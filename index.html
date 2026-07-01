@@ -754,7 +754,7 @@ async function enterApp(){
     el.style.display = currentRole === 'admin' ? '' : 'none';
   });
   
-  showToast('Google Sheet থেকে লাইভ সেটিংস লোড হচ্ছে...');
+  showToast('লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।...');
   await loadTicker();
   await loadBanners();
   switchTab('CATV');
@@ -881,7 +881,7 @@ async function renderVerticalPanel(tab){
   
   panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>${meta.label} Sheet Logs</h1><p>গুগল শিট থেকে লাইভ ডাটা লোড হচ্ছে...</p></div>
+      <div><h1>${meta.label} Sheet Logs</h1><p>অনুগ্রহ করে অপেক্ষা করুন... লাইভ ডাটা লোড হচ্ছে।...</p></div>
     </div>
     <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
   
@@ -909,7 +909,7 @@ async function renderVerticalPanel(tab){
   
   let html = `
     <div class="panel-header">
-      <div><h1>${meta.label} Sheet Logs</h1><p>গুগল শিট ডাটাবেস এন্ট্রি এবং এজেন্ট কোয়ালিটি লগ রিপোর্ট।</p></div>
+      <div><h1>${meta.label} Sheet Logs</h1><p>এজেন্ট পারফরম্যান্স ও কোয়ালিটি লগ রিপোর্ট</p></div>
       <div style="display:flex;gap:10px;">
         <button class="btn" onclick="renderVerticalPanel('${tab}')">↻ Refresh Live Data</button>
       </div>
