@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0B1420;
+  --surface:#101C2E;
+  --surface-2:#16263C;
+  --surface-3:#1D3049;
+  --border:#22344C;
+  --text:#EAF0F6;
+  --text-muted:#7C8CA3;
+  --admin:#E3A857;
+  --admin-dim:#4A3D24;
+  --agent:#33C9B0;
+  --agent-dim:#173B36;
+  --top:#E3A857;
+  --excellent:#3FBF7F;
+  --good:#E0C341;
+  --average:#E08A3F;
+  --need:#E0524A;
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.display{font-family:'Space Grotesk',sans-serif;}
+
+/* ---------- LOGIN SCREEN ---------- */
+#loginScreen{
+  display:flex;
+  min-height:100vh;
+}
+.login-brand{
+  flex:1.1;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(51,201,176,0.10), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(227,168,87,0.10), transparent 45%),
+    var(--bg);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:60px;
+  border-right:1px solid var(--border);
+  position:relative;
+  overflow:hidden;
+}
+.login-brand::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.02) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.02) 40px);
+  pointer-events:none;
+}
+.login-eyebrow{
+  color:var(--agent);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  margin-bottom:18px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.pulse-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--agent);
+  box-shadow:0 0 0 0 rgba(51,201,176,0.6);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(51,201,176,0.5);}
+  70%{box-shadow:0 0 0 10px rgba(51,201,176,0);}
+  100%{box-shadow:0 0 0 0 rgba(51,201,176,0);}
+}
+.login-title{
+  font-size:44px;
+  font-weight:700;
+  line-height:1.15;
+  margin-bottom:16px;
+  max-width:520px;
+}
+.login-title span{color:var(--admin);}
+.login-sub{
+  color:var(--text-muted);
+  max-width:440px;
+  line-height:1.6;
+  font-size:15px;
+}
+.login-stats{
+  display:flex;
+  gap:32px;
+  margin-top:48px;
+}
+.login-stat b{
+  display:block;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:26px;
+  color:var(--text);
+}
+.login-stat span{
+  font-size:11px;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+}
+.login-form-wrap{
+  flex:0.9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px;
+}
+.login-card{
+  width:100%;
+  max-width:380px;
+}
+.login-card h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  margin-bottom:6px;
+}
+.login-card p.hint{
+  color:var(--text-muted);
+  font-size:13px;
+  margin-bottom:28px;
+}
+.role-toggle{
+  display:flex;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:4px;
+  margin-bottom:22px;
+}
+.role-toggle button{
+  flex:1;
+  padding:10px;
+  border:none;
+  background:transparent;
+  color:var(--text-muted);
+  font-family:'Inter',sans-serif;
+  font-weight:600;
+  font-size:13px;
+  border-radius:7px;
+  cursor:pointer;
+  transition:all .2s;
+}
+.role-toggle button.active[data-role="agent"]{background:var(--agent-dim);color:var(--agent);}
+.role-toggle button.active[data-role="admin"]{background:var(--admin-dim);color:var(--admin);}
+.field{margin-bottom:16px;}
+.field label{
+  display:block;
+  font-size:12px;
+  color:var(--text-muted);
+  margin-bottom:6px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+.field input{
+  width:100%;
+  padding:12px 14px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  color:var(--text);
+  font-size:14px;
+  outline:none;
+  transition:border-color .2s;
+}
+.field input:focus{border-color:var(--agent);}
+.login-btn{
+  width:100%;
+  padding:13px;
+  border:none;
+  border-radius:var(--radius);
+  font-family:'Inter',sans-serif;
+  font-weight:700;
+  font-size:14px;
+  cursor:pointer;
+  margin-top:6px;
+  transition:opacity .2s, transform .1s;
+}
+.login-btn:active{transform:scale(0.98);}
+.login-btn[data-role="agent"]{background:var(--agent);color:#04211C;}
+.login-btn[data-role="admin"]{background:var(--admin);color:#2B1D06;}
+.login-error{
+  color:var(--need);
+  font-size:12.5px;
+  margin-top:12px;
+  min-height:16px;
+}
+.login-demo{
+  margin-top:26px;
+  font-size:11.5px;
+  color:var(--text-muted);
+  border-top:1px dashed var(--border);
+  padding-top:14px;
+  line-height:1.7;
+}
+.login-demo b{color:var(--text);}
+
+/* ---------- MAIN APP ---------- */
+#mainScreen{display:none;min-height:100vh;flex-direction:column;}
+header.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 24px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  gap:20px;
+}
+.logo-block{display:flex;align-items:center;gap:12px;min-width:180px;}
+.logo-mark{
+  width:38px;height:38px;border-radius:9px;
+  background:linear-gradient(135deg, var(--agent), var(--admin));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;color:#0B1420;font-size:15px;
+}
+.logo-text{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;}
+.logo-text small{display:block;font-size:10px;color:var(--text-muted);font-weight:500;letter-spacing:1.5px;}
+
+.ticker{
+  flex:1;
+  overflow:hidden;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:9px 0;
+  white-space:nowrap;
+  position:relative;
+}
+.ticker-track{
+  display:inline-block;
+  padding-left:100%;
+  animation:scrollTicker 28s linear infinite;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;
+  color:var(--agent);
+  letter-spacing:0.3px;
+}
+@keyframes scrollTicker{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-100%);}
+}
+.user-block{display:flex;align-items:center;gap:12px;min-width:180px;justify-content:flex-end;}
+.role-pill{
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.role-pill.agent{background:var(--agent-dim);color:var(--agent);}
+.role-pill.admin{background:var(--admin-dim);color:var(--admin);}
+.logout-btn{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text-muted);
+  padding:7px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12.5px;
+  font-family:'Inter',sans-serif;
+}
+.logout-btn:hover{border-color:var(--need);color:var(--need);}
+
+/* Banner carousel */
+.banner-wrap{
+  margin:18px 24px 0 24px;
+  position:relative;
+  border-radius:var(--radius);
+  overflow:hidden;
+  border:1px solid var(--border);
+  height:160px;
+  background:var(--surface);
+}
+.banner-slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:0 40px;
+  opacity:0;
+  transition:opacity .6s ease;
+  background:linear-gradient(120deg, var(--surface-3), var(--surface));
+}
+.banner-slide.active{opacity:1;}
+.banner-eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;color:var(--admin);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;
+}
+.banner-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px;}
+.banner-sub{color:var(--text-muted);font-size:13px;max-width:640px;}
+.banner-dots{
+  position:absolute;bottom:12px;right:18px;display:flex;gap:6px;
+}
+.banner-dots span{
+  width:7px;height:7px;border-radius:50%;background:var(--border);cursor:pointer;
+}
+.banner-dots span.active{background:var(--agent);}
+
+/* layout */
+.body-layout{display:flex;flex:1;gap:0;margin-top:18px;}
+aside.sidebar{
+  width:220px;
+  padding:0 12px 24px 24px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;
+  border-radius:9px;
+  cursor:pointer;
+  color:var(--text-muted);
+  font-weight:600;
+  font-size:13.5px;
+  transition:all .15s;
+  border:1px solid transparent;
+}
+.nav-item .dot{width:8px;height:8px;border-radius:50%;background:var(--border);}
+.nav-item:hover{background:var(--surface);color:var(--text);}
+.nav-item.active{
+  background:var(--surface-2);
+  color:var(--text);
+  border-color:var(--border);
+}
+.nav-item.active .dot{background:var(--agent);}
+.nav-item.admin-only .dot{background:var(--admin);}
+
+main.content{flex:1;padding:0 24px 40px 0;min-width:0;}
+.panel{display:none;}
+.panel.active{display:block;}
+
+.panel-header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  margin-bottom:18px;flex-wrap:wrap;gap:12px;
+}
+.panel-header h1{font-family:'Space Grotesk',sans-serif;font-size:22px;}
+.panel-header p{color:var(--text-muted);font-size:13px;margin-top:4px;}
+
+.btn{
+  padding:9px 16px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface-2);color:var(--text);font-size:12.5px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;
+}
+.btn:hover{border-color:var(--agent);}
+.btn.primary{background:var(--agent);color:#04211C;border-color:var(--agent);}
+.btn.primary:hover{opacity:.9;}
+.btn.gold{background:var(--admin);color:#2B1D06;border-color:var(--admin);}
+.btn.danger{color:var(--need);}
+.btn.small{padding:6px 10px;font-size:11.5px;}
+
+/* summary cards */
+.stat-row{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+.stat-card{
+  flex:1;min-width:140px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px 18px;
+}
+.stat-card .label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.stat-card .value{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;}
+.stat-card .value.gold{color:var(--admin);}
+.stat-card .value.teal{color:var(--agent);}
+
+.chart-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px;margin-bottom:22px;height:280px;
+}
+
+table.score-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+table.score-table th{
+  text-align:left;padding:12px 14px;font-size:11px;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);background:var(--surface-2);
+}
+table.score-table td{padding:12px 14px;font-size:13.5px;border-bottom:1px solid var(--border);}
+table.score-table tr:last-child td{border-bottom:none;}
+table.score-table tr:hover td{background:var(--surface-2);}
+.badge{
+  padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;
+}
+.badge.top{background:var(--admin-dim);color:var(--top);}
+.badge.excellent{background:#123222;color:var(--excellent);}
+.badge.good{background:#332c10;color:var(--good);}
+.badge.average{background:#33220f;color:var(--average);}
+.badge.need{background:#331414;color:var(--need);}
+
+.empty-state{
+  border:1px dashed var(--border);border-radius:var(--radius);
+  padding:50px 20px;text-align:center;color:var(--text-muted);
+}
+.empty-state b{display:block;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;margin-bottom:6px;}
+
+/* admin upload box */
+.upload-box{
+  border:1px dashed var(--border);border-radius:var(--radius);
+  padding:20px;margin-bottom:22px;background:var(--surface);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.upload-box .txt b{display:block;font-family:'Space Grotesk',sans-serif;font-size:14px;margin-bottom:4px;}
+.upload-box .txt span{color:var(--text-muted);font-size:12px;}
+input[type=file]{display:none;}
+
+/* updates panel */
+.update-form{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px;margin-bottom:22px;
+}
+.update-form input, .update-form textarea{
+  width:100%;padding:11px 13px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;margin-bottom:10px;outline:none;
+}
+.update-form textarea{resize:vertical;min-height:70px;}
+.update-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 18px;margin-bottom:12px;
+}
+.update-card .u-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.update-card .u-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14.5px;}
+.update-card .u-date{font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;}
+.update-card .u-body{font-size:13px;color:#C7D2E0;line-height:1.6;}
+
+/* admin panel editors */
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media (max-width:900px){.admin-grid{grid-template-columns:1fr;}}
+.editor-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+.editor-card h3{font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin-bottom:12px;}
+.banner-slot{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+.banner-slot span{width:20px;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);font-size:11px;}
+.banner-slot input{flex:1;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12.5px;}
+
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:4px;}
+
+.toast{
+  position:fixed;bottom:20px;right:20px;
+  background:var(--surface-2);border:1px solid var(--agent);color:var(--text);
+  padding:12px 18px;border-radius:9px;font-size:13px;z-index:999;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  display:none;
+}
+
+/* ---------- LIVE CLOCK ---------- */
+.live-clock{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-muted);
+  white-space:nowrap;
+}
+.live-clock .clock-dot{width:6px;height:6px;border-radius:50%;background:var(--agent);animation:pulse 2s infinite;}
+.login-eyebrow .live-clock{margin-left:auto;color:var(--text-muted);}
+
+/* ---------- SIDEBAR SECTION LABEL ---------- */
+.nav-label{
+  font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;
+  padding:14px 14px 4px;font-family:'IBM Plex Mono',monospace;
+}
+.nav-label:first-child{padding-top:2px;}
+
+/* ---------- DASHBOARD GRID ---------- */
+.dash-charts-row{display:flex;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+.dash-charts-row .chart-box{flex:1;min-width:320px;}
+
+.fail-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:22px;}
+.fail-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.fail-row:last-child{margin-bottom:0;}
+.fail-row .fail-label{width:230px;flex-shrink:0;font-size:12.5px;color:#C7D2E0;}
+.fail-row .fail-bar-track{flex:1;height:9px;background:var(--surface-2);border-radius:5px;overflow:hidden;}
+.fail-row .fail-bar-fill{height:100%;background:linear-gradient(90deg, var(--need), var(--average));border-radius:5px;}
+.fail-row .fail-count{width:70px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-muted);flex-shrink:0;}
+
+.fatal-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:22px;}
+
+/* ---------- BADGES: score pill & disposition pill ---------- */
+.score-pill{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:38px;padding:3px 8px;border-radius:7px;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:12.5px;
+}
+.disp-pill{
+  display:inline-block;padding:3px 9px;border-radius:6px;background:var(--surface-3);color:#C7D2E0;font-size:11.5px;white-space:nowrap;
+}
+
+/* ---------- RAW TABLE controls ---------- */
+.raw-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.raw-controls select, .raw-controls .btn{white-space:nowrap;}
+table.score-table td.sticky-col, table.score-table th.sticky-col{
+  position:sticky;left:0;background:var(--surface);z-index:2;
+}
+table.score-table th.sticky-col{background:var(--surface-2);z-index:3;}
+
+/* ---------- FLOATING RECORDING PLAYER ---------- */
+.player-bar{
+  position:fixed;left:0;right:0;bottom:0;
+  background:var(--surface-2);border-top:1px solid var(--border);
+  padding:12px 24px;display:none;align-items:center;gap:16px;
+  z-index:1000;box-shadow:0 -8px 24px rgba(0,0,0,0.35);
+}
+.player-bar.open{display:flex;}
+.player-bar .player-info{min-width:160px;}
+.player-bar .player-info b{display:block;font-family:'Space Grotesk',sans-serif;font-size:13px;}
+.player-bar .player-info span{font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;}
+.player-bar audio{flex:1;height:36px;}
+.player-bar .player-close{
+  background:transparent;border:1px solid var(--border);color:var(--text-muted);
+  width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;flex-shrink:0;
+}
+.player-bar .player-close:hover{color:var(--need);border-color:var(--need);}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen">
+  <div class="login-brand">
+    <div class="login-eyebrow"><span class="pulse-dot"></span> QA CONTROL ROOM · LIVE</div>
+    <div class="login-title">Every call, <span>scored</span>.<br>Every agent, <span>seen</span>.</div>
+    <p class="login-sub">CATV, Broadband Renewal আর Tech Support — তিনটে ভার্টিক্যালের কল কোয়ালিটি স্কোর, ড্যাশবোর্ড আর আপডেট একজায়গায়। Admin আপলোড করে, Agent দেখে।</p>
+    <div class="login-stats">
+      <div class="login-stat"><b>3</b><span>Verticals</span></div>
+      <div class="login-stat"><b id="loginStatAgents">--</b><span>Agents Tracked</span></div>
+      <div class="login-stat"><b>Live</b><span>Dashboard</span></div>
+    </div>
+  </div>
+  <div class="login-form-wrap">
+    <div class="login-card">
+      <h2>Sign in</h2>
+      <p class="hint">আপনার role বেছে নিয়ে password দিন।</p>
+      <div class="role-toggle">
+        <button type="button" class="active" data-role="agent" onclick="selectRole('agent')">Agent</button>
+        <button type="button" data-role="admin" onclick="selectRole('admin')">Admin</button>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="login-btn" id="loginBtn" data-role="agent" onclick="doLogin()">Enter as Agent</button>
+      <div class="login-error" id="loginError"></div>
+      <div class="login-demo">
+        Demo credentials — <b>Agent:</b> agent@123&nbsp;&nbsp;|&nbsp;&nbsp;<b>Admin:</b> admin@123<br>
+        (কোড এর ভিতরে <b>CREDENTIALS</b> অংশ থেকে password পরিবর্তন করা যাবে।)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div id="mainScreen">
+  <header class="topbar">
+    <div class="logo-block">
+      <div class="logo-mark">QA</div>
+      <div class="logo-text">QA Control Room<small>CALL QUALITY MONITORING</small></div>
+    </div>
+    <div class="ticker">
+      <div class="ticker-track mono" id="tickerTrack">Loading updates...</div>
+    </div>
+    <div class="user-block">
+      <span class="role-pill" id="rolePill">AGENT</span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="banner-wrap" id="bannerWrap"></div>
+
+  <div class="body-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="nav-item active" data-tab="CATV" onclick="switchTab('CATV')"><span class="dot"></span>CATV</div>
+      <div class="nav-item" data-tab="BBTECH" onclick="switchTab('BBTECH')"><span class="dot"></span>BB Tech Support</div>
+      <div class="nav-item" data-tab="BBRENEWAL" onclick="switchTab('BBRENEWAL')"><span class="dot"></span>BB Renewal</div>
+      <div class="nav-item" data-tab="UPDATES" onclick="switchTab('UPDATES')"><span class="dot"></span>New Update</div>
+      <div class="nav-item admin-only" data-tab="ADMIN" onclick="switchTab('ADMIN')" style="display:none;"><span class="dot"></span>Admin Panel</div>
+    </aside>
+
+    <main class="content">
+      <!-- Vertical panels: CATV / BBTECH / BBRENEWAL -->
+      <div class="panel active" id="panel-CATV" data-vertical="CATV"></div>
+      <div class="panel" id="panel-BBTECH" data-vertical="BBTECH"></div>
+      <div class="panel" id="panel-BBRENEWAL" data-vertical="BBRENEWAL"></div>
+
+      <!-- Updates panel -->
+      <div class="panel" id="panel-UPDATES">
+        <div class="panel-header">
+          <div><h1>New Updates</h1><p>Team-এর জন্য latest announcements আর notes।</p></div>
+        </div>
+        <div class="update-form admin-only" style="display:none;">
+          <input type="text" id="updTitle" placeholder="Update title">
+          <textarea id="updBody" placeholder="Update details লিখুন..."></textarea>
+          <button class="btn gold" onclick="addUpdate()">Post Update</button>
+        </div>
+        <div id="updatesList"></div>
+      </div>
+
+      <!-- Admin panel -->
+      <div class="panel" id="panel-ADMIN">
+        <div class="panel-header">
+          <div><h1>Admin Panel</h1><p>Ticker, banners আর score data এখান থেকে manage করুন।</p></div>
+        </div>
+        <div class="admin-grid">
+          <div class="editor-card">
+            <h3>Scrolling Ticker Text</h3>
+            <input type="text" id="tickerInput" placeholder="Ticker text..." style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:10px;">
+            <button class="btn primary small" onclick="saveTicker()">Save Ticker</button>
+          </div>
+          <div class="editor-card">
+            <h3>Banner Slides (max 10)</h3>
+            <div id="bannerEditor"></div>
+            <button class="btn primary small" onclick="saveBanners()">Save Banners</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== CREDENTIALS (demo only, client-side) ===================== */
+const CREDENTIALS = { agent: 'agent@123', admin: 'admin@123' };
+
+const VERTICALS = {
+  CATV: { label: 'CATV', key: 'scores:CATV', rawKey: 'raw:CATV' },
+  BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH' },
+  BBRENEWAL: { label: 'BB Renewal', key: 'scores:BBRENEWAL', rawKey: 'raw:BBRENEWAL' }
+};
+
+let currentRole = null;
+let selectedRole = 'agent';
+let currentTab = 'CATV';
+let bannerTimer = null;
+let bannerIndex = 0;
+let chartInstances = {};
+
+/* ===================== STORAGE HELPERS ===================== */
+async function storageGet(key){
+  try{
+    const res = await window.storage.get(key, true);
+    return res ? JSON.parse(res.value) : null;
+  }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  try{
+    await window.storage.set(key, JSON.stringify(value), true);
+    return true;
+  }catch(e){ console.error('storage set failed', e); return false; }
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.style.display='none', 2600);
+}
+
+/* ===================== LOGIN ===================== */
+function selectRole(role){
+  selectedRole = role;
+  document.querySelectorAll('.role-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.role===role));
+  const btn = document.getElementById('loginBtn');
+  btn.dataset.role = role;
+  btn.className = 'login-btn';
+  btn.setAttribute('data-role', role);
+  btn.textContent = role === 'admin' ? 'Enter as Admin' : 'Enter as Agent';
+  document.getElementById('loginError').textContent = '';
+}
+
+function doLogin(){
+  const pass = document.getElementById('loginPassword').value.trim();
+  const errBox = document.getElementById('loginError');
+  if(!pass){ errBox.textContent = 'Password দিন।'; return; }
+  if(pass !== CREDENTIALS[selectedRole]){
+    errBox.textContent = 'Password সঠিক নয়। আবার চেষ্টা করুন।';
+    return;
+  }
+  errBox.textContent = '';
+  currentRole = selectedRole;
+  enterApp();
+}
+
+function doLogout(){
+  currentRole = null;
+  document.getElementById('mainScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPassword').value = '';
+  if(bannerTimer) clearInterval(bannerTimer);
+}
+
+async function enterApp(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = 'flex';
+  const pill = document.getElementById('rolePill');
+  pill.textContent = currentRole.toUpperCase();
+  pill.className = 'role-pill ' + currentRole;
+  document.querySelectorAll('.admin-only').forEach(el=>{
+    el.style.display = currentRole === 'admin' ? '' : 'none';
+  });
+  await loadTicker();
+  await loadBanners();
+  switchTab('CATV');
+  await loadUpdates();
+}
+
+/* ===================== TICKER ===================== */
+async function loadTicker(){
+  const data = await storageGet('ticker');
+  const text = (data && data.text) ? data.text : 'CATV, BB Tech Support ও BB Renewal-এর জুন মাসের QA স্কোর আপডেট হয়েছে — Admin Panel থেকে Excel আপলোড করুন।';
+  document.getElementById('tickerTrack').textContent = text;
+  document.getElementById('tickerInput').value = text;
+}
+async function saveTicker(){
+  const text = document.getElementById('tickerInput').value.trim();
+  if(!text) return;
+  await storageSet('ticker', { text });
+  document.getElementById('tickerTrack').textContent = text;
+  showToast('Ticker updated');
+}
+
+/* ===================== BANNERS ===================== */
+function defaultBanners(){
+  const arr = [];
+  for(let i=1;i<=10;i++){
+    arr.push({ title: 'Banner Slot ' + i, subtitle: 'Admin Panel থেকে এই ব্যানারের টেক্সট বসান।' });
+  }
+  return arr;
+}
+async function loadBanners(){
+  let data = await storageGet('banners');
+  if(!data || !Array.isArray(data) || data.length===0) data = defaultBanners();
+  renderBanners(data);
+  renderBannerEditor(data);
+}
+function renderBanners(banners){
+  const wrap = document.getElementById('bannerWrap');
+  wrap.innerHTML = '';
+  banners.forEach((b, i)=>{
+    const slide = document.createElement('div');
+    slide.className = 'banner-slide' + (i===0 ? ' active' : '');
+    slide.innerHTML = `<div class="banner-eyebrow">SLIDE ${String(i+1).padStart(2,'0')} / ${banners.length}</div>
+      <div class="banner-title">${escapeHtml(b.title||'')}</div>
+      <div class="banner-sub">${escapeHtml(b.subtitle||'')}</div>`;
+    wrap.appendChild(slide);
+  });
+  const dots = document.createElement('div');
+  dots.className = 'banner-dots';
+  banners.forEach((b,i)=>{
+    const d = document.createElement('span');
+    if(i===0) d.classList.add('active');
+    d.onclick = ()=> setBannerSlide(i);
+    dots.appendChild(d);
+  });
+  wrap.appendChild(dots);
+  bannerIndex = 0;
+  if(bannerTimer) clearInterval(bannerTimer);
+  bannerTimer = setInterval(()=> setBannerSlide((bannerIndex+1) % banners.length), 4500);
+}
+function setBannerSlide(i){
+  const slides = document.querySelectorAll('.banner-slide');
+  const dots = document.querySelectorAll('.banner-dots span');
+  slides.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+  dots.forEach((d,idx)=> d.classList.toggle('active', idx===i));
+  bannerIndex = i;
+}
+function renderBannerEditor(banners){
+  const box = document.getElementById('bannerEditor');
+  box.innerHTML = '';
+  banners.forEach((b,i)=>{
+    const row = document.createElement('div');
+    row.className = 'banner-slot';
+    row.innerHTML = `<span>${i+1}</span>
+      <input type="text" placeholder="Title" value="${escapeAttr(b.title||'')}" data-idx="${i}" data-field="title">
+      <input type="text" placeholder="Subtitle" value="${escapeAttr(b.subtitle||'')}" data-idx="${i}" data-field="subtitle">`;
+    box.appendChild(row);
+  });
+}
+async function saveBanners(){
+  const inputs = document.querySelectorAll('#bannerEditor input');
+  const banners = defaultBanners();
+  inputs.forEach(inp=>{
+    const idx = parseInt(inp.dataset.idx,10);
+    banners[idx][inp.dataset.field] = inp.value;
+  });
+  await storageSet('banners', banners);
+  renderBanners(banners);
+  showToast('Banners updated');
+}
+
+/* ===================== NAV / TABS ===================== */
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.tab===tab));
+  document.querySelectorAll('.panel').forEach(p=> p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  if(VERTICALS[tab]){
+    renderVerticalPanel(tab);
+  }
+}
+
+/* ===================== SCORE STATUS HELPERS ===================== */
+function statusFor(score){
+  if(score>=99) return {cls:'top', label:'🏆 TOP PERFORMER'};
+  if(score>=95) return {cls:'excellent', label:'🟢 EXCELLENT'};
+  if(score>=90) return {cls:'good', label:'🟡 GOOD'};
+  if(score>=85) return {cls:'average', label:'🟠 AVERAGE'};
+  return {cls:'need', label:'🔴 NEED IMPROVEMENT'};
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+/* ===================== VERTICAL PANEL (CATV / BBTECH / BBRENEWAL) ===================== */
+async function renderVerticalPanel(tab){
+  const meta = VERTICALS[tab];
+  const panel = document.getElementById('panel-'+tab);
+  const rows = (await storageGet(meta.key)) || [];
+  updateLoginAgentCount();
+
+  const isAdmin = currentRole === 'admin';
+  let html = `
+    <div class="panel-header">
+      <div><h1>${meta.label}</h1><p>Audit count, average score এবং agent-wise performance।</p></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn" onclick="renderVerticalPanel('${tab}')">↻ Refresh</button>
+      </div>
+    </div>`;
+
+  if(isAdmin){
+    html += `
+    <div class="upload-box">
+      <div class="txt">
+        <b>Excel থেকে ${meta.label} score আপলোড করুন</b>
+        <span>Raw call-level sheet (Associate Name + Scores, প্রতি call একটা row) অথবা already-aggregated per-agent sheet — দুটোই চলবে, agent অনুযায়ী auto-aggregate হয়ে যাবে। আপলোড করলে আগের data replace হয়ে যাবে।</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <label class="btn gold" for="file-${tab}">Upload Excel</label>
+        <input type="file" id="file-${tab}" accept=".xlsx,.xls,.csv" onchange="handleUpload(event,'${tab}')">
+        ${rows.length ? `<button class="btn danger" onclick="clearVertical('${tab}')">Clear Data</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  if(!rows.length){
+    html += `<div class="empty-state"><b>এখনও কোনো ডেটা নেই</b>${isAdmin ? 'উপরের Upload Excel বাটন থেকে score ডেটা যোগ করুন।' : 'Admin এখনও এই vertical-এর জন্য score আপলোড করেননি।'}</div>`;
+    panel.innerHTML = html;
+    return;
+  }
+
+  const totalAudits = rows.reduce((s,r)=> s + (Number(r.auditCount)||0), 0);
+  const avgScore = (rows.reduce((s,r)=> s + (Number(r.avgScore)||0), 0) / rows.length).toFixed(1);
+  const top = rows.slice().sort((a,b)=> b.avgScore - a.avgScore)[0];
+  const needCount = rows.filter(r=> r.avgScore < 85).length;
+
+  html += `
+    <div class="stat-row">
+      <div class="stat-card"><div class="label">Agents</div><div class="value">${rows.length}</div></div>
+      <div class="stat-card"><div class="label">Total Audits</div><div class="value teal">${totalAudits}</div></div>
+      <div class="stat-card"><div class="label">Average Score</div><div class="value gold">${avgScore}</div></div>
+      <div class="stat-card"><div class="label">Top Performer</div><div class="value" style="font-size:16px;">${escapeHtml(top.agent)}</div></div>
+      <div class="stat-card"><div class="label">Need Improvement</div><div class="value" style="color:var(--need);">${needCount}</div></div>
+    </div>
+    <div class="chart-box"><canvas id="chart-${tab}"></canvas></div>
+    <table class="score-table">
+      <thead><tr><th>Agent Name</th><th>Audit Count</th><th>Average Score</th><th>Status</th>${isAdmin?'<th></th>':''}</tr></thead>
+      <tbody>
+        ${rows.slice().sort((a,b)=>b.avgScore-a.avgScore).map(r=>{
+          const st = statusFor(Number(r.avgScore));
+          return `<tr>
+            <td>${escapeHtml(r.agent)}</td>
+            <td class="mono">${escapeHtml(r.auditCount)}</td>
+            <td class="mono">${escapeHtml(r.avgScore)}</td>
+            <td><span class="badge ${st.cls}">${st.label}</span></td>
+            ${isAdmin ? `<td><button class="btn small danger" onclick="removeAgentRow('${tab}','${encodeURIComponent(r.agent)}')">Remove</button></td>` : ''}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+
+  panel.innerHTML = html;
+  drawChart(tab, rows);
+  renderRawSection(tab);
+}
+
+/* ===================== RAW CALL-LEVEL TABLE (full excel, filter by agent name) ===================== */
+const rawDataCache = {};
+
+async function renderRawSection(tab){
+  const raw = (await storageGet(VERTICALS[tab].rawKey)) || [];
+  rawDataCache[tab] = raw;
+  const holder = document.createElement('div');
+  holder.id = 'rawSection-' + tab;
+  holder.innerHTML = buildRawSectionHtml(tab, raw, '');
+  document.getElementById('panel-' + tab).appendChild(holder);
+}
+
+function buildRawSectionHtml(tab, raw, filterValue){
+  if(!raw.length) return '';
+  const keys = Object.keys(raw[0]);
+  const { nameKey } = detectColumnKeys(keys);
+  const agentNames = nameKey ? Array.from(new Set(raw.map(r=> String(r[nameKey]).trim()).filter(Boolean))).sort() : [];
+  const filtered = (filterValue && nameKey) ? raw.filter(r=> String(r[nameKey]).trim() === filterValue) : raw;
+
+  const cols = keys; // preserve original excel column order exactly
+  const linkKey = keys.find(k=> /call\s*link/i.test(k));
+
+  return `
+    <div class="panel-header" style="margin-top:8px;">
+      <div><h1 style="font-size:17px;">Call-Level Detail (Full Excel)</h1><p>মোট ${raw.length}টা call row — আপলোড করা excel যেভাবে আছে ঠিক সেভাবেই।</p></div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <select id="rawFilter-${tab}" onchange="applyRawFilter('${tab}')" style="padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12.5px;">
+          <option value="">সব Agent</option>
+          ${agentNames.map(n=> `<option value="${escapeAttr(n)}" ${n===filterValue?'selected':''}>${escapeHtml(n)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="overflow:auto;max-height:520px;border:1px solid var(--border);border-radius:var(--radius);">
+      <table class="score-table" style="min-width:1400px;">
+        <thead><tr>${cols.map(c=> `<th style="position:sticky;top:0;background:var(--surface-2);white-space:nowrap;">${escapeHtml(c)}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${filtered.map(r=> `<tr>${cols.map(c=>{
+            if(c===linkKey && r[c]){
+              return `<td class="mono" style="white-space:nowrap;"><a href="${escapeAttr(r[c])}" target="_blank" rel="noopener" style="color:var(--agent);">▶ Recording</a></td>`;
+            }
+            const val = r[c];
+            return `<td style="white-space:nowrap;">${escapeHtml(val===null||val===undefined? '' : val)}</td>`;
+          }).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function applyRawFilter(tab){
+  const select = document.getElementById('rawFilter-' + tab);
+  const val = select ? select.value : '';
+  const raw = rawDataCache[tab] || [];
+  document.getElementById('rawSection-' + tab).innerHTML = buildRawSectionHtml(tab, raw, val);
+}
+
+function drawChart(tab, rows){
+  const ctx = document.getElementById('chart-'+tab);
+  if(!ctx) return;
+  if(chartInstances[tab]) chartInstances[tab].destroy();
+  const sorted = rows.slice().sort((a,b)=> b.avgScore - a.avgScore);
+  chartInstances[tab] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(r=>r.agent),
+      datasets: [{
+        label: 'Average Score',
+        data: sorted.map(r=>Number(r.avgScore)),
+        backgroundColor: sorted.map(r=> {
+          const s = statusFor(Number(r.avgScore));
+          return {top:'#E3A857',excellent:'#3FBF7F',good:'#E0C341',average:'#E08A3F',need:'#E0524A'}[s.cls];
+        }),
+        borderRadius: 5,
+        maxBarThickness: 28
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ ticks:{ color:'#7C8CA3', font:{size:10}, maxRotation:60, minRotation:60 }, grid:{ display:false } },
+        y:{ min:0, max:100, ticks:{ color:'#7C8CA3' }, grid:{ color:'#22344C' } }
+      }
+    }
+  });
+}
+
+/* ===================== EXCEL UPLOAD ===================== */
+function handleUpload(evt, tab){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e)=>{
+    try{
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      const rows = parseScoreRows(json);
+      if(!rows.length){
+        showToast('কোনো valid row পাওয়া যায়নি। Column headers চেক করুন।');
+        return;
+      }
+      await storageSet(VERTICALS[tab].key, rows);
+      await storageSet(VERTICALS[tab].rawKey, json);
+      showToast(`${rows.length} agents আপলোড হয়েছে (${json.length} calls)`);
+      renderVerticalPanel(tab);
+    }catch(err){
+      console.error(err);
+      showToast('Excel পড়তে সমস্যা হয়েছে।');
+    }
+  };
+  reader.readAsBinaryString(file);
+  evt.target.value = '';
+}
+
+function detectColumnKeys(keys){
+  const nameKey = keys.find(k=> /^\s*(associate|agent)\s*name\s*$/i.test(k))
+    || keys.find(k=> /associate|agent/i.test(k) && /name/i.test(k))
+    || keys.find(k=> /name/i.test(k));
+  // word-boundary match so columns like "Account Authentication/Security Checks"
+  // (which contains "count" as a substring, not a word) are never mistaken for an audit-count column
+  const countKey = keys.find(k=> /\baudit\b/i.test(k) && /\bcount\b/i.test(k))
+    || keys.find(k=> /^\s*(audit\s*)?count\s*$/i.test(k));
+  const scoreKey = keys.find(k=> /^\s*scores?\s*$/i.test(k))
+    || keys.find(k=> /score/i.test(k));
+  return { nameKey, countKey, scoreKey };
+}
+
+function parseScoreRows(json){
+  if(!json.length) return [];
+  const keys = Object.keys(json[0]);
+  const { nameKey, countKey, scoreKey } = detectColumnKeys(keys);
+  if(!nameKey || !scoreKey) return [];
+
+  // Group rows by agent name and aggregate — handles both:
+  // (a) raw call-level exports (many rows per agent, one call per row), and
+  // (b) already-aggregated per-agent summary sheets (one row per agent).
+  const groups = {};
+  json.forEach(row=>{
+    const agentRaw = row[nameKey];
+    if(agentRaw === undefined || agentRaw === null) return;
+    const agent = String(agentRaw).trim();
+    if(!agent) return;
+    const scoreVal = parseFloat(row[scoreKey]);
+    if(isNaN(scoreVal)) return; // skip blank/non-numeric score rows
+    const countVal = countKey ? parseFloat(row[countKey]) : NaN;
+
+    if(!groups[agent]) groups[agent] = { scoreSum:0, scoreN:0, countSum:0, hasExplicitCount:false, rowN:0 };
+    const g = groups[agent];
+    g.scoreSum += scoreVal;
+    g.scoreN += 1;
+    g.rowN += 1;
+    if(!isNaN(countVal)){ g.countSum += countVal; g.hasExplicitCount = true; }
+  });
+
+  const rows = [];
+  Object.keys(groups).forEach(agent=>{
+    const g = groups[agent];
+    const avgScore = Math.round((g.scoreSum / g.scoreN) * 10) / 10;
+    // If the sheet already had an explicit audit-count column, use its sum;
+    // otherwise the number of call rows for this agent IS the audit count.
+    const auditCount = g.hasExplicitCount ? g.countSum : g.rowN;
+    rows.push({ agent, auditCount, avgScore });
+  });
+  return rows;
+}
+
+async function removeAgentRow(tab, encodedName){
+  const name = decodeURIComponent(encodedName);
+  const rows = (await storageGet(VERTICALS[tab].key)) || [];
+  const updated = rows.filter(r=> r.agent !== name);
+  await storageSet(VERTICALS[tab].key, updated);
+  renderVerticalPanel(tab);
+}
+async function clearVertical(tab){
+  if(!confirm(VERTICALS[tab].label + '-এর সব ডেটা মুছে ফেলবেন?')) return;
+  await storageSet(VERTICALS[tab].key, []);
+  await storageSet(VERTICALS[tab].rawKey, []);
+  renderVerticalPanel(tab);
+}
+
+async function updateLoginAgentCount(){
+  let total = new Set();
+  for(const k of Object.keys(VERTICALS)){
+    const rows = await storageGet(VERTICALS[k].key);
+    if(rows) rows.forEach(r=> total.add(r.agent));
+  }
+  const el = document.getElementById('loginStatAgents');
+  if(el && total.size) el.textContent = total.size;
+}
+
+/* ===================== UPDATES ===================== */
+async function loadUpdates(){
+  const list = (await storageGet('updates')) || [];
+  renderUpdates(list);
+}
+function renderUpdates(list){
+  const box = document.getElementById('updatesList');
+  if(!list.length){
+    box.innerHTML = `<div class="empty-state"><b>এখনও কোনো আপডেট নেই</b>${currentRole==='admin' ? 'উপরে ফর্ম থেকে প্রথম আপডেট পোস্ট করুন।' : 'Admin শীঘ্রই নতুন আপডেট পোস্ট করবেন।'}</div>`;
+    return;
+  }
+  box.innerHTML = list.slice().sort((a,b)=> b.id - a.id).map(u=>`
+    <div class="update-card">
+      <div class="u-head">
+        <span class="u-title">${escapeHtml(u.title)}</span>
+        <span class="u-date mono">${escapeHtml(u.date)}</span>
+      </div>
+      <div class="u-body">${escapeHtml(u.body)}</div>
+      ${currentRole==='admin' ? `<div style="margin-top:10px;"><button class="btn small danger" onclick="deleteUpdate(${u.id})">Delete</button></div>` : ''}
+    </div>`).join('');
+}
+async function addUpdate(){
+  const title = document.getElementById('updTitle').value.trim();
+  const body = document.getElementById('updBody').value.trim();
+  if(!title || !body){ showToast('Title ও details দুটোই দিন।'); return; }
+  const list = (await storageGet('updates')) || [];
+  list.push({ id: Date.now(), title, body, date: new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) });
+  await storageSet('updates', list);
+  document.getElementById('updTitle').value = '';
+  document.getElementById('updBody').value = '';
+  renderUpdates(list);
+  showToast('Update posted');
+}
+async function deleteUpdate(id){
+  let list = (await storageGet('updates')) || [];
+  list = list.filter(u=> u.id !== id);
+  await storageSet('updates', list);
+  renderUpdates(list);
+}
+
+/* ===================== INIT ===================== */
+updateLoginAgentCount();
+</script>
+</body>
+</html>
