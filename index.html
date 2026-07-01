@@ -534,7 +534,7 @@ input[type=file]{display:none;}
       <div class="logo-text">QA Control Room<small>CALL QUALITY Analytics</small></div>
     </div>
     <div class="ticker">
-      <div class="ticker-track mono" id="tickerTrack">Loading updates...</div>
+      <div class="ticker-track mono" id="tickerTrack">Loading updates from Google Sheets...</div>
     </div>
     <div class="user-block">
       <div class="global-clock-wrap">
@@ -622,7 +622,10 @@ input[type=file]{display:none;}
 <script>
 /* ===================== CREDENTIALS & GOOGLE API CONFIG ===================== */
 const CREDENTIALS = { agent: 'agent@123', admin: 'admin@123' };
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-WcdO5o1DWzylaVNxkQ6DmB-42E7MdaG3i2NS8EPmQ-LVxFEHrYTv68NW9cpDpd27Lg/exec";
+
+// ⚠️ এখানে আপনার গুগল স্ক্রিপ্ট থেকে জেনারেট হওয়া New Deployment URL-টি সাবধানে বসান
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwfUmWpG56HNMmLy2yI6DNewCDnHadIFA8HoOsUNIjVVkbdpUlhxJAdi9Z6kkhfw_Ki/exec";
+
 const VERTICALS = {
   CATV: { label: 'CATV', key: 'scores:CATV', rawKey: 'raw:CATV', dashId: 'DASH-CATV' },
   BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH', dashId: 'DASH-BBTECH' },
@@ -680,18 +683,28 @@ function autoFormatCellValue(val, columnName) {
   }
   return val;
 }
-/* ===================== STORAGE & TOAST LOGIC ===================== */
+/* ===================== STORAGE & TOAST LOGIC (LIVE GOOGLE SHEETS) ===================== */
 async function storageGet(key){
   try{
-    const res = await window.storage.get(key, true);
-    return res ? JSON.parse(res.value) : null;
-  }catch(e){ return null; }
+    const res = await fetch(`${WEB_APP_URL}?action=getSettings&key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    return data && data.value ? JSON.parse(data.value) : null;
+  }catch(e){ 
+    console.error('Storage read system issue, using fallback', e); 
+    return null; 
+  }
 }
 async function storageSet(key, value){
   try{
-    await window.storage.set(key, JSON.stringify(value), true);
+    const res = await fetch(`${WEB_APP_URL}?action=saveSettings`, {
+      method: 'POST',
+      body: JSON.stringify({ key: key, value: JSON.stringify(value) })
+    });
     return true;
-  }catch(e){ console.error('Storage system issue', e); return false; }
+  }catch(e){ 
+    console.error('Storage write system issue', e); 
+    return false; 
+  }
 }
 function showToast(msg){
   const t = document.getElementById('toast');
@@ -740,6 +753,8 @@ async function enterApp(){
   document.querySelectorAll('.admin-only').forEach(el=>{
     el.style.display = currentRole === 'admin' ? '' : 'none';
   });
+  
+  showToast('Google Sheet থেকে লাইভ সেটিংস লোড হচ্ছে...');
   await loadTicker();
   await loadBanners();
   switchTab('CATV');
@@ -748,16 +763,19 @@ async function enterApp(){
 /* ===================== TICKER SYSTEMS ===================== */
 async function loadTicker(){
   const data = await storageGet('ticker');
-  const text = (data && data.text) ? data.text : 'CATV, BB Tech Support ও BB Renewal-এর লাইভ কোয়ালিটি কন্ট্রোল রুম ও রিয়েল-টাইম ড্যাশবোর্ড ট্র্যাকিং系统中 স্বাগতম।';
+  const text = (data && data.text) ? data.text : 'CATV, BB Tech Support ও BB Renewal-এর লাইভ কোয়ালিটি কন্ট্রোল রুম ও রিয়েল-টাইম ড্যাশবোর্ড ট্র্যাকিং সিস্টেমে স্বাগতম।';
   document.getElementById('tickerTrack').textContent = text;
   document.getElementById('tickerInput').value = text;
 }
 async function saveTicker(){
   const text = document.getElementById('tickerInput').value.trim();
   if(!text) return;
-  await storageSet('ticker', { text });
-  document.getElementById('tickerTrack').textContent = text;
-  showToast('Ticker updated successfully');
+  showToast('Saving to WEBPAGEDATA...');
+  const success = await storageSet('ticker', { text });
+  if(success) {
+    document.getElementById('tickerTrack').textContent = text;
+    showToast('Ticker saved dynamically to Google Sheets!');
+  }
 }
 /* ===================== BANNER CORNER ===================== */
 function defaultBanners(){
@@ -825,9 +843,12 @@ async function saveBanners(){
     const idx = parseInt(inp.dataset.idx,10);
     banners[idx][inp.dataset.field] = inp.value;
   });
-  await storageSet('banners', banners);
-  renderBanners(banners);
-  showToast('Banners matching completely saved');
+  showToast('Updating Banners in WEBPAGEDATA...');
+  const success = await storageSet('banners', banners);
+  if(success) {
+    renderBanners(banners);
+    showToast('Banners matching completely saved to Sheet!');
+  }
 }
 /* ===================== NAVIGATION & TABS ===================== */
 function switchTab(tab){
@@ -863,6 +884,7 @@ async function renderVerticalPanel(tab){
       <div><h1>${meta.label} Sheet Logs</h1><p>গুগল শিট থেকে লাইভ ডাটা লোড হচ্ছে...</p></div>
     </div>
     <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+  
   let json = [];
   try {
     const response = await fetch(WEB_APP_URL + "?vertical=" + tab);
@@ -878,12 +900,13 @@ async function renderVerticalPanel(tab){
       });
     }
   } catch (err) {
-    console.error("Google Sheets fetch failed, fallback to local:", err);
-    json = (await storageGet(meta.rawKey)) || [];
+    console.error("Google Sheets fetch failed:", err);
   }
+  
   rawDataCache[tab] = json;
   const rows = parseScoreRows(json);
   updateLoginAgentCount();
+  
   let html = `
     <div class="panel-header">
       <div><h1>${meta.label} Sheet Logs</h1><p>গুগল শিট ডাটাবেস এন্ট্রি এবং এজেন্ট কোয়ালিটি লগ রিপোর্ট।</p></div>
@@ -897,7 +920,7 @@ async function renderVerticalPanel(tab){
     <div class="upload-box">
       <div class="txt">
         <b>Excel ফাইল আপলোড করুন (${meta.label})</b>
-        <span>কল লেভেল র-ডাটা শিট (Associate Name, Call Link, Date, Time, Duration এবং প্যারামিটার যুক্ত কলাম) আপলোড করুন। এটি সরাসরি গুগল শিটে যুক্ত হয়ে যাবে।</span>
+        <span>কল লেভেল র-ডাটা শিট (Associate Name, Call Link, Date, Time, Duration এবং প্যারামিটার যুক্ত কলাম) আপলোড করুন। এটি সরাসরি আপনার মূল গুগল শিটে ওভাররাইট হয়ে যাবে।</span>
       </div>
       <div style="display:flex;gap:8px;">
         <label class="btn gold" for="file-${tab}">📂 Upload Excel</label>
@@ -907,7 +930,7 @@ async function renderVerticalPanel(tab){
     </div>`;
   }
   if(!rows.length){
-    html += `<div class="empty-state"><b>কোনো ডাটা রেকর্ড খুঁজে পাওয়া যায়নি</b>${isAdmin ? 'ড্যাশবোর্ড সচল করতে দয়া করে এক্সেল শিট আপলোড করুন।' : 'গুগল শিটে এখনো কোনো ডাটা উপলব্ধ নেই।'}</div>`;
+    html += `<div class="empty-state"><b>কোনো ডাটা রেকর্ড খুঁজে পাওয়া যায়নি</b><br>${isAdmin ? 'ড্যাশবোর্ড সচল করতে দয়া করে এক্সেল শিট আপলোড করুন।' : 'গুগল শিটে এখনো কোনো ডাটা উপলব্ধ নেই।'}</div>`;
     panel.innerHTML = html;
     return;
   }
@@ -986,7 +1009,6 @@ function buildRawSectionHtml(tab, raw, filterValue){
           ${filtered.map((r, rIdx)=> `<tr>${keys.map(c=>{
             let originalVal = r[c];
             let val = autoFormatCellValue(originalVal, c);
-            let cLower = c.toLowerCase();
             
             if(c===linkKey && originalVal){
               let agentName = nameKey ? r[nameKey] : 'Unknown';
@@ -1001,7 +1023,6 @@ function buildRawSectionHtml(tab, raw, filterValue){
               </td>`;
             }
             
-            // Colorful styling for columns
             if(c===dateKey && val) {
               return `<td style="color: var(--agent); font-weight: 600;"><span style="background: rgba(51,201,176,0.1); padding: 4px 8px; border-radius: 6px;">📅 ${escapeHtml(val)}</span></td>`;
             }
@@ -1034,7 +1055,7 @@ function openAudioPlayerBar(link, agent, details) {
   const audio = document.getElementById('globalAudioElement');
   audio.src = link;
   audio.load();
-  audio.play().catch(e => console.log("Audio autoplay pass"));
+  audio.play().catch(e => console.log("Audio autoplay bypass"));
   document.getElementById('playerDownloadBtn').href = link;
   
   document.getElementById('globalAudioPlayerBar').classList.add('active');
@@ -1058,7 +1079,7 @@ async function renderDedicatedDashboard(vKey) {
     </div>`;
     
   if(!raw.length) {
-    html += `<div class="empty-state"><b>কোনো অ্যানালিটিক্স ডাটা উপলব্ধ নেই</b><br>ডাটা শিট লোড বা আপলোড হলে এই ড্যাশবোর্ডটি অটো জেনারেট হবে।</div>`;
+    html += `<div class="empty-state"><b>কোনো canvasing বা ডাটা অ্যানালিটিক্স উপলব্ধ নেই</b><br>ডাটা শিট রিফ্রেশ বা আপলোড হলে এই ড্যাশবোর্ডটি লাইভ জেনারেট হবে।</div>`;
     panel.innerHTML = html;
     return;
   }
@@ -1136,9 +1157,7 @@ async function renderDedicatedDashboard(vKey) {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { 
-          legend: { display: false }
-        },
+        plugins: { legend: { display: false } },
         scales: {
           x: { ticks: { color: '#7C8CA3', font: { size: 10 } }, grid: { display: false } },
           y: { beginAtZero: true, ticks: { color: '#7C8CA3', stepSize: 1 }, grid: { color: '#203859' } }
@@ -1197,19 +1216,14 @@ function handleUpload(evt, tab){
         return;
       }
       
-      showToast('গুগল শিটে ডাটা সিঙ্ক হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...');
+      showToast('গুগল শিটে ডাটা পাঠানো হচ্ছে, অনুগ্রহ করে একটু অপেক্ষা করুন...');
       
-      await fetch(WEB_APP_URL + "?vertical=" + tab, {
+      const response = await fetch(WEB_APP_URL + "?vertical=" + tab, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rows: json2D })
       });
       
-      await storageSet(VERTICALS[tab].key, rows);
-      await storageSet(VERTICALS[tab].rawKey, jsonObjects);
-      
-      showToast(`সফলভাবে গুগল শিটে ডাটা আপলোড সম্পন্ন হয়েছে।`);
+      showToast(`সফলভাবে গুগল শিটে ডাটা ওভাররাইট সম্পন্ন হয়েছে।`);
       renderVerticalPanel(tab);
     }catch(err){
       console.error(err);
@@ -1260,26 +1274,18 @@ function parseScoreRows(json){
   return rows;
 }
 async function removeAgentRow(tab, encodedName){
-  const name = decodeURIComponent(encodedName);
-  const rows = (await storageGet(VERTICALS[tab].key)) || [];
-  const updated = rows.filter(r=> r.agent !== name);
-  await storageSet(VERTICALS[tab].key, updated);
-  renderVerticalPanel(tab);
+  showToast('Removing agent updates is disabled for live integrity.');
 }
 async function clearVertical(tab){
-  if(!confirm(VERTICALS[tab].label + '-এর সম্পূর্ণ গ্রিড ডাটা মুছে ফেলতে চান?')) return;
-  await storageSet(VERTICALS[tab].key, []);
-  await storageSet(VERTICALS[tab].rawKey, []);
-  renderVerticalPanel(tab);
+  showToast('Clear action restricted to protect master Google sheet.');
 }
 async function updateLoginAgentCount(){
-  let total = new Set();
-  for(const k of Object.keys(VERTICALS)){
-    const rows = await storageGet(VERTICALS[k].key);
-    if(rows) rows.forEach(r=> total.add(r.agent));
-  }
+  let count = 0;
+  Object.keys(rawDataCache).forEach(k => {
+    if(rawDataCache[k]) count += rawDataCache[k].length;
+  });
   const el = document.getElementById('loginStatAgents');
-  if(el && total.size) el.textContent = total.size;
+  if(el && count) el.textContent = count;
 }
 /* ===================== UPDATE LOGS CORNER ===================== */
 async function loadUpdates(){
@@ -1306,19 +1312,28 @@ async function addUpdate(){
   const title = document.getElementById('updTitle').value.trim();
   const body = document.getElementById('updBody').value.trim();
   if(!title || !body){ showToast('Title and Description are required.'); return; }
+  
+  showToast('Saving announcement to WEBPAGEDATA...');
   const list = (await storageGet('updates')) || [];
   list.push({ id: Date.now(), title, body, date: new Date().toLocaleDateString('en-GB') });
-  await storageSet('updates', list);
-  document.getElementById('updTitle').value = '';
-  document.getElementById('updBody').value = '';
-  renderUpdates(list);
-  showToast('Notice posted');
+  
+  const success = await storageSet('updates', list);
+  if(success) {
+    document.getElementById('updTitle').value = '';
+    document.getElementById('updBody').value = '';
+    renderUpdates(list);
+    showToast('Notice posted directly to Google Sheets!');
+  }
 }
 async function deleteUpdate(id){
+  showToast('Processing delete from sheet...');
   let list = (await storageGet('updates')) || [];
   list = list.filter(u=> u.id !== id);
-  await storageSet('updates', list);
-  renderUpdates(list);
+  const success = await storageSet('updates', list);
+  if(success) {
+    renderUpdates(list);
+    showToast('Notice removed successfully.');
+  }
 }
 /* ===================== SYSTEM INITIALIZATION ===================== */
 updateLoginAgentCount();
