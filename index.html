@@ -619,12 +619,10 @@ input[type=file]{display:none;}
   </div>
 </div>
 <div class="toast" id="toast"></div>
-
 <script>
 /* ===================== CREDENTIALS & GOOGLE API CONFIG ===================== */
 const CREDENTIALS = { agent: 'agent@123', admin: 'admin@123' };
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-WcdO5o1DWzylaVNxkQ6DmB-42E7MdaG3i2NS8EPmQ-LVxFEHrYTv68NW9cpDpd27Lg/exec";
-
 const VERTICALS = {
   CATV: { label: 'CATV', key: 'scores:CATV', rawKey: 'raw:CATV', dashId: 'DASH-CATV' },
   BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH', dashId: 'DASH-BBTECH' },
@@ -637,7 +635,6 @@ let bannerTimer = null;
 let bannerIndex = 0;
 let chartInstances = {};
 const rawDataCache = {};
-
 /* ===================== LIVE SYSTEM CLOCK ===================== */
 function startLiveClock() {
   setInterval(() => {
@@ -647,13 +644,12 @@ function startLiveClock() {
   }, 1000);
 }
 startLiveClock();
-
 /* ===================== FORMATTING HELPERS ===================== */
 function autoFormatCellValue(val, columnName) {
   if (val === undefined || val === null || val === '') return '';
   const colLower = columnName.toLowerCase();
   
-  if (colLower.includes('date')) {
+  if (colLower.includes('date') || colLower.includes('তারিখ')) {
     if (!isNaN(val) && Number(val) > 30000) {
       const date = new Date((Number(val) - 25569) * 86400 * 1000);
       return date.toLocaleDateString('en-GB');
@@ -661,7 +657,7 @@ function autoFormatCellValue(val, columnName) {
     return val;
   }
   
-  if (colLower.includes('time')) {
+  if (colLower.includes('time') || colLower.includes('সময়')) {
     if (!isNaN(val) && Number(val) < 1 && Number(val) >= 0) {
       let totalSeconds = Math.round(Number(val) * 86400);
       let hours = Math.floor(totalSeconds / 3600);
@@ -684,7 +680,6 @@ function autoFormatCellValue(val, columnName) {
   }
   return val;
 }
-
 /* ===================== STORAGE & TOAST LOGIC ===================== */
 async function storageGet(key){
   try{
@@ -705,7 +700,6 @@ function showToast(msg){
   clearTimeout(t._timer);
   t._timer = setTimeout(()=> t.style.display='none', 2600);
 }
-
 /* ===================== LOGIN SYSTEMS ===================== */
 function selectRole(role){
   selectedRole = role;
@@ -751,11 +745,10 @@ async function enterApp(){
   switchTab('CATV');
   await loadUpdates();
 }
-
 /* ===================== TICKER SYSTEMS ===================== */
 async function loadTicker(){
   const data = await storageGet('ticker');
-  const text = (data && data.text) ? data.text : 'CATV, BB Tech Support ও BB Renewal-এর লাইভ কোয়ালিটি কন্ট্রোল রুম ও রিয়েল-টাইম ড্যাশবোর্ড ট্র্যাকিং সিস্টেমে স্বাগতম।';
+  const text = (data && data.text) ? data.text : 'CATV, BB Tech Support ও BB Renewal-এর লাইভ কোয়ালিটি কন্ট্রোল রুম ও রিয়েল-টাইম ড্যাশবোর্ড ট্র্যাকিং系统中 স্বাগতম।';
   document.getElementById('tickerTrack').textContent = text;
   document.getElementById('tickerInput').value = text;
 }
@@ -766,7 +759,6 @@ async function saveTicker(){
   document.getElementById('tickerTrack').textContent = text;
   showToast('Ticker updated successfully');
 }
-
 /* ===================== BANNER CORNER ===================== */
 function defaultBanners(){
   const arr = [];
@@ -837,7 +829,6 @@ async function saveBanners(){
   renderBanners(banners);
   showToast('Banners matching completely saved');
 }
-
 /* ===================== NAVIGATION & TABS ===================== */
 function switchTab(tab){
   currentTab = tab;
@@ -861,23 +852,19 @@ function statusFor(score){
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
-
 /* ===================== RENDER SHEETS WITH GOOGLE SHEET API ===================== */
 async function renderVerticalPanel(tab){
   const meta = VERTICALS[tab];
   const panel = document.getElementById('panel-'+tab);
   const isAdmin = currentRole === 'admin';
   
-  // ১. সাময়িক লোডিং স্ক্রিন
   panel.innerHTML = `
     <div class="panel-header">
       <div><h1>${meta.label} Sheet Logs</h1><p>গুগল শিট থেকে লাইভ ডাটা লোড হচ্ছে...</p></div>
     </div>
     <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
-
   let json = [];
   try {
-    // গুগল শিট থেকে লাইভ রিড করা হচ্ছে
     const response = await fetch(WEB_APP_URL + "?vertical=" + tab);
     const data = await response.json();
     if (Array.isArray(data) && data.length > 0) {
@@ -894,11 +881,9 @@ async function renderVerticalPanel(tab){
     console.error("Google Sheets fetch failed, fallback to local:", err);
     json = (await storageGet(meta.rawKey)) || [];
   }
-
   rawDataCache[tab] = json;
   const rows = parseScoreRows(json);
   updateLoginAgentCount();
-
   let html = `
     <div class="panel-header">
       <div><h1>${meta.label} Sheet Logs</h1><p>গুগল শিট ডাটাবেস এন্ট্রি এবং এজেন্ট কোয়ালিটি লগ রিপোর্ট।</p></div>
@@ -965,7 +950,6 @@ async function renderVerticalPanel(tab){
   drawChart(tab, rows);
   renderRawSection(tab);
 }
-
 /* ===================== CALL-LEVEL LOGS DETAIL ===================== */
 async function renderRawSection(tab){
   const raw = rawDataCache[tab] || [];
@@ -981,8 +965,9 @@ function buildRawSectionHtml(tab, raw, filterValue){
   const agentNames = nameKey ? Array.from(new Set(raw.map(r=> String(r[nameKey]).trim()).filter(Boolean))).sort() : [];
   const filtered = (filterValue && nameKey) ? raw.filter(r=> String(r[nameKey]).trim() === filterValue) : raw;
   const linkKey = keys.find(k=> /call\s*link|recording|audio/i.test(k));
-  const dateKey = keys.find(k=> /date/i.test(k));
-  const timeKey = keys.find(k=> /time/i.test(k));
+  const dateKey = keys.find(k=> /date|তারিখ/i.test(k));
+  const timeKey = keys.find(k=> /time|সময়/i.test(k));
+  const scoreKey = keys.find(k=> /score|স্কোর/i.test(k));
   
   return `
     <div class="panel-header" style="margin-top:32px;">
@@ -1001,6 +986,7 @@ function buildRawSectionHtml(tab, raw, filterValue){
           ${filtered.map((r, rIdx)=> `<tr>${keys.map(c=>{
             let originalVal = r[c];
             let val = autoFormatCellValue(originalVal, c);
+            let cLower = c.toLowerCase();
             
             if(c===linkKey && originalVal){
               let agentName = nameKey ? r[nameKey] : 'Unknown';
@@ -1014,6 +1000,20 @@ function buildRawSectionHtml(tab, raw, filterValue){
                 </button>
               </td>`;
             }
+            
+            // Colorful styling for columns
+            if(c===dateKey && val) {
+              return `<td style="color: var(--agent); font-weight: 600;"><span style="background: rgba(51,201,176,0.1); padding: 4px 8px; border-radius: 6px;">📅 ${escapeHtml(val)}</span></td>`;
+            }
+            if(c===timeKey && val) {
+              return `<td style="color: var(--admin); font-weight: 600;"><span style="background: rgba(227,168,87,0.1); padding: 4px 8px; border-radius: 6px;">⏰ ${escapeHtml(val)}</span></td>`;
+            }
+            if(c===scoreKey && val !== '') {
+              let num = parseFloat(val);
+              let clr = !isNaN(num) ? (num >= 95 ? 'var(--excellent)' : (num >= 85 ? 'var(--good)' : 'var(--need)')) : 'var(--text)';
+              return `<td style="color: ${clr}; font-weight: 700; font-family:'IBM Plex Mono', monospace;">${escapeHtml(val)}%</td>`;
+            }
+            
             return `<td>${escapeHtml(val===null||val===undefined? '' : val)}</td>`;
           }).join('')}</tr>`).join('')}
         </tbody>
@@ -1026,7 +1026,6 @@ function applyRawFilter(tab){
   const raw = rawDataCache[tab] || [];
   document.getElementById('rawSection-' + tab).innerHTML = buildRawSectionHtml(tab, raw, val);
 }
-
 /* ===================== FLOATING AUDIO PLAYER ===================== */
 function openAudioPlayerBar(link, agent, details) {
   document.getElementById('playerAgentName').textContent = "Agent Name: " + agent;
@@ -1047,7 +1046,6 @@ function closePlayerBar() {
   audio.src = "";
   document.getElementById('globalAudioPlayerBar').classList.remove('active');
 }
-
 /* ===================== LIVE DASHBOARDS (AUTO SYNC) ===================== */
 async function renderDedicatedDashboard(vKey) {
   const meta = VERTICALS[vKey];
@@ -1066,7 +1064,7 @@ async function renderDedicatedDashboard(vKey) {
   }
   
   const keys = Object.keys(raw[0]);
-  const nonParamKeywords = ['name','associate','agent','date','time','duration','link','audio','recording','comment','remark','status','audit','score','total'];
+  const nonParamKeywords = ['name','associate','agent','date','time','duration','link','audio','recording','comment','remark','status','audit','score','total','sl','id','তারিখ','সময়','নাম','স্কোর'];
   const paramKeys = keys.filter(k => {
     const kl = k.toLowerCase();
     return !nonParamKeywords.some(kw => kl.includes(kw)) && k.trim().length > 0;
@@ -1077,9 +1075,11 @@ async function renderDedicatedDashboard(vKey) {
   
   raw.forEach(row => {
     paramKeys.forEach(p => {
-      const val = String(row[p]).trim().toLowerCase();
-      if(val === '0' || val === 'fail' || val === 'no' || val === 'non-compliant' || val === 'nc') {
-        failCounts[p]++;
+      if(row[p] !== undefined && row[p] !== null) {
+        const val = String(row[p]).trim().toLowerCase();
+        if(val === '0' || val === 'fail' || val === 'no' || val === 'non-compliant' || val === 'nc' || val === 'incorrect') {
+          failCounts[p]++;
+        }
       }
     });
   });
@@ -1101,7 +1101,7 @@ async function renderDedicatedDashboard(vKey) {
             return `
               <div class="parameter-card">
                 <div class="param-info">
-                  <span style="font-weight:600; color:#EAF0F6; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(p)}</span>
+                  <span style="font-weight:600; color:#EAF0F6; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeAttr(p)}">${escapeHtml(p)}</span>
                   <span style="color:var(--need); font-weight:bold;">${count} Fails (${percentage}%)</span>
                 </div>
                 <div class="param-bar-bg">
@@ -1121,32 +1121,32 @@ async function renderDedicatedDashboard(vKey) {
     if(chartInstances[`dash-${vKey}`]) chartInstances[`dash-${vKey}`].destroy();
     
     chartInstances[`dash-${vKey}`] = new Chart(ctx, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels: paramKeys.map(p => p.length > 15 ? p.substring(0,15)+'...' : p),
         datasets: [{
           label: 'Total Fail Count',
           data: paramKeys.map(p => failCounts[p]),
+          backgroundColor: 'rgba(224, 82, 74, 0.7)',
           borderColor: '#E0524A',
-          backgroundColor: 'rgba(224, 82, 74, 0.2)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.3,
-          pointBackgroundColor: '#E0524A'
+          borderWidth: 1.5,
+          borderRadius: 4,
+          maxBarThickness: 30
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { 
+          legend: { display: false }
+        },
         scales: {
-          x: { ticks: { color: '#7C8CA3', font: { size: 9 } }, grid: { display: false } },
+          x: { ticks: { color: '#7C8CA3', font: { size: 10 } }, grid: { display: false } },
           y: { beginAtZero: true, ticks: { color: '#7C8CA3', stepSize: 1 }, grid: { color: '#203859' } }
         }
       }
     });
   }, 50);
 }
-
 /* ===================== STANDARD CHART GRAPH ===================== */
 function drawChart(tab, rows){
   const ctx = document.getElementById('chart-'+tab);
@@ -1178,7 +1178,6 @@ function drawChart(tab, rows){
     }
   });
 }
-
 /* ===================== EXCEL UPLOAD AND SEND TO GOOGLE SHEET ===================== */
 function handleUpload(evt, tab){
   const file = evt.target.files[0];
@@ -1200,7 +1199,6 @@ function handleUpload(evt, tab){
       
       showToast('গুগল শিটে ডাটা সিঙ্ক হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...');
       
-      // গুগল শিটে ডাটা POST করার এপিআই কল
       await fetch(WEB_APP_URL + "?vertical=" + tab, {
         method: "POST",
         mode: "no-cors",
@@ -1208,7 +1206,6 @@ function handleUpload(evt, tab){
         body: JSON.stringify({ rows: json2D })
       });
       
-      // লোকাল ক্যাশে ব্যাকআপ সেভ
       await storageSet(VERTICALS[tab].key, rows);
       await storageSet(VERTICALS[tab].rawKey, jsonObjects);
       
@@ -1222,18 +1219,16 @@ function handleUpload(evt, tab){
   reader.readAsBinaryString(file);
   evt.target.value = '';
 }
-
 function detectColumnKeys(keys){
   const nameKey = keys.find(k=> /^\s*(associate|agent)\s*name\s*$/i.test(k))
     || keys.find(k=> /associate|agent/i.test(k) && /name/i.test(k))
-    || keys.find(k=> /name/i.test(k));
+    || keys.find(k=> /name|নাম/i.test(k));
   const countKey = keys.find(k=> /\baudit\b/i.test(k) && /\bcount\b/i.test(k))
     || keys.find(k=> /^\s*(audit\s*)?count\s*$/i.test(k));
   const scoreKey = keys.find(k=> /^\s*scores?\s*$/i.test(k))
-    || keys.find(k=> /score/i.test(k));
+    || keys.find(k=> /score|স্কোর/i.test(k));
   return { nameKey, countKey, scoreKey };
 }
-
 function parseScoreRows(json){
   if(!json.length) return [];
   const keys = Object.keys(json[0]);
@@ -1264,7 +1259,6 @@ function parseScoreRows(json){
   });
   return rows;
 }
-
 async function removeAgentRow(tab, encodedName){
   const name = decodeURIComponent(encodedName);
   const rows = (await storageGet(VERTICALS[tab].key)) || [];
@@ -1287,7 +1281,6 @@ async function updateLoginAgentCount(){
   const el = document.getElementById('loginStatAgents');
   if(el && total.size) el.textContent = total.size;
 }
-
 /* ===================== UPDATE LOGS CORNER ===================== */
 async function loadUpdates(){
   const list = (await storageGet('updates')) || [];
@@ -1327,7 +1320,6 @@ async function deleteUpdate(id){
   await storageSet('updates', list);
   renderUpdates(list);
 }
-
 /* ===================== SYSTEM INITIALIZATION ===================== */
 updateLoginAgentCount();
 </script>
