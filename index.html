@@ -38,7 +38,6 @@ body{
 }
 .mono{font-family:'IBM Plex Mono',monospace;}
 .display{font-family:'Space Grotesk',sans-serif;}
-
 /* ---------- LOGIN SCREEN ---------- */
 #loginScreen{
   display:flex;
@@ -215,7 +214,6 @@ body{
   line-height:1.7;
 }
 .login-demo b{color:var(--text);}
-
 /* ---------- MAIN APP ---------- */
 #mainScreen{display:none;min-height:100vh;flex-direction:column;}
 header.topbar{
@@ -236,7 +234,6 @@ header.topbar{
 }
 .logo-text{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;}
 .logo-text small{display:block;font-size:10px;color:var(--text-muted);font-weight:500;letter-spacing:1.5px;}
-
 .ticker{
   flex:1;
   overflow:hidden;
@@ -282,7 +279,6 @@ header.topbar{
   font-family:'Inter',sans-serif;
 }
 .logout-btn:hover{border-color:var(--need);color:var(--need);}
-
 /* Live Header Clock Style */
 .global-clock-wrap{
   display:flex;
@@ -300,7 +296,6 @@ header.topbar{
   width:6px;height:6px;border-radius:50%;background:var(--agent);
   animation:pulse 2s infinite;
 }
-
 /* Banner carousel */
 .banner-wrap{
   margin:18px 24px 0 24px;
@@ -333,7 +328,6 @@ header.topbar{
   width:7px;height:7px;border-radius:50%;background:var(--border);cursor:pointer;
 }
 .banner-dots span.active{background:var(--agent);}
-
 /* layout */
 .body-layout{display:flex;flex:1;gap:0;margin-top:18px;}
 aside.sidebar{
@@ -366,11 +360,9 @@ aside.sidebar{
 }
 .nav-item.active .dot{background:var(--agent);}
 .nav-item.dashboard-tab.active .dot{background:var(--admin);}
-
 main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 .panel{display:none;}
 .panel.active{display:block;}
-
 .panel-header{
   display:flex;justify-content:space-between;align-items:flex-end;
   margin-bottom:18px;flex-wrap:wrap;gap:12px;
@@ -379,7 +371,6 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 }
 .panel-header h1{font-family:'Space Grotesk',sans-serif;font-size:22px;}
 .panel-header p{color:var(--text-muted);font-size:13px;margin-top:4px;}
-
 .btn{
   padding:9px 16px;border-radius:8px;border:1px solid var(--border);
   background:var(--surface-2);color:var(--text);font-size:12.5px;font-weight:600;
@@ -392,7 +383,6 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 .btn.danger{color:var(--need);border-color:rgba(224,82,74,0.3);}
 .btn.danger:hover{background:rgba(224,82,74,0.1);border-color:var(--need);}
 .btn.small{padding:5px 10px;font-size:11.5px;border-radius:6px;}
-
 /* summary cards */
 .stat-row{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
 .stat-card{
@@ -406,12 +396,10 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 .stat-card .value{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;}
 .stat-card .value.gold{color:var(--admin);}
 .stat-card .value.teal{color:var(--agent);}
-
 .chart-box{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:18px;margin-bottom:22px;height:280px;
 }
-
 /* Beautiful Data Table Styles */
 .table-wrapper {
   overflow:hidden;
@@ -433,7 +421,6 @@ table.score-table td{
 }
 table.score-table tr:last-child td{border-bottom:none;}
 table.score-table tr:hover td{background:rgba(255,255,255,0.02);}
-
 .badge{
   padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;
 }
@@ -442,13 +429,11 @@ table.score-table tr:hover td{background:rgba(255,255,255,0.02);}
 .badge.good{background:#2A250E;color:var(--good);border:1px solid rgba(224,195,65,0.3);}
 .badge.average{background:#2D1C0E;color:var(--average);border:1px solid rgba(224,138,63,0.3);}
 .badge.need{background:#2D1212;color:var(--need);border:1px solid rgba(224,82,74,0.3);}
-
 .empty-state{
   border:1px dashed var(--border);border-radius:var(--radius);
   padding:50px 20px;text-align:center;color:var(--text-muted);background:var(--surface);
 }
 .empty-state b{display:block;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;margin-bottom:6px;}
-
 /* admin upload box */
 .upload-box{
   border:1px dashed var(--border);border-radius:var(--radius);
@@ -458,7 +443,6 @@ table.score-table tr:hover td{background:rgba(255,255,255,0.02);}
 .upload-box .txt b{display:block;font-family:'Space Grotesk',sans-serif;font-size:14px;margin-bottom:4px;}
 .upload-box .txt span{color:var(--text-muted);font-size:12px;display:block;max-width:700px;}
 input[type=file]{display:none;}
-
 /* Parameter Breakdown Style */
 .parameter-card{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
@@ -467,7 +451,6 @@ input[type=file]{display:none;}
 .param-info{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
 .param-bar-bg{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;}
 .param-bar-fill{height:100%;background:linear-gradient(90deg, var(--average), var(--need));border-radius:4px;}
-
 /* updates panel */
 .update-form{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
@@ -486,7 +469,6 @@ input[type=file]{display:none;}
 .update-card .u-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14.5px;}
 .update-card .u-date{font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;}
 .update-card .u-body{font-size:13px;color:#C7D2E0;line-height:1.6;}
-
 /* Floating Audio Player Design */
 .floating-player{
   position:fixed;bottom:0;left:0;right:0;
@@ -501,7 +483,6 @@ input[type=file]{display:none;}
 .audio-controls-wrap{flex:1;display:flex;align-items:center;gap:12px;max-width:700px;}
 .audio-controls-wrap audio{width:100%;height:36px;accent-color:var(--agent);}
 .player-actions{display:flex;align-items:center;gap:10px;}
-
 .toast{
   position:fixed;bottom:20px;right:20px;
   background:var(--surface-2);border:1px solid var(--agent);color:var(--text);
@@ -513,7 +494,6 @@ input[type=file]{display:none;}
 </style>
 </head>
 <body>
-
 <!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
   <div class="login-brand">
@@ -546,7 +526,6 @@ input[type=file]{display:none;}
     </div>
   </div>
 </div>
-
 <!-- ============ MAIN APP ============ -->
 <div id="mainScreen">
   <header class="topbar">
@@ -558,7 +537,6 @@ input[type=file]{display:none;}
       <div class="ticker-track mono" id="tickerTrack">Loading updates...</div>
     </div>
     <div class="user-block">
-      <!-- Live Clock Added on Top header for all screens -->
       <div class="global-clock-wrap">
         <span class="dot"></span>
         <span id="globalLiveClock">--:--:--</span>
@@ -567,9 +545,7 @@ input[type=file]{display:none;}
       <button class="logout-btn" onclick="doLogout()">Logout</button>
     </div>
   </header>
-
   <div class="banner-wrap" id="bannerWrap"></div>
-
   <div class="body-layout">
     <aside class="sidebar" id="sidebar">
       <div class="nav-label">Data Sheets</div>
@@ -577,7 +553,6 @@ input[type=file]{display:none;}
       <div class="nav-item" data-tab="BBTECH" onclick="switchTab('BBTECH')"><span class="dot"></span>BB Tech Support</div>
       <div class="nav-item" data-tab="BBRENEWAL" onclick="switchTab('BBRENEWAL')"><span class="dot"></span>BB Renewal Data</div>
       
-      <!-- Dedicated Dashboard Tabs Auto Updated -->
       <div class="nav-label">Live Dashboards</div>
       <div class="nav-item dashboard-tab" data-tab="DASH-CATV" onclick="switchTab('DASH-CATV')"><span class="dot"></span>CATV Dashboard</div>
       <div class="nav-item dashboard-tab" data-tab="DASH-BBTECH" onclick="switchTab('DASH-BBTECH')"><span class="dot"></span>BB Tech Dashboard</div>
@@ -587,18 +562,15 @@ input[type=file]{display:none;}
       <div class="nav-item" data-tab="UPDATES" onclick="switchTab('UPDATES')"><span class="dot"></span>New Update</div>
       <div class="nav-item admin-only" data-tab="ADMIN" onclick="switchTab('ADMIN')" style="display:none;"><span class="dot"></span>Admin Panel</div>
     </aside>
-
     <main class="content">
       <!-- Data sheets panels -->
       <div class="panel active" id="panel-CATV" data-vertical="CATV"></div>
       <div class="panel" id="panel-BBTECH" data-vertical="BBTECH"></div>
       <div class="panel" id="panel-BBRENEWAL" data-vertical="BBRENEWAL"></div>
-
       <!-- Dedicated Dashboards panels -->
       <div class="panel" id="panel-DASH-CATV"></div>
       <div class="panel" id="panel-DASH-BBTECH"></div>
       <div class="panel" id="panel-DASH-BBRENEWAL"></div>
-
       <!-- Updates panel -->
       <div class="panel" id="panel-UPDATES">
         <div class="panel-header">
@@ -611,7 +583,6 @@ input[type=file]{display:none;}
         </div>
         <div id="updatesList"></div>
       </div>
-
       <!-- Admin panel -->
       <div class="panel" id="panel-ADMIN">
         <div class="panel-header">
@@ -633,7 +604,6 @@ input[type=file]{display:none;}
     </main>
   </div>
 </div>
-
 <!-- Floating Custom Recording Player Bar -->
 <div class="floating-player" id="globalAudioPlayerBar">
   <div class="player-details">
@@ -648,19 +618,18 @@ input[type=file]{display:none;}
     <button class="btn small danger" onclick="closePlayerBar()">✕ Close</button>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-/* ===================== CREDENTIALS ===================== */
+/* ===================== CREDENTIALS & GOOGLE API CONFIG ===================== */
 const CREDENTIALS = { agent: 'agent@123', admin: 'admin@123' };
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-WcdO5o1DWzylaVNxkQ6DmB-42E7MdaG3i2NS8EPmQ-LVxFEHrYTv68NW9cpDpd27Lg/exec";
 
 const VERTICALS = {
   CATV: { label: 'CATV', key: 'scores:CATV', rawKey: 'raw:CATV', dashId: 'DASH-CATV' },
   BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH', dashId: 'DASH-BBTECH' },
   BBRENEWAL: { label: 'BB Renewal', key: 'scores:BBRENEWAL', rawKey: 'raw:BBRENEWAL', dashId: 'DASH-BBRENEWAL' }
 };
-
 let currentRole = null;
 let selectedRole = 'agent';
 let currentTab = 'CATV';
@@ -679,21 +648,19 @@ function startLiveClock() {
 }
 startLiveClock();
 
-/* ===================== FORMATTING HELPERS (Date, Time, Duration) ===================== */
+/* ===================== FORMATTING HELPERS ===================== */
 function autoFormatCellValue(val, columnName) {
   if (val === undefined || val === null || val === '') return '';
   const colLower = columnName.toLowerCase();
   
-  // 1. Convert Excel Serial Date to standard Date format
   if (colLower.includes('date')) {
     if (!isNaN(val) && Number(val) > 30000) {
       const date = new Date((Number(val) - 25569) * 86400 * 1000);
-      return date.toLocaleDateString('en-GB'); // DD/MM/YYYY
+      return date.toLocaleDateString('en-GB');
     }
     return val;
   }
   
-  // 2. Convert Excel Time decimal fractions to HH:MM:SS format
   if (colLower.includes('time')) {
     if (!isNaN(val) && Number(val) < 1 && Number(val) >= 0) {
       let totalSeconds = Math.round(Number(val) * 86400);
@@ -705,12 +672,10 @@ function autoFormatCellValue(val, columnName) {
     }
     return val;
   }
-
-  // 3. Convert Call Duration to MM:SS or human readable clean format
   if (colLower.includes('duration')) {
     if (!isNaN(val)) {
       let sec = Math.round(Number(val));
-      if (Number(val) < 1 && Number(val) > 0) sec = Math.round(Number(val) * 86400); // fraction duration check
+      if (Number(val) < 1 && Number(val) > 0) sec = Math.round(Number(val) * 86400);
       let m = Math.floor(sec / 60);
       let s = sec % 60;
       return `${m}:${String(s).padStart(2, '0')}`;
@@ -720,7 +685,7 @@ function autoFormatCellValue(val, columnName) {
   return val;
 }
 
-/* ===================== STORAGE LOGIC ===================== */
+/* ===================== STORAGE & TOAST LOGIC ===================== */
 async function storageGet(key){
   try{
     const res = await window.storage.get(key, true);
@@ -752,7 +717,6 @@ function selectRole(role){
   btn.textContent = role === 'admin' ? 'Enter as Admin' : 'Enter as Agent';
   document.getElementById('loginError').textContent = '';
 }
-
 function doLogin(){
   const pass = document.getElementById('loginPassword').value.trim();
   const errBox = document.getElementById('loginError');
@@ -765,7 +729,6 @@ function doLogin(){
   currentRole = selectedRole;
   enterApp();
 }
-
 function doLogout(){
   currentRole = null;
   document.getElementById('mainScreen').style.display = 'none';
@@ -774,7 +737,6 @@ function doLogout(){
   if(bannerTimer) clearInterval(bannerTimer);
   closePlayerBar();
 }
-
 async function enterApp(){
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('mainScreen').style.display = 'flex';
@@ -876,7 +838,7 @@ async function saveBanners(){
   showToast('Banners matching completely saved');
 }
 
-/* ===================== SWITCHING NAVIGATION TABS ===================== */
+/* ===================== NAVIGATION & TABS ===================== */
 function switchTab(tab){
   currentTab = tab;
   document.querySelectorAll('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.tab===tab));
@@ -890,7 +852,6 @@ function switchTab(tab){
     renderDedicatedDashboard(vKey);
   }
 }
-
 function statusFor(score){
   if(score>=99) return {cls:'top', label:'🏆 TOP PERFORMER'};
   if(score>=95) return {cls:'excellent', label:'🟢 EXCELLENT'};
@@ -901,28 +862,57 @@ function statusFor(score){
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
 
-/* ===================== RENDER SHEETS WITH IMMACULATE LAYOUT ===================== */
+/* ===================== RENDER SHEETS WITH GOOGLE SHEET API ===================== */
 async function renderVerticalPanel(tab){
   const meta = VERTICALS[tab];
   const panel = document.getElementById('panel-'+tab);
-  const rows = (await storageGet(meta.key)) || [];
+  const isAdmin = currentRole === 'admin';
+  
+  // ১. সাময়িক লোডিং স্ক্রিন
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>${meta.label} Sheet Logs</h1><p>গুগল শিট থেকে লাইভ ডাটা লোড হচ্ছে...</p></div>
+    </div>
+    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+
+  let json = [];
+  try {
+    // গুগল শিট থেকে লাইভ রিড করা হচ্ছে
+    const response = await fetch(WEB_APP_URL + "?vertical=" + tab);
+    const data = await response.json();
+    if (Array.isArray(data) && data.length > 0) {
+      const headers = data[0];
+      json = data.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((h, i) => {
+          obj[h] = row[i] !== undefined ? row[i] : '';
+        });
+        return obj;
+      });
+    }
+  } catch (err) {
+    console.error("Google Sheets fetch failed, fallback to local:", err);
+    json = (await storageGet(meta.rawKey)) || [];
+  }
+
+  rawDataCache[tab] = json;
+  const rows = parseScoreRows(json);
   updateLoginAgentCount();
 
-  const isAdmin = currentRole === 'admin';
   let html = `
     <div class="panel-header">
-      <div><h1>${meta.label} Sheet Logs</h1><p>অডিট ডাটাবেস এন্ট্রি এবং এজেন্ট কোয়ালিটি লগ রিপোর্ট।</p></div>
+      <div><h1>${meta.label} Sheet Logs</h1><p>গুগল শিট ডাটাবেস এন্ট্রি এবং এজেন্ট কোয়ালিটি লগ রিপোর্ট।</p></div>
       <div style="display:flex;gap:10px;">
-        <button class="btn" onclick="renderVerticalPanel('${tab}')">↻ Refresh Data</button>
+        <button class="btn" onclick="renderVerticalPanel('${tab}')">↻ Refresh Live Data</button>
       </div>
     </div>`;
-
+    
   if(isAdmin){
     html += `
     <div class="upload-box">
       <div class="txt">
         <b>Excel ফাইল আপলোড করুন (${meta.label})</b>
-        <span>কল লেভেল র-ডাটা শিট (Associate Name, Call Link, Date, Time, Duration এবং প্যারামিটার যুক্ত কলাম) আপলোড করুন। স্বয়ংক্রিয়ভাবে সব ক্যালকুলেশন ও ড্যাশবোর্ড আপডেট হয়ে যাবে।</span>
+        <span>কল লেভেল র-ডাটা শিট (Associate Name, Call Link, Date, Time, Duration এবং প্যারামিটার যুক্ত কলাম) আপলোড করুন। এটি সরাসরি গুগল শিটে যুক্ত হয়ে যাবে।</span>
       </div>
       <div style="display:flex;gap:8px;">
         <label class="btn gold" for="file-${tab}">📂 Upload Excel</label>
@@ -931,18 +921,17 @@ async function renderVerticalPanel(tab){
       </div>
     </div>`;
   }
-
   if(!rows.length){
-    html += `<div class="empty-state"><b>কোনো ডাটা রেকর্ড খুঁজে পাওয়া যায়নি</b>${isAdmin ? 'ড্যাশবোর্ড সচল করতে দয়া করে এক্সেল শিট আপলোড করুন।' : 'অ্যাডমিন প্যানেল থেকে এখনো এই শিট আপলোড করা হয়নি।'}</div>`;
+    html += `<div class="empty-state"><b>কোনো ডাটা রেকর্ড খুঁজে পাওয়া যায়নি</b>${isAdmin ? 'ড্যাশবোর্ড সচল করতে দয়া করে এক্সেল শিট আপলোড করুন।' : 'গুগল শিটে এখনো কোনো ডাটা উপলব্ধ নেই।'}</div>`;
     panel.innerHTML = html;
     return;
   }
-
+  
   const totalAudits = rows.reduce((s,r)=> s + (Number(r.auditCount)||0), 0);
   const avgScore = (rows.reduce((s,r)=> s + (Number(r.avgScore)||0), 0) / rows.length).toFixed(1);
   const top = rows.slice().sort((a,b)=> b.avgScore - a.avgScore)[0];
   const needCount = rows.filter(r=> r.avgScore < 85).length;
-
+  
   html += `
     <div class="stat-row">
       <div class="stat-card"><div class="label">Total Agents</div><div class="value">${rows.length}</div></div>
@@ -971,36 +960,33 @@ async function renderVerticalPanel(tab){
         </tbody>
       </table>
     </div>`;
-
+    
   panel.innerHTML = html;
   drawChart(tab, rows);
   renderRawSection(tab);
 }
 
-/* ===================== CALL-LEVEL LOGS & CUSTOM FLOATING PLAYER ===================== */
+/* ===================== CALL-LEVEL LOGS DETAIL ===================== */
 async function renderRawSection(tab){
-  const raw = (await storageGet(VERTICALS[tab].rawKey)) || [];
-  rawDataCache[tab] = raw;
+  const raw = rawDataCache[tab] || [];
   const holder = document.createElement('div');
   holder.id = 'rawSection-' + tab;
   holder.innerHTML = buildRawSectionHtml(tab, raw, '');
   document.getElementById('panel-' + tab).appendChild(holder);
 }
-
 function buildRawSectionHtml(tab, raw, filterValue){
   if(!raw.length) return '';
   const keys = Object.keys(raw[0]);
   const { nameKey } = detectColumnKeys(keys);
   const agentNames = nameKey ? Array.from(new Set(raw.map(r=> String(r[nameKey]).trim()).filter(Boolean))).sort() : [];
   const filtered = (filterValue && nameKey) ? raw.filter(r=> String(r[nameKey]).trim() === filterValue) : raw;
-
   const linkKey = keys.find(k=> /call\s*link|recording|audio/i.test(k));
   const dateKey = keys.find(k=> /date/i.test(k));
   const timeKey = keys.find(k=> /time/i.test(k));
-
+  
   return `
     <div class="panel-header" style="margin-top:32px;">
-      <div><h1>Call-Level Logs Detail (Full Sheet View)</h1><p>এক্সেল ফাইলের প্রতিটি কল রো ফরম্যাট কনভার্সন সহ নিখুঁতভাবে নিচে সাজানো হয়েছে।</p></div>
+      <div><h1>Call-Level Logs Detail (Full Sheet View)</h1><p>গুগল শিটের প্রতিটি কল রেকর্ড এবং অডিও প্লে-ব্যাক প্লেয়ার নিচে সাজানো হলো।</p></div>
       <div>
         <select id="rawFilter-${tab}" onchange="applyRawFilter('${tab}')" style="padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12.5px; outline:none;">
           <option value="">🔍 Filter By Agent (All)</option>
@@ -1014,7 +1000,6 @@ function buildRawSectionHtml(tab, raw, filterValue){
         <tbody>
           ${filtered.map((r, rIdx)=> `<tr>${keys.map(c=>{
             let originalVal = r[c];
-            // Format check for dates, times and durations
             let val = autoFormatCellValue(originalVal, c);
             
             if(c===linkKey && originalVal){
@@ -1035,7 +1020,6 @@ function buildRawSectionHtml(tab, raw, filterValue){
       </table>
     </div>`;
 }
-
 function applyRawFilter(tab){
   const select = document.getElementById('rawFilter-' + tab);
   const val = select ? select.value : '';
@@ -1043,7 +1027,7 @@ function applyRawFilter(tab){
   document.getElementById('rawSection-' + tab).innerHTML = buildRawSectionHtml(tab, raw, val);
 }
 
-/* ===================== FLOATING AUDIO PLAYER IMPLEMENTATION ===================== */
+/* ===================== FLOATING AUDIO PLAYER ===================== */
 function openAudioPlayerBar(link, agent, details) {
   document.getElementById('playerAgentName').textContent = "Agent Name: " + agent;
   document.getElementById('playerCallDetails').textContent = "Call details: " + (details || "N/A");
@@ -1051,15 +1035,12 @@ function openAudioPlayerBar(link, agent, details) {
   const audio = document.getElementById('globalAudioElement');
   audio.src = link;
   audio.load();
-  audio.play().catch(e => console.log("Audio autoplay block pass"));
-
-  const dlBtn = document.getElementById('playerDownloadBtn');
-  dlBtn.href = link;
+  audio.play().catch(e => console.log("Audio autoplay pass"));
+  document.getElementById('playerDownloadBtn').href = link;
   
   document.getElementById('globalAudioPlayerBar').classList.add('active');
   showToast("Playing call recording in-page...");
 }
-
 function closePlayerBar() {
   const audio = document.getElementById('globalAudioElement');
   audio.pause();
@@ -1067,34 +1048,30 @@ function closePlayerBar() {
   document.getElementById('globalAudioPlayerBar').classList.remove('active');
 }
 
-/* ===================== DEDICATED AUTO-UPDATING DASHBOARDS ===================== */
+/* ===================== LIVE DASHBOARDS (AUTO SYNC) ===================== */
 async function renderDedicatedDashboard(vKey) {
   const meta = VERTICALS[vKey];
   const panel = document.getElementById('panel-' + meta.dashId);
-  const raw = (await storageGet(meta.rawKey)) || [];
+  let raw = rawDataCache[vKey] || [];
   
   let html = `
     <div class="panel-header">
-      <div><h1>📊 ${meta.label} Analytics Dashboard</h1><p>রিয়েল-টাইম প্যারামিটার ওয়াইজ ফেইল কাউন্ট ব্রেকডাউন এবং কোয়ালিটি চার্ট।</p></div>
+      <div><h1>📊 ${meta.label} Analytics Dashboard</h1><p>গুগল শিট ডাটার উপর ভিত্তি করে লাইভ প্যারামিটার ব্রেকডাউন।</p></div>
     </div>`;
     
   if(!raw.length) {
-    html += `<div class="empty-state"><b>কোনো অ্যানালিটিক্স ডাটা উপলব্ধ নেই</b><br>অ্যাডমিন প্যানেল থেকে এক্সেল আপলোড করার সাথে সাথে এই ড্যাশবোর্ডটি অটো জেনারেট হবে।</div>`;
+    html += `<div class="empty-state"><b>কোনো অ্যানালিটিক্স ডাটা উপলব্ধ নেই</b><br>ডাটা শিট লোড বা আপলোড হলে এই ড্যাশবোর্ডটি অটো জেনারেট হবে।</div>`;
     panel.innerHTML = html;
     return;
   }
   
-  // Discover parameters and compute fail counts dynamically
   const keys = Object.keys(raw[0]);
-  const { nameKey, scoreKey, countKey } = detectColumnKeys(keys);
-  
   const nonParamKeywords = ['name','associate','agent','date','time','duration','link','audio','recording','comment','remark','status','audit','score','total'];
   const paramKeys = keys.filter(k => {
     const kl = k.toLowerCase();
     return !nonParamKeywords.some(kw => kl.includes(kw)) && k.trim().length > 0;
   });
   
-  // Calculate failures per parameter
   const failCounts = {};
   paramKeys.forEach(p => failCounts[p] = 0);
   
@@ -1111,7 +1088,7 @@ async function renderDedicatedDashboard(vKey) {
     <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px; flex-wrap:wrap;">
       <div>
         <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:20px; border-radius:var(--radius); height: 420px;">
-          <h3 style="margin-bottom:14px; font-family:'Space Grotesk',sans-serif;">Parameter-wise Defect Breakdown (Chart View)</h3>
+          <h3 style="margin-bottom:14px; font-family:'Space Grotesk',sans-serif;">Parameter-wise Defect Breakdown</h3>
           <div style="height:340px; width:100%;"><canvas id="dashChart-${vKey}"></canvas></div>
         </div>
       </div>
@@ -1138,7 +1115,6 @@ async function renderDedicatedDashboard(vKey) {
     
   panel.innerHTML = html;
   
-  // Render Parameter Fail chart
   setTimeout(() => {
     const ctx = document.getElementById(`dashChart-${vKey}`);
     if(!ctx) return;
@@ -1171,7 +1147,7 @@ async function renderDedicatedDashboard(vKey) {
   }, 50);
 }
 
-/* ===================== STANDARD DATA GRAPH ===================== */
+/* ===================== STANDARD CHART GRAPH ===================== */
 function drawChart(tab, rows){
   const ctx = document.getElementById('chart-'+tab);
   if(!ctx) return;
@@ -1203,7 +1179,7 @@ function drawChart(tab, rows){
   });
 }
 
-/* ===================== EXCEL PROCESSOR & PARSER ===================== */
+/* ===================== EXCEL UPLOAD AND SEND TO GOOGLE SHEET ===================== */
 function handleUpload(evt, tab){
   const file = evt.target.files[0];
   if(!file) return;
@@ -1212,19 +1188,35 @@ function handleUpload(evt, tab){
     try{
       const wb = XLSX.read(e.target.result, {type:'binary'});
       const sheet = wb.Sheets[wb.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet, {defval:''});
-      const rows = parseScoreRows(json);
+      
+      const json2D = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+      const jsonObjects = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      const rows = parseScoreRows(jsonObjects);
+      
       if(!rows.length){
         showToast('Valid কোনো ডাটা রো পাওয়া যায়নি। এক্সেল হেডার চেক করুন।');
         return;
       }
+      
+      showToast('গুগল শিটে ডাটা সিঙ্ক হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...');
+      
+      // গুগল শিটে ডাটা POST করার এপিআই কল
+      await fetch(WEB_APP_URL + "?vertical=" + tab, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows: json2D })
+      });
+      
+      // লোকাল ক্যাশে ব্যাকআপ সেভ
       await storageSet(VERTICALS[tab].key, rows);
-      await storageSet(VERTICALS[tab].rawKey, json);
-      showToast(`সফলভাবে ${rows.length} জন এজেন্টের ডাটা শিট আপলোড সম্পন্ন হয়েছে।`);
+      await storageSet(VERTICALS[tab].rawKey, jsonObjects);
+      
+      showToast(`সফলভাবে গুগল শিটে ডাটা আপলোড সম্পন্ন হয়েছে।`);
       renderVerticalPanel(tab);
     }catch(err){
       console.error(err);
-      showToast('Error parsing file.');
+      showToast('Error parsing or uploading file.');
     }
   };
   reader.readAsBinaryString(file);
@@ -1247,7 +1239,6 @@ function parseScoreRows(json){
   const keys = Object.keys(json[0]);
   const { nameKey, countKey, scoreKey } = detectColumnKeys(keys);
   if(!nameKey || !scoreKey) return [];
-
   const groups = {};
   json.forEach(row=>{
     const agentRaw = row[nameKey];
@@ -1257,7 +1248,6 @@ function parseScoreRows(json){
     const scoreVal = parseFloat(row[scoreKey]);
     if(isNaN(scoreVal)) return;
     const countVal = countKey ? parseFloat(row[countKey]) : NaN;
-
     if(!groups[agent]) groups[agent] = { scoreSum:0, scoreN:0, countSum:0, hasExplicitCount:false, rowN:0 };
     const g = groups[agent];
     g.scoreSum += scoreVal;
@@ -1265,7 +1255,6 @@ function parseScoreRows(json){
     g.rowN += 1;
     if(!isNaN(countVal)){ g.countSum += countVal; g.hasExplicitCount = true; }
   });
-
   const rows = [];
   Object.keys(groups).forEach(agent=>{
     const g = groups[agent];
@@ -1289,7 +1278,6 @@ async function clearVertical(tab){
   await storageSet(VERTICALS[tab].rawKey, []);
   renderVerticalPanel(tab);
 }
-
 async function updateLoginAgentCount(){
   let total = new Set();
   for(const k of Object.keys(VERTICALS)){
