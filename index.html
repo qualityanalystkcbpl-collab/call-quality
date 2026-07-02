@@ -923,11 +923,54 @@ input[type=file]{display:none;}
 .browser .icon{
     background:linear-gradient(135deg,#ffc400,#ff9300);
 }
+/* ==========================
+   LOGIN PAGE LOGO
+========================== */
+
+#loginScreen{
+    position:relative;
+}
+
+.login-header-logo{
+    position:absolute;
+    top:25px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:999;
+    text-align:center;
+    animation:logoFade .8s ease;
+}
+
+.login-header-logo img{
+    width:200px;          /* Logo Size */
+    max-width:90%;
+    height:auto;
+    filter:
+        drop-shadow(0 0 15px rgba(51,201,176,.35))
+        drop-shadow(0 0 25px rgba(227,168,87,.20));
+}
+
+@keyframes logoFade{
+
+    from{
+        opacity:0;
+        transform:translate(-50%,-20px);
+    }
+
+    to{
+        opacity:1;
+        transform:translate(-50%,0);
+    }
+
+}
 </style>
 </head>
 <body>
 <!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
+<div class="login-header-logo">
+    <img src="logo.png" alt="GTPL KCBPL Logo">
+</div>
   <div class="login-brand">
     <div class="login-eyebrow"><span class="pulse-dot"></span> QA CONTROL ROOM • LIVE</div>
     <div class="login-title">Every call, <span>scored</span>.<br>Every agent, <span>seen</span>.</div>
