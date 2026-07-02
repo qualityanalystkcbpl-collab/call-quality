@@ -778,9 +778,9 @@ const CREDENTIALS = { agent: 'agent@123', admin: 'admin@123' };
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwfUmWpG56HNMmLy2yI6DNewCDnHadIFA8HoOsUNIjVVkbdpUlhxJAdi9Z6kkhfw_Ki/exec";
 
 const VERTICALS = {
-  CATV: { label: 'CATV', key: 'scores:CATV', rawKey: 'raw:CATV', dashId: 'DASH-CATV' },
-  BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH', dashId: 'DASH-BBTECH' },
-  BBRENEWAL: { label: 'BB Renewal', key: 'scores:BBRENEWAL', rawKey: 'raw:BBRENEWAL', dashId: 'DASH-BBRENEWAL' }
+  CATV: { label: 'CATV', key: 'scores:CATV', rawKey: 'raw:CATV', dashId: 'DASH-CATV', dashSheet: 'CATV_DASHBOARD' },
+  BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH', dashId: 'DASH-BBTECH', dashSheet: 'BBTECH_DASHBOARD' },
+  BBRENEWAL: { label: 'BB Renewal', key: 'scores:BBRENEWAL', rawKey: 'raw:BBRENEWAL', dashId: 'DASH-BBRENEWAL', dashSheet: 'BBRENEWAL_DASHBOARD' }
 };
 let currentRole = null;
 let selectedRole = 'agent';
@@ -1218,106 +1218,155 @@ function closePlayerBar() {
   audio.src = "";
   document.getElementById('globalAudioPlayerBar').classList.remove('active');
 }
-/* ===================== LIVE DASHBOARDS (AUTO SYNC) ===================== */
+/* ===================== LIVE DASHBOARDS (AUTO SYNC - MONTH WISE MATRIX) ===================== */
 async function renderDedicatedDashboard(vKey) {
   const meta = VERTICALS[vKey];
   const panel = document.getElementById('panel-' + meta.dashId);
-  let raw = rawDataCache[vKey] || [];
   
-  let html = `
+  panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>📊 ${meta.label} Analytics Dashboard</h1><p>গুগল শিট ডাটার উপর ভিত্তি করে লাইভ প্যারামিটার ব্রেকডাউন।</p></div>
-    </div>`;
+      <div><h1>📊 ${meta.label} Live Analytics Dashboard</h1><p>গুগল শিট (${meta.dashSheet}) থেকে লাইভ ডাটা জেনারেট হচ্ছে...</p></div>
+    </div>
+    <div class="empty-state"><b>রিয়েল-টাইম ডাটা সিঙ্ক হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b></div>`;
     
-  if(!raw.length) {
-    html += `<div class="empty-state"><b>কোনো canvasing বা ডাটা অ্যানালিটিক্স উপলব্ধ নেই</b><br>ডাটা শিট রিফ্রেশ বা আপলোড হলে এই ড্যাশবোর্ডটি লাইভ জেনারেট হবে।</div>`;
+  try {
+    // সরাসরি ড্যাশবোর্ড ট্যাব (যেমন: CATV_DASHBOARD) থেকে ডাটা ফেচ করা হচ্ছে
+    const response = await fetch(WEB_APP_URL + "?vertical=" + meta.dashSheet);
+    const data = await response.json();
+    
+    if(!Array.isArray(data) || data.length === 0) {
+      panel.innerHTML = `<div class="empty-state"><b>কোনো ড্যাশবোর্ড ডাটা পাওয়া যায়নি</b><br>আপনার গুগল শিটের "${meta.dashSheet}" ট্যাবটি চেক করুন।</div>`;
+      return;
+    }
+    
+    const headers = data[0]; // Agent name, April'26, May'26, etc.
+    const rows = data.slice(1);
+    const monthHeaders = headers.slice(1); // মাসের কলামগুলো আলাদা করা হলো
+    
+    let calculatedAgents = [];
+    
+    rows.forEach(row => {
+      const agentName = String(row[0] || '').trim();
+      // Grand Total রো বাদ দেওয়া হচ্ছে
+      if(!agentName || agentName.toLowerCase() === 'grand total' || agentName.includes('Total')) return;
+      
+      let totalScore = 0;
+      let validMonths = 0;
+      let monthlyScores = {};
+      
+      monthHeaders.forEach((month, idx) => {
+        let cellVal = String(row[idx + 1] || '').trim();
+        monthlyScores[month] = cellVal;
+        
+        let num = parseFloat(cellVal);
+        if(!isNaN(num)) {
+          totalScore += num;
+          validMonths++;
+        }
+      });
+      
+      // ডাইনামিক এভারেজ স্কোর ক্যালকুলেশন
+      let avgScore = validMonths > 0 ? Math.round((totalScore / validMonths) * 10) / 10 : 0;
+      
+      calculatedAgents.push({
+        agent: agentName,
+        scores: monthlyScores,
+        avgScore: avgScore
+      });
+    });
+    
+    if(!calculatedAgents.length) {
+      panel.innerHTML = `<div class="empty-state"><b>কোনো বৈধ এজেন্ট ডাটা খুঁজে পাওয়া যায়নি।</b></div>`;
+      return;
+    }
+    
+    // HTML স্ট্রাকচার রেন্ডারিং
+    let tableHeadersHtml = `<th>Agent Name</th>` + monthHeaders.map(m => `<th>${m}</th>`).join('') + `<th>Calculated Avg</th><th>Status Tier</th>`;
+    
+    let tableRowsHtml = calculatedAgents.map(a => {
+      let monthCells = monthHeaders.map(m => {
+        let val = a.scores[m] || '-';
+        let style = '';
+        let num = parseFloat(val);
+        if(!isNaN(num)) {
+          style = num >= 95 ? 'color: var(--excellent); font-weight:600;' : (num >= 85 ? 'color: var(--good);' : 'color: var(--need);');
+        }
+        return `<td style="${style}">${val}</td>`;
+      }).join('');
+      
+      const st = statusFor(a.avgScore);
+      
+      return `<tr>
+        <td style="font-weight:600; color: var(--text);">${escapeHtml(a.agent)}</td>
+        ${monthCells}
+        <td class="mono" style="font-weight:700; color:var(--admin); background: rgba(227,168,87,0.05);">${a.avgScore}%</td>
+        <td><span class="badge ${st.cls}">${st.label}</span></td>
+      </tr>`;
+    }).join('');
+    
+    let html = `
+      <div class="panel-header">
+        <div>
+          <h1>📊 ${meta.label} Month-wise Dashboard</h1>
+          <p>ট্যাব: <b>${meta.dashSheet}</b> থেকে সরাসরি জেনারেট হওয়া লাইভ রিপোর্ট।</p>
+        </div>
+        <button class="btn primary" onclick="switchTab('${meta.dashId}')">↻ Refresh Live Matrix</button>
+      </div>
+      
+      <!-- এজেন্টের অটো-ক্যালকুলেটেড এভারেজ চার্ট -->
+      <div class="chart-box"><canvas id="dashChart-${vKey}"></canvas></div>
+      
+      <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
+        📋 Month-wise Agent Performance Matrix
+      </h3>
+      <div class="table-wrapper" style="overflow-x: auto;">
+        <table class="score-table">
+          <thead><tr>${tableHeadersHtml}</tr></thead>
+          <tbody>${tableRowsHtml}</tbody>
+        </table>
+      </div>`;
+      
     panel.innerHTML = html;
-    return;
+    
+    // Chart.js দিয়ে গ্রাফ লোড করা
+    setTimeout(() => {
+      const ctx = document.getElementById(`dashChart-${vKey}`);
+      if(!ctx) return;
+      if(chartInstances[`dash-${vKey}`]) chartInstances[`dash-${vKey}`].destroy();
+      
+      chartInstances[`dash-${vKey}`] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: calculatedAgents.map(a => a.agent),
+          datasets: [{
+            label: 'Calculated Average Score (%)',
+            data: calculatedAgents.map(a => a.avgScore),
+            backgroundColor: calculatedAgents.map(a => {
+              const s = statusFor(a.avgScore);
+              return {excellent:'rgba(63,191,127,0.7)', good:'rgba(224,195,65,0.7)', average:'rgba(224,138,63,0.7)', need:'rgba(224,82,74,0.7)'}[s.cls] || 'rgba(51,201,176,0.7)';
+            }),
+            borderColor: 'var(--border)',
+            borderWidth: 1,
+            borderRadius: 5,
+            maxBarThickness: 30
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#8FA0B5', font: { size: 11 } }, grid: { display: false } },
+            y: { min: 0, max: 100, ticks: { color: '#8FA0B5' }, grid: { color: '#203859' } }
+          }
+        }
+      });
+    }, 60);
+
+  } catch (err) {
+    console.error(err);
+    panel.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br>গুগল শিট কানেকশন বা ওয়েব অ্যাপ URL পরীক্ষা করুন।</div>`;
   }
-  
-  const keys = Object.keys(raw[0]);
-  const nonParamKeywords = ['name','associate','agent','date','time','duration','link','audio','recording','comment','remark','status','audit','score','total','sl','id','তারিখ','সময়','নাম','স্কোর'];
-  const paramKeys = keys.filter(k => {
-    const kl = k.toLowerCase();
-    return !nonParamKeywords.some(kw => kl.includes(kw)) && k.trim().length > 0;
-  });
-  
-  const failCounts = {};
-  paramKeys.forEach(p => failCounts[p] = 0);
-  
-  raw.forEach(row => {
-    paramKeys.forEach(p => {
-      if(row[p] !== undefined && row[p] !== null) {
-        const val = String(row[p]).trim().toLowerCase();
-        if(val === '0' || val === 'fail' || val === 'no' || val === 'non-compliant' || val === 'nc' || val === 'incorrect') {
-          failCounts[p]++;
-        }
-      }
-    });
-  });
-  
-  html += `
-    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px; flex-wrap:wrap;">
-      <div>
-        <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:20px; border-radius:var(--radius); height: 420px;">
-          <h3 style="margin-bottom:14px; font-family:'Space Grotesk',sans-serif;">Parameter-wise Defect Breakdown</h3>
-          <div style="height:340px; width:100%;"><canvas id="dashChart-${vKey}"></canvas></div>
-        </div>
-      </div>
-      <div>
-        <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:20px; border-radius:var(--radius); max-height:420px; overflow-y:auto;">
-          <h3 style="margin-bottom:14px; font-family:'Space Grotesk',sans-serif;">Defect Parameter List</h3>
-          ${paramKeys.map(p => {
-            const count = failCounts[p];
-            const percentage = raw.length ? Math.round((count / raw.length) * 100) : 0;
-            return `
-              <div class="parameter-card">
-                <div class="param-info">
-                  <span style="font-weight:600; color:#EAF0F6; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeAttr(p)}">${escapeHtml(p)}</span>
-                  <span style="color:var(--need); font-weight:bold;">${count} Fails (${percentage}%)</span>
-                </div>
-                <div class="param-bar-bg">
-                  <div class="param-bar-fill" style="width: ${percentage}%"></div>
-                </div>
-              </div>`;
-          }).join('')}
-        </div>
-      </div>
-    </div>`;
-    
-  panel.innerHTML = html;
-  
-  setTimeout(() => {
-    const ctx = document.getElementById(`dashChart-${vKey}`);
-    if(!ctx) return;
-    if(chartInstances[`dash-${vKey}`]) chartInstances[`dash-${vKey}`].destroy();
-    
-    chartInstances[`dash-${vKey}`] = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: paramKeys.map(p => p.length > 15 ? p.substring(0,15)+'...' : p),
-        datasets: [{
-          label: 'Total Fail Count',
-          data: paramKeys.map(p => failCounts[p]),
-          backgroundColor: 'rgba(224, 82, 74, 0.7)',
-          borderColor: '#E0524A',
-          borderWidth: 1.5,
-          borderRadius: 4,
-          maxBarThickness: 30
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: '#7C8CA3', font: { size: 10 } }, grid: { display: false } },
-          y: { beginAtZero: true, ticks: { color: '#7C8CA3', stepSize: 1 }, grid: { color: '#203859' } }
-        }
-      }
-    });
-  }, 50);
 }
-/* ===================== STANDARD CHART GRAPH ===================== */
 function drawChart(tab, rows){
   const ctx = document.getElementById('chart-'+tab);
   if(!ctx) return;
