@@ -792,6 +792,137 @@ input[type=file]{display:none;}
 }
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:4px;}
+/* ==========================
+   Sidebar Footer
+========================== */
+
+.sidebar-footer{
+    margin-top:auto;
+    padding:12px;
+    background:linear-gradient(180deg,#162234,#101826);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;
+    text-align:center;
+    box-shadow:0 8px 18px rgba(0,0,0,.35);
+}
+
+.sidebar-footer h3{
+    margin:0;
+    font-size:15px;
+    font-weight:700;
+    color:#fff;
+    line-height:1.35;
+    font-family:'Space Grotesk',sans-serif;
+}
+
+.sidebar-footer .subtitle{
+    margin-top:6px;
+    font-size:11px;
+    color:#24d8c5;
+    font-weight:600;
+}
+
+.sidebar-footer .divider{
+    width:100%;
+    height:1px;
+    background:rgba(255,255,255,.08);
+    margin:10px 0;
+}
+
+.sidebar-footer .developer{
+    font-size:11px;
+    color:#bcc7d8;
+    line-height:1.5;
+}
+
+.sidebar-footer .developer span{
+    display:block;
+    margin-top:3px;
+    font-size:15px;
+    font-weight:700;
+    color:#53ff78;
+}
+
+.sidebar-footer .version{
+    margin-top:8px;
+    padding:7px;
+    border-radius:8px;
+    background:#123747;
+    border:1px solid #18c9c0;
+    color:#fff;
+    font-size:11px;
+}
+
+.sidebar-footer .version span{
+    color:#ffd44f;
+    font-weight:700;
+}
+
+.info-card{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:8px;
+    padding:8px 10px;
+    border-radius:10px;
+    background:#18263a;
+    border-left:4px solid;
+    text-align:left;
+    transition:.25s;
+}
+
+.info-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 12px rgba(0,0,0,.30);
+}
+
+.info-card .icon{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-size:15px;
+    flex-shrink:0;
+}
+
+.info-card b{
+    display:block;
+    color:#fff;
+    font-size:11px;
+}
+
+.info-card small{
+    display:block;
+    margin-top:2px;
+    color:#b7c5d8;
+    font-size:10px;
+    line-height:1.35;
+    word-break:break-word;
+}
+
+.support{
+    border-color:#16b9ff;
+}
+.support .icon{
+    background:linear-gradient(135deg,#00b8ff,#006eff);
+}
+
+.help{
+    border-color:#ff2d8d;
+}
+.help .icon{
+    background:linear-gradient(135deg,#ff2d8d,#c90070);
+}
+
+.browser{
+    border-color:#ffbf00;
+}
+.browser .icon{
+    background:linear-gradient(135deg,#ffc400,#ff9300);
+}
 </style>
 </head>
 <body>
@@ -877,6 +1008,53 @@ input[type=file]{display:none;}
       <div class="nav-label">System</div>
       <div class="nav-item" data-tab="UPDATES" onclick="switchTab('UPDATES')"><span class="dot"></span>New Update</div>
       <div class="nav-item admin-only" data-tab="ADMIN" onclick="switchTab('ADMIN')" style="display:none;"><span class="dot"></span>Admin Panel</div>
+<!-- Sidebar Footer -->
+<div class="sidebar-footer">
+
+    <h3>GTPL KCBPL<br>Call Quality Audit System</h3>
+
+    <div class="subtitle">
+        Enterprise Quality Monitoring Platform
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="developer">
+        © 2026 Developed &amp; Maintained by
+        <span>Kalyan Sarkar</span>
+    </div>
+
+    <div class="version">
+        👤 Quality Analyst | Version 1.0 <span>(Live)</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="info-card support">
+        <div class="icon">✉</div>
+        <div>
+            <b>Support</b>
+            <small>kalyan.sarkar@gtplkcbpl.com</small>
+        </div>
+    </div>
+
+    <div class="info-card help">
+        <div class="icon">☎</div>
+        <div>
+            <b>Mobile</b>
+            <small>+91 9733588266</small>
+        </div>
+    </div>
+
+    <div class="info-card browser">
+        <div class="icon">🌐</div>
+        <div>
+            <b>Browser</b>
+            <small>Google Chrome</small>
+        </div>
+    </div>
+
+</div>
     </aside>
     <main class="content">
       <!-- Data sheets panels -->
