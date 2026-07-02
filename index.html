@@ -823,7 +823,7 @@ input[type=file]{display:none;}
       <button class="login-btn" id="loginBtn" data-role="agent" onclick="doLogin()">Enter as Agent</button>
       <div class="login-error" id="loginError"></div>
       <div class="login-demo">
-        Demo credentials — <b>Agent:</b> agent@123&nbsp;&nbsp;|&nbsp;&nbsp;<b>Admin:</b> admin@123
+        Agent Login Password — <b>Agent:</b> GTPL@123&nbsp;&nbsp;|&nbsp;&nbsp;
       </div>
     </div>
   </div>
@@ -937,7 +937,7 @@ input[type=file]{display:none;}
 <div class="toast" id="toast"></div>
 <script>
 /* ===================== CREDENTIALS & GOOGLE API CONFIG ===================== */
-const CREDENTIALS = { agent: 'agent@123', admin: 'admin@123' };
+const CREDENTIALS = { agent: 'GTPL@123', admin: 'admin@123' };
 
 // ⚠️ এখানে আপনার গুগল স্ক্রিপ্ট থেকে জেনারেট হওয়া New Deployment URL-টি সাবধানে বসান
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwfUmWpG56HNMmLy2yI6DNewCDnHadIFA8HoOsUNIjVVkbdpUlhxJAdi9Z6kkhfw_Ki/exec";
@@ -1327,7 +1327,7 @@ function buildRawSectionHtml(tab, raw, filterValue){
   
   return `
     <div class="panel-header" style="margin-top:32px;">
-      <div><h1>Call-Level Logs Detail (Full Sheet View)</h1><p>গুগল শিটের প্রতিটি কল রেকর্ড এবং অডিও প্লে-ব্যাক প্লেয়ার নিচে সাজানো হলো।</p></div>
+      <div><h1>Call-Level Logs Detail (Full Sheet View)</h1><p>প্রতিটি এজেন্টের নামের পাশে অডিও প্লে-ব্যাক প্লেয়ার সংযুক্ত রয়েছে এবং প্রতিটি কলের Parameter-wise বিস্তারিত তথ্যও প্রদর্শিত হয়েছে। এখান থেকে Agent-wise ফিল্টার প্রয়োগ করে সংশ্লিষ্ট এজেন্টের স্কোর, অডিট ফলাফল এবং মূল্যায়নের বিস্তারিত তথ্য সহজেই দেখা যাবে।</p></div>
       <div>
         <select id="rawFilter-${tab}" onchange="applyRawFilter('${tab}')" style="padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12.5px; outline:none;">
           <option value="">🔍 Filter By Agent (All)</option>
