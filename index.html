@@ -702,7 +702,7 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 }
 /* Beautiful Data Table Styles */
 .table-wrapper {
-  overflow:hidden;
+  overflow:hidden:auto;
   border:1px solid var(--border);
   border-radius:var(--radius);
   background:var(--surface);
@@ -711,6 +711,10 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 }
 table.score-table{width:100%;border-collapse:collapse;text-align:left;}
 table.score-table th{
+position: sticky;
+top: 0;
+z-index: 100;
+background: var(--surface-2);
   padding:14px 16px;font-size:11px;color:var(--text-muted);
   text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid var(--border);background:var(--surface-2);
   font-weight:700;white-space:nowrap;
