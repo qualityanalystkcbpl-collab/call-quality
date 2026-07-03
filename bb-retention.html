@@ -645,6 +645,51 @@ grid-template-columns:1fr;
 }
 
 }
+.refresh-btn{
+
+padding:14px 24px;
+
+border:none;
+
+border-radius:40px;
+
+cursor:pointer;
+
+font-size:14px;
+
+font-weight:700;
+
+color:#fff;
+
+background:linear-gradient(90deg,#28a745,#20c997);
+
+transition:.3s;
+
+animation:refreshGlow 2s infinite;
+
+}
+
+.refresh-btn:hover{
+
+transform:translateY(-3px) scale(1.05);
+
+}
+
+@keyframes refreshGlow{
+
+0%{
+box-shadow:0 0 8px rgba(40,167,69,.4);
+}
+
+50%{
+box-shadow:0 0 22px rgba(40,167,69,.9);
+}
+
+100%{
+box-shadow:0 0 8px rgba(40,167,69,.4);
+}
+
+}
 </style>
 </head>
 <body>
@@ -683,6 +728,11 @@ class="home-btn">
 🏠 Back to Home
 
 </a>
+<button class="refresh-btn" onclick="refreshDashboard()">
+
+🔄 Refresh Data
+
+</button>
 
 </div>
 
@@ -1037,7 +1087,14 @@ function updateClock(){
         "🕒 " + date + " | " + time;
 
 }
+function refreshDashboard(){
 
+    document.getElementById("updatedAt").textContent =
+    "🔄 Refresh হচ্ছে...";
+
+    loadData();
+
+}
 updateClock();
 
 setInterval(updateClock,1000);
