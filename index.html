@@ -1357,6 +1357,29 @@ now.toLocaleString("en-IN", options);
   }, 1000);
 }
 startLiveClock();
+function checkLoginSession(){
+
+    const role = localStorage.getItem("qa_role");
+    const loginTime = localStorage.getItem("qa_login_time");
+
+    if(!role || !loginTime) return;
+
+    const oneHour = 60 * 60 * 1000;
+
+    if(Date.now() - Number(loginTime) < oneHour){
+
+        currentRole = role;
+
+        enterApp();
+
+    }else{
+
+        localStorage.removeItem("qa_role");
+        localStorage.removeItem("qa_login_time");
+
+    }
+
+}
 /* ===================== DARK / LIGHT MODE ===================== */
 function initTheme(){
   const saved = localStorage.getItem('qa_theme') || 'dark';
@@ -1371,6 +1394,7 @@ function toggleTheme(){
   localStorage.setItem('qa_theme', isLight ? 'light' : 'dark');
 }
 initTheme();
+checkLoginSession();
 /* ===================== FORMATTING HELPERS ===================== */
 function autoFormatCellValue(val, columnName) {
   if (val === undefined || val === null || val === '') return '';
@@ -1458,9 +1482,16 @@ function doLogin(){
   }
   errBox.textContent = '';
   currentRole = selectedRole;
-  enterApp();
+
+// ১ ঘণ্টার জন্য Login Session Save
+localStorage.setItem("qa_role", currentRole);
+localStorage.setItem("qa_login_time", Date.now());
+
+enterApp();
 }
 function doLogout(){
+localStorage.removeItem("qa_role");
+    localStorage.removeItem("qa_login_time");
   currentRole = null;
   document.getElementById('mainScreen').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
