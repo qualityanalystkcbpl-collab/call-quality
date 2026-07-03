@@ -690,13 +690,295 @@ box-shadow:0 0 8px rgba(40,167,69,.4);
 }
 
 }
+.hero-banner{
+
+position:relative;
+
+height:150px;
+
+margin:20px 0 30px;
+
+border-radius:18px;
+
+overflow:hidden;
+
+background:linear-gradient(135deg,#071528,#14386a,#0c203d);
+
+display:flex;
+
+flex-direction:column;
+
+justify-content:center;
+
+align-items:center;
+
+border:1px solid rgba(255,255,255,.12);
+
+}
+
+.theme-box{
+
+position:fixed;
+
+top:18px;
+
+right:18px;
+
+z-index:99999;
+
+}
+
+.theme-btn{
+
+width:52px;
+
+height:52px;
+
+border:none;
+
+border-radius:50%;
+
+font-size:24px;
+
+cursor:pointer;
+
+background:linear-gradient(135deg,#00c6ff,#7b2cff);
+
+color:#fff;
+
+box-shadow:0 0 20px rgba(0,180,255,.35);
+
+transition:.35s;
+
+}
+
+.theme-btn:hover{
+
+transform:rotate(20deg) scale(1.1);
+
+}
+
+.theme-menu{
+
+display:none;
+
+margin-top:12px;
+
+background:#13233f;
+
+border-radius:14px;
+
+padding:10px;
+
+box-shadow:0 0 25px rgba(0,180,255,.25);
+
+}
+
+.theme-menu button{
+
+display:block;
+
+width:170px;
+
+margin:6px 0;
+
+padding:10px;
+
+background:none;
+
+border:none;
+
+color:#fff;
+
+text-align:left;
+
+cursor:pointer;
+
+border-radius:8px;
+
+transition:.3s;
+
+font-size:14px;
+
+}
+
+.theme-menu button:hover{
+
+background:#244d86;
+
+}
+
+.top-brand{
+
+position:relative;
+
+text-align:center;
+
+padding:20px 0 40px;
+
+overflow:hidden;
+
+}
+
+.logo-bg{
+
+position:absolute;
+
+left:0;
+
+right:0;
+
+top:0;
+
+bottom:0;
+
+pointer-events:none;
+
+overflow:hidden;
+
+}
+
+.bubble{
+
+position:absolute;
+
+bottom:-80px;
+
+border-radius:50%;
+
+filter:blur(4px);
+
+opacity:.35;
+
+animation:floatBubble linear infinite;
+
+}
+
+.b1{
+
+left:5%;
+
+width:70px;
+
+height:70px;
+
+background:#00d2ff;
+
+animation-duration:11s;
+
+}
+
+.b2{
+
+left:22%;
+
+width:45px;
+
+height:45px;
+
+background:#00ff99;
+
+animation-duration:8s;
+
+}
+
+.b3{
+
+left:40%;
+
+width:90px;
+
+height:90px;
+
+background:#7b2cff;
+
+animation-duration:13s;
+
+}
+
+.b4{
+
+left:62%;
+
+width:55px;
+
+height:55px;
+
+background:#ff9800;
+
+animation-duration:9s;
+
+}
+
+.b5{
+
+left:80%;
+
+width:80px;
+
+height:80px;
+
+background:#00bfff;
+
+animation-duration:12s;
+
+}
+
+.b6{
+
+left:92%;
+
+width:35px;
+
+height:35px;
+
+background:#ff4dd2;
+
+animation-duration:7s;
+
+}
+
+@keyframes floatBubble{
+
+0%{
+
+transform:translateY(0) rotate(0deg);
+
+opacity:0;
+
+}
+
+20%{
+
+opacity:.35;
+
+}
+
+100%{
+
+transform:translateY(-260px) rotate(360deg);
+
+opacity:0;
+
+}
+
+}
 </style>
 </head>
 <body>
 <div class="top-brand">
 
     <img src="logo2.png" class="brand-logo">
+<div class="logo-bg">
 
+    <span class="bubble b1"></span>
+    <span class="bubble b2"></span>
+    <span class="bubble b3"></span>
+    <span class="bubble b4"></span>
+    <span class="bubble b5"></span>
+    <span class="bubble b6"></span>
+
+</div>
 </div>
 <div class="page-header">
 
@@ -733,7 +1015,27 @@ class="home-btn">
 🔄 Refresh Data
 
 </button>
+<div class="theme-box">
 
+    <button class="theme-btn" onclick="toggleThemeMenu()">
+        🎨
+    </button>
+
+    <div class="theme-menu" id="themeMenu">
+
+        <button onclick="changeTheme('dark')">🌙 Dark</button>
+
+        <button onclick="changeTheme('light')">☀️ Light</button>
+
+        <button onclick="changeTheme('blue')">🔵 Blue</button>
+
+        <button onclick="changeTheme('green')">🟢 Green</button>
+
+        <button onclick="changeTheme('purple')">🟣 Purple</button>
+
+    </div>
+
+</div>
 </div>
 
 </div>
@@ -1087,18 +1389,85 @@ function updateClock(){
         "🕒 " + date + " | " + time;
 
 }
-function refreshDashboard(){
+async function refreshDashboard(){
 
-    document.getElementById("updatedAt").textContent =
-    "🔄 Refresh হচ্ছে...";
+    const btn=document.querySelector(".refresh-btn");
 
-    loadData();
+    btn.disabled=true;
+
+    btn.innerHTML="⏳ Refreshing...";
+
+    await loadData();
+
+    btn.disabled=false;
+
+    btn.innerHTML="🔄 Refresh Data";
 
 }
 updateClock();
 
 setInterval(updateClock,1000);
+function toggleThemeMenu(){
 
+const menu=document.getElementById("themeMenu");
+
+menu.style.display=
+menu.style.display==="block"
+?"none":"block";
+
+}
+
+function changeTheme(theme){
+
+const root=document.documentElement;
+
+switch(theme){
+
+case "dark":
+
+root.style.setProperty("--bg","#0a0e1a");
+root.style.setProperty("--panel","#0f1729");
+root.style.setProperty("--text","#ffffff");
+
+break;
+
+case "light":
+
+root.style.setProperty("--bg","#f4f7fb");
+root.style.setProperty("--panel","#ffffff");
+root.style.setProperty("--text","#222");
+
+break;
+
+case "blue":
+
+root.style.setProperty("--bg","#04192d");
+root.style.setProperty("--panel","#0d355d");
+root.style.setProperty("--text","#fff");
+
+break;
+
+case "green":
+
+root.style.setProperty("--bg","#081b12");
+root.style.setProperty("--panel","#103222");
+root.style.setProperty("--text","#fff");
+
+break;
+
+case "purple":
+
+root.style.setProperty("--bg","#1a0828");
+root.style.setProperty("--panel","#2b1242");
+root.style.setProperty("--text","#fff");
+
+break;
+
+}
+
+document.getElementById("themeMenu").style.display="none";
+
+}
 loadData();
 </script>
 <!-- ================= FOOTER ================= -->
