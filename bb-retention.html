@@ -77,17 +77,45 @@
   /* ---- Chart panel ---- */
   .chart-panel{
     background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius);
-    padding:20px; margin-bottom:22px; overflow-x:auto;
+    padding:24px 26px 18px; margin-bottom:22px;
   }
-  .chart-panel h2{ font-size:13px; color:var(--muted); margin:0 0 14px; text-transform:uppercase; letter-spacing:.6px;}
-  .bars{ display:flex; align-items:flex-end; gap:22px; height:200px; min-width:600px; }
-  .bar-col{ display:flex; flex-direction:column; align-items:center; width:44px; }
-  .bar-track{ height:170px; width:22px; display:flex; align-items:flex-end; background:#131c30; border-radius:4px; }
-  .bar-fill{ width:100%; border-radius:4px 4px 0 0; transition:height .5s ease; }
+  .chart-panel h2{ font-size:13px; color:var(--muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:.6px;}
+  .chart-sub{ font-size:11.5px; color:var(--muted); margin:0 0 18px; opacity:.75; }
+  .chart-legend{ display:flex; gap:18px; margin-bottom:16px; flex-wrap:wrap; }
+  .chart-legend span{ display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+  .chart-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+  .chart-area{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+  .chart-y-axis{
+    display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end;
+    height:230px; padding-bottom:44px; font-size:10.5px; color:var(--muted); flex-shrink:0;
+  }
+  .bars{
+    position:relative; flex:1; display:flex; align-items:flex-end; gap:26px; height:230px;
+    min-width:600px; padding-bottom:44px;
+  }
+  .gridlines{
+    position:absolute; left:0; right:0; top:0; bottom:44px;
+    display:flex; flex-direction:column; justify-content:space-between; pointer-events:none;
+  }
+  .gridlines div{ border-top:1px dashed var(--panel-border); }
+  .bar-col{ position:relative; display:flex; flex-direction:column; align-items:center; width:38px; z-index:1; }
+  .bar-track{
+    height:186px; width:30px; display:flex; align-items:flex-end; background:#0c1526;
+    border-radius:8px; overflow:hidden; border:1px solid #17223b;
+  }
+  .bar-fill{
+    width:100%; border-radius:6px 6px 0 0; transition:height .6s cubic-bezier(.2,.8,.2,1);
+    position:relative; cursor:default;
+  }
+  .bar-value{
+    font-size:11px; font-weight:700; color:var(--text); margin-bottom:6px; white-space:nowrap;
+  }
   .bar-name{
-    margin-top:8px; font-size:9.5px; color:var(--muted); writing-mode:vertical-rl;
-    transform:rotate(180deg); height:90px; text-align:right; white-space:nowrap;
+    margin-top:9px; font-size:10px; color:var(--muted); white-space:nowrap;
+    transform:rotate(-38deg); transform-origin:top right; width:14px; text-align:right;
   }
+  .bar-col:hover .bar-track{ border-color:var(--accent-blue); }
+  .bar-col:hover .bar-value{ color:var(--accent-blue); }
 
   /* ---- Table panel ---- */
   .panel-title{ font-size:17px; font-weight:600; margin:0 0 12px; }
@@ -119,19 +147,46 @@
   .remove-btn:hover{ background:#2a1414; }
 
   /* ---- Call logs view ---- */
-  .filter-row{ margin-bottom:14px; display:flex; gap:10px; align-items:center; }
+  .filter-row{ margin-bottom:14px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .filter-row .filter-left{ display:flex; gap:10px; align-items:center; }
   .filter-row select{
     background:var(--panel); color:var(--text); border:1px solid var(--panel-border);
     padding:9px 14px; border-radius:8px; font-size:13px;
   }
+  .result-count{ color:var(--muted); font-size:12px; }
   .play-btn{
     background:var(--accent-green); color:#06251a; border:none; padding:6px 14px;
     border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block;
   }
   .play-btn:hover{ filter:brightness(1.08); }
-  .score-good{ color:var(--accent-green); }
-  .score-mid{ color:var(--accent-yellow); }
-  .score-bad{ color:var(--accent-red); }
+  .score-good{ color:var(--accent-green); font-weight:700; }
+  .score-mid{ color:var(--accent-yellow); font-weight:700; }
+  .score-bad{ color:var(--accent-red); font-weight:700; }
+
+  /* ---- Scrollable "box" table (shows ~10 rows, drag/scroll for more) ---- */
+  .table-box{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius);
+    max-height:552px; overflow:auto; position:relative;
+  }
+  .table-box table{ min-width:900px; }
+  .table-box thead th{ position:sticky; top:0; z-index:2; box-shadow:0 1px 0 var(--panel-border); }
+  .table-box tbody tr:nth-child(even){ background:rgba(255,255,255,.015); }
+  .table-box::-webkit-scrollbar{ width:10px; height:10px; }
+  .table-box::-webkit-scrollbar-track{ background:var(--panel); }
+  .table-box::-webkit-scrollbar-thumb{ background:#26314d; border-radius:6px; }
+  .table-box::-webkit-scrollbar-thumb:hover{ background:var(--accent-blue); }
+
+  .pagination{
+    display:flex; align-items:center; justify-content:center; gap:6px; margin-top:14px; flex-wrap:wrap;
+  }
+  .page-btn{
+    background:var(--panel); border:1px solid var(--panel-border); color:var(--muted);
+    min-width:34px; height:34px; padding:0 10px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600;
+  }
+  .page-btn:hover:not(:disabled){ color:var(--text); border-color:var(--accent-blue); }
+  .page-btn.active{ background:var(--accent-blue); color:#08152e; border-color:var(--accent-blue); }
+  .page-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .page-info{ color:var(--muted); font-size:12px; margin:0 8px; }
 
   .state-msg{ padding:40px; text-align:center; color:var(--muted); }
 </style>
@@ -160,7 +215,19 @@
 
   <div class="chart-panel">
     <h2>Agent-wise Average Score</h2>
-    <div class="bars" id="chartBars"><div class="state-msg">ডেটা লোড হচ্ছে...</div></div>
+    <p class="chart-sub">প্রতিটি এজেন্টের গড় অডিট স্কোর, রঙ পারফরম্যান্স টিয়ার অনুযায়ী</p>
+    <div class="chart-legend">
+      <span><i style="background:var(--accent-orange)"></i>Top Performer (99%+)</span>
+      <span><i style="background:var(--accent-green)"></i>Excellent / Good (90%+)</span>
+      <span><i style="background:var(--accent-red)"></i>Needs Improvement (&lt;90%)</span>
+    </div>
+    <div class="chart-area">
+      <div class="chart-y-axis"><span>100</span><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span></div>
+      <div class="bars" id="chartBars">
+        <div class="gridlines"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        <div class="state-msg">ডেটা লোড হচ্ছে...</div>
+      </div>
+    </div>
   </div>
 
   <div class="panel-title">Agent Performance Overview</div>
@@ -179,22 +246,21 @@
 <!-- ================= CALL LOGS VIEW ================= -->
 <div class="view" id="view-logs">
   <div class="filter-row">
-    <label for="agentFilter" style="color:var(--muted); font-size:13px;">Filter By Agent</label>
-    <select id="agentFilter"><option value="__all__">(All)</option></select>
+    <div class="filter-left">
+      <label for="agentFilter" style="color:var(--muted); font-size:13px;">Filter By Agent</label>
+      <select id="agentFilter"><option value="__all__">(All)</option></select>
+    </div>
+    <div class="result-count" id="resultCount"></div>
   </div>
-  <div class="table-wrap">
+  <div class="table-box">
     <table>
-      <thead>
-        <tr>
-          <th>Process</th><th>Associate Name</th><th>Call Date</th><th>Call ID</th>
-          <th>Language</th><th>Disposition</th><th>Scores</th><th>Call Link</th><th>Opening</th>
-        </tr>
-      </thead>
+      <thead id="logsTableHead"></thead>
       <tbody id="logsTableBody">
-        <tr><td colspan="9" class="state-msg">ডেটা লোড হচ্ছে...</td></tr>
+        <tr><td class="state-msg">ডেটা লোড হচ্ছে...</td></tr>
       </tbody>
     </table>
   </div>
+  <div class="pagination" id="pagination"></div>
 </div>
 
 <script>
@@ -202,8 +268,8 @@
    এখানে আপনার Apps Script Web App URL বসান (Deploy -> Web app -> URL)
 ========================================================*/
 const CONFIG = {
-  API_URL: "PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE",
-  SHEET_TAB: "BB Retention"
+  API_URL: "https://script.google.com/macros/s/AKfycbwfA4gjCFYizJsyTCUIGU2FAC9NVHFV6jobF0aPuWrDcQxuMh5AUEpkT-MZkKuxB42aBw/exec",
+  SHEET_TAB: "BB-Retention"
 };
 
 let DASHBOARD_DATA = null;
@@ -224,6 +290,11 @@ function barColor(tier){
   if(tier === 'Top Performer') return 'var(--accent-orange)';
   if(tier === 'Excellent' || tier === 'Good') return 'var(--accent-green)';
   return 'var(--accent-red)';
+}
+function barColorLight(tier){
+  if(tier === 'Top Performer') return '#f2c98a';
+  if(tier === 'Excellent' || tier === 'Good') return '#7fe6b8';
+  return '#f0958c';
 }
 function scoreClass(score){
   if(score >= 90) return 'score-good';
@@ -274,10 +345,12 @@ function renderOverview(data){
   if(!data.agents.length){
     bars.innerHTML = '<div class="state-msg">কোনো এজেন্ট ডেটা নেই।</div>';
   } else {
-    bars.innerHTML = data.agents.map(a => `
-      <div class="bar-col">
+    const gridlines = '<div class="gridlines"><div></div><div></div><div></div><div></div><div></div><div></div></div>';
+    bars.innerHTML = gridlines + data.agents.map(a => `
+      <div class="bar-col" title="${a.name} — ${a.avgScore}% (${a.tier})">
+        <div class="bar-value">${a.avgScore}%</div>
         <div class="bar-track">
-          <div class="bar-fill" style="height:${Math.min(a.avgScore,100)}%; background:${barColor(a.tier)};"></div>
+          <div class="bar-fill" style="height:${Math.min(a.avgScore,100)}%; background:linear-gradient(180deg, ${barColorLight(a.tier)}, ${barColor(a.tier)});"></div>
         </div>
         <div class="bar-name">${a.name}</div>
       </div>
@@ -304,35 +377,99 @@ function removeAgent(name){
   renderOverview(DASHBOARD_DATA);
 }
 
+const PAGE_SIZE = 10;
+let currentPage = 1;
+let currentRows = [];
+
 function renderLogs(data){
+  // টেবিলের হেডার ডাইনামিক ভাবে বসানো হচ্ছে — শিটে যে কলামগুলো আছে ঠিক সেগুলোই দেখাবে
+  const headers = data.headers || [];
+  const head = document.getElementById('logsTableHead');
+  head.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
   const select = document.getElementById('agentFilter');
   const names = [...new Set(data.logs.map(l => l.agent))].sort();
   select.innerHTML = '<option value="__all__">(All)</option>' +
     names.map(n => `<option value="${n}">${n}</option>`).join('');
-  select.onchange = () => paintLogs(data, select.value);
-  paintLogs(data, '__all__');
+  select.onchange = () => { currentPage = 1; filterAndPaint(data, select.value); };
+  filterAndPaint(data, '__all__');
 }
 
-function paintLogs(data, agentFilter){
-  const rows = agentFilter === '__all__' ? data.logs : data.logs.filter(l => l.agent === agentFilter);
+function filterAndPaint(data, agentFilter){
+  currentRows = agentFilter === '__all__' ? data.logs : data.logs.filter(l => l.agent === agentFilter);
+  document.getElementById('resultCount').textContent = currentRows.length + ' calls';
+  paintPage(data);
+}
+
+function paintPage(data){
+  const headers = data.headers || [];
+  const scoreHeader = data.meta ? data.meta.scoreHeader : null;
+  const linkHeader = data.meta ? data.meta.linkHeader : null;
   const tbody = document.getElementById('logsTableBody');
-  if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="9" class="state-msg">কোনো কল পাওয়া যায়নি।</td></tr>';
+
+  if(!currentRows.length){
+    tbody.innerHTML = `<tr><td class="state-msg">কোনো কল পাওয়া যায়নি।</td></tr>`;
+    document.getElementById('pagination').innerHTML = '';
     return;
   }
-  tbody.innerHTML = rows.map(l => `
-    <tr>
-      <td>${l.process ?? ''}</td>
-      <td>${l.agent ?? ''}</td>
-      <td>${fmtDate(l.callDate)}</td>
-      <td>${l.callId ?? ''}</td>
-      <td>${l.language ?? ''}</td>
-      <td>${l.disposition ?? ''}</td>
-      <td class="${scoreClass(l.score)}">${l.score}%</td>
-      <td>${l.callLink ? `<a class="play-btn" href="${l.callLink}" target="_blank" rel="noopener">▶ Play Audio</a>` : '—'}</td>
-      <td>${l.opening ?? ''}</td>
-    </tr>
-  `).join('');
+
+  const totalPages = Math.max(1, Math.ceil(currentRows.length / PAGE_SIZE));
+  currentPage = Math.min(currentPage, totalPages);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageRows = currentRows.slice(start, start + PAGE_SIZE);
+
+  tbody.innerHTML = pageRows.map(l => {
+    const cells = headers.map(h => {
+      const val = l.cells ? l.cells[h] : '';
+      if(h === linkHeader){
+        return val ? `<td><a class="play-btn" href="${val}" target="_blank" rel="noopener">▶ Play Audio</a></td>` : '<td>—</td>';
+      }
+      if(h === scoreHeader){
+        const num = Number(val) || 0;
+        return `<td class="${scoreClass(num)}">${val}%</td>`;
+      }
+      return `<td>${val === undefined || val === null ? '' : val}</td>`;
+    }).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+
+  renderPagination(totalPages, data);
+}
+
+function renderPagination(totalPages, data){
+  const el = document.getElementById('pagination');
+  if(totalPages <= 1){ el.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">‹</button>`;
+
+  const windowSize = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(windowSize / 2));
+  let endPage = Math.min(totalPages, startPage + windowSize - 1);
+  startPage = Math.max(1, endPage - windowSize + 1);
+
+  if(startPage > 1){
+    html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+    if(startPage > 2) html += `<span class="page-info">…</span>`;
+  }
+  for(let p = startPage; p <= endPage; p++){
+    html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+  }
+  if(endPage < totalPages){
+    if(endPage < totalPages - 1) html += `<span class="page-info">…</span>`;
+    html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+  }
+
+  html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">›</button>`;
+  html += `<span class="page-info">Page ${currentPage} of ${totalPages}</span>`;
+  el.innerHTML = html;
+
+  window.__PAGE_DATA__ = data;
+}
+
+function goToPage(p){
+  currentPage = p;
+  paintPage(window.__PAGE_DATA__);
+  document.querySelector('.table-box').scrollTop = 0;
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
