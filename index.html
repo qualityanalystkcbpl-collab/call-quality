@@ -1181,8 +1181,47 @@ letter-spacing:1px;
       <div class="nav-item dashboard-tab" data-tab="DASH-BBRENEWAL" onclick="switchTab('DASH-BBRENEWAL')"><span class="dot"></span>BB Renewal Dashboard</div>
       
       <div class="nav-label">System</div>
-      <div class="nav-item" data-tab="UPDATES" onclick="switchTab('UPDATES')"><span class="dot"></span>New Update</div>
-      <div class="nav-item admin-only" data-tab="ADMIN" onclick="switchTab('ADMIN')" style="display:none;"><span class="dot"></span>Admin Panel</div>
+
+<!-- সবাই দেখবে -->
+<div class="nav-item"
+     data-tab="UPDATES"
+     onclick="switchTab('UPDATES')">
+
+    <span class="dot"></span>
+    New Update
+
+</div>
+
+<!-- শুধু Agent দেখবে -->
+<div class="nav-item agent-only"
+     onclick="window.location.href='bb-retention.html'"
+     style="display:none;">
+
+    <span class="dot"></span>
+    BB Retention
+
+</div>
+
+<!-- শুধু Agent দেখবে -->
+<div class="nav-item agent-only"
+     onclick="window.location.href='business-dev-bb.html'"
+     style="display:none;">
+
+    <span class="dot"></span>
+    Business Dev BB
+
+</div>
+
+<!-- শুধু Admin দেখবে -->
+<div class="nav-item admin-only"
+     data-tab="ADMIN"
+     onclick="switchTab('ADMIN')"
+     style="display:none;">
+
+    <span class="dot"></span>
+    Admin Panel
+
+</div>
 <!-- Sidebar Footer -->
 <div class="sidebar-footer">
 
@@ -1435,9 +1474,29 @@ async function enterApp(){
   const pill = document.getElementById('rolePill');
   pill.textContent = currentRole.toUpperCase();
   pill.className = 'role-pill ' + currentRole;
-  document.querySelectorAll('.admin-only').forEach(el=>{
-    el.style.display = currentRole === 'admin' ? '' : 'none';
-  });
+  if(currentRole==="admin"){
+
+    document
+        .querySelectorAll(".admin-only")
+        .forEach(el=>el.style.display="");
+
+    document
+        .querySelectorAll(".agent-only")
+        .forEach(el=>el.style.display="none");
+
+}
+
+if(currentRole==="agent"){
+
+    document
+        .querySelectorAll(".admin-only")
+        .forEach(el=>el.style.display="none");
+
+    document
+        .querySelectorAll(".agent-only")
+        .forEach(el=>el.style.display="");
+
+}
   
   showToast('লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।...');
   await loadTicker();
