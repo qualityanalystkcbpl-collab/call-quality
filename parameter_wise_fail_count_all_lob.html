@@ -414,7 +414,7 @@
             .concat(keys.filter(function(k){ return DEFAULT_PROCESS_ORDER.indexOf(k) === -1; }));
           state.activeProcess = ordered[0] || null;
         }
-        setStatus('live', 'Live · synced with Google Sheet');
+        setStatus('live', 'Live · 🟢 Successfully Synced with Call Quality Server System');
         document.getElementById('lastSync').textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit', timeZone:'Asia/Kolkata'});
         renderAll();
       })
