@@ -453,17 +453,109 @@ header.topbar{
 }
 .role-pill.agent{background:var(--agent-dim);color:var(--agent);}
 .role-pill.admin{background:var(--admin-dim);color:var(--admin);}
+/* =========================
+   Premium Logout Button
+========================= */
+
 .logout-btn{
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--text-muted);
-  padding:7px 14px;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:12.5px;
-  font-family:'Inter',sans-serif;
+    position:relative;
+    overflow:hidden;
+
+    background:linear-gradient(135deg,#ff3b3b,#b80000);
+    color:#fff;
+
+    border:1px solid #ff4d4d;
+    border-radius:10px;
+
+    padding:8px 18px;
+
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.5px;
+
+    cursor:pointer;
+
+    transition:.35s ease;
+
+    box-shadow:
+        0 0 10px rgba(255,0,0,.35),
+        inset 0 0 8px rgba(255,255,255,.08);
+
+    animation:logoutPulse 2s infinite;
 }
-.logout-btn:hover{border-color:var(--need);color:var(--need);}
+
+/* Shine Animation */
+.logout-btn::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:-120%;
+    width:60%;
+    height:100%;
+
+    background:linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.45),
+        transparent
+    );
+
+    transform:skewX(-25deg);
+    animation:logoutShine 3s infinite;
+}
+
+/* Hover */
+.logout-btn:hover{
+
+    background:linear-gradient(135deg,#ff2020,#8b0000);
+
+    transform:translateY(-2px) scale(1.05);
+
+    box-shadow:
+        0 0 18px rgba(255,0,0,.70),
+        0 0 35px rgba(255,0,0,.45);
+
+}
+
+/* Click */
+.logout-btn:active{
+
+    transform:scale(.95);
+
+}
+
+/* Pulse */
+@keyframes logoutPulse{
+
+    0%,100%{
+
+        box-shadow:
+            0 0 8px rgba(255,0,0,.35);
+
+    }
+
+    50%{
+
+        box-shadow:
+            0 0 22px rgba(255,0,0,.85),
+            0 0 40px rgba(255,80,80,.45);
+
+    }
+
+}
+
+/* Shine */
+@keyframes logoutShine{
+
+    0%{
+        left:-120%;
+    }
+
+    100%{
+        left:160%;
+    }
+
+}
 /* Live Header Clock Style */
 /* Live Header Clock Style */
 /* Premium Live Clock */
@@ -1232,7 +1324,7 @@ letter-spacing:1px;
 
 </div>
         <span class="role-pill" id="rolePill">AGENT</span>
-        <button class="logout-btn" onclick="doLogout()">Logout</button>
+        <button class="logout-btn" onclick="doLogout()">⏻Logout</button>
       </div>
     </header>
   </div>
