@@ -383,7 +383,7 @@ transform:translate(-40px,-40px);
 </div>
 
 <div class="ticker-wrap">
-  <div class="ticker-tag">UPDATES</div>
+  <div class="ticker-tag">Live Feed</div>
   <div class="ticker-track" id="tickerTrack">
     <span id="tickerText">📈 CATV, BB Tech Support এবং BB Renewal-এর Parameter-wise Fail Count এখানে উপলব্ধ।</span>
   </div>
@@ -493,7 +493,7 @@ transform:translate(-40px,-40px);
   // ---------------- fetching ----------------
   function fetchData(){
     if(!state.apiUrl){
-      setStatus('warn', 'CONFIG.WEB_APP_URL set kora hoyni — html file-er <script> ongshe URL ta bosan');
+      setStatus('warn','System Configuration Error');
       renderEmptyNeedsSetup();
       return;
     }
@@ -521,17 +521,38 @@ transform:translate(-40px,-40px);
         renderAll();
       })
       .catch(function(err){
-        setStatus('err', 'Fetch failed');
+        setStatus('err','সার্ভারের সঙ্গে সংযোগ স্থাপন করা যায়নি');
         renderFetchError(err.message);
       });
   }
 
   function renderFetchError(msg){
-    var isFileProtocol = location.protocol === 'file:';
-    var tips = '';
-    if(isFileProtocol){
-      tips += '<li>Ei page ta file:// hisebe direct double-click kore khola hoyeche — browser eta cross-origin fetch block kore dey. Page-ta ekta hosting-e (GitHub Pages, Netlify) upload kore ba <code>python3 -m http.server</code> diye local server theke khulun.</li>';
-    }
+
+    document.getElementById('tabs').innerHTML='';
+
+    document.getElementById('cards').innerHTML='';
+
+    document.getElementById('tableScroll').innerHTML=
+
+    '<div class="empty-state">'+
+
+    '<div style="font-size:60px;">⚠️</div>'+
+
+    '<h3 style="color:var(--danger);margin-top:10px;">ডাটা লোড করা যায়নি</h3>'+
+
+    '<p style="color:var(--text-dim);line-height:1.8;">'+
+
+    'বর্তমানে সার্ভারের সঙ্গে সংযোগ স্থাপন করা সম্ভব হচ্ছে না।<br>'+
+
+    'অনুগ্রহ করে কিছুক্ষণ পরে আবার চেষ্টা করুন।'+
+
+    '</p>'+
+
+    '<button class="btn primary" onclick="fetchData()">🔄 আবার চেষ্টা করুন</button>'+
+
+    '</div>';
+
+}
     tips += '<li>Apps Script-e <b>Deploy → Manage deployments</b>-e giye check korun Access <b>"Anyone"</b> kore deploy kora ache kina (শুধু "Anyone with Google account" hole cholbe na).</li>';
     tips += '<li>Code.gs-e kono change korle notun kore <b>Deploy → Manage deployments → Edit (✎) → New version</b> kore deploy korte hobe, tarpor URL-ta same thakbe.</li>';
     tips += '<li>URL-ta <code>/exec</code> diye shesh hocche kina check korun (<code>/dev</code> diye hole login lagbe).</li>';
@@ -554,12 +575,23 @@ transform:translate(-40px,-40px);
   document.getElementById('refreshBtn').addEventListener('click', fetchData);
 
   // ---------------- rendering ----------------
-  function renderEmptyNeedsSetup(){
-    document.getElementById('tabs').innerHTML = '';
-    document.getElementById('cards').innerHTML = '';
-    document.getElementById('tableScroll').innerHTML =
-      '<div class="empty-state">html file-er &lt;script&gt; ongshe <code>CONFIG.WEB_APP_URL</code>-e apnar Google Apps Script Web App URL ta bosan.<br>Tarpor eikhane automatic vabe sob process-er parameter-wise fail count dekha jabe.</div>';
-  }
+ function renderEmptyNeedsSetup(){
+
+document.getElementById('tabs').innerHTML='';
+
+document.getElementById('cards').innerHTML='';
+
+document.getElementById('tableScroll').innerHTML=
+
+'<div class="empty-state">'+
+
+'⚠️ বর্তমানে কোনো ডাটা উপলব্ধ নয়।<br><br>'+
+
+'অনুগ্রহ করে কিছুক্ষণ পরে আবার চেষ্টা করুন।'+
+
+'</div>';
+
+}
 
   function renderAll(){
     if(!state.data) return;
@@ -737,7 +769,7 @@ transform:translate(-40px,-40px);
   // ---------------- boot ----------------
   loadTheme();
   setupAutoRefresh();
-  if(state.apiUrl){ fetchData(); } else { renderEmptyNeedsSetup(); setStatus('warn','CONFIG.WEB_APP_URL set kora hoyni'); }
+  if(state.apiUrl){ fetchData(); } else { renderEmptyNeedsSetup(); setStatus('warn','System Offline'); }
 })();
 </script>
 </body>
