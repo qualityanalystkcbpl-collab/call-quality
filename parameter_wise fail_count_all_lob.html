@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Call Quality Control Room · Parameter-wise Fail Count</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1420; --panel:#121D2E; --panel-2:#182741; --panel-3:#0E1826;
+    --border:#223350; --text:#E8ECF3; --text-dim:#8FA0BF; --text-faint:#5E7093;
+    --accent:#2DD4BF; --accent-soft:rgba(45,212,191,.14); --accent-2:#7C9EFF;
+    --warn:#F5A623; --danger:#FF5D5D; --good:#34D399;
+    --shadow: 0 12px 28px rgba(0,0,0,.35);
+    --radius: 14px;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Sora', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  html[data-theme="light"]{
+    --bg:#EEF2F8; --panel:#FFFFFF; --panel-2:#F4F7FC; --panel-3:#E7ECF5;
+    --border:#DCE3EE; --text:#16202E; --text-dim:#5B6B84; --text-faint:#8E9CB2;
+    --accent:#0E9C8D; --accent-soft:rgba(14,156,141,.10); --accent-2:#3D63DD;
+    --warn:#B96A0A; --danger:#D64545; --good:#188A5C;
+    --shadow: 0 10px 24px rgba(30,42,66,.10);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);transition:background .25s ease,color .25s ease;}
+  ::selection{background:var(--accent-soft);color:var(--text);}
+  a{color:inherit;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;align-items:center;gap:18px;
+    padding:14px 22px;border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,var(--panel),var(--panel-3));
+    position:sticky;top:0;z-index:50;
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;flex-shrink:0;
+  }
+  .logo-img{
+    width:38px;height:38px;border-radius:10px;object-fit:contain;
+    background:var(--panel-2);border:1px solid var(--border);flex-shrink:0;
+  }
+  .logo-mark{
+    width:38px;height:38px;border-radius:10px;
+    background:conic-gradient(from 220deg, var(--accent), var(--accent-2), var(--accent));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--display);font-weight:800;font-size:14px;color:#04140F;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.25);
+  }
+  .logo-text{display:flex;flex-direction:column;line-height:1.1;}
+  .logo-text b{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.4px;}
+  .logo-text span{font-size:10px;color:var(--text-faint);letter-spacing:1.5px;text-transform:uppercase;}
+
+  .heading{
+    flex:1;min-width:0;
+  }
+  .heading h1{
+    font-family:var(--display);font-size:16px;font-weight:700;margin:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .heading .sub{font-size:11px;color:var(--text-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+
+  .clock{
+    font-family:var(--mono);font-size:13px;color:var(--accent);
+    background:var(--panel-2);border:1px solid var(--border);
+    padding:7px 12px;border-radius:10px;text-align:right;line-height:1.15;min-width:118px;
+  }
+  .clock .d{display:block;font-size:9px;color:var(--text-faint);letter-spacing:.5px;}
+
+  .icon-btn, .home-btn, .theme-toggle{
+    border:1px solid var(--border);background:var(--panel-2);color:var(--text);
+    border-radius:10px;cursor:pointer;font-family:var(--body);
+    display:flex;align-items:center;gap:7px;transition:.15s ease;
+  }
+  .icon-btn:hover, .home-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .icon-btn{width:36px;height:36px;justify-content:center;font-size:16px;}
+  .home-btn{padding:0 14px;height:36px;font-size:12.5px;font-weight:600;white-space:nowrap;text-decoration:none;}
+
+  .theme-toggle{
+    width:52px;height:30px;padding:3px;position:relative;
+  }
+  .theme-toggle .knob{
+    width:22px;height:22px;border-radius:50%;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:11px;
+    transition:transform .25s ease;transform:translateX(0);
+  }
+  html[data-theme="light"] .theme-toggle .knob{transform:translateX(22px);}
+
+  /* ---------- ticker ---------- */
+  .ticker-wrap{
+    background:var(--panel-3);border-bottom:1px solid var(--border);
+    overflow:hidden;white-space:nowrap;position:relative;height:32px;display:flex;align-items:center;
+  }
+  .ticker-tag{
+    flex-shrink:0;background:var(--accent);color:#04140F;font-family:var(--display);
+    font-weight:700;font-size:10.5px;letter-spacing:1px;padding:4px 12px;height:100%;
+    display:flex;align-items:center;z-index:2;text-transform:uppercase;
+  }
+  .ticker-track{display:flex;align-items:center;animation:scrollLeft 32s linear infinite;padding-left:100%;}
+  .ticker-track span{padding:0 40px;font-size:12px;color:var(--text-dim);font-family:var(--mono);}
+  @keyframes scrollLeft{ 0%{transform:translateX(0);} 100%{transform:translateX(-100%);} }
+
+  /* ---------- layout ---------- */
+  .wrap{max-width:1400px;margin:0 auto;padding:22px;}
+
+  .status-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+  .status-pill{
+    font-size:11.5px;color:var(--text-dim);background:var(--panel-2);
+    border:1px solid var(--border);padding:6px 12px;border-radius:20px;
+    display:flex;align-items:center;gap:7px;font-family:var(--mono);
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+  .dot.live{background:var(--good);box-shadow:0 0 0 3px var(--accent-soft);}
+  .dot.warn{background:var(--warn);}
+  .dot.err{background:var(--danger);}
+  .spacer{flex:1;}
+  .btn{
+    border:1px solid var(--border);background:var(--panel-2);color:var(--text);
+    padding:8px 14px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;
+    font-family:var(--body);display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.primary{background:var(--accent);color:#04140F;border-color:var(--accent);}
+  .btn.primary:hover{filter:brightness(1.08);color:#04140F;}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .tab{
+    border:1px solid var(--border);background:var(--panel);color:var(--text-dim);
+    padding:10px 16px;border-radius:12px;font-family:var(--display);font-weight:600;
+    font-size:13px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:.15s ease;
+  }
+  .tab .led{width:8px;height:8px;border-radius:50%;background:var(--text-faint);}
+  .tab.active{border-color:var(--accent);color:var(--text);background:var(--accent-soft);}
+  .tab:hover{color:var(--text);}
+
+  /* ---------- summary cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 16px;box-shadow:var(--shadow);
+  }
+  .card .label{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+  .card .value{font-family:var(--display);font-size:24px;font-weight:700;}
+  .card .value.accent{color:var(--accent);}
+  .card .value.danger{color:var(--danger);}
+
+  /* ---------- table panel ---------- */
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .panel-head{
+    display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;
+  }
+  .panel-head h2{font-family:var(--display);font-size:14.5px;margin:0;flex-shrink:0;}
+  .search{
+    flex:1;min-width:160px;background:var(--panel-2);border:1px solid var(--border);
+    border-radius:10px;padding:8px 12px;color:var(--text);font-family:var(--body);font-size:12.5px;
+  }
+  .search:focus{outline:none;border-color:var(--accent);}
+  .agent-filter{cursor:pointer;flex:0 0 auto;}
+  .legend{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--text-faint);flex-shrink:0;}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+
+  .table-scroll{overflow:auto;max-height:70vh;}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;font-family:var(--mono);}
+  thead th{
+    position:sticky;top:0;background:var(--panel-2);color:var(--text-dim);
+    font-family:var(--body);font-weight:600;text-align:center;padding:11px 14px;
+    border-bottom:1px solid var(--border);border-right:1px solid var(--border);
+    white-space:nowrap;cursor:pointer;user-select:none;z-index:3;
+  }
+  thead th:last-child{border-right:none;}
+  thead th:hover{color:var(--accent);}
+  thead th.agent-col, tbody td.agent-col{
+    position:sticky;left:0;background:var(--panel-2);text-align:left;z-index:4;
+    box-shadow:2px 0 0 var(--border);
+  }
+  tbody td.agent-col{background:var(--panel);font-family:var(--body);font-weight:600;z-index:2;}
+  tbody tr:nth-child(even) td{background:var(--panel-2);}
+  tbody tr:nth-child(even) td.agent-col{background:var(--panel-3);}
+  tbody tr:hover td{background:var(--accent-soft);}
+  tbody tr:hover td.agent-col{background:var(--panel-3);}
+  tbody td{padding:9px 14px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap;}
+  tbody td:last-child{border-right:none;}
+  td.fail-0{color:var(--text-faint);}
+  td.fail-cell{position:relative;}
+  td.fail-cell span.badge{
+    display:inline-block;min-width:26px;padding:3px 9px;border-radius:20px;font-weight:800;
+  }
+  td.f-low span.badge{color:var(--good);background:rgba(52,211,153,.14);}
+  td.f-mid span.badge{color:var(--warn);background:rgba(245,166,35,.16);}
+  td.f-high span.badge{color:var(--danger);background:rgba(255,93,93,.16);}
+  td.score-cell span.badge{
+    display:inline-block;min-width:44px;padding:3px 10px;border-radius:20px;font-weight:800;
+  }
+  td.s-good span.badge{color:var(--good);background:rgba(52,211,153,.14);}
+  td.s-mid span.badge{color:var(--warn);background:rgba(245,166,35,.16);}
+  td.s-bad span.badge{color:var(--danger);background:rgba(255,93,93,.16);}
+  tfoot .grand-total-row td{
+    font-family:var(--display);font-weight:800;font-size:12.5px;
+    background:var(--panel-3);border-top:2px solid var(--accent);
+    border-right:1px solid var(--border);
+    border-bottom:none;color:var(--text);position:sticky;bottom:0;z-index:3;
+  }
+  tfoot .grand-total-row td:last-child{border-right:none;}
+  tfoot .grand-total-row td.agent-col{background:var(--panel-3);color:var(--accent);letter-spacing:.5px;}
+  .panel{border-radius:16px;}
+  .table-scroll{border-radius:0 0 16px 16px;}
+  .empty-state, .loading-state{padding:60px 20px;text-align:center;color:var(--text-dim);font-size:13px;}
+  .loading-state .spin{
+    width:28px;height:28px;border-radius:50%;border:3px solid var(--border);
+    border-top-color:var(--accent);margin:0 auto 14px;animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- settings modal ---------- */
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(4,10,18,.55);display:none;
+    align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{
+    background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    width:100%;max-width:460px;padding:22px;box-shadow:var(--shadow);
+  }
+  .modal h3{font-family:var(--display);margin:0 0 4px;font-size:16px;}
+  .modal p.hint{font-size:12px;color:var(--text-dim);margin:0 0 16px;line-height:1.5;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:11.5px;color:var(--text-faint);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+  .field input{
+    width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12.5px;
+  }
+  .field input:focus{outline:none;border-color:var(--accent);}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+
+  footer{text-align:center;color:var(--text-faint);font-size:11px;padding:26px 10px 34px;}
+
+  @media (max-width:720px){
+    .topbar{padding:10px 14px;gap:10px;}
+    .logo-text span{display:none;}
+    .heading .sub{display:none;}
+    .clock{min-width:auto;font-size:11px;padding:6px 9px;}
+    .home-btn span.txt{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <!-- ============================================================
+         PUT YOUR LOGO HERE:
+         Replace the src below with your logo file/URL
+         (e.g. "logo.png" if it sits next to this html file, or a
+         full https:// link). If the image fails to load, the round
+         "QA" mark is shown automatically instead. -->
+    <img class="logo-img" id="logoImg" src="logo.png" alt="Company Logo"
+         onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';" />
+    <div class="logo-mark" id="logoFallback" style="display:none;">QA</div>
+    <!-- ============================================================ -->
+    <div class="logo-text">
+      <b>KCBPL</b>
+      <span>Quality Analyst Desk</span>
+    </div>
+  </div>
+  <div class="heading">
+    <h1>Call Quality Control Room</h1>
+    <div class="sub">Parameter-wise Fail Count · auto-synced from Raw Data</div>
+  </div>
+  <div class="topbar-right">
+    <div class="clock" id="clock">--:--:--<span class="d" id="clockDate">-- --- ----</span></div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme"><span class="knob" id="themeKnob">☾</span></button>
+    <a class="home-btn" href="https://qualityanalystkcbpl-collab.github.io/call-quality/" target="_top">⌂ <span class="txt">Back to Home</span></a>
+  </div>
+</div>
+
+<div class="ticker-wrap">
+  <div class="ticker-tag">Live Feed</div>
+  <div class="ticker-track" id="tickerTrack">
+    <span id="tickerText">Google Sheet-e raw data update korle ei dashboard nijer theke sync hoye jabe · Remarks column-e je kono lekha thakle sheta fail hisebe dhora hoy</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="status-row">
+    <div class="status-pill"><span class="dot" id="statusDot"></span><span id="statusText">Connecting…</span></div>
+    <div class="status-pill">🕓 Last synced: <span id="lastSync">—</span></div>
+    <div class="spacer"></div>
+    <button class="btn" id="refreshBtn">↻ Refresh now</button>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2 id="panelTitle">Parameter-wise Fail Count</h2>
+      <input class="search" id="searchInput" placeholder="Agent name diye khujun… (search agent)" />
+      <select class="search agent-filter" id="agentFilterSelect" style="max-width:200px;">
+        <option value="">All Agents</option>
+      </select>
+      <div class="legend">
+        <i style="background:var(--good)"></i> Low
+        <i style="background:var(--warn)"></i> Medium
+        <i style="background:var(--danger)"></i> High
+      </div>
+    </div>
+    <div class="table-scroll" id="tableScroll">
+      <div class="loading-state" id="loadingState"><div class="spin"></div>Data load hocche…</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Call Quality Control Room · Built for KCBPL QA team · Data source: Google Sheets (live)</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ==========================================================================
+  //  CONFIG — EDIT THESE VALUES DIRECTLY
+  // ==========================================================================
+  //  WEB_APP_URL : paste your deployed Google Apps Script Web App URL here.
+  //                It must end with /exec (NOT /dev). Get it from:
+  //                Apps Script editor -> Deploy -> Manage deployments
+  //                (Execute as: Me, Who has access: Anyone)
+  //  REFRESH_SECONDS : how often the page re-fetches data automatically.
+  //                     Set to 0 to turn auto-refresh off.
+  //  TICKER_TEXT : the text that scrolls in the ticker strip below the header.
+  // ==========================================================================
+  var CONFIG = {
+    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxqPyo4IiBAzQetd6veRxeqP9HgMgUZ8JxDcvLfOuqKzzAquCuwQQeEC5c8lnTqpb1E-A/exec",
+    REFRESH_SECONDS: 60,
+    TICKER_TEXT: "Google Sheet-e raw data update korle ei dashboard nijer theke sync hoye jabe · Remarks column-e je kono lekha thakle sheta fail hisebe dhora hoy"
+  };
+  // ==========================================================================
+
+  var DEFAULT_PROCESS_ORDER = ['CATV','BB TECH SUPPORT','BB RENEWAL'];
+
+  var state = {
+    apiUrl: CONFIG.WEB_APP_URL,
+    refreshSec: CONFIG.REFRESH_SECONDS,
+    data: null,
+    activeProcess: null,
+    sortKey: null,
+    sortDir: 1,
+    timer: null
+  };
+  document.getElementById('tickerText').textContent = CONFIG.TICKER_TEXT;
+
+  // ---------------- theme ----------------
+  function loadTheme(){
+    var t = localStorage.getItem('cqcr_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('themeKnob').textContent = t === 'dark' ? '☾' : '☀';
+  }
+  document.getElementById('themeToggle').addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme');
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    document.getElementById('themeKnob').textContent = next === 'dark' ? '☾' : '☀';
+    localStorage.setItem('cqcr_theme', next);
+  });
+
+  // ---------------- clock ----------------
+  function tickClock(){
+    var now = new Date();
+    var opts = { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true, timeZone:'Asia/Kolkata' };
+    var dOpts = { day:'2-digit', month:'short', year:'numeric', timeZone:'Asia/Kolkata' };
+    document.getElementById('clock').firstChild.textContent = now.toLocaleTimeString('en-IN', opts);
+    document.getElementById('clockDate').textContent = now.toLocaleDateString('en-IN', dOpts) + ' IST';
+  }
+  setInterval(tickClock, 1000); tickClock();
+
+  // ---------------- status pill ----------------
+  function setStatus(kind, text){
+    var dot = document.getElementById('statusDot');
+    dot.className = 'dot ' + (kind || '');
+    document.getElementById('statusText').textContent = text;
+  }
+
+  // ---------------- fetching ----------------
+  function fetchData(){
+    if(!state.apiUrl){
+      setStatus('warn', 'CONFIG.WEB_APP_URL set kora hoyni — html file-er <script> ongshe URL ta bosan');
+      renderEmptyNeedsSetup();
+      return;
+    }
+    setStatus('', 'Syncing…');
+    fetch(state.apiUrl, {method:'GET'})
+      .then(function(r){
+        if(!r.ok){ throw new Error('HTTP ' + r.status + ' — deployment access thik ache to?'); }
+        return r.json();
+      })
+      .then(function(json){
+        if(!json || json.ok === false){
+          setStatus('err', 'Error: ' + (json && json.error ? json.error : 'unknown'));
+          renderFetchError((json && json.error) || 'Unknown error from Apps Script');
+          return;
+        }
+        state.data = json;
+        if(!state.activeProcess){
+          var keys = Object.keys(json.processes || {});
+          var ordered = DEFAULT_PROCESS_ORDER.filter(function(k){ return keys.indexOf(k) !== -1; })
+            .concat(keys.filter(function(k){ return DEFAULT_PROCESS_ORDER.indexOf(k) === -1; }));
+          state.activeProcess = ordered[0] || null;
+        }
+        setStatus('live', 'Live · synced with Google Sheet');
+        document.getElementById('lastSync').textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit', timeZone:'Asia/Kolkata'});
+        renderAll();
+      })
+      .catch(function(err){
+        setStatus('err', 'Fetch failed');
+        renderFetchError(err.message);
+      });
+  }
+
+  function renderFetchError(msg){
+    var isFileProtocol = location.protocol === 'file:';
+    var tips = '';
+    if(isFileProtocol){
+      tips += '<li>Ei page ta file:// hisebe direct double-click kore khola hoyeche — browser eta cross-origin fetch block kore dey. Page-ta ekta hosting-e (GitHub Pages, Netlify) upload kore ba <code>python3 -m http.server</code> diye local server theke khulun.</li>';
+    }
+    tips += '<li>Apps Script-e <b>Deploy → Manage deployments</b>-e giye check korun Access <b>"Anyone"</b> kore deploy kora ache kina (শুধু "Anyone with Google account" hole cholbe na).</li>';
+    tips += '<li>Code.gs-e kono change korle notun kore <b>Deploy → Manage deployments → Edit (✎) → New version</b> kore deploy korte hobe, tarpor URL-ta same thakbe.</li>';
+    tips += '<li>URL-ta <code>/exec</code> diye shesh hocche kina check korun (<code>/dev</code> diye hole login lagbe).</li>';
+    tips += '<li>Apps Script editor theke <code>testGetDashboardData</code> function run kore dekhun error thakle sekhane dhora porbe.</li>';
+    document.getElementById('tabs').innerHTML = '';
+    document.getElementById('cards').innerHTML = '';
+    document.getElementById('tableScroll').innerHTML =
+      '<div class="empty-state" style="text-align:left;max-width:560px;margin:0 auto;">' +
+      '<b style="color:var(--danger)">Data load kora jayni:</b> ' + escapeHtml(msg) +
+      '<ul style="margin-top:14px;line-height:1.7;">' + tips + '</ul></div>';
+  }
+
+  function setupAutoRefresh(){
+    if(state.timer){ clearInterval(state.timer); state.timer = null; }
+    if(state.refreshSec > 0){
+      state.timer = setInterval(fetchData, state.refreshSec * 1000);
+    }
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', fetchData);
+
+  // ---------------- rendering ----------------
+  function renderEmptyNeedsSetup(){
+    document.getElementById('tabs').innerHTML = '';
+    document.getElementById('cards').innerHTML = '';
+    document.getElementById('tableScroll').innerHTML =
+      '<div class="empty-state">html file-er &lt;script&gt; ongshe <code>CONFIG.WEB_APP_URL</code>-e apnar Google Apps Script Web App URL ta bosan.<br>Tarpor eikhane automatic vabe sob process-er parameter-wise fail count dekha jabe.</div>';
+  }
+
+  function renderAll(){
+    if(!state.data) return;
+    var keys = Object.keys(state.data.processes || {});
+    var ordered = DEFAULT_PROCESS_ORDER.filter(function(k){ return keys.indexOf(k) !== -1; })
+      .concat(keys.filter(function(k){ return DEFAULT_PROCESS_ORDER.indexOf(k) === -1; }));
+
+    // tabs
+    var tabsEl = document.getElementById('tabs');
+    tabsEl.innerHTML = '';
+    ordered.forEach(function(procKey){
+      var proc = state.data.processes[procKey];
+      var health = computeHealth(proc);
+      var tab = document.createElement('div');
+      tab.className = 'tab' + (procKey === state.activeProcess ? ' active' : '');
+      tab.innerHTML = '<span class="led" style="background:' + healthColor(health) + '"></span>' + procKey;
+      tab.addEventListener('click', function(){ state.activeProcess = procKey; renderAll(); });
+      tabsEl.appendChild(tab);
+    });
+
+    if(!state.activeProcess && ordered.length){ state.activeProcess = ordered[0]; }
+    var activeProc = state.data.processes[state.activeProcess];
+    document.getElementById('panelTitle').textContent = (state.activeProcess || '—') + ' · Parameter-wise Fail Count';
+
+    populateAgentFilter(activeProc);
+    renderCards(activeProc);
+    renderTable(activeProc, state.data.parameters || []);
+  }
+
+  function populateAgentFilter(proc){
+    var sel = document.getElementById('agentFilterSelect');
+    var prevVal = sel.value;
+    var names = (proc && proc.agents) ? proc.agents.map(function(a){ return a.name; }).sort() : [];
+    var html = '<option value="">All Agents</option>';
+    names.forEach(function(n){ html += '<option value="'+escapeAttr(n)+'">'+escapeHtml(n)+'</option>'; });
+    sel.innerHTML = html;
+    sel.value = names.indexOf(prevVal) !== -1 ? prevVal : '';
+  }
+
+  function computeHealth(proc){
+    if(!proc || !proc.agents || !proc.agents.length) return 0;
+    var totalFails = 0, totalAudits = 0;
+    proc.agents.forEach(function(a){
+      totalAudits += a.auditCount;
+      Object.keys(a.fails).forEach(function(k){ totalFails += a.fails[k]; });
+    });
+    return totalAudits ? totalFails / totalAudits : 0;
+  }
+  function healthColor(h){
+    if(h === 0) return 'var(--text-faint)';
+    if(h < 0.5) return 'var(--good)';
+    if(h < 1.5) return 'var(--warn)';
+    return 'var(--danger)';
+  }
+
+  function renderCards(proc){
+    var cardsEl = document.getElementById('cards');
+    if(!proc || !proc.agents){ cardsEl.innerHTML=''; return; }
+    var agents = proc.agents;
+    var totalAudits = 0, scoreSum = 0, scoreN = 0, totalFails = 0;
+    agents.forEach(function(a){
+      totalAudits += a.auditCount;
+      if(a.avgScore !== null){ scoreSum += a.avgScore; scoreN++; }
+      Object.keys(a.fails).forEach(function(k){ totalFails += a.fails[k]; });
+    });
+    var avgScore = scoreN ? (scoreSum/scoreN).toFixed(1) : '—';
+    cardsEl.innerHTML =
+      card('Agents', agents.length) +
+      card('Total Audits', totalAudits) +
+      card('Avg Score', avgScore, 'accent') +
+      card('Total Fails', totalFails, totalFails > 0 ? 'danger' : '');
+  }
+  function card(label, value, cls){
+    return '<div class="card"><div class="label">'+label+'</div><div class="value '+(cls||'')+'">'+value+'</div></div>';
+  }
+
+  function failClass(n){
+    if(n === 0) return 'fail-0';
+    if(n <= 2) return 'fail-cell f-low';
+    if(n <= 5) return 'fail-cell f-mid';
+    return 'fail-cell f-high';
+  }
+
+  // Conditional formatting for Avg Score: tune thresholds here if needed.
+  function scoreClass(s){
+    if(s === null || s === undefined) return '';
+    if(s >= 90) return 'score-cell s-good';
+    if(s >= 75) return 'score-cell s-mid';
+    return 'score-cell s-bad';
+  }
+
+  function renderTable(proc, parameters){
+    var container = document.getElementById('tableScroll');
+    if(!proc || !proc.agents || !proc.agents.length){
+      container.innerHTML = '<div class="empty-state">Ei process-er jonno kono data paoya jayni.</div>';
+      return;
+    }
+    var q = (document.getElementById('searchInput').value || '').toLowerCase();
+    var filterVal = document.getElementById('agentFilterSelect').value;
+    var rows = proc.agents.filter(function(a){
+      var matchesSearch = a.name.toLowerCase().indexOf(q) !== -1;
+      var matchesFilter = !filterVal || a.name === filterVal;
+      return matchesSearch && matchesFilter;
+    });
+
+    if(state.sortKey){
+      rows = rows.slice().sort(function(a,b){
+        var va, vb;
+        if(state.sortKey === 'name'){ va=a.name; vb=b.name; return state.sortDir*va.localeCompare(vb); }
+        if(state.sortKey === 'auditCount'){ va=a.auditCount; vb=b.auditCount; }
+        else if(state.sortKey === 'avgScore'){ va=a.avgScore||0; vb=b.avgScore||0; }
+        else { va=a.fails[state.sortKey]||0; vb=b.fails[state.sortKey]||0; }
+        return state.sortDir*(va-vb);
+      });
+    }
+
+    var html = '<table><thead><tr>';
+    html += '<th class="agent-col" data-key="name">Agent Name</th>';
+    html += '<th data-key="auditCount">Audit Count</th>';
+    html += '<th data-key="avgScore">Avg Score</th>';
+    parameters.forEach(function(p){ html += '<th data-key="'+escapeAttr(p)+'">'+escapeHtml(p)+'</th>'; });
+    html += '</tr></thead><tbody>';
+
+    var totalAudits = 0, weightedScoreSum = 0, weightedScoreN = 0;
+    var paramTotals = {};
+    parameters.forEach(function(p){ paramTotals[p] = 0; });
+
+    rows.forEach(function(a){
+      html += '<tr><td class="agent-col">'+escapeHtml(a.name)+'</td>';
+      html += '<td>'+a.auditCount+'</td>';
+      html += '<td class="'+scoreClass(a.avgScore)+'"><span class="badge">'+(a.avgScore===null?'—':a.avgScore)+'</span></td>';
+      parameters.forEach(function(p){
+        var n = a.fails[p] || 0;
+        html += '<td class="'+failClass(n)+'"><span class="badge">'+n+'</span></td>';
+        paramTotals[p] += n;
+      });
+      html += '</tr>';
+
+      totalAudits += a.auditCount;
+      if(a.avgScore !== null){ weightedScoreSum += a.avgScore * a.auditCount; weightedScoreN += a.auditCount; }
+    });
+
+    html += '</tbody><tfoot><tr class="grand-total-row">';
+    html += '<td class="agent-col">GRAND TOTAL</td>';
+    html += '<td>'+totalAudits+'</td>';
+    var gAvg = weightedScoreN ? Math.round((weightedScoreSum/weightedScoreN)*100)/100 : null;
+    html += '<td class="'+scoreClass(gAvg)+'"><span class="badge">'+(gAvg===null?'—':gAvg)+'</span></td>';
+    parameters.forEach(function(p){ html += '<td>'+paramTotals[p]+'</td>'; });
+    html += '</tr></tfoot></table>';
+    container.innerHTML = html;
+
+    container.querySelectorAll('th[data-key]').forEach(function(th){
+      th.addEventListener('click', function(){
+        var key = th.getAttribute('data-key');
+        if(state.sortKey === key){ state.sortDir *= -1; } else { state.sortKey = key; state.sortDir = 1; }
+        renderTable(proc, parameters);
+      });
+    });
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  document.getElementById('searchInput').addEventListener('input', function(){
+    if(state.data && state.activeProcess){
+      renderTable(state.data.processes[state.activeProcess], state.data.parameters || []);
+    }
+  });
+  document.getElementById('agentFilterSelect').addEventListener('change', function(){
+    if(state.data && state.activeProcess){
+      renderTable(state.data.processes[state.activeProcess], state.data.parameters || []);
+    }
+  });
+
+  // ---------------- boot ----------------
+  loadTheme();
+  setupAutoRefresh();
+  if(state.apiUrl){ fetchData(); } else { renderEmptyNeedsSetup(); setStatus('warn','CONFIG.WEB_APP_URL set kora hoyni'); }
+})();
+</script>
+</body>
+</html>
