@@ -221,6 +221,7 @@ animation:gridMove 30s linear infinite;
   .legend{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--text-faint);flex-shrink:0;}
   .legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
 
+  
   .table-scroll{overflow:auto;max-height:70vh;}
   table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;font-family:var(--mono);}
   thead th{
@@ -350,6 +351,21 @@ transform:translate(-40px,-40px);
 }
 
 }
+
+/* ---------- animated LIVE watermark ---------- */
+.live-zone{position:relative;}
+.live-zone>.status-row,.live-zone>.tabs,.live-zone>.cards{position:relative;z-index:1;}
+.live-watermark{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:var(--display);font-weight:800;font-size:130px;letter-spacing:16px;
+  white-space:nowrap;pointer-events:none;user-select:none;z-index:0;
+  background-image:linear-gradient(90deg,#ff5d5d,#f5a623,#34d399,#2dd4bf,#7c9eff,#ff5d5d);
+  background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  opacity:.14;animation:liveHue 5s linear infinite,livePulse 2.4s ease-in-out infinite alternate;
+}
+@keyframes liveHue{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+@keyframes livePulse{0%{opacity:.08;transform:translate(-50%,-50%) scale(1);}100%{opacity:.22;transform:translate(-50%,-50%) scale(1.04);}}
+@media (max-width:720px){.live-watermark{font-size:56px;letter-spacing:6px;}}
 </style>
 </head>
 <body>
@@ -391,16 +407,19 @@ transform:translate(-40px,-40px);
 
 <div class="wrap">
 
-  <div class="status-row">
-    <div class="status-pill"><span class="dot" id="statusDot"></span><span id="statusText">Connecting…</span></div>
-    <div class="status-pill">🕓 Last synced: <span id="lastSync">—</span></div>
-    <div class="spacer"></div>
-    <button class="btn" id="refreshBtn">↻ Refresh now</button>
+  <div class="live-zone">
+    <div class="live-watermark" aria-hidden="true">LIVE</div>
+    <div class="status-row">
+      <div class="status-pill"><span class="dot" id="statusDot"></span><span id="statusText">Connecting…</span></div>
+      <div class="status-pill">🕓 Last synced: <span id="lastSync">—</span></div>
+      <div class="spacer"></div>
+      <button class="btn" id="refreshBtn">↻ Refresh now</button>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <div class="cards" id="cards"></div>
   </div>
-
-  <div class="tabs" id="tabs"></div>
-
-  <div class="cards" id="cards"></div>
 
   <div class="panel">
     <div class="panel-head">
@@ -440,7 +459,7 @@ transform:translate(-40px,-40px);
   //  TICKER_TEXT : the text that scrolls in the ticker strip below the header.
   // ==========================================================================
   var CONFIG = {
-    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxqPyo4IiBAzQetd6veRxeqP9HgMgUZ8JxDcvLfOuqKzzAquCuwQQeEC5c8lnTqpb1E-A/exec",
+    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbynuWG1pmogLgWrrWV3PliaoouH4zUQMP3On-stBbh3abS1-Ya5IJoNy75mYrzZzE1GUw/exec",
     REFRESH_SECONDS: 60,
     TICKER_TEXT: "📈 CATV, BB Tech Support এবং BB Renewal-এর Parameter-wise Fail Count এখানে উপলব্ধ।"
   };
@@ -640,11 +659,12 @@ document.getElementById('tableScroll').innerHTML=
     var cardsEl = document.getElementById('cards');
     if(!proc || !proc.agents){ cardsEl.innerHTML=''; return; }
     var agents = proc.agents;
-    var totalAudits = 0, scoreSum = 0, scoreN = 0, totalFails = 0;
+    var totalAudits = 0, scoreSum = 0, scoreN = 0, totalFails = 0, totalFatals = 0;
     agents.forEach(function(a){
       totalAudits += a.auditCount;
       if(a.avgScore !== null){ scoreSum += a.avgScore; scoreN++; }
       Object.keys(a.fails).forEach(function(k){ totalFails += a.fails[k]; });
+      totalFatals += a.fatalCount || 0;
     });
     var avgScore = scoreN ? (scoreSum/scoreN).toFixed(1) : '—';
     cardsEl.innerHTML =
@@ -652,10 +672,12 @@ document.getElementById('tableScroll').innerHTML=
       card('Total Audits', totalAudits) +
       card('Avg Score', avgScore, 'accent') +
       card('Total Fails', totalFails, totalFails > 0 ? 'danger' : '');
+      
   }
   function card(label, value, cls){
     return '<div class="card"><div class="label">'+label+'</div><div class="value '+(cls||'')+'">'+value+'</div></div>';
   }
+
 
   function failClass(n){
     if(n === 0) return 'fail-0';
