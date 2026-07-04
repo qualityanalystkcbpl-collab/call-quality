@@ -26,7 +26,62 @@
     --shadow: 0 10px 24px rgba(30,42,66,.10);
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);transition:background .25s ease,color .25s ease;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    transition:background .25s ease,color .25s ease;
+
+    position:relative;
+    overflow-x:hidden;
+}
+/*==============================
+ Animated Background
+==============================*/
+
+body::before{
+
+content:"";
+
+position:fixed;
+
+inset:0;
+
+z-index:-2;
+
+background:
+radial-gradient(circle at 15% 20%, rgba(45,212,191,.18), transparent 30%),
+radial-gradient(circle at 80% 30%, rgba(124,158,255,.15), transparent 35%),
+radial-gradient(circle at 50% 80%, rgba(255,93,93,.12), transparent 35%),
+linear-gradient(135deg,#07111d,#0b1420,#13233d);
+
+background-size:200% 200%;
+
+animation:bgMove 18s ease-in-out infinite alternate;
+
+}
+body::after{
+
+content:"";
+
+position:fixed;
+
+inset:0;
+
+z-index:-1;
+
+background-image:
+
+linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+
+linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+
+background-size:40px 40px;
+
+animation:gridMove 30s linear infinite;
+
+}
   ::selection{background:var(--accent-soft);color:var(--text);}
   a{color:inherit;}
 
@@ -248,6 +303,53 @@
     .clock{min-width:auto;font-size:11px;padding:6px 9px;}
     .home-btn span.txt{display:none;}
   }
+@keyframes bgMove{
+
+0%{
+
+background-position:
+
+0% 0%,
+
+100% 0%,
+
+50% 100%,
+
+0 0;
+
+}
+
+100%{
+
+background-position:
+
+15% 10%,
+
+80% 60%,
+
+40% 90%,
+
+0 0;
+
+}
+
+}
+
+@keyframes gridMove{
+
+0%{
+
+transform:translate(0,0);
+
+}
+
+100%{
+
+transform:translate(-40px,-40px);
+
+}
+
+}
 </style>
 </head>
 <body>
