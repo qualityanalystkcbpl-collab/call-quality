@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8" />
@@ -383,7 +383,7 @@ transform:translate(-40px,-40px);
 </div>
 
 <div class="ticker-wrap">
-  <div class="ticker-tag">Live Feed</div>
+  <div class="ticker-tag">UPDATE</div>
   <div class="ticker-track" id="tickerTrack">
     <span id="tickerText">📈 CATV, BB Tech Support এবং BB Renewal-এর Parameter-wise Fail Count এখানে উপলব্ধ।</span>
   </div>
@@ -553,17 +553,6 @@ transform:translate(-40px,-40px);
     '</div>';
 
 }
-    tips += '<li>Apps Script-e <b>Deploy → Manage deployments</b>-e giye check korun Access <b>"Anyone"</b> kore deploy kora ache kina (শুধু "Anyone with Google account" hole cholbe na).</li>';
-    tips += '<li>Code.gs-e kono change korle notun kore <b>Deploy → Manage deployments → Edit (✎) → New version</b> kore deploy korte hobe, tarpor URL-ta same thakbe.</li>';
-    tips += '<li>URL-ta <code>/exec</code> diye shesh hocche kina check korun (<code>/dev</code> diye hole login lagbe).</li>';
-    tips += '<li>Apps Script editor theke <code>testGetDashboardData</code> function run kore dekhun error thakle sekhane dhora porbe.</li>';
-    document.getElementById('tabs').innerHTML = '';
-    document.getElementById('cards').innerHTML = '';
-    document.getElementById('tableScroll').innerHTML =
-      '<div class="empty-state" style="text-align:left;max-width:560px;margin:0 auto;">' +
-      '<b style="color:var(--danger)">Data load kora jayni:</b> ' + escapeHtml(msg) +
-      '<ul style="margin-top:14px;line-height:1.7;">' + tips + '</ul></div>';
-  }
 
   function setupAutoRefresh(){
     if(state.timer){ clearInterval(state.timer); state.timer = null; }
