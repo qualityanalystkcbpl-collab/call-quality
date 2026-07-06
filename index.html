@@ -2584,6 +2584,13 @@ function updateWelcome(){
 updateWelcome();
 
 setInterval(updateWelcome,1000);
+/* ===============================
+   Auto Refresh Every 10 Minutes
+================================= */
+
+setInterval(() => {
+    location.reload();
+}, 10 * 60 * 1000); // 10 Minutes
 </script>
 </body>
 </html>
