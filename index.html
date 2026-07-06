@@ -463,7 +463,9 @@ header.topbar{
 
 .ticker-track{
 
-    display:inline-block;
+    display:inline-flex;
+align-items:center;
+width:max-content;
 
     white-space:nowrap;
 
@@ -483,8 +485,6 @@ header.topbar{
 .ticker:hover .ticker-track{
 
     animation-play-state:paused;
-
-}
 
 }
 /* ===========================
@@ -2021,7 +2021,10 @@ async function saveTicker(){
   showToast('Saving to WEBPAGEDATA...');
   const success = await storageSet('ticker', { text });
   if(success) {
-    document.getElementById('tickerTrack').textContent = text;
+    document.getElementById("tickerTrack").innerHTML =
+text +
+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✦ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+text;
     showToast('Ticker saved dynamically to Google Sheets!');
   }
 }
