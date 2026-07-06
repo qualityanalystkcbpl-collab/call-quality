@@ -1231,6 +1231,163 @@ text-shadow:
 }
 
 }
+/*==========================
+  Premium Welcome (No Box)
+==========================*/
+
+.welcome-area{
+
+    text-align:center;
+
+    margin-bottom:30px;
+
+    position:relative;
+
+    animation:welcomeFade .8s ease;
+
+}
+
+.welcome-icon{
+
+    font-size:42px;
+
+    margin-bottom:10px;
+
+    animation:floatIcon 3s ease-in-out infinite;
+
+}
+
+.welcome-greeting{
+
+    font-family:'Space Grotesk',sans-serif;
+
+    font-size:34px;
+
+    font-weight:700;
+
+    background:linear-gradient(
+        90deg,
+        #33C9B0,
+        #FFD166,
+        #FFFFFF,
+        #33C9B0
+    );
+
+    background-size:220%;
+
+    -webkit-background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+
+    animation:gradientMove 6s linear infinite;
+
+}
+
+.welcome-title{
+
+    margin-top:8px;
+
+    font-size:18px;
+
+    color:#ffffff;
+
+    font-weight:600;
+
+    letter-spacing:1px;
+
+}
+
+.welcome-subtitle{
+
+    margin-top:6px;
+
+    font-size:14px;
+
+    color:#8fa0b5;
+
+    letter-spacing:2px;
+
+    text-transform:uppercase;
+
+}
+
+.welcome-date{
+
+    margin-top:16px;
+
+    font-size:14px;
+
+    color:#c8d4df;
+
+}
+
+.welcome-time{
+
+    margin-top:6px;
+
+    font-family:'IBM Plex Mono',monospace;
+
+    font-size:22px;
+
+    color:#33C9B0;
+
+    text-shadow:0 0 10px rgba(51,201,176,.45);
+
+    animation:clockGlow 2s infinite alternate;
+
+}
+
+@keyframes floatIcon{
+
+0%,100%{
+
+transform:translateY(0);
+
+}
+
+50%{
+
+transform:translateY(-8px);
+
+}
+
+}
+
+@keyframes gradientMove{
+
+0%{
+
+background-position:0%;
+
+}
+
+100%{
+
+background-position:220%;
+
+}
+
+}
+
+@keyframes welcomeFade{
+
+from{
+
+opacity:0;
+
+transform:translateY(20px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+}
 </style>
 </head>
 <body>
@@ -1252,6 +1409,32 @@ text-shadow:
   </div>
   <div class="login-form-wrap">
     <div class="login-card">
+<!-- Premium Welcome -->
+<div class="welcome-area">
+
+    <div class="welcome-icon" id="welcomeIcon">🌅</div>
+
+    <div class="welcome-greeting" id="welcomeGreeting">
+        Good Morning
+    </div>
+
+    <div class="welcome-title">
+        Welcome to QA Control Room
+    </div>
+
+    <div class="welcome-subtitle">
+        Live Quality Monitoring System
+    </div>
+
+    <div class="welcome-date" id="welcomeDate">
+        Monday, 06 July 2026
+    </div>
+
+    <div class="welcome-time" id="welcomeTime">
+        09:45:28 AM
+    </div>
+
+</div>
       <h2>Sign in</h2>
       <p class="hint">আপনার role বেছে নিয়ে password দিন।</p>
       <div class="role-toggle">
@@ -2336,6 +2519,71 @@ async function deleteUpdate(id){
 }
 /* ===================== SYSTEM INITIALIZATION ===================== */
 updateLoginAgentCount();
+function updateWelcome(){
+
+    const now=new Date();
+
+    const h=now.getHours();
+
+    let greet="";
+    let icon="";
+
+    if(h>=5 && h<12){
+
+        greet="Good Morning";
+        icon="🌅";
+
+    }
+
+    else if(h>=12 && h<17){
+
+        greet="Good Afternoon";
+        icon="☀️";
+
+    }
+
+    else if(h>=17 && h<20){
+
+        greet="Good Evening";
+        icon="🌇";
+
+    }
+
+    else{
+
+        greet="Good Night";
+        icon="🌙";
+
+    }
+
+    document.getElementById("welcomeGreeting").innerHTML=greet;
+    document.getElementById("welcomeIcon").innerHTML=icon;
+
+    document.getElementById("welcomeDate").innerHTML=
+        now.toLocaleDateString("en-IN",{
+
+            weekday:"long",
+            day:"2-digit",
+            month:"long",
+            year:"numeric"
+
+        });
+
+    document.getElementById("welcomeTime").innerHTML=
+        now.toLocaleTimeString("en-IN",{
+
+            hour:"2-digit",
+            minute:"2-digit",
+            second:"2-digit",
+            hour12:true
+
+        });
+
+}
+
+updateWelcome();
+
+setInterval(updateWelcome,1000);
 </script>
 </body>
 </html>
