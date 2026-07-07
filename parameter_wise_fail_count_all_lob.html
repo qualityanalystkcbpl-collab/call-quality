@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8" />
@@ -35,6 +35,11 @@
 
     position:relative;
     overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+}
+html{
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
 }
 /*==============================
  Animated Background
@@ -244,40 +249,26 @@ animation:gridMove 30s linear infinite;
 
     height:100%;
 
+    display:flex;
+    align-items:center;
+    white-space:nowrap;
+
 }
 .ticker-track span{
 
-    position:absolute;
-
-    left:100%;
-
-    top:50%;
-
-    transform:translateY(-50%);
+    display:inline-block;
 
     white-space:nowrap;
 
-    padding-left:20px;
+    padding:0 40px;
 
-    animation:scrollLeft 28s linear infinite;
+    animation:scrollLeft 18s linear infinite;
 
     color:#fff;
 
     font-weight:700;
 
     text-shadow:0 0 5px rgba(255,255,255,.6);
-
-}
-  .ticker-track span{
-
-    padding:0 40px;
-
-    color:#fff;
-
-    font-weight:700;
-
-    text-shadow:
-        0 0 5px rgba(255,255,255,.6);
 
 }
 @keyframes rainbowTicker{
@@ -305,13 +296,13 @@ animation:gridMove 30s linear infinite;
 
     0%{
 
-        left:100%;
+        transform:translateX(0);
 
     }
 
     100%{
 
-        left:-100%;
+        transform:translateX(-100%);
 
     }
 
@@ -509,7 +500,7 @@ animation:gridMove 30s linear infinite;
 
     color:#fff;
 
-    animation:activePulse 1.6s infinite;
+    animation:activePulse 1s ease-in-out infinite;
 
 }
 
@@ -582,13 +573,25 @@ animation:gridMove 30s linear infinite;
 
     0%,100%{
 
-        transform:translateY(0);
+        transform:translateY(0) scale(1) rotate(0deg);
+
+    }
+
+    25%{
+
+        transform:translateY(-6px) scale(1.06) rotate(-1.5deg);
 
     }
 
     50%{
 
-        transform:translateY(-2px);
+        transform:translateY(-9px) scale(1.09) rotate(0deg);
+
+    }
+
+    75%{
+
+        transform:translateY(-6px) scale(1.06) rotate(1.5deg);
 
     }
 
@@ -637,16 +640,29 @@ animation:gridMove 30s linear infinite;
   .legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
 
   
-  .table-scroll{overflow:auto;max-height:70vh;}
+  .table-scroll{overflow:auto;max-height:70vh;-webkit-overflow-scrolling:touch;}
   table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;font-family:var(--mono);}
   thead th{
     position:sticky;top:0;background:var(--panel-2);color:var(--text-dim);
     font-family:var(--body);font-weight:600;text-align:center;padding:11px 14px;
     border-bottom:1px solid var(--border);border-right:1px solid var(--border);
     white-space:nowrap;cursor:pointer;user-select:none;z-index:3;
+    transition:color .18s ease, background .18s ease;
+    isolation:isolate;
+  }
+  thead th::after{
+    content:'';
+    position:absolute;
+    left:14px; right:14px; bottom:0;
+    height:2px;
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform .25s ease;
   }
   thead th:last-child{border-right:none;}
-  thead th:hover{color:var(--accent);}
+  thead th:hover{color:var(--accent);background:var(--panel-3);}
+  thead th:hover::after{transform:scaleX(1);}
   thead th.agent-col, tbody td.agent-col{
     position:sticky;left:0;background:var(--panel-2);text-align:left;z-index:4;
     box-shadow:2px 0 0 var(--border);
@@ -654,32 +670,113 @@ animation:gridMove 30s linear infinite;
   tbody td.agent-col{background:var(--panel);font-family:var(--body);font-weight:600;z-index:2;}
   tbody tr:nth-child(even) td{background:var(--panel-2);}
   tbody tr:nth-child(even) td.agent-col{background:var(--panel-3);}
+  tbody tr{
+    animation:rowFadeIn .4s ease both;
+    transition:transform .15s ease;
+  }
   tbody tr:hover td{background:var(--accent-soft);}
   tbody tr:hover td.agent-col{background:var(--panel-3);}
+  tbody tr:hover{transform:translateX(2px);}
+  @keyframes rowFadeIn{
+    from{ opacity:0; transform:translateY(6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  tbody tr:nth-child(1){animation-delay:.01s;}
+  tbody tr:nth-child(2){animation-delay:.02s;}
+  tbody tr:nth-child(3){animation-delay:.03s;}
+  tbody tr:nth-child(4){animation-delay:.04s;}
+  tbody tr:nth-child(5){animation-delay:.05s;}
+  tbody tr:nth-child(6){animation-delay:.06s;}
+  tbody tr:nth-child(7){animation-delay:.07s;}
+  tbody tr:nth-child(8){animation-delay:.08s;}
+  tbody tr:nth-child(9){animation-delay:.09s;}
+  tbody tr:nth-child(10){animation-delay:.10s;}
+  tbody tr:nth-child(n+11){animation-delay:.11s;}
   tbody td{padding:9px 14px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap;}
   tbody td:last-child{border-right:none;}
   td.fail-0{color:var(--text-faint);}
   td.fail-cell{position:relative;}
   td.fail-cell span.badge{
-    display:inline-block;min-width:26px;padding:3px 9px;border-radius:20px;font-weight:800;
+    display:inline-block;min-width:28px;padding:5px 12px;border-radius:20px;font-weight:800;
+    border:1px solid transparent;
+    transition:transform .18s ease, box-shadow .18s ease;
   }
-  td.f-low span.badge{color:var(--good);background:rgba(52,211,153,.14);}
-  td.f-mid span.badge{color:var(--warn);background:rgba(245,166,35,.16);}
-  td.f-high span.badge{color:var(--danger);background:rgba(255,93,93,.16);}
+  td.fail-cell span.badge:hover{transform:scale(1.15) rotate(-1deg);}
+  td.f-low span.badge{
+    color:#eafff5; background:linear-gradient(135deg,#34D399,#0E9C6F);
+    border-color:rgba(52,211,153,.6); box-shadow:0 2px 8px rgba(52,211,153,.25);
+  }
+  td.f-mid span.badge{
+    color:#3a2600; background:linear-gradient(135deg,#FFCE54,#F5A623);
+    border-color:rgba(245,166,35,.65); box-shadow:0 2px 8px rgba(245,166,35,.28);
+  }
+  td.f-high span.badge{
+    color:#fff0ef; background:linear-gradient(135deg,#FF7A7A,#E53E3E);
+    border-color:rgba(255,93,93,.7); box-shadow:0 2px 10px rgba(255,93,93,.35);
+    animation:pulseBadgeDanger 2.2s ease-in-out infinite;
+  }
+  @keyframes pulseBadgeDanger{
+    0%,100%{ box-shadow:0 2px 10px rgba(255,93,93,.35); }
+    50%{ box-shadow:0 2px 18px rgba(255,93,93,.7); }
+  }
   td.score-cell span.badge{
-    display:inline-block;min-width:44px;padding:3px 10px;border-radius:20px;font-weight:800;
+    display:inline-block;min-width:46px;padding:5px 13px;border-radius:20px;font-weight:800;
+    border:1px solid transparent;
+    transition:transform .18s ease, box-shadow .18s ease;
   }
-  td.s-good span.badge{color:var(--good);background:rgba(52,211,153,.14);}
-  td.s-mid span.badge{color:var(--warn);background:rgba(245,166,35,.16);}
-  td.s-bad span.badge{color:var(--danger);background:rgba(255,93,93,.16);}
+  td.score-cell span.badge:hover{transform:scale(1.12) rotate(1deg);}
+  td.s-good span.badge{
+    color:#eafff5; background:linear-gradient(135deg,#34D399,#0E9C6F);
+    border-color:rgba(52,211,153,.6); box-shadow:0 2px 8px rgba(52,211,153,.25);
+  }
+  td.s-mid span.badge{
+    color:#3a2600; background:linear-gradient(135deg,#FFCE54,#F5A623);
+    border-color:rgba(245,166,35,.65); box-shadow:0 2px 8px rgba(245,166,35,.28);
+  }
+  td.s-bad span.badge{
+    color:#fff0ef; background:linear-gradient(135deg,#FF7A7A,#E53E3E);
+    border-color:rgba(255,93,93,.7); box-shadow:0 2px 10px rgba(255,93,93,.35);
+    animation:pulseBadgeDanger 2.2s ease-in-out infinite;
+  }
+  /* colorful agent name column — fully filled background, rotating 3 colors */
+  tbody td.agent-col{
+    border-left:3px solid rgba(0,0,0,.25);
+  }
+  tbody tr:nth-child(3n+1) td.agent-col{
+    background:linear-gradient(135deg,#17a589,#0e9c6f) !important;
+    color:#eafff5;
+  }
+  tbody tr:nth-child(3n+2) td.agent-col{
+    background:linear-gradient(135deg,#4b6cff,#3d63dd) !important;
+    color:#eaf0ff;
+  }
+  tbody tr:nth-child(3n+3) td.agent-col{
+    background:linear-gradient(135deg,#f5a623,#d9860a) !important;
+    color:#3a2600;
+  }
+  tbody tr:hover td.agent-col{ filter:brightness(1.12); }
+  /* soft rainbow-tinted zebra striping (very subtle, doesn't fight badges) */
+  tbody tr:nth-child(6n+1) td{ background:rgba(45,212,191,.03); }
+  tbody tr:nth-child(6n+2) td{ background:rgba(124,158,255,.03); }
+  tbody tr:nth-child(6n+3) td{ background:rgba(245,166,35,.03); }
+  tbody tr:nth-child(6n+4) td{ background:rgba(255,93,93,.025); }
+  tbody tr:nth-child(6n+5) td{ background:rgba(52,211,153,.03); }
+  tbody tr:nth-child(6n+6) td{ background:rgba(124,158,255,.035); }
+  tbody tr:hover td{background:var(--accent-soft) !important;}
   tfoot .grand-total-row td{
     font-family:var(--display);font-weight:800;font-size:12.5px;
-    background:var(--panel-3);border-top:2px solid var(--accent);
+    background:#000;
+    border-top:2px solid var(--accent);
     border-right:1px solid var(--border);
     border-bottom:none;color:var(--text);position:sticky;bottom:0;z-index:3;
+    animation:grandTotalGlow 3s ease-in-out infinite;
+  }
+  @keyframes grandTotalGlow{
+    0%,100%{ box-shadow:inset 0 1px 0 rgba(45,212,191,.15); }
+    50%{ box-shadow:inset 0 1px 0 rgba(45,212,191,.4); }
   }
   tfoot .grand-total-row td:last-child{border-right:none;}
-  tfoot .grand-total-row td.agent-col{background:var(--panel-3);color:var(--accent);letter-spacing:.5px;}
+  tfoot .grand-total-row td.agent-col{background:#000;color:var(--accent);letter-spacing:.5px;}
   .panel{border-radius:16px;}
   .table-scroll{border-radius:0 0 16px 16px;}
   .empty-state, .loading-state{padding:60px 20px;text-align:center;color:var(--text-dim);font-size:13px;}
@@ -710,7 +807,7 @@ animation:gridMove 30s linear infinite;
   .field input:focus{outline:none;border-color:var(--accent);}
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
 
-  footer{text-align:center;color:var(--text-faint);font-size:11px;padding:26px 10px 34px;}
+  footer{text-align:center;color:var(--text-faint);font-size:11px;padding:26px 10px 34px;background:#000;}
 
   @media (max-width:720px){
     .topbar{padding:10px 14px;gap:10px;}
@@ -816,7 +913,7 @@ transform:translate(-40px,-40px);
 <div class="ticker-wrap">
   <div class="ticker-tag">UPDATE</div>
   <div class="ticker-track" id="tickerTrack">
-    <span id="tickerText">📈 CATV, BB Tech Support এবং BB Renewal-এর Parameter-wise Fail Count এখানে উপলব্ধ।</span>
+    <span id="tickerText">📈 CATV, BB Tech Support এবং BB Renewal-এর Parameter-wise Fail Count এখানে উপলব্ধ।</span><span id="tickerText2">📈 CATV, BB Tech Support এবং BB Renewal-এর Parameter-wise Fail Count এখানে উপলব্ধ।</span>
   </div>
 </div>
 
@@ -892,6 +989,8 @@ transform:translate(-40px,-40px);
     timer: null
   };
   document.getElementById('tickerText').textContent = CONFIG.TICKER_TEXT;
+  var t2 = document.getElementById('tickerText2');
+  if(t2) t2.textContent = CONFIG.TICKER_TEXT;
 
   // ---------------- theme ----------------
   function loadTheme(){
