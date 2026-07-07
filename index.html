@@ -1582,6 +1582,178 @@ transform:translateY(0);
   object-fit:contain;
   filter:drop-shadow(0 6px 14px rgba(0,0,0,.4));
 }
+
+/* ============================================================
+   ANSWERED WITHIN 3 SEC — Colorful boxed table
+   ============================================================ */
+.ans3sec-table-wrap{
+  overflow:auto;
+  max-height:600px;
+  border-radius:16px;
+  padding:4px;
+  background:linear-gradient(135deg, rgba(51,201,176,0.10), rgba(227,168,87,0.10));
+  margin-bottom:22px;
+}
+.ans3sec-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:6px;
+}
+.ans3sec-table thead th{
+  position:sticky;
+  top:0;
+  z-index:5;
+  padding:12px 14px;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-weight:800;
+  color:#fff;
+  background:linear-gradient(135deg, #1B3150, #143832);
+  border-radius:10px;
+  white-space:nowrap;
+}
+.ans3sec-table tbody td{
+  padding:0;
+  white-space:nowrap;
+}
+.ans3sec-cell{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:64px;
+  padding:10px 14px;
+  border-radius:10px;
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:700;
+  font-size:13px;
+  border:1px solid transparent;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.ans3sec-cell:hover{
+  transform:translateY(-2px) scale(1.04);
+  box-shadow:0 6px 16px rgba(0,0,0,0.35);
+}
+.ans3sec-cell.agent-name{
+  justify-content:flex-start;
+  min-width:170px;
+  font-family:'Inter',sans-serif;
+  font-weight:700;
+  font-size:13.5px;
+  color:var(--text);
+  background:var(--surface);
+  border:1px solid var(--border);
+}
+.ans3sec-cell.na{
+  color:var(--text-muted);
+  background:rgba(255,255,255,0.03);
+  border:1px dashed var(--border);
+}
+.ans3sec-cell.excellent{ color:#eafff3; background:linear-gradient(135deg,#1b6b46,#0f4530); border-color:rgba(63,191,127,0.5); }
+.ans3sec-cell.good{ color:#3a2f00; background:linear-gradient(135deg,#f4dd66,#e0c341); border-color:rgba(224,195,65,0.6); }
+.ans3sec-cell.need{ color:#fff0ef; background:linear-gradient(135deg,#8a2b26,#5c1a17); border-color:rgba(224,82,74,0.5); }
+.ans3sec-cell.grand-total{
+  font-weight:900;
+  color:#2B1D06;
+  background:linear-gradient(135deg,#FFD27A,#E3A857);
+  border-color:rgba(227,168,87,0.7);
+  box-shadow:0 0 14px rgba(227,168,87,0.35);
+}
+.ans3sec-row-total .ans3sec-cell.agent-name{
+  background:linear-gradient(135deg,#3D2E18,#2B1D06);
+  color:#FFD27A;
+  border-color:rgba(227,168,87,0.5);
+}
+
+/* ============================================================
+   CATV / BB TECH / BB RENEWAL — animated colorful sub-tab buttons
+   ============================================================ */
+@keyframes tabPop{
+  0%{ transform:scale(0.9); opacity:0; }
+  60%{ transform:scale(1.03); opacity:1; }
+  100%{ transform:scale(1); }
+}
+@keyframes tabShimmer{
+  0%{ background-position:0% 50%; }
+  100%{ background-position:200% 50%; }
+}
+.lob-tab-row{
+  display:flex;
+  gap:10px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+.lob-tab{
+  position:relative;
+  padding:10px 20px;
+  border-radius:10px;
+  font-weight:700;
+  font-size:12.5px;
+  letter-spacing:.3px;
+  cursor:pointer;
+  border:1px solid transparent;
+  color:#cfe0ee;
+  background:var(--surface-2);
+  overflow:hidden;
+  animation:tabPop .45s cubic-bezier(.34,1.56,.64,1) both;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.lob-tab:hover{ transform:translateY(-3px); }
+.lob-tab.lob-catv{
+  background:linear-gradient(120deg,#33C9B0,#1B3150,#33C9B0);
+  background-size:220% 220%;
+  animation:tabPop .45s cubic-bezier(.34,1.56,.64,1) both, tabShimmer 6s ease infinite;
+  color:#04211C;
+  box-shadow:0 0 14px rgba(51,201,176,0.35);
+}
+.lob-tab.lob-bbtech{
+  background:linear-gradient(120deg,#E3A857,#3D2E18,#E3A857);
+  background-size:220% 220%;
+  animation:tabPop .45s cubic-bezier(.34,1.56,.64,1) both, tabShimmer 7s ease infinite;
+  color:#2B1D06;
+  box-shadow:0 0 14px rgba(227,168,87,0.35);
+}
+.lob-tab.lob-bbrenewal{
+  background:linear-gradient(120deg,#FF5E7E,#3D142A,#FF5E7E);
+  background-size:220% 220%;
+  animation:tabPop .45s cubic-bezier(.34,1.56,.64,1) both, tabShimmer 8s ease infinite;
+  color:#3D0E1A;
+  box-shadow:0 0 14px rgba(255,94,126,0.35);
+}
+.lob-tab.active{
+  outline:2px solid #fff;
+  outline-offset:2px;
+}
+
+/* ============================================================
+   Data Sheets tabs (CATV / BB Tech / BB Renewal in sidebar-driven
+   panels) — animated colorful entrance for their section headers
+   ============================================================ */
+@keyframes sectionGlideIn{
+  0%{ opacity:0; transform:translateY(14px); }
+  100%{ opacity:1; transform:translateY(0); }
+}
+#panel-CATV, #panel-BBTECH, #panel-BBRENEWAL{
+  animation:sectionGlideIn .5s ease both;
+}
+#panel-CATV .stat-card, #panel-BBTECH .stat-card, #panel-BBRENEWAL .stat-card{
+  animation:sectionGlideIn .5s ease both;
+}
+#panel-CATV .stat-card:nth-child(1){ animation-delay:.03s; border-top:3px solid #33C9B0; }
+#panel-CATV .stat-card:nth-child(2){ animation-delay:.07s; border-top:3px solid #33C9B0; }
+#panel-CATV .stat-card:nth-child(3){ animation-delay:.11s; border-top:3px solid #33C9B0; }
+#panel-CATV .stat-card:nth-child(4){ animation-delay:.15s; border-top:3px solid #33C9B0; }
+#panel-CATV .stat-card:nth-child(5){ animation-delay:.19s; border-top:3px solid #33C9B0; }
+#panel-BBTECH .stat-card:nth-child(1){ animation-delay:.03s; border-top:3px solid #E3A857; }
+#panel-BBTECH .stat-card:nth-child(2){ animation-delay:.07s; border-top:3px solid #E3A857; }
+#panel-BBTECH .stat-card:nth-child(3){ animation-delay:.11s; border-top:3px solid #E3A857; }
+#panel-BBTECH .stat-card:nth-child(4){ animation-delay:.15s; border-top:3px solid #E3A857; }
+#panel-BBTECH .stat-card:nth-child(5){ animation-delay:.19s; border-top:3px solid #E3A857; }
+#panel-BBRENEWAL .stat-card:nth-child(1){ animation-delay:.03s; border-top:3px solid #FF5E7E; }
+#panel-BBRENEWAL .stat-card:nth-child(2){ animation-delay:.07s; border-top:3px solid #FF5E7E; }
+#panel-BBRENEWAL .stat-card:nth-child(3){ animation-delay:.11s; border-top:3px solid #FF5E7E; }
+#panel-BBRENEWAL .stat-card:nth-child(4){ animation-delay:.15s; border-top:3px solid #FF5E7E; }
+#panel-BBRENEWAL .stat-card:nth-child(5){ animation-delay:.19s; border-top:3px solid #FF5E7E; }
 </style>
 </head>
 <body>
@@ -2615,11 +2787,47 @@ async function renderDedicatedDashboard(vKey) {
 }
 /* ===================== ANSWERED WITHIN 3 SECONDS (LIVE GOOGLE SHEET) ===================== */
 function ans3secSubTabsHtml(activeSub){
-  return `<div style="display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;">
+  const cls = { CATV:'lob-catv', BBTECH:'lob-bbtech', BBRENEWAL:'lob-bbrenewal' };
+  return `<div class="lob-tab-row">
     ${Object.keys(ANS3SEC_SHEETS).map(k=>
-      `<button class="btn ${k===activeSub?'gold':''} small" onclick="renderAnswered3SecPanel('${k}')">${VERTICALS[k].label}</button>`
+      `<button class="lob-tab ${cls[k]||''} ${k===activeSub?'active':''}" onclick="renderAnswered3SecPanel('${k}')">${VERTICALS[k].label}</button>`
     ).join('')}
   </div>`;
+}
+function statusClassFor3Sec(val){
+  if(val === '-' || val === '') return 'na';
+  const num = parseFloat(val);
+  if(isNaN(num)) return 'na';
+  if(num >= 95) return 'excellent';
+  if(num >= 85) return 'good';
+  return 'need';
+}
+function buildAns3SecTableHtml(monthHeaders, rows, label){
+  const bodyRows = rows.map(row=>{
+    const agent = String(row[0] || '').trim();
+    if(!agent) return '';
+    const isTotal = /grand\s*total/i.test(agent);
+
+    const cells = monthHeaders.map((m, idx)=>{
+      const rawVal = row[idx+1];
+      const val = (rawVal === undefined || rawVal === null || rawVal === '') ? '-' : String(rawVal).trim();
+      const cls = isTotal ? 'grand-total' : statusClassFor3Sec(val);
+      return `<td><div class="ans3sec-cell ${cls}">${escapeHtml(val)}</div></td>`;
+    }).join('');
+
+    return `<tr${isTotal ? ' class="ans3sec-row-total"' : ''}>
+      <td><div class="ans3sec-cell agent-name">${escapeHtml(agent)}</div></td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="ans3sec-table-wrap">
+      <table class="ans3sec-table">
+        <thead><tr><th>Agent Name (${label})</th>${monthHeaders.map(m=>`<th>${escapeHtml(m)}</th>`).join('')}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>`;
 }
 async function renderAnswered3SecPanel(sub){
   sub = sub || ans3secSubTab || 'CATV';
@@ -2653,26 +2861,6 @@ async function renderAnswered3SecPanel(sub){
     const rows = data.slice(1);
     const monthHeaders = headers.slice(1);
 
-    const bodyRows = rows.map(row=>{
-      const agent = String(row[0] || '').trim();
-      if(!agent) return '';
-      const isTotal = /grand\s*total/i.test(agent);
-      const cells = monthHeaders.map((m, idx)=>{
-        const rawVal = row[idx+1];
-        const val = (rawVal === undefined || rawVal === null || rawVal === '') ? '-' : String(rawVal).trim();
-        const num = parseFloat(val);
-        let style = isTotal ? 'font-weight:800;' : '';
-        if(!isNaN(num)){
-          style += num >= 95 ? 'color:var(--excellent);' : (num >= 85 ? 'color:var(--good);' : 'color:var(--need);');
-        }
-        return `<td style="${style}">${escapeHtml(val)}</td>`;
-      }).join('');
-      return `<tr${isTotal ? ' style="background:rgba(227,168,87,0.14);"' : ''}>
-        <td style="font-weight:${isTotal ? 800 : 600}; ${isTotal ? 'color:var(--admin);' : ''}">${escapeHtml(agent)}</td>
-        ${cells}
-      </tr>`;
-    }).join('');
-
     panel.innerHTML = `
       <div class="panel-header">
         <div>
@@ -2682,12 +2870,8 @@ async function renderAnswered3SecPanel(sub){
         <button class="btn primary" onclick="renderAnswered3SecPanel('${sub}')">↻ Refresh Live Data</button>
       </div>
       ${ans3secSubTabsHtml(sub)}
-      <div class="table-wrapper" style="overflow:auto; max-height:600px;">
-        <table class="score-table">
-          <thead><tr><th>Agent Name (${label})</th>${monthHeaders.map(m=>`<th>${escapeHtml(m)}</th>`).join('')}</tr></thead>
-          <tbody>${bodyRows}</tbody>
-        </table>
-      </div>`;
+      ${buildAns3SecTableHtml(monthHeaders, rows, label)}
+    `;
   }catch(err){
     console.error(err);
     panel.innerHTML = `
