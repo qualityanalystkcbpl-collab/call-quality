@@ -25,10 +25,50 @@
   *{box-sizing:border-box;}
   body{
     margin:0;
-    background:var(--bg);
+    position:relative;
     color:var(--text);
     font-family:"Segoe UI", "Noto Sans Bengali", system-ui, -apple-system, sans-serif;
     padding:24px;
+    overflow-x:hidden;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(91,141,239,.10), transparent 45%),
+      radial-gradient(circle at 80% 30%, rgba(62,207,142,.08), transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(224,164,88,.07), transparent 50%),
+      var(--bg);
+    background-size:220% 220%, 220% 220%, 220% 220%, 100% 100%;
+    animation:bgDrift 22s ease-in-out infinite;
+  }
+  @keyframes bgDrift{
+    0%{ background-position:0% 0%, 100% 20%, 40% 100%, 0 0; }
+    50%{ background-position:60% 40%, 30% 70%, 80% 20%, 0 0; }
+    100%{ background-position:0% 0%, 100% 20%, 40% 100%, 0 0; }
+  }
+  /* floating particle layer behind content */
+  .bg-particles{
+    position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+  }
+  .bg-particles span{
+    position:absolute; bottom:-40px; display:block;
+    width:var(--s,6px); height:var(--s,6px); border-radius:50%;
+    background:var(--c, rgba(91,141,239,.55));
+    box-shadow:0 0 10px 2px var(--c, rgba(91,141,239,.35));
+    animation:floatUp var(--d,16s) linear infinite;
+    animation-delay:var(--delay,0s);
+    opacity:.55;
+  }
+  @keyframes floatUp{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:.6; }
+    50%{ transform:translateY(-50vh) translateX(20px); }
+    90%{ opacity:.4; }
+    100%{ transform:translateY(-105vh) translateX(-15px); opacity:0; }
+  }
+  .page-header, .tab-title, .tabs, .view, .top-brand{
+    position:relative; z-index:1;
+  }
+  @media (prefers-reduced-motion: reduce){
+    body{ animation:none; }
+    .bg-particles{ display:none; }
   }
   .page-header{
     display:flex; align-items:baseline; justify-content:space-between;
@@ -173,46 +213,114 @@ flex-wrap:wrap;
 
   /* ---- Chart panel ---- */
   .chart-panel{
-    background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius);
-    padding:24px 26px 18px; margin-bottom:22px;
+    position:relative;
+    background:linear-gradient(180deg, rgba(23,35,63,.55), rgba(15,23,41,.85));
+    backdrop-filter:blur(6px);
+    border:1px solid var(--panel-border);
+    border-radius:calc(var(--radius) + 4px);
+    padding:26px 28px 20px;
+    margin-bottom:22px;
+    overflow:hidden;
+    box-shadow:0 10px 30px -12px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.03);
   }
-  .chart-panel h2{ font-size:13px; color:var(--muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:.6px;}
-  .chart-sub{ font-size:11.5px; color:var(--muted); margin:0 0 18px; opacity:.75; }
-  .chart-legend{ display:flex; gap:18px; margin-bottom:16px; flex-wrap:wrap; }
-  .chart-legend span{ display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
-  .chart-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+  .chart-panel::before{
+    content:"";
+    position:absolute; inset:-2px;
+    background:linear-gradient(120deg, rgba(91,141,239,.25), transparent 30%, transparent 70%, rgba(62,207,142,.2));
+    background-size:250% 250%;
+    animation:panelSheen 10s ease-in-out infinite;
+    pointer-events:none;
+    z-index:0;
+  }
+  @keyframes panelSheen{
+    0%,100%{ background-position:0% 0%; }
+    50%{ background-position:100% 100%; }
+  }
+  .chart-panel > *{ position:relative; z-index:1; }
+  .chart-panel h2{
+    font-size:14px; margin:0 0 4px; text-transform:uppercase; letter-spacing:1px;
+    display:flex; align-items:center; gap:8px;
+    background:linear-gradient(90deg,#dce7ff,#7ba8ff 60%,#5b8def);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    font-weight:800;
+  }
+  .chart-panel h2::before{
+    content:"📈"; -webkit-text-fill-color:initial; filter:none;
+  }
+  .chart-sub{ font-size:11.5px; color:var(--muted); margin:0 0 18px; opacity:.8; }
+  .chart-legend{ display:flex; gap:18px; margin-bottom:18px; flex-wrap:wrap; }
+  .chart-legend span{
+    display:inline-flex; align-items:center; gap:7px; font-size:11px; color:var(--muted);
+    background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06);
+    padding:5px 11px; border-radius:20px;
+  }
+  .chart-legend i{
+    width:9px; height:9px; border-radius:50%; display:inline-block;
+    box-shadow:0 0 8px 1px currentColor;
+  }
   .chart-area{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
   .chart-y-axis{
     display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end;
-    height:230px; padding-bottom:44px; font-size:10.5px; color:var(--muted); flex-shrink:0;
+    height:240px; padding-bottom:44px; font-size:10.5px; color:var(--muted); flex-shrink:0;
   }
   .bars{
-    position:relative; flex:1; display:flex; align-items:flex-end; gap:26px; height:230px;
+    position:relative; flex:1; display:flex; align-items:flex-end; gap:28px; height:240px;
     min-width:600px; padding-bottom:44px;
   }
   .gridlines{
     position:absolute; left:0; right:0; top:0; bottom:44px;
     display:flex; flex-direction:column; justify-content:space-between; pointer-events:none;
   }
-  .gridlines div{ border-top:1px dashed var(--panel-border); }
-  .bar-col{ position:relative; display:flex; flex-direction:column; align-items:center; width:38px; z-index:1; }
+  .gridlines div{ border-top:1px dashed rgba(255,255,255,.06); }
+  .bar-col{
+    position:relative; display:flex; flex-direction:column; align-items:center; width:40px; z-index:1;
+    animation:barColIn .5s ease both;
+  }
+  @keyframes barColIn{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
   .bar-track{
-    height:186px; width:30px; display:flex; align-items:flex-end; background:#0c1526;
-    border-radius:8px; overflow:hidden; border:1px solid #17223b;
+    height:196px; width:26px; display:flex; align-items:flex-end;
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.25));
+    border-radius:9px 9px 5px 5px; overflow:hidden;
+    border:1px solid #17223b;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.4);
+    transition:border-color .25s, box-shadow .25s, transform .25s;
   }
   .bar-fill{
-    width:100%; border-radius:6px 6px 0 0; transition:height .6s cubic-bezier(.2,.8,.2,1);
+    width:100%; border-radius:7px 7px 3px 3px;
+    transition:height 1s cubic-bezier(.16,.9,.25,1.15);
     position:relative; cursor:default;
+    animation:fillGlow 3s ease-in-out infinite;
+  }
+  .bar-fill::after{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:8px;
+    background:rgba(255,255,255,.35);
+    filter:blur(3px);
+    border-radius:6px 6px 0 0;
+  }
+  @keyframes fillGlow{
+    0%,100%{ filter:brightness(1); }
+    50%{ filter:brightness(1.12); }
   }
   .bar-value{
-    font-size:11px; font-weight:700; color:var(--text); margin-bottom:6px; white-space:nowrap;
+    font-size:11.5px; font-weight:800; color:var(--text); margin-bottom:7px; white-space:nowrap;
+    text-shadow:0 0 10px rgba(91,141,239,.35);
   }
   .bar-name{
-    margin-top:9px; font-size:10px; color:var(--muted); white-space:nowrap;
+    margin-top:10px; font-size:10px; color:var(--muted); white-space:nowrap;
     transform:rotate(-38deg); transform-origin:top right; width:14px; text-align:right;
+    transition:color .2s;
   }
-  .bar-col:hover .bar-track{ border-color:var(--accent-blue); }
+  .bar-col:hover .bar-track{
+    border-color:var(--accent-blue);
+    box-shadow:0 0 18px rgba(91,141,239,.45), inset 0 2px 6px rgba(0,0,0,.4);
+    transform:translateY(-2px);
+  }
   .bar-col:hover .bar-value{ color:var(--accent-blue); }
+  .bar-col:hover .bar-name{ color:var(--text); }
 
   /* ---- Table panel ---- */
   .panel-title{ font-size:17px; font-weight:600; margin:0 0 12px; }
@@ -479,6 +587,20 @@ opacity:.75;
 </style>
 </head>
 <body>
+<div class="bg-particles">
+  <span style="left:5%;  --s:5px; --c:rgba(91,141,239,.6);  --d:18s; --delay:0s;"></span>
+  <span style="left:15%; --s:3px; --c:rgba(62,207,142,.55); --d:14s; --delay:2s;"></span>
+  <span style="left:25%; --s:7px; --c:rgba(224,164,88,.5);  --d:22s; --delay:4s;"></span>
+  <span style="left:35%; --s:4px; --c:rgba(91,141,239,.5);  --d:16s; --delay:1s;"></span>
+  <span style="left:45%; --s:6px; --c:rgba(62,207,142,.5);  --d:20s; --delay:6s;"></span>
+  <span style="left:55%; --s:3px; --c:rgba(224,164,88,.55); --d:15s; --delay:3s;"></span>
+  <span style="left:65%; --s:5px; --c:rgba(91,141,239,.55); --d:19s; --delay:5s;"></span>
+  <span style="left:75%; --s:4px; --c:rgba(62,207,142,.5);  --d:17s; --delay:2.5s;"></span>
+  <span style="left:85%; --s:6px; --c:rgba(224,164,88,.5);  --d:21s; --delay:7s;"></span>
+  <span style="left:92%; --s:3px; --c:rgba(91,141,239,.5);  --d:13s; --delay:1.5s;"></span>
+  <span style="left:10%; --s:4px; --c:rgba(62,207,142,.45); --d:24s; --delay:8s;"></span>
+  <span style="left:60%; --s:5px; --c:rgba(224,164,88,.45); --d:12s; --delay:4.5s;"></span>
+</div>
 <div class="top-brand">
 
     <img src="logo2.png" class="brand-logo">
@@ -551,9 +673,9 @@ Dashboard Navigation
     <h2>Agent-wise Average Score</h2>
     <p class="chart-sub">প্রতিটি এজেন্টের গড় অডিট স্কোর, পারফরম্যান্স অনুযায়ী</p>
     <div class="chart-legend">
-      <span><i style="background:var(--accent-orange)"></i>Top Performer (99%+)</span>
-      <span><i style="background:var(--accent-green)"></i>Excellent / Good (90%+)</span>
-      <span><i style="background:var(--accent-red)"></i>Needs Improvement (&lt;90%)</span>
+      <span style="color:var(--accent-orange)"><i style="background:var(--accent-orange)"></i><span style="color:var(--muted)">Top Performer (99%+)</span></span>
+      <span style="color:var(--accent-green)"><i style="background:var(--accent-green)"></i><span style="color:var(--muted)">Excellent / Good (90%+)</span></span>
+      <span style="color:var(--accent-red)"><i style="background:var(--accent-red)"></i><span style="color:var(--muted)">Needs Improvement (&lt;90%)</span></span>
     </div>
     <div class="chart-area">
       <div class="chart-y-axis"><span>100</span><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span></div>
@@ -680,11 +802,11 @@ function renderOverview(data){
     bars.innerHTML = '<div class="state-msg">কোনো এজেন্ট ডেটা নেই।</div>';
   } else {
     const gridlines = '<div class="gridlines"><div></div><div></div><div></div><div></div><div></div><div></div></div>';
-    bars.innerHTML = gridlines + data.agents.map(a => `
-      <div class="bar-col" title="${a.name} — ${a.avgScore}% (${a.tier})">
+    bars.innerHTML = gridlines + data.agents.map((a, i) => `
+      <div class="bar-col" style="animation-delay:${(i*0.05).toFixed(2)}s" title="${a.name} — ${a.avgScore}% (${a.tier})">
         <div class="bar-value">${a.avgScore}%</div>
         <div class="bar-track">
-          <div class="bar-fill" style="height:${Math.min(a.avgScore,100)}%; background:linear-gradient(180deg, ${barColorLight(a.tier)}, ${barColor(a.tier)});"></div>
+          <div class="bar-fill" style="height:${Math.min(a.avgScore,100)}%; background:linear-gradient(180deg, ${barColorLight(a.tier)}, ${barColor(a.tier)}); box-shadow:0 0 14px -2px ${barColor(a.tier)};"></div>
         </div>
         <div class="bar-name">${a.name}</div>
       </div>
