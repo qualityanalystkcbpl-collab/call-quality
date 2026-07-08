@@ -1044,6 +1044,27 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:18px;margin-bottom:22px;height:280px;
 }
+.analysis-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:22px;
+}
+.chart-box.small{
+  height:280px;margin-bottom:0;display:flex;flex-direction:column;
+}
+.chart-box.small canvas{flex:1;min-height:0;}
+.chart-box-title{
+  font-size:12.5px;font-weight:700;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;
+}
+@media (max-width: 900px){
+  .analysis-grid{grid-template-columns:1fr;}
+}
+.chart-anim-in{
+  animation:chartBoxIn .6s cubic-bezier(.22,1,.36,1);
+}
+@keyframes chartBoxIn{
+  0%{ opacity:0; transform:translateY(14px) scale(.97); }
+  100%{ opacity:1; transform:translateY(0) scale(1); }
+}
 /* Beautiful Data Table Styles */
 .table-wrapper {
   overflow:hidden:auto;
@@ -1069,6 +1090,30 @@ table.score-table td{
 }
 table.score-table tr:last-child td{border-bottom:none;}
 table.score-table tr:hover td{background:rgba(255,255,255,0.02);}
+
+/* ---------- agent search box ---------- */
+.table-search-wrap{
+  position:relative;display:flex;align-items:center;
+  margin-bottom:12px;max-width:340px;
+}
+.table-search-icon{
+  position:absolute;left:12px;font-size:14px;opacity:.6;pointer-events:none;
+}
+.table-search-input{
+  width:100%;padding:10px 12px 10px 34px;
+  border:1px solid var(--border);border-radius:10px;
+  background:var(--surface);color:var(--text);font-size:13px;
+  outline:none;transition:border-color .15s ease, box-shadow .15s ease;
+}
+.table-search-input:focus{
+  border-color:var(--agent);
+  box-shadow:0 0 0 3px rgba(45,212,191,.15);
+}
+.table-search-input::placeholder{color:var(--text-muted);}
+.table-no-match{
+  padding:26px;text-align:center;color:var(--text-muted);font-size:13px;
+}
+
 .badge{
   padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;
 }
@@ -2082,8 +2127,8 @@ letter-spacing:1px;
   <img src="logo2.png" alt="Logo" onerror="this.parentElement.style.display='none';">
 </div>
 <script>
-/* ===================== GOOGLE API CONFIG ===================== */
-/* পাসওয়ার্ড এখন Apps Script backend-এ Script Properties-এ সেভ থাকে — এখানে নেই। */
+/* ===================== CREDENTIALS & GOOGLE API CONFIG ===================== */
+const CREDENTIALS = { agent: 'GTPL@123', admin: 'admin@123' };
 
 // ⚠️ এখানে আপনার গুগল স্ক্রিপ্ট থেকে জেনারেট হওয়া New Deployment URL-টি সাবধানে বসান
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbCrtIR8ww9F8eJBKZl92Ml-L7TwDq_hZBu3VHK8D8H-EYz2FM5nw/exec";
@@ -2251,43 +2296,22 @@ function selectRole(role){
   btn.textContent = role === 'admin' ? 'Enter as Admin' : 'Enter as Agent';
   document.getElementById('loginError').textContent = '';
 }
-async function doLogin(){
+function doLogin(){
   const pass = document.getElementById('loginPassword').value.trim();
   const errBox = document.getElementById('loginError');
-  const btn = document.getElementById('loginBtn');
   if(!pass){ errBox.textContent = 'Password দিন।'; return; }
-
-  errBox.textContent = '';
-  const originalBtnText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'যাচাই করা হচ্ছে...';
-
-  try{
-    const res = await fetch(`${WEB_APP_URL}?action=checkLogin&role=${encodeURIComponent(selectedRole)}&password=${encodeURIComponent(pass)}`);
-    const data = await res.json();
-
-    if(!data || data.ok !== true){
-      errBox.textContent = 'Password সঠিক নয়। আবার চেষ্টা করুন।';
-      btn.disabled = false;
-      btn.textContent = originalBtnText;
-      return;
-    }
-
-    currentRole = selectedRole;
-
-    // ১ ঘণ্টার জন্য Login Session Save
-    localStorage.setItem("qa_role", currentRole);
-    localStorage.setItem("qa_login_time", Date.now());
-
-    btn.disabled = false;
-    btn.textContent = originalBtnText;
-    enterApp();
-  }catch(e){
-    console.error('Login check failed', e);
-    errBox.textContent = 'সার্ভারের সঙ্গে সংযোগ স্থাপন করা যায়নি। আবার চেষ্টা করুন।';
-    btn.disabled = false;
-    btn.textContent = originalBtnText;
+  if(pass !== CREDENTIALS[selectedRole]){
+    errBox.textContent = 'Password সঠিক নয়। আবার চেষ্টা করুন।';
+    return;
   }
+  errBox.textContent = '';
+  currentRole = selectedRole;
+
+// ১ ঘণ্টার জন্য Login Session Save
+localStorage.setItem("qa_role", currentRole);
+localStorage.setItem("qa_login_time", Date.now());
+
+enterApp();
 }
 function doLogout(){
 localStorage.removeItem("qa_role");
@@ -2531,22 +2555,26 @@ async function renderVerticalPanel(tab){
   
   html += `
     <div class="stat-row">
-      <div class="stat-card"><div class="label">Total Agents</div><div class="value">${rows.length}</div></div>
-      <div class="stat-card"><div class="label">Total Audited Calls</div><div class="value teal">${totalAudits}</div></div>
-      <div class="stat-card"><div class="label">Vertical Avg Score</div><div class="value gold">${avgScore}%</div></div>
+      <div class="stat-card"><div class="label">Total Agents</div><div class="value" data-countup="${rows.length}">0</div></div>
+      <div class="stat-card"><div class="label">Total Audited Calls</div><div class="value teal" data-countup="${totalAudits}">0</div></div>
+      <div class="stat-card"><div class="label">Vertical Avg Score</div><div class="value gold" data-countup="${avgScore}" data-suffix="%">0%</div></div>
       <div class="stat-card"><div class="label">Best Achiever</div><div class="value" style="font-size:15px; color:var(--agent);">${escapeHtml(top.agent)}</div></div>
-      <div class="stat-card"><div class="label">Under Performance</div><div class="value" style="color:var(--need);">${needCount} Agents</div></div>
+      <div class="stat-card"><div class="label">Under Performance</div><div class="value" data-countup="${needCount}" data-suffix=" Agents" style="color:var(--need);">0 Agents</div></div>
     </div>
     <div class="chart-box"><canvas id="chart-${tab}"></canvas></div>
     
     <h3 style="margin: 24px 0 12px 0; font-family:'Space Grotesk',sans-serif;">Agent Performance Overview</h3>
+    <div class="table-search-wrap">
+      <span class="table-search-icon">🔎</span>
+      <input type="text" class="table-search-input" placeholder="এজেন্টের নাম দিয়ে খুঁজুন..." oninput="filterAgentTable(this,'agentTable-${tab}')">
+    </div>
     <div class="table-wrapper">
-      <table class="score-table">
+      <table class="score-table" id="agentTable-${tab}">
         <thead><tr><th>Agent Name</th><th>Audit Count</th><th>Average Score</th><th>Status Tier</th>${isAdmin?'<th>Action</th>':''}</tr></thead>
         <tbody>
           ${rows.slice().sort((a,b)=>b.avgScore-a.avgScore).map(r=>{
             const st = statusFor(Number(r.avgScore));
-            return `<tr>
+            return `<tr data-agent-name="${escapeAttr(String(r.agent).toLowerCase())}">
               <td style="font-weight:600;">${escapeHtml(r.agent)}</td>
               <td class="mono">${escapeHtml(r.auditCount)}</td>
               <td class="mono" style="font-weight:700; color:var(--agent);">${escapeHtml(r.avgScore)}%</td>
@@ -2556,11 +2584,61 @@ async function renderVerticalPanel(tab){
           }).join('')}
         </tbody>
       </table>
+      <div class="table-no-match" style="display:none;">😕 কোনো এজেন্ট পাওয়া যায়নি।</div>
+    </div>
+
+    <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif;">📊 Additional Performance Analysis</h3>
+    <div class="analysis-grid">
+      <div class="chart-box small">
+        <div class="chart-box-title">Score Distribution</div>
+        <canvas id="distChart-${tab}"></canvas>
+      </div>
+      <div class="chart-box small">
+        <div class="chart-box-title">Top 5 vs Bottom 5 Agents</div>
+        <canvas id="topBottomChart-${tab}"></canvas>
+      </div>
     </div>`;
     
   panel.innerHTML = html;
   drawChart(tab, rows);
   renderRawSection(tab);
+  runCountUps(panel);
+  drawDistributionChart(tab, rows);
+  drawTopBottomChart(tab, rows);
+}
+function filterAgentTable(input, tableId){
+  const q = input.value.trim().toLowerCase();
+  const table = document.getElementById(tableId);
+  if(!table) return;
+  const rows = table.querySelectorAll('tbody tr');
+  let anyVisible = false;
+  rows.forEach(tr=>{
+    const name = tr.getAttribute('data-agent-name') || '';
+    const match = !q || name.indexOf(q) !== -1;
+    tr.style.display = match ? '' : 'none';
+    if(match) anyVisible = true;
+  });
+  const noMatch = table.parentElement.querySelector('.table-no-match');
+  if(noMatch) noMatch.style.display = anyVisible ? 'none' : 'block';
+}
+function runCountUps(scope){
+  const els = (scope || document).querySelectorAll('[data-countup]');
+  els.forEach(el=>{
+    const target = parseFloat(el.getAttribute('data-countup')) || 0;
+    const suffix = el.getAttribute('data-suffix') || '';
+    const isDecimal = String(el.getAttribute('data-countup')).indexOf('.') !== -1;
+    const duration = 800;
+    const start = performance.now();
+    function tick(now){
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const current = target * eased;
+      el.textContent = (isDecimal ? current.toFixed(1) : Math.round(current)) + suffix;
+      if(p < 1) requestAnimationFrame(tick);
+      else el.textContent = (isDecimal ? target.toFixed(1) : Math.round(target)) + suffix;
+    }
+    requestAnimationFrame(tick);
+  });
 }
 /* ===================== CALL-LEVEL LOGS DETAIL ===================== */
 async function renderRawSection(tab){
@@ -3002,6 +3080,106 @@ function drawChart(tab, rows){
     }
   });
 }
+/* ===================== ADDITIONAL ANALYSIS CHARTS ===================== */
+function drawDistributionChart(tab, rows){
+  const ctx = document.getElementById('distChart-'+tab);
+  if(!ctx) return;
+  const key = 'dist-'+tab;
+  if(chartInstances[key]) chartInstances[key].destroy();
+  animateChartBox(ctx);
+
+  const buckets = { 'TOP PERFORMER':0, 'EXCELLENT':0, 'GOOD':0, 'AVERAGE':0, 'NEED IMPROVEMENT':0 };
+  const colorMap = { 'TOP PERFORMER':'#E3A857', 'EXCELLENT':'#3FBF7F', 'GOOD':'#E0C341', 'AVERAGE':'#E08A3F', 'NEED IMPROVEMENT':'#E0524A' };
+  rows.forEach(r=>{
+    const s = statusFor(Number(r.avgScore));
+    const label = s.label.replace(/^[^A-Za-z]+/, '').trim();
+    if(buckets[label] !== undefined) buckets[label]++;
+  });
+  const labels = Object.keys(buckets).filter(k=> buckets[k] > 0);
+  const data = labels.map(k=> buckets[k]);
+
+  chartInstances[key] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: labels.map(l=> colorMap[l]),
+        borderColor: 'transparent',
+        borderWidth: 2,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      animation:{
+        animateRotate: true,
+        animateScale: true,
+        duration: 1100,
+        easing: 'easeOutElastic'
+      },
+      plugins:{
+        legend:{ position:'bottom', labels:{ color:'#7C8CA3', font:{size:10.5}, boxWidth:12, padding:10 } }
+      }
+    }
+  });
+}
+
+function drawTopBottomChart(tab, rows){
+  const ctx = document.getElementById('topBottomChart-'+tab);
+  if(!ctx) return;
+  const key = 'topbot-'+tab;
+  if(chartInstances[key]) chartInstances[key].destroy();
+  animateChartBox(ctx);
+
+  const sorted = rows.slice().sort((a,b)=> b.avgScore - a.avgScore);
+  const top5 = sorted.slice(0, 5);
+  const bottom5 = sorted.slice(-5).reverse();
+  // ছোট ডাটাসেটে (৫ জনের কম এজেন্ট) ওভারল্যাপ এড়ানো
+  const seen = new Set(top5.map(r=>r.agent));
+  const bottomFiltered = bottom5.filter(r=> !seen.has(r.agent));
+  const combined = top5.concat(bottomFiltered);
+
+  chartInstances[key] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: combined.map(r=>r.agent),
+      datasets: [{
+        label: 'Average Score',
+        data: combined.map(r=>Number(r.avgScore)),
+        backgroundColor: combined.map((r,i)=> i < top5.length ? '#3FBF7F' : '#E0524A'),
+        borderRadius: 4,
+        maxBarThickness: 22
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive:true, maintainAspectRatio:false,
+      animation:{
+        duration: 1000,
+        easing: 'easeOutBack',
+        delay: (ctxA)=> {
+          return ctxA.type === 'data' ? ctxA.dataIndex * 90 : 0;
+        }
+      },
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ min:0, max:100, ticks:{ color:'#7C8CA3' }, grid:{ color:'#203859' } },
+        y:{ ticks:{ color:'#7C8CA3', font:{size:10.5} }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+/* চার্ট কন্টেইনারে হালকা fade+scale-in এন্ট্রি অ্যানিমেশন */
+function animateChartBox(canvasEl){
+  const box = canvasEl.closest('.chart-box');
+  if(!box) return;
+  box.classList.remove('chart-anim-in');
+  void box.offsetWidth; // reflow to restart animation
+  box.classList.add('chart-anim-in');
+}
+
 /* ===================== EXCEL UPLOAD AND SEND TO GOOGLE SHEET ===================== */
 function handleUpload(evt, tab){
   const file = evt.target.files[0];
