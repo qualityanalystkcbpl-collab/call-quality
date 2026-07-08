@@ -148,14 +148,32 @@ animation:gridMove 30s linear infinite;
   }
   .clock .d{display:block;font-size:9px;color:var(--text-faint);letter-spacing:.5px;}
 
-  .icon-btn, .home-btn, .theme-toggle{
+  .icon-btn, .theme-toggle{
     border:1px solid var(--border);background:var(--panel-2);color:var(--text);
     border-radius:10px;cursor:pointer;font-family:var(--body);
     display:flex;align-items:center;gap:7px;transition:.15s ease;
   }
-  .icon-btn:hover, .home-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .icon-btn:hover{border-color:var(--accent);color:var(--accent);}
   .icon-btn{width:36px;height:36px;justify-content:center;font-size:16px;}
-  .home-btn{padding:0 14px;height:36px;font-size:12.5px;font-weight:600;white-space:nowrap;text-decoration:none;}
+  .home-btn{
+    padding:0 16px;height:36px;font-size:12.5px;font-weight:700;white-space:nowrap;text-decoration:none;
+    border-radius:10px;cursor:pointer;font-family:var(--body);
+    display:flex;align-items:center;gap:7px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    color:#04140F;
+    border:1px solid transparent;
+    box-shadow:0 4px 14px rgba(45,212,191,.35);
+    transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  .home-btn:hover{
+    filter:brightness(1.12);
+    box-shadow:0 6px 20px rgba(45,212,191,.5);
+    transform:translateY(-1px);
+  }
+  .home-btn:active{
+    transform:translateY(0);
+    filter:brightness(1);
+  }
 
   .theme-toggle{
     width:52px;height:30px;padding:3px;position:relative;
@@ -640,7 +658,11 @@ animation:gridMove 30s linear infinite;
   .legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
 
   
-  .table-scroll{overflow:auto;max-height:70vh;-webkit-overflow-scrolling:touch;}
+  .table-scroll{overflow:auto;max-height:70vh;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+  .table-scroll::-webkit-scrollbar{width:8px;height:8px;}
+  .table-scroll::-webkit-scrollbar-track{background:transparent;}
+  .table-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+  .table-scroll::-webkit-scrollbar-thumb:hover{background:var(--accent);}
   table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;font-family:var(--mono);}
   thead th{
     position:sticky;top:0;background:var(--panel-2);color:var(--text-dim);
@@ -848,6 +870,11 @@ background-position:
 
 }
 
+@keyframes cqcrspin{
+0%{ transform:rotate(0deg); }
+100%{ transform:rotate(360deg); }
+}
+
 @keyframes gridMove{
 
 0%{
@@ -972,7 +999,7 @@ transform:translate(-40px,-40px);
   // ==========================================================================
   var CONFIG = {
     WEB_APP_URL: "https://script.google.com/macros/s/AKfycbynuWG1pmogLgWrrWV3PliaoouH4zUQMP3On-stBbh3abS1-Ya5IJoNy75mYrzZzE1GUw/exec",
-    REFRESH_SECONDS: 60,
+    REFRESH_SECONDS: 300,
     TICKER_TEXT: "📈 CATV, BB Tech Support এবং BB Renewal-এর Parameter-wise Fail Count এখানে উপলব্ধ।"
   };
   // ==========================================================================
@@ -986,7 +1013,8 @@ transform:translate(-40px,-40px);
     activeProcess: null,
     sortKey: null,
     sortDir: 1,
-    timer: null
+    timer: null,
+    isFetching: false
   };
   document.getElementById('tickerText').textContent = CONFIG.TICKER_TEXT;
   var t2 = document.getElementById('tickerText2');
@@ -1030,7 +1058,10 @@ transform:translate(-40px,-40px);
       renderEmptyNeedsSetup();
       return;
     }
+    if(state.isFetching){ return; } // prevent overlapping refreshes
+    state.isFetching = true;
     setStatus('', 'Syncing…');
+    renderLoading();
     fetch(state.apiUrl, {method:'GET'})
       .then(function(r){
         if(!r.ok){ throw new Error('HTTP ' + r.status + ' — deployment access thik ache to?'); }
@@ -1056,7 +1087,21 @@ transform:translate(-40px,-40px);
       .catch(function(err){
         setStatus('err','সার্ভারের সঙ্গে সংযোগ স্থাপন করা যায়নি');
         renderFetchError(err.message);
+      })
+      .finally(function(){
+        state.isFetching = false;
       });
+  }
+
+  function renderLoading(){
+    document.getElementById('tabs').innerHTML='';
+    document.getElementById('cards').innerHTML='';
+    document.getElementById('tableScroll').innerHTML=
+    '<div class="empty-state">'+
+    '<div style="margin:0 auto;width:46px;height:46px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:cqcrspin .8s linear infinite;"></div>'+
+    '<h3 style="color:var(--text);margin-top:16px;">Quality সার্ভার থেকে সরাসরি ডাটা লোড হচ্ছে ........</h3>'+
+    '<p style="color:var(--text-dim);">অনুগ্রহ করে অপেক্ষা করুন।</p>'+
+    '</div>';
   }
 
   function renderFetchError(msg){
@@ -1077,7 +1122,9 @@ transform:translate(-40px,-40px);
 
     'বর্তমানে সার্ভারের সঙ্গে সংযোগ স্থাপন করা সম্ভব হচ্ছে না।<br>'+
 
-    'অনুগ্রহ করে কিছুক্ষণ পরে আবার চেষ্টা করুন।'+
+    'কারণ সিস্টেমে ডাটাতে কোনো চেঞ্জ বা আপডেট করা হচ্ছে।<br>'+
+
+    'অনুগ্রহ করে ২ মিনিট পরে আবার চেষ্টা করুন।'+
 
     '</p>'+
 
