@@ -6,6 +6,7 @@
 <title>Call Quality Control Room · Parameter-wise Fail Count</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
   :root{
     --bg:#0B1420; --panel:#121D2E; --panel-2:#182741; --panel-3:#0E1826;
@@ -812,6 +813,72 @@ animation:gridMove 30s linear infinite;
   @keyframes cqcrOrbit{to{transform:rotate(360deg);}}
   @keyframes spin{to{transform:rotate(360deg);}}
 
+  /* ---------- charts / analytics section ---------- */
+  .charts-panel{margin-top:22px;}
+  .charts-panel .panel-head h2{display:flex;align-items:center;gap:8px;}
+  .charts-panel .panel-head .hint{font-size:11px;color:var(--text-faint);font-weight:500;}
+  .chart-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+    gap:18px;
+    padding:18px;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(45,212,191,.05), transparent 40%),
+      radial-gradient(circle at 100% 100%, rgba(124,158,255,.05), transparent 40%);
+  }
+  .chart-card{
+    position:relative;
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px 16px 12px;
+    box-shadow:var(--shadow);
+    display:flex;flex-direction:column;
+    min-height:310px;
+    overflow:hidden;
+    transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .chart-card::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--chart-c1,var(--accent)),var(--chart-c2,var(--accent-2)));
+    opacity:.9;
+  }
+  .chart-card:hover{
+    transform:translateY(-4px);
+    border-color:var(--chart-c1,var(--accent));
+    box-shadow:0 16px 36px rgba(0,0,0,.32), 0 0 0 1px var(--chart-c1,var(--accent)) inset;
+  }
+  .chart-card:nth-child(1){--chart-c1:#FF5D5D;--chart-c2:#FF9A5D;}
+  .chart-card:nth-child(2){--chart-c1:#7C9EFF;--chart-c2:#2DD4BF;}
+  .chart-card:nth-child(3){--chart-c1:#F5A623;--chart-c2:#FFD54F;}
+  .chart-card:nth-child(4){--chart-c1:#2DD4BF;--chart-c2:#7C9EFF;}
+  .chart-card:nth-child(5){--chart-c1:#34D399;--chart-c2:#F5A623;}
+  .chart-card:nth-child(6){--chart-c1:#B400FF;--chart-c2:#2DD4BF;}
+  .chart-card:nth-child(7){--chart-c1:#FF5D5D;--chart-c2:#F5A623;}
+  .chart-card:nth-child(8){--chart-c1:#4B6CFF;--chart-c2:#00C8FF;}
+  .chart-card:nth-child(9){--chart-c1:#00C8FF;--chart-c2:#34D399;}
+  .chart-card:nth-child(10){--chart-c1:#2DD4BF;--chart-c2:#7C9EFF;}
+  .chart-card .chart-title{
+    font-family:var(--display);font-size:13px;font-weight:700;
+    color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:8px;letter-spacing:.2px;
+  }
+  .chart-card .chart-title .num{
+    width:22px;height:22px;border-radius:7px;flex:none;
+    background:linear-gradient(135deg,var(--chart-c1,var(--accent)),var(--chart-c2,var(--accent-2)));
+    color:#04140F;font-size:10.5px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 8px rgba(0,0,0,.28);
+  }
+  .chart-card .chart-sub{font-size:10.5px;color:var(--text-faint);margin-bottom:12px;line-height:1.5;}
+  .chart-card .chart-canvas-wrap{position:relative;flex:1;min-height:225px;}
+  .chart-card canvas{max-width:100%;}
+  .chart-card.wide{grid-column:1 / -1;}
+  .chart-empty{
+    display:flex;align-items:center;justify-content:center;flex:1;
+    color:var(--text-faint);font-size:12px;text-align:center;padding:20px;
+  }
+
   /* ---------- settings modal ---------- */
   .modal-bg{
     position:fixed;inset:0;background:rgba(4,10,18,.55);display:none;
@@ -1101,6 +1168,25 @@ transform:translate(-40px,-40px);
     </div>
   </div>
 
+  <div class="panel charts-panel">
+    <div class="panel-head">
+      <h2>📊 Analytics · 10 Charts</h2>
+      <span class="hint" id="chartsScopeHint">— </span>
+    </div>
+    <div class="chart-grid" id="chartGrid">
+      <div class="chart-card"><div class="chart-title"><span class="num">1</span>📉 Parameter-wise Total Fail (Active Process)</div><div class="chart-sub">যে ট্যাব সিলেক্টেড আছে তার সব agent মিলিয়ে প্রতিটি প্যারামিটারে মোট fail</div><div class="chart-canvas-wrap"><canvas id="chart1"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title"><span class="num">2</span>🍩 Fail Share by Parameter</div><div class="chart-sub">প্যারামিটার-ভিত্তিক fail-এর শতকরা ভাগ</div><div class="chart-canvas-wrap"><canvas id="chart2"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title"><span class="num">3</span>🏆 Agent-wise Total Fails (Top 10)</div><div class="chart-sub">সবচেয়ে বেশি fail থাকা এজেন্টরা</div><div class="chart-canvas-wrap"><canvas id="chart3"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title"><span class="num">4</span>🧾 Agent-wise Audit Count</div><div class="chart-sub">প্রতি এজেন্টের অডিট সংখ্যা</div><div class="chart-canvas-wrap"><canvas id="chart4"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title"><span class="num">5</span>🎯 Agent-wise Avg Score</div><div class="chart-sub">প্রতি এজেন্টের গড় স্কোর (ড্যাশড লাইন = 75 বেঞ্চমার্ক)</div><div class="chart-canvas-wrap"><canvas id="chart5"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title"><span class="num">6</span>🔬 Score vs Fails Correlation</div><div class="chart-sub">প্রতিটি বিন্দু একজন এজেন্ট — Avg Score বনাম Total Fails</div><div class="chart-canvas-wrap"><canvas id="chart6"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title"><span class="num">7</span>⚠️ Fail Severity Distribution</div><div class="chart-sub">টেবিলের Low/Medium/High badge অনুযায়ী কতগুলো সেল কোন লেভেলে</div><div class="chart-canvas-wrap"><canvas id="chart7"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title"><span class="num">8</span>📚 Top 5 Agents · Parameter Breakdown</div><div class="chart-sub">সবচেয়ে বেশি fail থাকা ৫ জন এজেন্টের প্যারামিটার-ভিত্তিক বিভাজন</div><div class="chart-canvas-wrap"><canvas id="chart8"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title"><span class="num">9</span>🕸️ Top 6 Agents · Parameter Radar</div><div class="chart-sub">সেরা/দুর্বল দিক তুলনা — কম fail এলাকা মানে ভালো পারফরম্যান্স</div><div class="chart-canvas-wrap"><canvas id="chart9"></canvas></div></div>
+      <div class="chart-card wide"><div class="chart-title"><span class="num">10</span>⚖️ Process Comparison · CATV vs BB Tech vs Renewal</div><div class="chart-sub">সব প্রসেস মিলিয়ে Total Audits, Total Fails ও Avg Score</div><div class="chart-canvas-wrap"><canvas id="chart10"></canvas></div></div>
+    </div>
+  </div>
+
 </div>
 
 <footer>Call Quality Control Room · Built for KCBPL QA, TL nad agent team · Data source: live system</footer>
@@ -1155,6 +1241,9 @@ transform:translate(-40px,-40px);
     document.documentElement.setAttribute('data-theme', next);
     document.getElementById('themeKnob').textContent = next === 'dark' ? '☾' : '☀';
     localStorage.setItem('cqcr_theme', next);
+    if(state.data && state.activeProcess){
+      renderChartsSection(state.data.processes[state.activeProcess], state.data);
+    }
   });
 
   // ---------------- clock ----------------
@@ -1319,6 +1408,7 @@ document.getElementById('tableScroll').innerHTML=
     populateAgentFilter(activeProc);
     renderCards(activeProc);
     renderTable(activeProc, state.data.parameters || []);
+    renderChartsSection(activeProc, state.data);
   }
 
   function populateAgentFilter(proc){
@@ -1468,6 +1558,316 @@ document.getElementById('tableScroll').innerHTML=
       renderTable(state.data.processes[state.activeProcess], state.data.parameters || []);
     }
   });
+
+  // ---------------- charts (10 analytics visuals) ----------------
+  var chartInstances = {};
+  var CHART_PALETTE = ['#2DD4BF','#7C9EFF','#F5A623','#FF5D5D','#34D399','#B400FF','#00C8FF','#FF6A00','#FFD500','#4B6CFF'];
+
+  function cssVar(name){
+    return (getComputedStyle(document.documentElement).getPropertyValue(name) || '').trim() || '#888';
+  }
+
+  function hexToRgba(hex, alpha){
+    var h = hex.replace('#','');
+    if(h.length === 3){ h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; }
+    var r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+    if(isNaN(r)||isNaN(g)||isNaN(b)) return 'rgba(136,136,136,'+alpha+')';
+    return 'rgba('+r+','+g+','+b+','+alpha+')';
+  }
+
+  function vGradient(canvas, colorTop, colorBottom){
+    if(!canvas || !canvas.getContext) return colorTop;
+    var ctx = canvas.getContext('2d');
+    var g = ctx.createLinearGradient(0,0,0,canvas.height || 260);
+    g.addColorStop(0, colorTop);
+    g.addColorStop(1, colorBottom);
+    return g;
+  }
+
+  var centerTextPlugin = {
+    id:'centerText',
+    afterDraw:function(chart){
+      var opts = chart.config.options && chart.config.options.plugins && chart.config.options.plugins.centerText;
+      if(!opts || !opts.text) return;
+      var ctx = chart.ctx;
+      var area = chart.chartArea;
+      var cx = (area.left + area.right)/2, cy = (area.top + area.bottom)/2;
+      ctx.save();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = "700 21px Sora, sans-serif";
+      ctx.fillStyle = opts.color || '#fff';
+      ctx.fillText(opts.text, cx, cy - 8);
+      ctx.font = "600 9.5px Inter, sans-serif";
+      ctx.fillStyle = opts.subColor || '#888';
+      ctx.fillText(opts.sub || '', cx, cy + 11);
+      ctx.restore();
+    }
+  };
+
+  if(typeof Chart !== 'undefined'){
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = cssVar('--text-dim');
+  }
+
+  function makeChart(id, config){
+    if(typeof Chart === 'undefined') return;
+    if(chartInstances[id]){ chartInstances[id].destroy(); chartInstances[id] = null; }
+    var el = document.getElementById(id);
+    if(!el) return;
+    chartInstances[id] = new Chart(el, config);
+  }
+
+  function tooltipStyle(){
+    return {
+      backgroundColor: cssVar('--panel-3'),
+      titleColor: cssVar('--text'),
+      bodyColor: cssVar('--text-dim'),
+      borderColor: cssVar('--accent'),
+      borderWidth:1,
+      cornerRadius:10,
+      padding:10,
+      titleFont:{size:11.5, weight:'700'},
+      bodyFont:{size:11},
+      displayColors:true,
+      boxPadding:4
+    };
+  }
+
+  function chartBaseOptions(extra){
+    var textDim = cssVar('--text-dim');
+    var border = cssVar('--border');
+    var base = {
+      responsive:true,
+      maintainAspectRatio:false,
+      animation:{duration:650, easing:'easeOutQuart'},
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{labels:{color:textDim, font:{size:10.5}, boxWidth:11, usePointStyle:true, pointStyle:'circle'}},
+        tooltip: tooltipStyle()
+      },
+      scales:{
+        x:{ticks:{color:textDim, font:{size:10}}, grid:{color:border, drawTicks:false}, border:{color:border}},
+        y:{ticks:{color:textDim, font:{size:10}}, grid:{color:border, drawTicks:false}, border:{color:border}}
+      }
+    };
+    if(extra){
+      Object.keys(extra).forEach(function(k){
+        if(k === 'scales' || k === 'plugins'){
+          Object.keys(extra[k]).forEach(function(k2){ base[k][k2] = extra[k][k2]; });
+        } else {
+          base[k] = extra[k];
+        }
+      });
+    }
+    return base;
+  }
+
+  function agentTotalFails(agent){
+    var t = 0;
+    Object.keys(agent.fails || {}).forEach(function(k){ t += agent.fails[k] || 0; });
+    return t;
+  }
+
+  function renderChartsSection(activeProc, fullData){
+    if(typeof Chart === 'undefined'){
+      var grid = document.getElementById('chartGrid');
+      if(grid) grid.innerHTML = '<div class="chart-empty" style="grid-column:1/-1;">⚠️ Chart.js লোড হয়নি — ইন্টারনেট সংযোগ চেক করুন।</div>';
+      return;
+    }
+    var parameters = (fullData && fullData.parameters) || [];
+    var agents = (activeProc && activeProc.agents) || [];
+
+    // 1. Parameter-wise total fail (active process)
+    var paramTotals = {};
+    parameters.forEach(function(p){ paramTotals[p] = 0; });
+    agents.forEach(function(a){
+      parameters.forEach(function(p){ paramTotals[p] += (a.fails && a.fails[p]) || 0; });
+    });
+    makeChart('chart1', {
+      type:'bar',
+      data:{ labels:parameters, datasets:[{ label:'Total Fails',
+        data:parameters.map(function(p){return paramTotals[p];}),
+        backgroundColor:function(ctx){ return vGradient(ctx.chart.canvas, hexToRgba(cssVar('--danger'),.95), hexToRgba('#FF9A5D',.55)); },
+        hoverBackgroundColor: cssVar('--danger'),
+        borderRadius:10, borderSkipped:false, maxBarThickness:36 }] },
+      options: chartBaseOptions({ plugins:{ legend:{display:false} } })
+    });
+
+    // 2. Fail share by parameter (donut)
+    var nonZeroParams = parameters.filter(function(p){ return paramTotals[p] > 0; });
+    var totalFailAll = nonZeroParams.reduce(function(s,p){ return s + paramTotals[p]; }, 0);
+    makeChart('chart2', {
+      type:'doughnut',
+      plugins:[centerTextPlugin],
+      data:{
+        labels: nonZeroParams.length ? nonZeroParams : ['কোনো fail নেই'],
+        datasets:[{
+          data: nonZeroParams.length ? nonZeroParams.map(function(p){return paramTotals[p];}) : [1],
+          backgroundColor: nonZeroParams.length ? nonZeroParams.map(function(_,i){return CHART_PALETTE[i%CHART_PALETTE.length];}) : [cssVar('--border')],
+          borderColor:cssVar('--panel-2'), borderWidth:3, hoverBorderWidth:4, spacing:2, hoverOffset:10
+        }]
+      },
+      options:{ responsive:true, maintainAspectRatio:false, animation:{duration:650, easing:'easeOutQuart'}, cutout:'68%',
+        plugins:{
+          legend:{ position:'right', labels:{color:cssVar('--text-dim'), font:{size:9.5}, boxWidth:9, usePointStyle:true, pointStyle:'circle'} },
+          tooltip: tooltipStyle(),
+          centerText:{ text: String(totalFailAll), sub:'TOTAL FAILS', color: cssVar('--text'), subColor: cssVar('--text-faint') }
+        } }
+    });
+
+    // 3. Agent-wise total fails (top 10, horizontal bar)
+    var agentFails = agents.map(function(a){ return {name:a.name, val: agentTotalFails(a)}; })
+      .sort(function(x,y){ return y.val - x.val; }).slice(0,10);
+    makeChart('chart3', {
+      type:'bar',
+      data:{ labels:agentFails.map(function(a){return a.name;}),
+        datasets:[{ label:'Total Fails', data:agentFails.map(function(a){return a.val;}),
+          backgroundColor:function(ctx){ return vGradient(ctx.chart.canvas, hexToRgba(cssVar('--warn'),.95), hexToRgba('#FFD54F',.5)); },
+          hoverBackgroundColor: cssVar('--warn'),
+          borderRadius:8, borderSkipped:false, maxBarThickness:20 }] },
+      options: chartBaseOptions({ indexAxis:'y', plugins:{ legend:{display:false} } })
+    });
+
+    // 4. Agent-wise audit count
+    var byAudit = agents.slice().sort(function(x,y){ return y.auditCount - x.auditCount; }).slice(0,12);
+    makeChart('chart4', {
+      type:'bar',
+      data:{ labels:byAudit.map(function(a){return a.name;}),
+        datasets:[{ label:'Audit Count', data:byAudit.map(function(a){return a.auditCount;}),
+          backgroundColor:function(ctx){ return vGradient(ctx.chart.canvas, hexToRgba(cssVar('--accent-2'),.95), hexToRgba(cssVar('--accent'),.45)); },
+          hoverBackgroundColor: cssVar('--accent-2'),
+          borderRadius:8, borderSkipped:false, maxBarThickness:28 }] },
+      options: chartBaseOptions({ plugins:{ legend:{display:false} } })
+    });
+
+    // 5. Agent-wise avg score (bar + benchmark line)
+    var withScore = agents.filter(function(a){ return a.avgScore !== null && a.avgScore !== undefined; });
+    makeChart('chart5', {
+      type:'bar',
+      data:{
+        labels:withScore.map(function(a){return a.name;}),
+        datasets:[
+          { type:'bar', label:'Avg Score', data:withScore.map(function(a){return a.avgScore;}),
+            backgroundColor:withScore.map(function(a){ return a.avgScore>=90?cssVar('--good'):(a.avgScore>=75?cssVar('--warn'):cssVar('--danger')); }),
+            borderRadius:8, borderSkipped:false, maxBarThickness:24 },
+          { type:'line', label:'Benchmark (75)', data:withScore.map(function(){return 75;}),
+            borderColor:cssVar('--accent'), backgroundColor:'transparent', borderDash:[6,4], pointRadius:0, borderWidth:2, tension:0 }
+        ]
+      },
+      options: chartBaseOptions({ scales:{ y:{ min:0, max:100, ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{color:cssVar('--border')} } } })
+    });
+
+    // 6. Score vs Fails correlation (scatter)
+    var scatterPts = withScore.map(function(a){ return { x: agentTotalFails(a), y: a.avgScore, label:a.name }; });
+    makeChart('chart6', {
+      type:'scatter',
+      data:{ datasets:[{ label:'Agent', data:scatterPts,
+        backgroundColor:scatterPts.map(function(p){ return p.y>=90?hexToRgba(cssVar('--good'),.85):(p.y>=75?hexToRgba(cssVar('--warn'),.85):hexToRgba(cssVar('--danger'),.85)); }),
+        borderColor:cssVar('--panel'), borderWidth:1.5,
+        pointStyle:'circle', pointRadius:6, pointHoverRadius:9, pointHoverBorderWidth:2 }] },
+      options: chartBaseOptions({
+        interaction:{mode:'nearest', intersect:true},
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{ label:function(ctx){ var p=ctx.raw; return p.label+': Score '+p.y+', Fails '+p.x; } } } },
+        scales:{
+          x:{ title:{display:true,text:'Total Fails',color:cssVar('--text-dim'),font:{size:10}}, ticks:{color:cssVar('--text-dim')}, grid:{color:cssVar('--border')} },
+          y:{ title:{display:true,text:'Avg Score',color:cssVar('--text-dim'),font:{size:10}}, ticks:{color:cssVar('--text-dim')}, grid:{color:cssVar('--border')} }
+        }
+      })
+    });
+
+    // 7. Fail severity distribution (matches table's Low/Medium/High badge logic)
+    var sev = {none:0, low:0, mid:0, high:0};
+    agents.forEach(function(a){
+      parameters.forEach(function(p){
+        var n = (a.fails && a.fails[p]) || 0;
+        if(n===0) sev.none++; else if(n<=2) sev.low++; else if(n<=5) sev.mid++; else sev.high++;
+      });
+    });
+    makeChart('chart7', {
+      type:'pie',
+      data:{
+        labels:['No Fail','Low (1-2)','Medium (3-5)','High (6+)'],
+        datasets:[{ data:[sev.none, sev.low, sev.mid, sev.high],
+          backgroundColor:[cssVar('--text-faint'), cssVar('--good'), cssVar('--warn'), cssVar('--danger')],
+          borderColor:cssVar('--panel-2'), borderWidth:3, hoverOffset:12, spacing:1 }]
+      },
+      options:{ responsive:true, maintainAspectRatio:false, animation:{duration:650, easing:'easeOutQuart'},
+        plugins:{ legend:{ position:'bottom', labels:{color:cssVar('--text-dim'), font:{size:9.5}, boxWidth:9, usePointStyle:true, pointStyle:'circle'} }, tooltip: tooltipStyle() } }
+    });
+
+    // 8. Top 5 agents · parameter breakdown (stacked bar)
+    var top5 = agents.map(function(a){ return {a:a, val:agentTotalFails(a)}; })
+      .sort(function(x,y){ return y.val - x.val; }).slice(0,5).map(function(x){return x.a;});
+    makeChart('chart8', {
+      type:'bar',
+      data:{
+        labels:top5.map(function(a){return a.name;}),
+        datasets:parameters.map(function(p,i){
+          return { label:p, data:top5.map(function(a){ return (a.fails && a.fails[p]) || 0; }),
+            backgroundColor:hexToRgba(CHART_PALETTE[i%CHART_PALETTE.length],.85),
+            borderRadius:4, borderSkipped:false };
+        })
+      },
+      options: chartBaseOptions({ scales:{ x:{stacked:true, ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{color:cssVar('--border')}}, y:{stacked:true, ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{color:cssVar('--border')}} } })
+    });
+
+    // 9. Top 6 agents · parameter radar
+    var top6 = agents.map(function(a){ return {a:a, val:agentTotalFails(a)}; })
+      .sort(function(x,y){ return y.val - x.val; }).slice(0,6).map(function(x){return x.a;});
+    makeChart('chart9', {
+      type:'radar',
+      data:{
+        labels:parameters,
+        datasets:top6.map(function(a,i){
+          var c = CHART_PALETTE[i%CHART_PALETTE.length];
+          return { label:a.name, data:parameters.map(function(p){ return (a.fails && a.fails[p]) || 0; }),
+            borderColor:c, backgroundColor:hexToRgba(c,.14), pointBackgroundColor:c, pointBorderColor:cssVar('--panel'),
+            pointRadius:3, pointHoverRadius:5, borderWidth:2, tension:.15 };
+        })
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:{duration:650, easing:'easeOutQuart'},
+        plugins:{ legend:{ position:'bottom', labels:{color:cssVar('--text-dim'), font:{size:9.5}, boxWidth:9, usePointStyle:true, pointStyle:'circle'} }, tooltip: tooltipStyle() },
+        scales:{ r:{ angleLines:{color:cssVar('--border')}, grid:{color:cssVar('--border')},
+          pointLabels:{color:cssVar('--text-dim'), font:{size:9.5}}, ticks:{color:cssVar('--text-faint'), backdropColor:'transparent'} } }
+      }
+    });
+
+    // 10. Process comparison — CATV vs BB Tech vs Renewal (all processes, not just active tab)
+    var procKeys = Object.keys((fullData && fullData.processes) || {});
+    var orderedKeys = DEFAULT_PROCESS_ORDER.filter(function(k){ return procKeys.indexOf(k)!==-1; })
+      .concat(procKeys.filter(function(k){ return DEFAULT_PROCESS_ORDER.indexOf(k)===-1; }));
+    var procStats = orderedKeys.map(function(k){
+      var p = fullData.processes[k];
+      var ta=0, tf=0, ss=0, sn=0;
+      (p.agents||[]).forEach(function(a){
+        ta += a.auditCount;
+        tf += agentTotalFails(a);
+        if(a.avgScore!==null && a.avgScore!==undefined){ ss += a.avgScore*a.auditCount; sn += a.auditCount; }
+      });
+      return { key:k, totalAudits:ta, totalFails:tf, avgScore: sn ? Math.round((ss/sn)*10)/10 : 0 };
+    });
+    makeChart('chart10', {
+      type:'bar',
+      data:{
+        labels:procStats.map(function(p){return p.key;}),
+        datasets:[
+          { label:'Total Audits', data:procStats.map(function(p){return p.totalAudits;}), backgroundColor:hexToRgba(cssVar('--accent-2'),.9), borderRadius:8, borderSkipped:false, yAxisID:'y' },
+          { label:'Total Fails', data:procStats.map(function(p){return p.totalFails;}), backgroundColor:hexToRgba(cssVar('--danger'),.9), borderRadius:8, borderSkipped:false, yAxisID:'y' },
+          { label:'Avg Score', data:procStats.map(function(p){return p.avgScore;}), backgroundColor:hexToRgba(cssVar('--good'),.9), borderRadius:8, borderSkipped:false, yAxisID:'y1' }
+        ]
+      },
+      options: chartBaseOptions({
+        plugins:{ legend:{ position:'top', labels:{color:cssVar('--text-dim'), font:{size:10.5}, boxWidth:11, usePointStyle:true, pointStyle:'circle'} } },
+        scales:{
+          x:{ ticks:{color:cssVar('--text-dim'),font:{size:10.5, weight:'600'}}, grid:{color:cssVar('--border')} },
+          y:{ position:'left', ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{color:cssVar('--border')} },
+          y1:{ position:'right', min:0, max:100, ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{drawOnChartArea:false} }
+        }
+      })
+    });
+  }
 
   // ---------------- boot ----------------
   loadTheme();
