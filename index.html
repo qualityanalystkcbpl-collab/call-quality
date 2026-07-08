@@ -2082,8 +2082,8 @@ letter-spacing:1px;
   <img src="logo2.png" alt="Logo" onerror="this.parentElement.style.display='none';">
 </div>
 <script>
-/* ===================== CREDENTIALS & GOOGLE API CONFIG ===================== */
-const CREDENTIALS = { agent: 'GTPL@123', admin: 'admin@123' };
+/* ===================== GOOGLE API CONFIG ===================== */
+/* পাসওয়ার্ড এখন Apps Script backend-এ Script Properties-এ সেভ থাকে — এখানে নেই। */
 
 // ⚠️ এখানে আপনার গুগল স্ক্রিপ্ট থেকে জেনারেট হওয়া New Deployment URL-টি সাবধানে বসান
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbCrtIR8ww9F8eJBKZl92Ml-L7TwDq_hZBu3VHK8D8H-EYz2FM5nw/exec";
@@ -2251,22 +2251,43 @@ function selectRole(role){
   btn.textContent = role === 'admin' ? 'Enter as Admin' : 'Enter as Agent';
   document.getElementById('loginError').textContent = '';
 }
-function doLogin(){
+async function doLogin(){
   const pass = document.getElementById('loginPassword').value.trim();
   const errBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
   if(!pass){ errBox.textContent = 'Password দিন।'; return; }
-  if(pass !== CREDENTIALS[selectedRole]){
-    errBox.textContent = 'Password সঠিক নয়। আবার চেষ্টা করুন।';
-    return;
-  }
+
   errBox.textContent = '';
-  currentRole = selectedRole;
+  const originalBtnText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'যাচাই করা হচ্ছে...';
 
-// ১ ঘণ্টার জন্য Login Session Save
-localStorage.setItem("qa_role", currentRole);
-localStorage.setItem("qa_login_time", Date.now());
+  try{
+    const res = await fetch(`${WEB_APP_URL}?action=checkLogin&role=${encodeURIComponent(selectedRole)}&password=${encodeURIComponent(pass)}`);
+    const data = await res.json();
 
-enterApp();
+    if(!data || data.ok !== true){
+      errBox.textContent = 'Password সঠিক নয়। আবার চেষ্টা করুন।';
+      btn.disabled = false;
+      btn.textContent = originalBtnText;
+      return;
+    }
+
+    currentRole = selectedRole;
+
+    // ১ ঘণ্টার জন্য Login Session Save
+    localStorage.setItem("qa_role", currentRole);
+    localStorage.setItem("qa_login_time", Date.now());
+
+    btn.disabled = false;
+    btn.textContent = originalBtnText;
+    enterApp();
+  }catch(e){
+    console.error('Login check failed', e);
+    errBox.textContent = 'সার্ভারের সঙ্গে সংযোগ স্থাপন করা যায়নি। আবার চেষ্টা করুন।';
+    btn.disabled = false;
+    btn.textContent = originalBtnText;
+  }
 }
 function doLogout(){
 localStorage.removeItem("qa_role");
