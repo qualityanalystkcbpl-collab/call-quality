@@ -455,59 +455,96 @@ width:max-content;
     will-change: transform;
 }
 
-/* একবার স্ক্রলিং সম্পূর্ণ শেষ হলে "ব্রেকিং নিউজ" স্টাইলে ছোট থেকে জুম-ইন হয়ে এই "UPDATE" ফ্ল্যাশ দেখাবে (৩ সেকেন্ড), তারপর আবার স্ক্রলিং শুরু হবে */
+/* একবার স্ক্রলিং সম্পূর্ণ শেষ হলে ABP News-স্টাইলের "BREAKING NEWS" ধাঁচের এই "UPDATE" ব্যানার
+   ছোট থেকে জুম-ইন হয়ে ৩ সেকেন্ডের জন্য দেখাবে, তারপর আবার স্ক্রলিং শুরু হবে */
 .ticker-flash{
     position:absolute;
     inset:0;
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:10px;
+    gap:14px;
     z-index:3;
     border-radius:9px;
-    background: linear-gradient(90deg, #E0524A, #E3A857, #E0524A);
-    background-size:220% 100%;
-    color:#fff;
+    overflow:hidden;
+    background: linear-gradient(90deg, #6e0000 0%, #c40000 30%, #ff2e2e 50%, #c40000 70%, #6e0000 100%);
     opacity:0;
-    transform:scale(0.25);
+    transform:scale(0.2);
     pointer-events:none;
-    box-shadow:0 0 24px rgba(224,82,74,0.6) inset;
+    box-shadow:0 0 26px rgba(255,40,40,0.55) inset, 0 0 16px rgba(255,40,40,0.45);
     transition: opacity 0.25s ease, transform 0.25s ease;
 }
 .ticker-flash.show{
     opacity:1;
     transform:scale(1);
     pointer-events:auto;
-    animation:
-        tickerFlashPop 0.55s cubic-bezier(0.34,1.56,0.64,1),
-        tickerFlashBg 0.9s linear infinite;
+    animation: tickerFlashPop 0.55s cubic-bezier(0.34,1.56,0.64,1);
 }
 @keyframes tickerFlashPop{
     0%   { transform:scale(0.2); opacity:0; }
-    55%  { transform:scale(1.22); opacity:1; }
-    75%  { transform:scale(0.94); }
+    55%  { transform:scale(1.18); opacity:1; }
+    75%  { transform:scale(0.95); }
     100% { transform:scale(1); opacity:1; }
 }
-@keyframes tickerFlashBg{
-    0%   { background-position:0% 50%; }
-    100% { background-position:220% 50%; }
+/* তীর্যক আলোর ঝলক (lens-flare sweep) — ব্যানারের উপর দিয়ে বারবার বয়ে যাবে */
+.ticker-flash::before{
+    content:"";
+    position:absolute;
+    top:0; bottom:0;
+    left:-45%;
+    width:35%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.65), transparent);
+    mix-blend-mode: screen;
+    animation: tfSweep 1.3s linear infinite;
 }
-.ticker-flash .flash-icon{
-    font-size:17px;
-    animation: tickerFlashBlink 0.5s steps(1) infinite;
+@keyframes tfSweep{
+    0%   { left:-45%; }
+    100% { left:120%; }
 }
-@keyframes tickerFlashBlink{
-    0%, 49% { opacity:1; }
-    50%, 100% { opacity:0.25; }
+/* UPDATE টেক্সট + তীর একসাথে বাম দিক থেকে ডান দিকে স্লাইড করে যাবে — মোট ৩ সেকেন্ডে ২ বার,
+   ফ্ল্যাশ যতবার দেখাবে ততবারই এই অ্যানিমেশন নতুন করে শুরু হবে */
+.tf-content{
+    position:absolute;
+    top:50%;
+    left:-32%;
+    white-space:nowrap;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    transform: translateY(-50%);
 }
-.ticker-flash .flash-text{
+.ticker-flash.show .tf-content{
+    animation: tfSlide 3.3s linear 2;
+}
+@keyframes tfSlide{
+    0%   { left:-32%; opacity:0; }
+    10%  { opacity:1; }
+    88%  { opacity:1; }
+    100% { left:104%; opacity:0; }
+}
+.tf-text{
+    position:relative;
+    z-index:1;
     font-family:'Space Grotesk',sans-serif;
     font-weight:900;
-    font-size:16px;
+    font-size:19px;
     letter-spacing:2.5px;
     text-transform:uppercase;
-    text-shadow:0 2px 10px rgba(0,0,0,0.5);
+    background: linear-gradient(180deg, #fff6c8 0%, #ffe58a 30%, #d69a1a 58%, #ffe58a 80%, #fff6c8 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    text-shadow:0 2px 3px rgba(0,0,0,0.35);
 }
+.tf-arrow{
+    position:relative;
+    z-index:1;
+    font-size:19px;
+    color:#ffe58a;
+    text-shadow:0 2px 3px rgba(0,0,0,0.35);
+}
+
+
 /* ===========================
    Animated Bottom Color Bar
 =========================== */
@@ -2145,7 +2182,9 @@ transform:translateY(0);
       </div>
       <div class="ticker">
         <div class="ticker-track mono" id="tickerTrack">Loading updates ...</div>
-        <div class="ticker-flash" id="tickerFlash"><span class="flash-icon">📢</span><span class="flash-text">UPDATE</span></div>
+        <div class="ticker-flash" id="tickerFlash">
+          <span class="tf-content"><span class="tf-text">UPDATE</span><span class="tf-arrow">➤</span></span>
+        </div>
       </div>
       <div class="user-block">
        <div class="global-clock-wrap">
@@ -2694,7 +2733,7 @@ function renderTopTicker(text){
         lastFrameTime = null;
         running = true;
         topTickerAnimFrame = requestAnimationFrame(tick);
-      }, 3000);
+      }, 6600);
       return;
     }
 
