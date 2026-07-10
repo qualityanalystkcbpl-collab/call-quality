@@ -934,10 +934,56 @@ width:max-content;
   align-items: stretch;
   height: 46px;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible;
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: 0 8px 26px rgba(0,0,0,0.35);
+}
+/* ==== হালকা আগুনের গ্লো — স্ক্রলিং বক্সের ঠিক নিচে অল্প ফ্লিকার করবে ==== */
+.news-ticker-wrap::before{
+  content:"";
+  position:absolute;
+  left:6%;
+  right:6%;
+  bottom:-11px;
+  height:18px;
+  background:
+    radial-gradient(ellipse at 15% 50%, rgba(255,140,40,0.55), transparent 62%),
+    radial-gradient(ellipse at 45% 50%, rgba(255,80,30,0.6), transparent 65%),
+    radial-gradient(ellipse at 75% 50%, rgba(255,190,70,0.5), transparent 60%),
+    radial-gradient(ellipse at 95% 50%, rgba(255,110,30,0.5), transparent 60%);
+  filter: blur(7px);
+  opacity:0.65;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:0;
+  animation: newsFireFlicker 1.7s ease-in-out infinite alternate;
+}
+.news-ticker-wrap::after{
+  content:"";
+  position:absolute;
+  left:16%;
+  right:16%;
+  bottom:-6px;
+  height:9px;
+  background: linear-gradient(90deg, transparent, rgba(255,170,60,0.85), rgba(255,90,30,0.9), rgba(255,170,60,0.85), transparent);
+  filter: blur(3px);
+  opacity:0.7;
+  pointer-events:none;
+  z-index:0;
+  animation: newsFireFlickerSmall 1.1s ease-in-out infinite alternate;
+}
+@keyframes newsFireFlicker{
+  0%   { opacity:0.45; transform: scaleX(0.93) scaleY(0.85); }
+  25%  { opacity:0.7;  transform: scaleX(1.03) scaleY(1.15); }
+  50%  { opacity:0.55; transform: scaleX(0.97) scaleY(0.9); }
+  75%  { opacity:0.75; transform: scaleX(1.04) scaleY(1.1); }
+  100% { opacity:0.5;  transform: scaleX(0.95) scaleY(0.95); }
+}
+@keyframes newsFireFlickerSmall{
+  0%   { opacity:0.5; transform: scaleX(0.9) translateY(0px); }
+  50%  { opacity:0.85; transform: scaleX(1.05) translateY(1px); }
+  100% { opacity:0.6; transform: scaleX(0.95) translateY(-1px); }
 }
 .news-ticker-tag {
   flex-shrink: 0;
@@ -976,6 +1022,7 @@ width:max-content;
 }
 .news-ticker-track {
   position: relative;
+  z-index: 1;
   flex: 1;
   overflow: hidden;
   background:
@@ -990,7 +1037,8 @@ width:max-content;
   align-items: center;
   white-space: nowrap;
   will-change: transform;
-  animation: newsTickerScroll linear infinite;
+  /* স্ক্রলিং এখন CSS animation দিয়ে নয়, JS দিয়ে ফ্রেম-বাই-ফ্রেম কন্ট্রোল করা হয় —
+     যাতে পজ/রিজিউম, ৩০ সেকেন্ড ইন্টারাপ্ট ফ্ল্যাশ, এবং ফুল-প্যাস শেষে ৪ সেকেন্ড ফ্ল্যাশ সঠিকভাবে সিঙ্ক থাকে */
 }
 .news-ticker-scroll span.item {
   display: inline-flex;
@@ -1028,7 +1076,7 @@ width:max-content;
 .news-ticker-flash {
   position: absolute;
   inset: 0;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
@@ -1038,9 +1086,17 @@ width:max-content;
   background-size: 220% 100%;
   animation: newsFlashBg 1s linear infinite;
   box-shadow: 0 0 24px rgba(224,82,74,0.55) inset;
+  /* লুকানো অবস্থায় এটি NOTICE ট্যাগের দিকে (বাম পাশে) সরানো থাকে, দেখানোর সময় স্মুথভাবে
+     মাঝে এসে বসে, আবার লুকানোর সময় ঠিক একই পথে ফিরে যায় */
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.6s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease;
 }
 .news-ticker-flash.show {
-  display: flex;
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 @keyframes newsFlashBg {
   0% { background-position: 0% 50%; }
@@ -2337,6 +2393,8 @@ let currentTab = 'CATV';
 let bannerTimer = null;
 let bannerIndex = 0;
 let newsTickerFlashTimer = null;
+let newsTickerAnimFrame = null;
+let newsTickerTimeoutId = null;
 let chartInstances = {};
 const rawDataCache = {};
 /* ===================== LIVE SYSTEM CLOCK ===================== */
@@ -2658,9 +2716,13 @@ async function loadNewsTicker(){
 function renderNewsTicker(items){
   const wrap = document.getElementById('newsTickerWrap');
   if(!wrap) return;
+  /* আগের কোনো চলমান অ্যানিমেশন/টাইমার থাকলে বন্ধ করে দেওয়া হয় (Admin Panel থেকে টেক্সট বদলালে পুরো সাইকেল নতুন করে শুরু হবে) */
+  if(newsTickerFlashTimer){ clearInterval(newsTickerFlashTimer); newsTickerFlashTimer = null; }
+  if(newsTickerAnimFrame){ cancelAnimationFrame(newsTickerAnimFrame); newsTickerAnimFrame = null; }
+  if(newsTickerTimeoutId){ clearTimeout(newsTickerTimeoutId); newsTickerTimeoutId = null; }
+
   wrap.innerHTML = '';
   const clean = (items||[]).map(t=> (t||'').trim()).filter(Boolean);
-  if(newsTickerFlashTimer){ clearInterval(newsTickerFlashTimer); newsTickerFlashTimer = null; }
   if(!clean.length){
     wrap.innerHTML = `<div class="news-ticker-empty">এখনো কোনো নিউজ যোগ করা হয়নি — Admin Panel থেকে যোগ করুন।</div>`;
     return;
@@ -2675,9 +2737,6 @@ function renderNewsTicker(items){
   /* সিমলেস লুপের জন্য লিস্টটা দুইবার বসানো হয় */
   const doubled = clean.concat(clean);
   scroll.innerHTML = doubled.map(t=> `<span class="item">${escapeHtml(t)}</span>`).join('');
-  /* লেখার পরিমাণ অনুযায়ী স্ক্রল-স্পিড ঠিক করা হয়, যাতে গতি সবসময় স্বাভাবিক থাকে — এই স্ক্রলিং কখনো থামবে না */
-  const speed = Math.max(18, clean.join(' ').length * 0.35);
-  scroll.style.animationDuration = speed + 's';
   track.appendChild(scroll);
 
   const flash = document.createElement('div');
@@ -2688,14 +2747,85 @@ function renderNewsTicker(items){
   wrap.appendChild(track);
   wrap.appendChild(flash);
 
-  /* প্রতি ১৫ সেকেন্ড পরপর ২ সেকেন্ডের জন্য "Latest Update" ফ্ল্যাশ হবে — স্ক্রলিং কখনো থামবে না, পেছনে চলতেই থাকবে;
-     ফ্ল্যাশ শুধু উপরে ওভারলে হয়ে ভেসে ওঠে, নিচের স্ক্রলিং টেক্সটকে ওভাররাইট/নষ্ট করে না */
-  function triggerFlash(){
-    flash.classList.add('show');
-    setTimeout(()=> flash.classList.remove('show'), 3000);
+  /* ============================================================
+     নতুন স্ক্রলিং সিকোয়েন্স (Admin Panel-এর টেক্সট অনুযায়ী কাজ করবে):
+     ১) প্রথমে "Latest Update" ফ্ল্যাশ দেখাবে
+     ২) তারপর স্ক্রলিং শুরু হবে — একদম প্রথমবার ডান দিক থেকে শুরু হয়ে পুরো একটা
+        সম্পূর্ণ প্যাস (loop) শেষ করবে
+     ৩) পুরো প্যাস শেষ হলে স্ক্রলিং থেমে যাবে এবং "Latest Update" ৪ সেকেন্ডের জন্য দেখাবে
+        (এই সময় নিচে স্ক্রলিং থেমে থাকবে)
+     ৪) তারপর আবার স্ক্রলিং শুরু হবে — এভাবে চক্রটি চলতেই থাকবে
+     ৫) এছাড়া স্ক্রলিং চলাকালীন প্রতি ৩০ সেকেন্ড পরপর, ৩ সেকেন্ডের জন্য "Latest Update"
+        ফ্ল্যাশ হবে (স্ক্রলিং সাময়িক থেমে থাকবে, তারপর ঠিক যেখানে ছিল সেখান থেকেই আবার চলবে)
+     ============================================================ */
+  const END_FLASH_MS = 4000;      // পুরো প্যাস শেষে ফ্ল্যাশ
+  const INTERRUPT_FLASH_MS = 3000; // মাঝপথে প্রতি ৩০ সেকেন্ডে ফ্ল্যাশ
+  const INTERRUPT_EVERY_MS = 30000;
+
+  const containerW = track.clientWidth || wrap.clientWidth || 0;
+  const singleSetWidth = scroll.scrollWidth / 2;
+  /* লেখার পরিমাণ অনুযায়ী স্বাভাবিক গতি ঠিক করা হয় */
+  const speedSeconds = Math.max(10, clean.join(' ').length * 0.18);
+  const pxPerSec = singleSetWidth / speedSeconds;
+
+  let posX = containerW; // প্রথমবার ডান দিক থেকে (কনটেইনারের বাইরে) শুরু হবে
+  let scrollingElapsed = 0;
+  let lastFrameTime = null;
+  let running = false;
+
+  function applyTransform(){
+    scroll.style.transform = `translateX(${posX}px)`;
   }
-  triggerFlash();
-  newsTickerFlashTimer = setInterval(triggerFlash, 15000);
+  applyTransform();
+
+  function showFlash(){ flash.classList.add('show'); }
+  function hideFlash(){ flash.classList.remove('show'); }
+
+  function tick(now){
+    if(!running){ newsTickerAnimFrame = requestAnimationFrame(tick); return; }
+    if(lastFrameTime === null) lastFrameTime = now;
+    const dt = now - lastFrameTime;
+    lastFrameTime = now;
+
+    posX -= pxPerSec * (dt/1000);
+    scrollingElapsed += dt;
+
+    if(posX <= -singleSetWidth){
+      /* একটা পুরো প্যাস শেষ — সিমলেস রিসেট, তারপর ৪ সেকেন্ডের ফ্ল্যাশ */
+      posX = 0;
+      applyTransform();
+      pauseForFlash(END_FLASH_MS);
+      return;
+    }
+    if(scrollingElapsed >= INTERRUPT_EVERY_MS){
+      /* মাঝপথে ৩০ সেকেন্ড পার হলে ৩ সেকেন্ডের ছোট ফ্ল্যাশ, স্ক্রলিং একই জায়গা থেকে আবার চলবে */
+      pauseForFlash(INTERRUPT_FLASH_MS);
+      return;
+    }
+
+    applyTransform();
+    newsTickerAnimFrame = requestAnimationFrame(tick);
+  }
+
+  function pauseForFlash(durationMs){
+    running = false;
+    showFlash();
+    newsTickerTimeoutId = setTimeout(()=>{
+      hideFlash();
+      scrollingElapsed = 0;
+      lastFrameTime = null;
+      running = true;
+      newsTickerAnimFrame = requestAnimationFrame(tick);
+    }, durationMs);
+  }
+
+  /* সাইকেলের শুরুতে প্রথমে "Latest Update" ফ্ল্যাশ, তারপর স্ক্রলিং শুরু (ডান দিক থেকে) */
+  showFlash();
+  newsTickerTimeoutId = setTimeout(()=>{
+    hideFlash();
+    running = true;
+    newsTickerAnimFrame = requestAnimationFrame(tick);
+  }, END_FLASH_MS);
 }
 function renderNewsTickerEditor(items){
   const box = document.getElementById('newsTickerEditor');
