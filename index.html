@@ -925,6 +925,137 @@ width:max-content;
   background: linear-gradient(90deg, #33C9B0, #FF5E7E);
   box-shadow: 0 0 15px rgba(51, 201, 176, 0.6);
 }
+
+/* ==================== NEWS-CHANNEL STYLE TEXT TICKER (ছবির বদলে টেক্সট নিউজ ব্যানার) ==================== */
+.news-ticker-wrap {
+  margin: 16px 24px 0 24px;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 46px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.35);
+}
+.news-ticker-tag {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  background: linear-gradient(120deg, #E0524A, #E3A857);
+  background-size: 200% 200%;
+  animation: newsTagFlow 6s ease infinite;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 2;
+  clip-path: polygon(0 0, 100% 0, 88% 100%, 0% 100%);
+  padding-right: 34px;
+}
+@keyframes newsTagFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.news-ticker-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fff;
+  animation: newsDotBlink 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes newsDotBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.news-ticker-track {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(51,201,176,0.06), transparent 30%),
+    var(--surface-2);
+}
+.news-ticker-scroll {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+  animation: newsTickerScroll linear infinite;
+}
+.news-ticker-scroll span.item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 36px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #33C9B0;
+  animation: newsItemHueCycle 8s linear infinite;
+}
+/* প্রতিটা লাইনের রঙ ধীরে ধীরে পুরো কালার স্পেকট্রাম জুড়ে বদলাতে থাকবে (আগের gradient-sweep থেকে ভিন্ন ধরনের অ্যানিমেশন) */
+@keyframes newsItemHueCycle {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+.news-ticker-scroll span.item::before {
+  content: "●";
+  color: var(--admin);
+  font-size: 8px;
+  margin-right: 14px;
+  animation: newsDotColorCycle 3s ease-in-out infinite;
+}
+@keyframes newsDotColorCycle {
+  0%   { color: #E3A857; text-shadow: 0 0 6px rgba(227,168,87,0.7); }
+  33%  { color: #33C9B0; text-shadow: 0 0 6px rgba(51,201,176,0.7); }
+  66%  { color: #B94AE0; text-shadow: 0 0 6px rgba(185,74,224,0.7); }
+  100% { color: #E3A857; text-shadow: 0 0 6px rgba(227,168,87,0.7); }
+}
+@keyframes newsTickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.news-ticker-empty {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 20px;
+  color: var(--text-muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  letter-spacing: 1px;
+}
+/* Admin editor rows for ticker text items */
+.news-ticker-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.news-ticker-editor-row input[type="text"] {
+  flex: 1;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 13.5px;
+}
+.news-ticker-editor-row .idx {
+  color: var(--text-muted);
+  min-width: 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
 /* layout */
 .body-layout{display:flex;flex:1;gap:0;margin-top:18px;}
 aside.sidebar{
@@ -1923,6 +2054,7 @@ letter-spacing:1px;
     </header>
   </div>
   <div class="banner-wrap" id="bannerWrap"></div>
+  <div class="news-ticker-wrap" id="newsTickerWrap"></div>
   <div class="body-layout">
     <aside class="sidebar" id="sidebar">
       <div class="nav-label">Data Sheets</div>
@@ -2068,6 +2200,15 @@ letter-spacing:1px;
             <h3 style="margin-bottom:12px;">Banner Slides (max 10)</h3>
             <div id="bannerEditor"></div>
             <button class="btn primary small" onclick="saveBanners()">Save Banners</button>
+          </div>
+          <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
+            <h3 style="margin-bottom:12px;">News Ticker (টেক্সট নিউজ ব্যানার)</h3>
+            <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">নিচে যত খুশি নিউজ/নোটিশ লাইন যোগ করুন — নিউজ চ্যানেলের মতো স্ক্রল হয়ে দেখাবে। "Add Line" চেপে নতুন লাইন যোগ করুন, তারপর Save করুন।</p>
+            <div id="newsTickerEditor"></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn small" type="button" onclick="addNewsTickerRow()">+ Add Line</button>
+              <button class="btn primary small" onclick="saveNewsTicker()">Save News Ticker</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2356,6 +2497,7 @@ if(currentRole==="agent"){
   showToast('লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।...');
   await loadTicker();
   await loadBanners();
+  await loadNewsTicker();
   switchTab('CATV');
   await loadUpdates();
 }
@@ -2455,6 +2597,86 @@ async function saveBanners(){
   if(success) {
     renderBanners(banners);
     showToast('Banners matching completely saved to Sheet!');
+  }
+}
+/* ===================== NEWS-CHANNEL STYLE TEXT TICKER CORNER (ছবির ব্যানারের বদলে টেক্সট নিউজ ব্যানার) ===================== */
+function defaultNewsTicker(){
+  return [];
+}
+async function loadNewsTicker(){
+  let items = await storageGet('newsTickerItems');
+  if(!Array.isArray(items)) items = [];
+  renderNewsTicker(items);
+  renderNewsTickerEditor(items.length ? items : ['']);
+}
+function renderNewsTicker(items){
+  const wrap = document.getElementById('newsTickerWrap');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const clean = (items||[]).map(t=> (t||'').trim()).filter(Boolean);
+  if(!clean.length){
+    wrap.innerHTML = `<div class="news-ticker-empty">এখনো কোনো নিউজ যোগ করা হয়নি — Admin Panel থেকে যোগ করুন।</div>`;
+    return;
+  }
+  const tag = document.createElement('div');
+  tag.className = 'news-ticker-tag';
+  tag.innerHTML = `<span class="news-ticker-dot"></span> NOTICE`;
+  const track = document.createElement('div');
+  track.className = 'news-ticker-track';
+  const scroll = document.createElement('div');
+  scroll.className = 'news-ticker-scroll';
+  /* সিমলেস লুপের জন্য লিস্টটা দুইবার বসানো হয় */
+  const doubled = clean.concat(clean);
+  scroll.innerHTML = doubled.map(t=> `<span class="item">${escapeHtml(t)}</span>`).join('');
+  /* লেখার পরিমাণ অনুযায়ী স্ক্রল-স্পিড ঠিক করা হয়, যাতে গতি সবসময় স্বাভাবিক থাকে */
+  const speed = Math.max(18, clean.join(' ').length * 0.35);
+  scroll.style.animationDuration = speed + 's';
+  track.appendChild(scroll);
+  wrap.appendChild(tag);
+  wrap.appendChild(track);
+}
+function renderNewsTickerEditor(items){
+  const box = document.getElementById('newsTickerEditor');
+  if(!box) return;
+  box.innerHTML = '';
+  const list = items.length ? items : [''];
+  list.forEach((t,i)=>{
+    const row = document.createElement('div');
+    row.className = 'news-ticker-editor-row';
+    row.innerHTML = `<span class="idx">${i+1}</span>
+      <input type="text" placeholder="নিউজ টেক্সট লিখুন..." value="${escapeAttr(t||'')}" data-idx="${i}">
+      <button class="btn small danger" type="button" onclick="removeNewsTickerRow(${i})">Remove</button>`;
+    box.appendChild(row);
+  });
+}
+function addNewsTickerRow(){
+  const inputs = document.querySelectorAll('#newsTickerEditor input');
+  const items = Array.from(inputs).map(inp=> inp.value);
+  items.push('');
+  renderNewsTickerEditor(items);
+}
+function removeNewsTickerRow(idx){
+  const inputs = document.querySelectorAll('#newsTickerEditor input');
+  const items = Array.from(inputs).map(inp=> inp.value);
+  items.splice(idx,1);
+  renderNewsTickerEditor(items.length ? items : ['']);
+}
+async function saveNewsTicker(){
+  const inputs = document.querySelectorAll('#newsTickerEditor input');
+  const items = Array.from(inputs).map(inp=> inp.value.trim()).filter(Boolean);
+  showToast('Updating News Ticker in WEBPAGEDATA...');
+  try{
+    const success = await storageSet('newsTickerItems', items);
+    if(success){
+      renderNewsTicker(items);
+      renderNewsTickerEditor(items.length ? items : ['']);
+      showToast('News ticker saved successfully!');
+    } else {
+      showToast('Save করতে সমস্যা হয়েছে, আবার চেষ্টা করুন।');
+    }
+  }catch(err){
+    console.error(err);
+    showToast('Save করতে সমস্যা হয়েছে, আবার চেষ্টা করুন।');
   }
 }
 /* ===================== NAVIGATION & TABS ===================== */
