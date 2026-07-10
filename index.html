@@ -425,40 +425,13 @@ header.topbar{
     overflow:hidden;
     white-space:nowrap;
 
-    padding:10px 0 10px 135px;
+    padding:10px 16px;
 
     background:linear-gradient(90deg,#10233a,#162d48,#10233a);
 
     border:1px solid rgba(51,201,176,.30);
 
     border-radius:10px;
-}
-
-.ticker::before{
-
-    content:"📢 UPDATE";
-
-    position:absolute;
-
-    left:0;
-    top:0;
-    bottom:0;
-
-    width:130px;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    background:#33C9B0;
-
-    color:#07131f;
-
-    font-weight:900;
-
-    font-size:13px;
-
-    z-index:2;
 }
 
 .ticker-track{
@@ -477,15 +450,63 @@ width:max-content;
 
     text-shadow:0 0 8px rgba(51,201,176,.5);
 
-    padding-left:100%;
-
-   animation:scrollTicker 35s linear infinite;
+    /* এখন CSS animation নয়, JS ফ্রেম-বাই-ফ্রেম ট্রান্সলেট কন্ট্রোল করে —
+       যাতে এক প্যাস শেষে থেমে "UPDATE" ফ্ল্যাশ দেখিয়ে আবার শুরু করা যায় */
+    will-change: transform;
 }
 
-.ticker:hover .ticker-track{
-
-    animation-play-state:paused;
-
+/* একবার স্ক্রলিং সম্পূর্ণ শেষ হলে "ব্রেকিং নিউজ" স্টাইলে ছোট থেকে জুম-ইন হয়ে এই "UPDATE" ফ্ল্যাশ দেখাবে (৩ সেকেন্ড), তারপর আবার স্ক্রলিং শুরু হবে */
+.ticker-flash{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    z-index:3;
+    border-radius:9px;
+    background: linear-gradient(90deg, #E0524A, #E3A857, #E0524A);
+    background-size:220% 100%;
+    color:#fff;
+    opacity:0;
+    transform:scale(0.25);
+    pointer-events:none;
+    box-shadow:0 0 24px rgba(224,82,74,0.6) inset;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.ticker-flash.show{
+    opacity:1;
+    transform:scale(1);
+    pointer-events:auto;
+    animation:
+        tickerFlashPop 0.55s cubic-bezier(0.34,1.56,0.64,1),
+        tickerFlashBg 0.9s linear infinite;
+}
+@keyframes tickerFlashPop{
+    0%   { transform:scale(0.2); opacity:0; }
+    55%  { transform:scale(1.22); opacity:1; }
+    75%  { transform:scale(0.94); }
+    100% { transform:scale(1); opacity:1; }
+}
+@keyframes tickerFlashBg{
+    0%   { background-position:0% 50%; }
+    100% { background-position:220% 50%; }
+}
+.ticker-flash .flash-icon{
+    font-size:17px;
+    animation: tickerFlashBlink 0.5s steps(1) infinite;
+}
+@keyframes tickerFlashBlink{
+    0%, 49% { opacity:1; }
+    50%, 100% { opacity:0.25; }
+}
+.ticker-flash .flash-text{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:900;
+    font-size:16px;
+    letter-spacing:2.5px;
+    text-transform:uppercase;
+    text-shadow:0 2px 10px rgba(0,0,0,0.5);
 }
 /* ===========================
    Animated Bottom Color Bar
@@ -996,14 +1017,14 @@ width:max-content;
   animation: newsTagFlow 6s ease infinite;
   color: #fff;
   font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 1.5px;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 1.3px;
   text-transform: uppercase;
   position: relative;
   z-index: 2;
   clip-path: polygon(0 0, 100% 0, 88% 100%, 0% 100%);
-  padding-right: 34px;
+  padding-right: 40px;
 }
 @keyframes newsTagFlow {
   0% { background-position: 0% 50%; }
@@ -2124,6 +2145,7 @@ transform:translateY(0);
       </div>
       <div class="ticker">
         <div class="ticker-track mono" id="tickerTrack">Loading updates ...</div>
+        <div class="ticker-flash" id="tickerFlash"><span class="flash-icon">📢</span><span class="flash-text">UPDATE</span></div>
       </div>
       <div class="user-block">
        <div class="global-clock-wrap">
@@ -2395,6 +2417,8 @@ let bannerIndex = 0;
 let newsTickerFlashTimer = null;
 let newsTickerAnimFrame = null;
 let newsTickerTimeoutId = null;
+let topTickerAnimFrame = null;
+let topTickerTimeoutId = null;
 let chartInstances = {};
 const rawDataCache = {};
 /* ===================== LIVE SYSTEM CLOCK ===================== */
@@ -2609,10 +2633,7 @@ if(currentRole==="agent"){
 async function loadTicker(){
   const data = await storageGet('ticker');
   const text = (data && data.text) ? data.text : 'CATV, BB Tech Support ও BB Renewal-এর লাইভ কোয়ালিটি কন্ট্রোল রুম ও রিয়েল-টাইম ড্যাশবোর্ড ট্র্যাকিং সিস্টেমে স্বাগতম।';
-  document.getElementById("tickerTrack").innerHTML =
-text +
-"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✦ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
-text;
+  renderTopTicker(text);
   document.getElementById('tickerInput').value = text;
 }
 async function saveTicker(){
@@ -2621,12 +2642,67 @@ async function saveTicker(){
   showToast('Saving to WEBPAGEDATA...');
   const success = await storageSet('ticker', { text });
   if(success) {
-    document.getElementById("tickerTrack").innerHTML =
-text +
-"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✦ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
-text;
+    renderTopTicker(text);
     showToast('Ticker saved dynamically to Google Sheets!');
   }
+}
+/* একবার পুরো টেক্সট স্ক্রল হয়ে গেলে "UPDATE" ছোট জুম-ইন এফেক্টে ৩ সেকেন্ড ফ্ল্যাশ করবে,
+   তারপর স্ক্রলিং আবার ডান দিক থেকে শুরু হবে — এভাবে চক্রটি চলতেই থাকবে */
+function renderTopTicker(text){
+  const tickerEl = document.querySelector('.ticker');
+  const track = document.getElementById('tickerTrack');
+  const flash = document.getElementById('tickerFlash');
+  if(!tickerEl || !track || !flash) return;
+
+  if(topTickerAnimFrame){ cancelAnimationFrame(topTickerAnimFrame); topTickerAnimFrame = null; }
+  if(topTickerTimeoutId){ clearTimeout(topTickerTimeoutId); topTickerTimeoutId = null; }
+  flash.classList.remove('show');
+
+  track.innerHTML =
+    text +
+    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✦ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+    text;
+
+  const containerW = tickerEl.clientWidth || 0;
+  const contentW = track.scrollWidth || 0;
+  const speedSeconds = Math.max(18, text.length * 0.15);
+  const pxPerSec = contentW / speedSeconds;
+
+  let posX = containerW; // ডান দিক থেকে শুরু
+  let lastFrameTime = null;
+  let running = true;
+
+  function applyTransform(){ track.style.transform = `translateX(${posX}px)`; }
+  applyTransform();
+
+  function tick(now){
+    if(!running){ topTickerAnimFrame = requestAnimationFrame(tick); return; }
+    if(lastFrameTime === null) lastFrameTime = now;
+    const dt = now - lastFrameTime;
+    lastFrameTime = now;
+
+    posX -= pxPerSec * (dt/1000);
+
+    if(posX <= -contentW){
+      /* একটা পুরো প্যাস শেষ — থেমে "UPDATE" ফ্ল্যাশ, তারপর আবার ডান দিক থেকে শুরু */
+      running = false;
+      flash.classList.add('show');
+      topTickerTimeoutId = setTimeout(()=>{
+        flash.classList.remove('show');
+        posX = containerW;
+        applyTransform();
+        lastFrameTime = null;
+        running = true;
+        topTickerAnimFrame = requestAnimationFrame(tick);
+      }, 3000);
+      return;
+    }
+
+    applyTransform();
+    topTickerAnimFrame = requestAnimationFrame(tick);
+  }
+
+  topTickerAnimFrame = requestAnimationFrame(tick);
 }
 /* ===================== BANNER CORNER ===================== */
 function defaultBanners(){
@@ -2723,13 +2799,18 @@ function renderNewsTicker(items){
 
   wrap.innerHTML = '';
   const clean = (items||[]).map(t=> (t||'').trim()).filter(Boolean);
-  if(!clean.length){
-    wrap.innerHTML = `<div class="news-ticker-empty">এখনো কোনো নিউজ যোগ করা হয়নি — Admin Panel থেকে যোগ করুন।</div>`;
-    return;
-  }
   const tag = document.createElement('div');
   tag.className = 'news-ticker-tag';
   tag.innerHTML = `<span class="news-ticker-dot"></span> NOTICE`;
+  if(!clean.length){
+    /* কোনো নিউজ টেক্সট এখনো সেভ করা না থাকলেও NOTICE ট্যাগটা দেখা যাবে, শুধু পাশে একটা প্লেসহোল্ডার মেসেজ থাকবে */
+    const track = document.createElement('div');
+    track.className = 'news-ticker-track';
+    track.innerHTML = `<div class="news-ticker-empty">এখনো কোনো নিউজ যোগ করা হয়নি — Admin Panel থেকে যোগ করুন।</div>`;
+    wrap.appendChild(tag);
+    wrap.appendChild(track);
+    return;
+  }
   const track = document.createElement('div');
   track.className = 'news-ticker-track';
   const scroll = document.createElement('div');
