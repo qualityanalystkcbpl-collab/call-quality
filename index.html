@@ -344,7 +344,7 @@ header.topbar{
   0%,100%{box-shadow:0 0 0 rgba(51,201,176,0);}
   50%{box-shadow:0 0 16px rgba(51,201,176,0.45);}
 }
-.logo-block{display:flex;align-items:center;gap:12px;min-width:180px; animation: logoEntrance .8s cubic-bezier(.34,1.56,.64,1) both;}
+.logo-block{display:flex;align-items:center;gap:12px;min-width:190px; animation: logoEntrance .8s cubic-bezier(.34,1.56,.64,1) both;}
 .logo-mark{ animation: logoGlowPulse 3.5s ease-in-out infinite; }
 .fire-loader{
     position:relative;
@@ -419,6 +419,150 @@ header.topbar{
 }
 .logo-text{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;}
 .logo-text small{display:block;font-size:10px;color:var(--text-muted);font-weight:500;letter-spacing:1.5px;}
+/* ===== Enlarged rotating logo/clock area (brand text <-> date & time, every 5s) ===== */
+.logo-rotator{
+  position:relative;
+  min-width:170px;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+}
+.logo-rotator-item{
+  position:absolute;
+  left:0; top:50%;
+  transform:translateY(-46%) translateX(6px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .55s ease, transform .55s ease;
+  white-space:nowrap;
+}
+.logo-rotator-item.active{
+  position:relative;
+  top:auto;
+  opacity:1;
+  transform:translateY(0) translateX(0);
+  pointer-events:auto;
+}
+.logo-text-main{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:800;
+  font-size:16px;
+  line-height:1.15;
+  color:var(--text);
+  letter-spacing:.3px;
+}
+.logo-text-sub{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:10px;
+  color:var(--text-muted);
+  font-weight:600;
+  letter-spacing:1.1px;
+  margin-top:3px;
+}
+.logo-text-sub .dot{
+  width:9px; height:9px; border-radius:50%;
+  background:#00ff9d;
+  box-shadow:0 0 8px #00ff9d, 0 0 18px #00ff9d;
+  animation:livePulse 1.2s infinite;
+  flex-shrink:0;
+}
+#logoRotatorClock .logo-text-main{ color:#7fded2; font-variant-numeric:tabular-nums; }
+/* ===== Agent-login welcome popup (admin-editable message, colorful animated text) ===== */
+.login-popup-overlay{
+  position:fixed; inset:0; z-index:9999;
+  background:rgba(4,10,20,.75);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  opacity:0;
+  transition:opacity .35s ease;
+}
+.login-popup-overlay.show{ display:flex; opacity:1; }
+.login-popup-box{
+  position:relative;
+  max-width:640px;
+  width:100%;
+  padding:46px 40px 40px;
+  border-radius:22px;
+  border:6px solid transparent;
+  background:
+    linear-gradient(145deg,#0f2230,#0a1620) padding-box,
+    conic-gradient(from var(--angle,0deg), #7fded2, #ffd76a, #ff9ad5, #7fded2) border-box;
+  box-shadow:0 20px 60px rgba(0,0,0,.55), 0 0 46px rgba(56,189,178,.18);
+  transform:translateY(18px) scale(.94);
+  opacity:0;
+  isolation:isolate;
+  animation:loginPopupIn .5s cubic-bezier(.34,1.56,.64,1) forwards, popupBorderSpin 4.5s linear infinite;
+}
+@keyframes loginPopupIn{ to{ transform:translateY(0) scale(1); opacity:1; } }
+@property --angle{
+  syntax:'<angle>';
+  inherits:false;
+  initial-value:0deg;
+}
+@keyframes popupBorderSpin{ to{ --angle:360deg; } }
+.login-popup-box::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(127,222,210,.22), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(255,154,213,.18), transparent 42%);
+  animation:popupGlowDrift 6s ease-in-out infinite;
+  pointer-events:none;
+  z-index:-1;
+}
+@keyframes popupGlowDrift{
+  0%,100%{ opacity:.7; transform:scale(1); }
+  50%{ opacity:1; transform:scale(1.06); }
+}
+.login-popup-close{
+  position:absolute;
+  top:-14px; right:-14px;
+  width:38px; height:38px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.45);
+  background:linear-gradient(145deg,#ff6161,#c81e1e);
+  color:#fff;
+  font-size:18px;
+  font-weight:800;
+  line-height:1;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  z-index:2;
+  animation:popupCloseGlow 1.7s ease-in-out infinite;
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+@keyframes popupCloseGlow{
+  0%,100%{ box-shadow:0 0 12px rgba(255,70,70,.65), 0 0 26px rgba(255,70,70,.32); }
+  50%{ box-shadow:0 0 22px rgba(255,70,70,1), 0 0 44px rgba(255,70,70,.55); }
+}
+.login-popup-close:hover{ transform:scale(1.18) rotate(90deg); box-shadow:0 0 28px rgba(255,70,70,1), 0 0 52px rgba(255,70,70,.75); }
+.login-popup-text{
+  position:relative;
+  z-index:1;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(22px,3.4vw,32px);
+  font-weight:800;
+  line-height:1.45;
+  text-align:center;
+  white-space:pre-wrap;
+  background:linear-gradient(90deg,#7fded2,#ffd76a,#ff9ad5,#7fded2);
+  background-size:300% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  animation:loginPopupColor 4s linear infinite;
+}
+@keyframes loginPopupColor{
+  0%{ background-position:0% center; }
+  100%{ background-position:300% center; }
+}
 .ticker{
     flex:1;
     position:relative;
@@ -621,7 +765,7 @@ width:max-content;
   0%{transform:translateX(0);}
   100%{transform:translateX(-100%);}
 }
-.user-block{display:flex;align-items:center;gap:16px;min-width:320px;justify-content:flex-end;}
+.user-block{display:flex;align-items:center;gap:16px;min-width:170px;justify-content:flex-end;}
 .role-pill{
   padding:6px 12px;
   border-radius:20px;
@@ -2173,7 +2317,7 @@ transform:translateY(0);
     </div>
 <div class="app-header-fixed">
     <header class="topbar">
-      <div class="logo-block">
+      <div class="logo-block" id="logoBlock">
         <div class="logo-mark">
     <div class="fire-loader">
         <span></span>
@@ -2181,7 +2325,16 @@ transform:translateY(0);
         <span></span>
     </div>
 </div>
-        <div class="logo-text">QA Control Room<small>CALL QUALITY Analytics</small></div>
+        <div class="logo-rotator" id="logoRotator">
+          <div class="logo-rotator-item active" id="logoRotatorBrand">
+            <div class="logo-text-main">QA Control Room</div>
+            <div class="logo-text-sub">CALL QUALITY Analytics</div>
+          </div>
+          <div class="logo-rotator-item" id="logoRotatorClock">
+            <div class="logo-text-main" id="logoClockDate">--</div>
+            <div class="logo-text-sub" id="logoClockTime"><span class="dot"></span>--:--:--</div>
+          </div>
+        </div>
       </div>
       <div class="ticker">
         <div class="ticker-track mono" id="tickerTrack">Loading updates ...</div>
@@ -2190,29 +2343,6 @@ transform:translateY(0);
         </div>
       </div>
       <div class="user-block">
-       <div class="global-clock-wrap">
-
-<span class="dot"></span>
-
-<div>
-
-<div style="
-font-size:10px;
-color:#7fded2;
-text-transform:uppercase;
-letter-spacing:1px;
-">
-</div>
-
-<div id="globalLiveClock">
-
---:--:--
-
-</div>
-
-</div>
-
-</div>
         <span class="role-pill" id="rolePill">AGENT</span>
         <button class="logout-btn" onclick="doLogout()">⏻Logout</button>
       </div>
@@ -2362,6 +2492,12 @@ letter-spacing:1px;
             <button class="btn primary small" onclick="saveTicker()">Save Ticker</button>
           </div>
           <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
+            <h3 style="margin-bottom:12px;">Agent Login Welcome Popup</h3>
+            <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">Agent লগইন করার পর এই মেসেজটি পপ-আপে দেখাবে (রঙিন অ্যানিমেশন সহ, বড় ফন্টে)। খালি রাখলে কোনো পপ-আপ দেখাবে না।</p>
+            <textarea id="loginPopupInput" placeholder="যেমন: আজকের টার্গেট সম্পন্ন করার জন্য শুভকামনা!" style="width:100%;min-height:90px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:10px;resize:vertical;font-family:inherit;"></textarea>
+            <button class="btn primary small" onclick="saveLoginPopup()">Save Popup Message</button>
+          </div>
+          <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
             <h3 style="margin-bottom:12px;">Banner Slides (max 10)</h3>
             <div id="bannerEditor"></div>
             <button class="btn primary small" onclick="saveBanners()">Save Banners</button>
@@ -2434,8 +2570,9 @@ letter-spacing:1px;
 </div>
 <script>
 /* ===================== GOOGLE API CONFIG ===================== */
+// 
 
-
+// ⚠️ এখানে 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbCrtIR8ww9F8eJBKZl92Ml-L7TwDq_hZBu3VHK8D8H-EYz2FM5nw/exec";
 
 const VERTICALS = {
@@ -2462,17 +2599,34 @@ let topTickerAnimFrame = null;
 let topTickerTimeoutId = null;
 let chartInstances = {};
 const rawDataCache = {};
-/* ===================== LIVE SYSTEM CLOCK ===================== */
+/* ===================== LIVE SYSTEM CLOCK (now inside the logo area) ===================== */
 function startLiveClock() {
   setInterval(() => {
     const now = new Date();
-    const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-    document.getElementById("globalLiveClock").innerHTML =
-"🕒 " +
-now.toLocaleString("en-IN", options);
+    const dateOptions = { day: '2-digit', month: 'short', year: 'numeric' };
+    const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+    const dateEl = document.getElementById("logoClockDate");
+    const timeEl = document.getElementById("logoClockTime");
+    if (dateEl) dateEl.textContent = now.toLocaleDateString("en-IN", dateOptions);
+    if (timeEl) {
+      timeEl.innerHTML = '<span class="dot"></span>' + now.toLocaleTimeString("en-IN", timeOptions);
+    }
   }, 1000);
 }
 startLiveClock();
+/* লোগো এরিয়ায় */
+function startLogoRotator() {
+  const brand = document.getElementById('logoRotatorBrand');
+  const clock = document.getElementById('logoRotatorClock');
+  if (!brand || !clock) return;
+  let showingBrand = true;
+  setInterval(() => {
+    showingBrand = !showingBrand;
+    brand.classList.toggle('active', showingBrand);
+    clock.classList.toggle('active', !showingBrand);
+  }, 5000);
+}
+startLogoRotator();
 /* ===================== FLOATING LOGO ON SCROLL ===================== */
 (function(){
   const el = document.getElementById('floatingScrollLogo');
@@ -2638,9 +2792,12 @@ async function doLogin(){
     btn.disabled = false;
     btn.textContent = originalBtnText;
     enterApp();
+    if(currentRole === 'agent'){
+      showLoginPopupIfNeeded();
+    }
   }catch(e){
     console.error('Login check failed', e);
-    errBox.textContent = 'সার্ভারে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+    errBox.textContent = 'Server is temporarily unavailable. Please try again in 2 minutes.';
     btn.disabled = false;
     btn.textContent = originalBtnText;
   }
@@ -2691,6 +2848,7 @@ if(currentRole==="agent"){
   await loadNewsTicker();
   switchTab('CATV');
   await loadUpdates();
+  await loadLoginPopupAdmin();
 }
 /* ===================== TICKER SYSTEMS ===================== */
 async function loadTicker(){
@@ -2709,6 +2867,35 @@ async function saveTicker(){
     showToast('Ticker saved dynamically to Google Sheets!');
   }
 }
+/* ===================== AGENT LOGIN WELCOME POPUP ===================== */
+async function loadLoginPopupAdmin(){
+  const data = await storageGet('loginPopup');
+  const text = (data && data.text) ? data.text : '';
+  const el = document.getElementById('loginPopupInput');
+  if(el) el.value = text;
+}
+async function saveLoginPopup(){
+  const el = document.getElementById('loginPopupInput');
+  const text = el ? el.value.trim() : '';
+  showToast('Saving to WEBPAGEDATA...');
+  const success = await storageSet('loginPopup', { text });
+  if(success){
+    showToast(text ? 'Popup message saved!' : 'Popup message cleared — popup আর দেখাবে না।');
+  }
+}
+async function showLoginPopupIfNeeded(){
+  const data = await storageGet('loginPopup');
+  const text = (data && data.text) ? data.text.trim() : '';
+  const overlay = document.getElementById('loginPopupOverlay');
+  const textEl = document.getElementById('loginPopupText');
+  if(!text || !overlay || !textEl) return; // খালি থাকলে পপ-আপ দেখাবে না
+  textEl.textContent = text;
+  overlay.classList.add('show');
+}
+function closeLoginPopup(){
+  const overlay = document.getElementById('loginPopupOverlay');
+  if(overlay) overlay.classList.remove('show');
+}
 /* একবার পুরো টেক্সট স্ক্রল হয়ে গেলে "UPDATE" ছোট জুম-ইন এফেক্টে ৩ সেকেন্ড ফ্ল্যাশ করবে,
    তারপর স্ক্রলিং আবার ডান দিক থেকে শুরু হবে — এভাবে চক্রটি চলতেই থাকবে */
 function renderTopTicker(text){
@@ -2721,15 +2908,11 @@ function renderTopTicker(text){
   if(topTickerTimeoutId){ clearTimeout(topTickerTimeoutId); topTickerTimeoutId = null; }
   flash.classList.remove('show');
 
-  track.innerHTML =
-    text +
-    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✦ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
-    text;
+  track.innerHTML = text;
 
   const containerW = tickerEl.clientWidth || 0;
   const contentW = track.scrollWidth || 0;
-  const speedSeconds = Math.max(18, text.length * 0.15);
-  const pxPerSec = contentW / speedSeconds;
+  const pxPerSec = 55; // ফিক্সড, একটু ধীর গতি — লেখা যত বড়ই হোক, গতি একই থাকবে
 
   let posX = containerW; // ডান দিক থেকে শুরু
   let lastFrameTime = null;
@@ -3951,5 +4134,11 @@ setInterval(() => {
     location.reload();
 }, 10 * 60 * 1000); // 10 Minutes
 </script>
+<div class="login-popup-overlay" id="loginPopupOverlay">
+  <div class="login-popup-box">
+    <button class="login-popup-close" onclick="closeLoginPopup()" title="Close">✕</button>
+    <div class="login-popup-text" id="loginPopupText"></div>
+  </div>
+</div>
 </body>
 </html>
