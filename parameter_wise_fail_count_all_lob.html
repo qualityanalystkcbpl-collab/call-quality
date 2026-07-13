@@ -1084,6 +1084,15 @@ transform:translate(-40px,-40px);
 /* ---------- animated LIVE watermark ---------- */
 .live-zone{position:relative;}
 .live-zone>.status-row,.live-zone>.tabs,.live-zone>.cards{position:relative;z-index:1;}
+.live-fly-wrap{
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  animation:liveFlyIn 5s ease-out infinite;
+}
+@keyframes liveFlyIn{
+  0%{transform:translateX(-100vw);}
+  25%{transform:translateX(0);}
+  100%{transform:translateX(0);}
+}
 .live-watermark{
   position:absolute;top:30%;left:78%;transform:translate(-50%,-50%);
   font-family:var(--display);font-weight:800;font-size:130px;letter-spacing:16px;
@@ -1137,7 +1146,7 @@ transform:translate(-40px,-40px);
 <div class="wrap">
 
   <div class="live-zone">
-    <div class="live-watermark" aria-hidden="true">LIVE</div>
+    <div class="live-fly-wrap" aria-hidden="true"><div class="live-watermark">LIVE</div></div>
     <div class="status-row">
       <div class="status-pill"><span class="dot" id="statusDot"></span><span id="statusText">Connecting…</span></div>
       <div class="status-pill">🕓 Last synced: <span id="lastSync">—</span></div>
