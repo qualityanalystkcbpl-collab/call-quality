@@ -318,6 +318,24 @@ body::before{
   border-bottom:1px solid var(--border);
   overflow:hidden;
   transition:padding .2s ease, min-height .2s ease;
+  position:relative;
+}
+.brand-strip-online-badge{
+  position:absolute;
+  right:24px;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 14px;
+  border-radius:20px;
+  background:var(--agent-dim);
+  color:var(--agent);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;
+  font-weight:600;
+  white-space:nowrap;
 }
 .brand-strip img{
   max-height:70px;
@@ -2256,6 +2274,7 @@ transform:translateY(0);
       <div class="login-stat"><b id="loginStatAgents">50 +</b><span>Agents Tracked</span></div>
       <div class="login-stat"><b>4</b><span>Calls / Week / Agent</span></div>
       <div class="login-stat"><b>Live</b><span>Analytics</span></div>
+      <div class="login-stat"><b id="loginStatOnline" style="color:var(--agent);"><span class="pulse-dot" style="display:inline-block;margin-right:4px;"></span>--</b><span>Online Now</span></div>
     </div>
   </div>
   <div class="login-form-wrap">
@@ -2298,6 +2317,7 @@ transform:translateY(0);
       </div>
       <button class="login-btn" id="loginBtn" data-role="agent" onclick="doLogin()">Enter as Agent</button>
       <div class="login-error" id="loginError"></div>
+      <div class="login-demo">Agent login password - <b>GTPL@123</b></div>
     </div>
   </div>
   <div class="theme-toggle-wrap">
@@ -2314,6 +2334,7 @@ transform:translateY(0);
     <!-- 1) Logo placeholder — GitHub-এ পাবলিশ করার পর এখানে আপনার logo.png রাখলেই এটি অটো লোড হবে -->
     <div class="brand-strip" id="brandStrip">
       <img id="siteLogo" src="logo2.png" alt="Company Logo" onerror="this.style.display='none'; this.parentElement.classList.add('no-logo');">
+      <span class="brand-strip-online-badge" id="onlineCountPill" title="Currently online on this portal"><span class="pulse-dot" style="display:inline-block;"></span><span id="onlineCountBadge">--</span> Online</span>
     </div>
 <div class="app-header-fixed">
     <header class="topbar">
@@ -2742,6 +2763,57 @@ async function storageSet(key, value){
     return false; 
   }
 }
+/* ===================== LIVE "ONLINE NOW" PRESENCE TRACKER =====================
+   কারা এই মুহূর্তে পোর্টাল খুলে রেখেছে তার লাইভ কাউন্ট।
+   কোনো নতুন Apps Script action লাগে না — এটি existing getSettings/saveSettings
+   generic key-value store-ই ব্যবহার করে ('onlineSessions' নামে একটি key)।
+*/
+const ONLINE_HEARTBEAT_MS = 30 * 1000;   // প্রতি ৩০ সেকেন্ডে একবার নিজের presence আপডেট
+const ONLINE_TIMEOUT_MS   = 90 * 1000;   // ৯০ সেকেন্ড কোনো heartbeat না এলে সেই সেশন "offline" ধরা হবে
+
+function getMySessionId(){
+  let id = sessionStorage.getItem('qa_session_id');
+  if(!id){
+    id = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    sessionStorage.setItem('qa_session_id', id);
+  }
+  return id;
+}
+
+function renderOnlineCount(count){
+  const a = document.getElementById('loginStatOnline');
+  if(a) a.innerHTML = `<span class="pulse-dot" style="display:inline-block;margin-right:4px;"></span>${count}`;
+  const b = document.getElementById('onlineCountBadge');
+  if(b) b.textContent = count;
+}
+
+async function pingOnlinePresence(){
+  try{
+    const mySessionId = getMySessionId();
+    const now = Date.now();
+    let sessions = (await storageGet('onlineSessions')) || {};
+    // পুরনো/মৃত সেশনগুলো বাদ দেওয়া হচ্ছে
+    Object.keys(sessions).forEach(id=>{
+      if(now - sessions[id] > ONLINE_TIMEOUT_MS) delete sessions[id];
+    });
+    sessions[mySessionId] = now;
+    await storageSet('onlineSessions', sessions);
+    renderOnlineCount(Object.keys(sessions).length);
+  }catch(e){
+    console.error('Online presence update failed', e);
+  }
+}
+pingOnlinePresence();
+setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
+window.addEventListener('beforeunload', ()=>{
+  // ট্যাব বন্ধ হওয়ার সময় নিজের সেশনটি সরিয়ে ফেলার একটি best-effort চেষ্টা
+  navigator.sendBeacon && storageGet('onlineSessions').then(sessions=>{
+    if(!sessions) return;
+    delete sessions[getMySessionId()];
+    const blob = new Blob([JSON.stringify({ key:'onlineSessions', value: JSON.stringify(sessions) })], {type:'application/json'});
+    navigator.sendBeacon(`${WEB_APP_URL}?action=saveSettings`, blob);
+  });
+});
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
