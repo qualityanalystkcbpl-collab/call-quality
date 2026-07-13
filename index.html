@@ -3432,7 +3432,7 @@ async function renderVerticalPanel(tab){
       <table class="score-table" id="agentTable-${tab}">
         <thead><tr><th>Agent Name</th><th>Audit Count</th><th>Average Score</th><th>Status Tier</th>${isAdmin?'<th>Action</th>':''}</tr></thead>
         <tbody>
-          ${rows.slice().sort((a,b)=>b.avgScore-a.avgScore).map(r=>{
+          ${rows.slice().sort((a,b)=> String(a.agent).localeCompare(String(b.agent), 'bn')).map(r=>{
             const st = statusFor(Number(r.avgScore));
             return `<tr data-agent-name="${escapeAttr(String(r.agent).toLowerCase())}">
               <td style="font-weight:600;">${escapeHtml(r.agent)}</td>
@@ -3532,7 +3532,19 @@ function buildRawSectionHtml(tab, raw, filterValue){
 
   const { nameKey } = detectColumnKeys(keys);
   const agentNames = nameKey ? Array.from(new Set(raw.map(r=> String(r[nameKey]).trim()).filter(Boolean))).sort() : [];
-  const filtered = (filterValue && nameKey) ? raw.filter(r=> String(r[nameKey]).trim() === filterValue) : raw;
+  let filtered = (filterValue && nameKey)
+  ? raw.filter(r => String(r[nameKey]).trim() === filterValue)
+  : [...raw];
+
+if (nameKey) {
+  filtered.sort((a, b) =>
+    String(a[nameKey] || "").localeCompare(
+      String(b[nameKey] || ""),
+      undefined,
+      { sensitivity: "base" }
+    )
+  );
+}
   const linkKey = keys.find(k=> /call\s*link|recording|audio/i.test(k));
   const dateKey = keys.find(k=> /date|তারিখ/i.test(k));
   const timeKey = keys.find(k=> /time|সময়/i.test(k));
