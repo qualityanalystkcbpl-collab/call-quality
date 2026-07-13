@@ -2604,6 +2604,16 @@ transform:translateY(0);
 // ⚠️ এখানে 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbCrtIR8ww9F8eJBKZl92Ml-L7TwDq_hZBu3VHK8D8H-EYz2FM5nw/exec";
 
+/* ✅ CATV / BB TECH SUPPORT / BB RENEWAL — Agent Summary (Audit Count, Avg Score) এই নতুন
+   CALL QUALITY DASHBOARD ব্যাকএন্ড (Apps Script) থেকে আসবে। Call-Level Logs Detail
+   আগের মতোই WEB_APP_URL থেকে অটোমেটিক আসতে থাকবে — কোনো পরিবর্তন হয়নি। */
+const NEW_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwynUu1nChgzn5oJYILitU_O1ce4uIZ_Nnr899xdXlWWMFCRe7UDa74CLg5HFCS551Xug/exec";
+const NEW_BACKEND_PROCESS_KEY = {
+  CATV: 'CATV',
+  BBTECH: 'BB TECH SUPPORT',
+  BBRENEWAL: 'BB RENEWAL'
+};
+
 const VERTICALS = {
   CATV: { label: 'CATV', key: 'scores:CATV', rawKey: 'raw:CATV', dashId: 'DASH-CATV', dashSheet: 'CATV_DASHBOARD' },
   BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH', dashId: 'DASH-BBTECH', dashSheet: 'BBTECH_DASHBOARD' },
@@ -3320,25 +3330,54 @@ async function renderVerticalPanel(tab){
     <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
   
   let json = [];
-  try {
-    const response = await fetch(WEB_APP_URL + "?vertical=" + tab);
-    const data = await response.json();
-    if (Array.isArray(data) && data.length > 0) {
-      const headers = data[0];
-      json = data.slice(1).map(row => {
-        const obj = {};
-        headers.forEach((h, i) => {
-          obj[h] = row[i] !== undefined ? row[i] : '';
-        });
-        return obj;
-      });
+  let rows = [];
+  const newBackendKey = NEW_BACKEND_PROCESS_KEY[tab];
+
+  if (newBackendKey) {
+    // ✅ CATV / BB TECH SUPPORT / BB RENEWAL — Agent Summary + Call-Level raw ডাটা,
+    // দুটোই এখন একই নতুন CALL QUALITY DASHBOARD ব্যাকএন্ড থেকে আসছে
+    try {
+      const res2 = await fetch(NEW_WEB_APP_URL);
+      const summary = await res2.json();
+      const proc = (summary && summary.ok && summary.processes) ? summary.processes[newBackendKey] : null;
+      if (proc) {
+        if (Array.isArray(proc.agents)) {
+          rows = proc.agents.map(a => ({
+            agent: a.name,
+            auditCount: a.auditCount,
+            avgScore: (a.avgScore !== null && a.avgScore !== undefined) ? a.avgScore : 0,
+            fails: a.fails || {}
+          }));
+        }
+        if (Array.isArray(proc.rows)) {
+          json = proc.rows; // Call-Level Logs Detail এর জন্য raw, শিটের কলাম-অর্ডারেই
+        }
+      }
+    } catch (err) {
+      console.error("New backend (Call Quality Dashboard) fetch failed:", err);
     }
-  } catch (err) {
-    console.error("Google Sheets fetch failed:", err);
+  } else {
+    // অন্য কোনো ভার্টিক্যাল থাকলে (নতুন ব্যাকএন্ডে ম্যাপ করা নেই), আগের পুরনো সোর্স থেকেই আসবে
+    try {
+      const response = await fetch(WEB_APP_URL + "?vertical=" + tab);
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const headers = data[0];
+        json = data.slice(1).map(row => {
+          const obj = {};
+          headers.forEach((h, i) => {
+            obj[h] = row[i] !== undefined ? row[i] : '';
+          });
+          return obj;
+        });
+      }
+    } catch (err) {
+      console.error("Google Sheets fetch failed:", err);
+    }
+    rows = parseScoreRows(json);
   }
-  
+
   rawDataCache[tab] = json;
-  const rows = parseScoreRows(json);
   updateLoginAgentCount();
   
   let html = `
@@ -3471,7 +3510,26 @@ async function renderRawSection(tab){
 }
 function buildRawSectionHtml(tab, raw, filterValue){
   if(!raw.length) return '';
-  const keys = Object.keys(raw[0]);
+  // এই কলামগুলো Call-Level Logs Detail টেবিল থেকে বাদ যাবে
+  const EXCLUDED_RAW_COLUMNS = [
+    /^\s*timestamp\s*$/i,
+    /^\s*associate\s*emp(loyee)?\s*id\s*$/i,
+    /^\s*call\s*date\s*$/i,
+    /^\s*call\s*time\s*$/i,
+    /^\s*tl\s*name\s*$/i,
+    /^\s*call\s*duration\s*$/i
+  ];
+  let keys = Object.keys(raw[0]).filter(k => !EXCLUDED_RAW_COLUMNS.some(rx => rx.test(k)));
+
+  // Scores কলামটা Call Link এর ঠিক আগে বসানো হচ্ছে
+  const scoreIdx = keys.findIndex(k => /^\s*scores?\s*$/i.test(k));
+  const linkIdx = keys.findIndex(k => /call\s*link|recording|audio/i.test(k));
+  if(scoreIdx !== -1 && linkIdx !== -1 && scoreIdx !== linkIdx){
+    const [scoreKeyName] = keys.splice(scoreIdx, 1);
+    const newLinkIdx = keys.findIndex(k => /call\s*link|recording|audio/i.test(k));
+    keys.splice(newLinkIdx, 0, scoreKeyName);
+  }
+
   const { nameKey } = detectColumnKeys(keys);
   const agentNames = nameKey ? Array.from(new Set(raw.map(r=> String(r[nameKey]).trim()).filter(Boolean))).sort() : [];
   const filtered = (filterValue && nameKey) ? raw.filter(r=> String(r[nameKey]).trim() === filterValue) : raw;
