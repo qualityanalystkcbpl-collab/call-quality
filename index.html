@@ -810,10 +810,10 @@ width:max-content;
     position:relative;
     overflow:hidden;
 
-    background:linear-gradient(135deg,#ff3b3b,#b80000);
+    background:linear-gradient(135deg,#ff2fb0,#c2007a);
     color:#fff;
 
-    border:1px solid #ff4d4d;
+    border:1px solid #ff6fd0;
     border-radius:10px;
 
     padding:8px 18px;
@@ -827,7 +827,7 @@ width:max-content;
     transition:.35s ease;
 
     box-shadow:
-        0 0 10px rgba(255,0,0,.35),
+        0 0 10px rgba(255,32,180,.45),
         inset 0 0 8px rgba(255,255,255,.08);
 
     animation:logoutPulse 2s infinite;
@@ -856,13 +856,13 @@ width:max-content;
 /* Hover */
 .logout-btn:hover{
 
-    background:linear-gradient(135deg,#ff2020,#8b0000);
+    background:linear-gradient(135deg,#ff4dc4,#a5006a);
 
     transform:translateY(-2px) scale(1.05);
 
     box-shadow:
-        0 0 18px rgba(255,0,0,.70),
-        0 0 35px rgba(255,0,0,.45);
+        0 0 18px rgba(255,32,180,.75),
+        0 0 35px rgba(255,32,180,.50);
 
 }
 
@@ -879,15 +879,15 @@ width:max-content;
     0%,100%{
 
         box-shadow:
-            0 0 8px rgba(255,0,0,.35);
+            0 0 8px rgba(255,32,180,.40);
 
     }
 
     50%{
 
         box-shadow:
-            0 0 22px rgba(255,0,0,.85),
-            0 0 40px rgba(255,80,80,.45);
+            0 0 22px rgba(255,32,180,.90),
+            0 0 40px rgba(255,110,210,.50);
 
     }
 
@@ -2332,16 +2332,16 @@ transform:translateY(0);
         <p class="hint">Select your role and enter your password.</p>
       </div>
       <div class="role-toggle">
-        <button type="button" class="active" data-role="agent" onclick="selectRole('agent')">Agent</button>
+        <button type="button" class="active" data-role="agent" onclick="selectRole('agent')">QA</button>
         <button type="button" data-role="admin" onclick="selectRole('admin')">Admin</button>
       </div>
       <div class="field">
         <label>Password</label>
         <input type="password" id="loginPassword" placeholder="••••••••">
       </div>
-      <button class="login-btn" id="loginBtn" data-role="agent" onclick="doLogin()">Enter as Agent</button>
+      <button class="login-btn" id="loginBtn" data-role="agent" onclick="doLogin()">Enter as QA</button>
       <div class="login-error" id="loginError"></div>
-      <div class="login-demo">Agent login password - <b>GTPL@123</b></div>
+      <div class="login-demo"> . <b> . </b></div>
     </div>
 
     <div class="login-card emp-login-card" id="employeeLoginCard" style="display:none;">
@@ -2402,19 +2402,20 @@ transform:translateY(0);
     <div id="employeeWelcomeBar" style="display:none;">
       <div class="emp-welcome-left">
         <span>👋 Welcome, <b id="empWelcomeName">-</b></span>
+        <span id="empWelcomeGreeting" class="emp-welcome-greeting">Good Morning</span>
         <span class="emp-online-chip"><span class="pulse-dot" style="display:inline-block;"></span> Currently Online</span>
+        <span class="emp-inline-stats">
+          <span class="emp-inline-stat">Login: <b id="empStatLoginTime">--:--:--</b></span>
+          <span class="emp-inline-stat">Previous: <b id="empStatPrevLogin">--</b></span>
+          <span class="emp-inline-stat">IP: <b id="empStatCurrentIP">--</b></span>
+          <span class="emp-inline-stat">Session: <b id="empStatSession">00:00:00</b></span>
+          <span class="emp-inline-stat">Today: <b id="empStatTodayTotal">00:00:00</b></span>
+        </span>
       </div>
       <div class="emp-welcome-right">
         <button class="emp-mini-btn" onclick="openChangePasswordModal()">🔒 Change Password</button>
         <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
       </div>
-    </div>
-    <div id="employeeStatCards" style="display:none;">
-      <div class="emp-stat-card"><span>Login Time</span><b id="empStatLoginTime">--:--:--</b></div>
-      <div class="emp-stat-card"><span>Previous Login</span><b id="empStatPrevLogin">--</b></div>
-      <div class="emp-stat-card"><span>Current IP Address</span><b id="empStatCurrentIP">--</b></div>
-      <div class="emp-stat-card"><span>Current Session</span><b id="empStatSession">00:00:00</b></div>
-      <div class="emp-stat-card"><span>Today's Total Login</span><b id="empStatTodayTotal">00:00:00</b></div>
     </div>
     <!-- 1) Logo placeholder — GitHub-এ পাবলিশ করার পর এখানে আপনার logo.png রাখলেই এটি অটো লোড হবে -->
     <div class="brand-strip" id="brandStrip">
@@ -2981,7 +2982,7 @@ function selectRole(role){
   btn.dataset.role = role;
   btn.className = 'login-btn';
   btn.setAttribute('data-role', role);
-  btn.textContent = role === 'admin' ? 'Enter as Admin' : 'Enter as Agent';
+  btn.textContent = role === 'admin' ? 'Enter as Admin' : 'Enter as QA';
   document.getElementById('loginError').textContent = '';
 }
 async function doLogin(){
@@ -3032,7 +3033,8 @@ localStorage.removeItem("qa_role");
   currentRole = null;
   document.getElementById('mainScreen').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('loginPassword').value = '';
+  const empPassEl = document.getElementById('empPassword');
+  if(empPassEl) empPassEl.value = '';
   if(bannerTimer) clearInterval(bannerTimer);
   closePlayerBar();
 }
@@ -4440,7 +4442,7 @@ setInterval(() => {
       <label>Confirm New Password</label>
       <input type="password" id="forceConfirmPassword" placeholder="••••••••">
     </div>
-    <p class="emp-pw-rules">--</p>
+    <p class="emp-pw-rules">Any password is accepted — no minimum length, no uppercase/number/special-character requirement (e.g. simply "12345" works).</p>
     <button class="login-btn" onclick="submitForceChangePassword()">Save &amp; Continue</button>
     <div class="login-error" id="forceChangeError"></div>
   </div>
@@ -4474,7 +4476,7 @@ setInterval(() => {
   <div class="emp-modal-box">
     <button class="login-popup-close" onclick="closeForgotPasswordInfo()" title="Close">✕</button>
     <h2>Forgot Password?</h2>
-    <p class="hint">Normal Admin cannot reset employee passwords. Please contact your <b>Super Admin</b> to reset your password. Once reset, you can log in with the default password <b>GTPL@123</b> and set a new one.</p>
+    <p class="hint">Password reset is currently unavailable. Please contact the <b>Quality Team</b> to reset your password. After the reset, log in using the default password <b>GTPL@123</b> and create a new password.</p>
     <button class="login-btn" onclick="closeForgotPasswordInfo()">OK, Got it</button>
   </div>
 </div>
@@ -4496,7 +4498,7 @@ setInterval(() => {
 .emp-switch-link:hover{ text-decoration:underline; }
 .emp-switch-sep{ color: var(--text-muted, #8FA0B5); }
 
-/* Employee Login — prominent hero button (now shown above the Agent/Admin toggle) */
+/* Employee Login — prominent hero button (shown above the Agent/Admin toggle) */
 .emp-login-hero-wrap{ margin-bottom:18px; }
 .emp-login-hero{
   width:100%;
@@ -4505,38 +4507,42 @@ setInterval(() => {
   gap:14px;
   padding:16px 18px;
   border-radius:var(--radius, 12px);
-  border:2px solid transparent;
+  border:2.5px solid transparent;
   background:
-    linear-gradient(var(--surface, #0E1A2B), var(--surface, #0E1A2B)) padding-box,
-    linear-gradient(120deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #33C9B0) border-box;
-  background-size: 100% 100%, 300% 300%;
-  animation: empHeroBorderFlow 5s ease infinite;
+    linear-gradient(135deg, rgba(51,201,176,0.14), rgba(185,74,224,0.10) 60%, var(--surface, #0E1A2B)) padding-box,
+    linear-gradient(120deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0, #33C9B0) border-box;
+  background-size: 200% 200%, 300% 300%;
+  animation: empHeroBorderFlow 4s ease infinite, empGlowPulse 1.8s ease-in-out infinite;
   cursor:pointer;
   text-align:left;
   font-family:'Inter', sans-serif;
-  transition: transform .18s ease, box-shadow .18s ease;
-  box-shadow:0 0 0 3px rgba(51,201,176,0.08);
+  transition: transform .18s ease;
 }
-.emp-login-hero:hover{
-  transform:translateY(-2px);
-  box-shadow:0 12px 28px rgba(51,201,176,0.28);
-}
+.emp-login-hero:hover{ transform:translateY(-2px); }
 @keyframes empHeroBorderFlow{
   0%{ background-position:0% 0%, 0% 50%; }
-  50%{ background-position:0% 0%, 100% 50%; }
+  50%{ background-position:100% 100%, 100% 50%; }
   100%{ background-position:0% 0%, 0% 50%; }
+}
+@keyframes empGlowPulse{
+  0%,100%{ box-shadow:0 0 14px rgba(51,201,176,0.55), 0 0 30px rgba(51,201,176,0.20), 0 0 0 3px rgba(51,201,176,0.10); }
+  33%{    box-shadow:0 0 22px rgba(185,74,224,0.75), 0 0 45px rgba(185,74,224,0.35), 0 0 0 3px rgba(185,74,224,0.15); }
+  66%{    box-shadow:0 0 22px rgba(255,111,208,0.75), 0 0 45px rgba(255,111,208,0.35), 0 0 0 3px rgba(255,111,208,0.15); }
 }
 .emp-login-hero-icon{
   flex-shrink:0;
-  width:44px; height:44px;
+  width:46px; height:46px;
   border-radius:50%;
-  background: linear-gradient(135deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857);
+  background: linear-gradient(135deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0);
   background-size:300% 300%;
-  animation: empHeroBorderFlow 5s ease infinite;
+  animation: empHeroBorderFlow 4s ease infinite, empIconGlowPulse 1.8s ease-in-out infinite;
   color:#06131a;
   display:flex; align-items:center; justify-content:center;
-  font-size:20px;
-  box-shadow:0 0 0 4px rgba(51,201,176,0.15);
+  font-size:21px;
+}
+@keyframes empIconGlowPulse{
+  0%,100%{ box-shadow:0 0 0 4px rgba(51,201,176,0.22), 0 0 18px rgba(51,201,176,0.65); transform:scale(1); }
+  50%{     box-shadow:0 0 0 6px rgba(185,74,224,0.28), 0 0 26px rgba(185,74,224,0.85); transform:scale(1.06); }
 }
 .emp-login-hero-text{
   flex:1;
@@ -4545,22 +4551,11 @@ setInterval(() => {
 }
 .emp-login-hero-text b{
   font-family:'Space Grotesk', sans-serif;
-  font-size:16px;
-  font-weight:700;
-  background: linear-gradient(120deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #33C9B0);
-  background-size:300% 300%;
-  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-  animation: empHeroBorderFlow 5s ease infinite;
-}
-
-/* Agent/Admin sign-in heading — de-emphasized now that Employee Login is the primary CTA */
-.agent-admin-heading h2{
-  font-size:15px;
-  margin-bottom:2px;
-}
-.agent-admin-heading p.hint{
-  font-size:11.5px;
-  margin-bottom:16px;
+  font-size:18px;
+  font-weight:800;
+  color: var(--text, #EAF0F6);
+  text-shadow:0 0 10px rgba(51,201,176,0.55);
+  letter-spacing:.2px;
 }
 .emp-login-hero-text small{
   font-size:11.5px;
@@ -4590,7 +4585,11 @@ setInterval(() => {
   background: var(--border, #203859);
 }
 
-/* Super Admin Login — moved to the very bottom of the login screen, kept subtle */
+/* Agent/Admin sign-in heading — de-emphasized now that Employee Login is the primary CTA */
+.agent-admin-heading h2{ font-size:15px; margin-bottom:2px; }
+.agent-admin-heading p.hint{ font-size:11.5px; margin-bottom:16px; }
+
+/* Super Admin Login — kept subtle, at the very bottom of the login screen */
 .sa-login-footer-row{
   display:flex; align-items:center; justify-content:center;
   padding:18px 0 8px;
@@ -4613,6 +4612,17 @@ setInterval(() => {
   font-size:13.5px;
 }
 .emp-welcome-left{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.emp-welcome-greeting{
+  font-weight:600;
+  background:linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0, #33C9B0);
+  background-size:300% 100%;
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  animation: empGreetingColorShift 6s linear infinite;
+}
+@keyframes empGreetingColorShift{
+  0%{ background-position:0% 50%; }
+  100%{ background-position:300% 50%; }
+}
 .emp-online-chip{
   display:inline-flex; align-items:center; gap:6px;
   color: var(--agent, #33C9B0); font-weight:600; font-size:12px;
@@ -4625,29 +4635,37 @@ setInterval(() => {
   border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer;
 }
 .emp-mini-btn:hover{ opacity:0.85; }
-.emp-mini-btn.danger{ background:#3D2020; border-color:#5A2E2E; }
-
-/* Compact session stat cards under the fixed bar */
-#employeeStatCards{
-  position:fixed; top:46px; left:0; right:0; z-index:9999;
-  display:flex; gap:10px; flex-wrap:wrap;
-  padding:8px 18px;
-  background: var(--surface, #0E1A2B);
-  border-bottom:1px solid var(--border, #203859);
+.emp-mini-btn.danger{
+  background:linear-gradient(135deg,#ff2fb0,#c2007a);
+  border-color:#ff6fd0;
+  color:#fff;
+  font-weight:700;
+  box-shadow:0 0 10px rgba(255,32,180,.45);
+  animation:logoutPulse 2s infinite;
 }
-.emp-stat-card{
-  background: var(--surface-2, #14253D);
-  border:1px solid var(--border, #203859);
-  border-radius:8px; padding:6px 12px;
-  display:flex; flex-direction:column; gap:2px;
+.emp-mini-btn.danger:hover{
+  background:linear-gradient(135deg,#ff4dc4,#a5006a);
+  box-shadow:0 0 18px rgba(255,32,180,.75), 0 0 35px rgba(255,32,180,.50);
+}
+
+/* Small inline session stats, shown right next to "Currently Online" in the welcome bar */
+.emp-inline-stats{
+  display:flex; gap:12px; flex-wrap:wrap;
   font-family:'IBM Plex Mono', monospace;
-  min-width:120px;
+  font-size:11px;
 }
-.emp-stat-card span{ font-size:10.5px; color: var(--text-muted, #8FA0B5); font-family:'Inter',sans-serif; }
-.emp-stat-card b{ font-size:13px; color: var(--text, #EAF0F6); }
+.emp-inline-stat{ color: var(--text-muted, #8FA0B5); white-space:nowrap; }
+.emp-inline-stat b{ color: var(--text, #EAF0F6); font-size:11.5px; font-weight:600; }
 
-/* When the employee bar is visible, push the rest of the app down so nothing overlaps */
-body.has-emp-bar #mainScreen{ padding-top:96px; }
+/* When the employee bar is visible, push the rest of the app down so nothing overlaps.
+   The bar now wraps its own content (name, greeting, online chip, inline stats) rather
+   than needing a second stacked bar, so a smaller offset is enough — but it can still
+   wrap onto 2 lines on narrow screens, hence the taller mobile value below. */
+body.has-emp-bar #mainScreen{ padding-top:54px; }
+/* The Welcome/Greeting bar is position:fixed at the very top so it never scrolls away.
+   The app's own sticky header (logo strip + topbar) must stick BELOW it, not at top:0,
+   or it would slide up and overlap/hide the fixed employee bar while scrolling. */
+body.has-emp-bar .app-header-fixed{ top:54px; }
 /* Employee sessions already show their own Logout button in the welcome bar above —
    hide the header's Logout button in that mode so only ONE Logout button is ever visible. */
 body.has-emp-bar header .user-block .logout-btn{ display:none; }
@@ -4681,8 +4699,8 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 
 @media (max-width: 640px){
   #employeeWelcomeBar{ flex-direction:column; align-items:flex-start; gap:6px; }
-  #employeeStatCards{ top:64px; }
-  body.has-emp-bar #mainScreen{ padding-top:120px; }
+  body.has-emp-bar #mainScreen{ padding-top:150px; }
+  body.has-emp-bar .app-header-fixed{ top:150px; }
 }
 </style>
 
@@ -4711,6 +4729,7 @@ let empSessionStartEpoch = null;
 let empTodayPriorSeconds = 0;
 let empSessionTimerInterval = null;
 let empHeartbeatInterval = null;
+let empGreetingInterval = null;
 let empInactivityTimeout = null;
 let superAdminToken = null;
 
@@ -4775,6 +4794,7 @@ function backToMainLogin(){
   document.getElementById('superAdminLoginCard').style.display = 'none';
   document.getElementById('empLoginHeroWrap').style.display = 'block';
   document.getElementById('saLoginFooterRow').style.display = 'flex';
+  document.getElementById('empLoginError').textContent = '';
 }
 function openForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'flex'; }
 function closeForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'none'; }
@@ -4867,11 +4887,27 @@ function formatPreviousLogin(raw){
   return timePart ? `${weekday}, ${datePart}, ${timePart}` : `${weekday}, ${datePart}`;
 }
 
+/* Same Good Morning/Afternoon/Evening/Night logic as the login-screen welcome area,
+   reused here so the post-login bar's greeting always matches the time of day. */
+function currentGreetingText(){
+  const h = new Date().getHours();
+  if(h>=5 && h<12) return 'Good Morning';
+  if(h>=12 && h<17) return 'Good Afternoon';
+  if(h>=17 && h<20) return 'Good Evening';
+  return 'Good Night';
+}
+function updateEmpWelcomeGreeting(){
+  const el = document.getElementById('empWelcomeGreeting');
+  if(el) el.textContent = currentGreetingText();
+}
+
 function showEmployeeWelcomeBar(){
   document.getElementById('employeeWelcomeBar').style.display = 'flex';
-  document.getElementById('employeeStatCards').style.display = 'flex';
   document.body.classList.add('has-emp-bar');
   document.getElementById('empWelcomeName').textContent = (empAgentName || localStorage.getItem('qa_emp_name') || '').toUpperCase();
+  updateEmpWelcomeGreeting();
+  if(empGreetingInterval) clearInterval(empGreetingInterval);
+  empGreetingInterval = setInterval(updateEmpWelcomeGreeting, 60000); // refresh every minute so it stays fixed AND accurate
   document.getElementById('empStatLoginTime').textContent = localStorage.getItem('qa_emp_login_time_display') || '--:--:--';
   document.getElementById('empStatPrevLogin').textContent = formatPreviousLogin(localStorage.getItem('qa_emp_prev_login'));
 
@@ -4939,10 +4975,10 @@ async function employeeLogout(logoutType){
   empSessionId = null; empEmployeeId = null; empAgentName = null;
   if(empSessionTimerInterval) clearInterval(empSessionTimerInterval);
   if(empHeartbeatInterval) clearInterval(empHeartbeatInterval);
+  if(empGreetingInterval) clearInterval(empGreetingInterval);
   if(empInactivityTimeout) clearTimeout(empInactivityTimeout);
 
   document.getElementById('employeeWelcomeBar').style.display = 'none';
-  document.getElementById('employeeStatCards').style.display = 'none';
   document.body.classList.remove('has-emp-bar');
 
   doLogout(); // existing function — hides mainScreen, shows loginScreen
