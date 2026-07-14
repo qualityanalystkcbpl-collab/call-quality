@@ -2639,6 +2639,16 @@ transform:translateY(0);
 
         <div class="admin-grid">
           <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius);">
+            <h3 style="margin-bottom:12px;">🔑 Super Admin Password</h3>
+            <p class="hint" style="margin-bottom:12px;">নিজের Super Admin পাসওয়ার্ড এখান থেকে পরিবর্তন করুন।</p>
+            <input type="password" id="saCurrentPassword" placeholder="Current Password" autocomplete="current-password" style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:8px;">
+            <input type="password" id="saNewPassword" placeholder="New Password" autocomplete="new-password" style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:8px;">
+            <input type="password" id="saConfirmNewPassword" placeholder="Confirm New Password" autocomplete="new-password" style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:10px;">
+            <button class="btn primary small" onclick="saChangeOwnPassword()">Update Password</button>
+            <div class="login-error" id="saPasswordChangeError" style="margin-top:8px;"></div>
+          </div>
+
+          <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius);">
             <h3 style="margin-bottom:12px;">➕ Create New Agent</h3>
             <input type="text" id="saNewEmpId" placeholder="Employee ID" style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:8px;">
             <input type="text" id="saNewEmpName" placeholder="Agent Name" style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:8px;">
@@ -2659,8 +2669,8 @@ transform:translateY(0);
             </div>
             <div style="overflow-x:auto;">
               <table class="score-table" id="saAgentTable">
-                <thead><tr><th>Employee ID</th><th>Name</th><th>Team</th><th>Process</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody id="saAgentTableBody"><tr><td colspan="6">Refresh চাপুন agent list দেখতে।</td></tr></tbody>
+                <thead><tr><th>Employee ID</th><th>Name</th><th>Team</th><th>Process</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="saAgentTableBody"><tr><td colspan="7">Refresh চাপুন agent list দেখতে।</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -4638,6 +4648,9 @@ setInterval(() => {
 
 /* When the employee bar is visible, push the rest of the app down so nothing overlaps */
 body.has-emp-bar #mainScreen{ padding-top:96px; }
+/* Employee sessions already show their own Logout button in the welcome bar above —
+   hide the header's Logout button in that mode so only ONE Logout button is ever visible. */
+body.has-emp-bar header .user-block .logout-btn{ display:none; }
 
 /* Modals */
 .emp-modal-overlay{
@@ -4820,9 +4833,11 @@ function completeEmployeeLogin(data){
   localStorage.setItem('qa_emp_prev_login', data.previousLogin || '--');
   localStorage.setItem('qa_emp_last_activity', Date.now());
 
-  // Employee Login opens the same Agent Dashboard (existing UI, unchanged)
-  currentRole = 'agent';
-  localStorage.setItem('qa_role', 'agent');
+  // Employee Login opens the Agent Dashboard by default — unless Super Admin has
+  // promoted this employee to Admin (data.role === 'admin'), in which case they get
+  // Admin-only access too, same as a normal Admin login.
+  currentRole = (data.role && data.role.toLowerCase() === 'admin') ? 'admin' : 'agent';
+  localStorage.setItem('qa_role', currentRole);
   localStorage.setItem('qa_login_time', Date.now());
 
   enterApp();
@@ -5078,29 +5093,75 @@ async function superAdminLogin(){
 
 async function saLoadAgents(){
   const tbody = document.getElementById('saAgentTableBody');
-  tbody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
   try{
     const data = await empApiGet('listAgents', { token: superAdminToken });
-    if(!data || data.ok !== true){ tbody.innerHTML = `<tr><td colspan="6">${(data&&data.error)||'Failed to load.'}</td></tr>`; return; }
-    if(!data.agents.length){ tbody.innerHTML = '<tr><td colspan="6">কোনো agent নেই।</td></tr>'; return; }
-    tbody.innerHTML = data.agents.map(a => `
+    if(!data || data.ok !== true){ tbody.innerHTML = `<tr><td colspan="7">${(data&&data.error)||'Failed to load.'}</td></tr>`; return; }
+    if(!data.agents.length){ tbody.innerHTML = '<tr><td colspan="7">কোনো agent নেই।</td></tr>'; return; }
+    tbody.innerHTML = data.agents.map(a => {
+      const role = (a.role || 'agent').toLowerCase();
+      const isAdmin = role === 'admin';
+      return `
       <tr>
         <td>${a.employeeId}</td>
         <td>${a.agentName || ''}</td>
         <td>${a.team || ''}</td>
         <td>${a.process || ''}</td>
+        <td>${isAdmin ? '<b style="color:var(--admin);">Admin</b>' : 'Agent'}</td>
         <td>${a.status || ''}</td>
         <td style="white-space:nowrap;">
           <button class="btn small" onclick="saActivate('${a.employeeId}')">Activate</button>
           <button class="btn small" onclick="saDeactivate('${a.employeeId}')">Deactivate</button>
           <button class="btn small" onclick="saReset('${a.employeeId}')">Reset PW</button>
+          ${isAdmin
+            ? `<button class="btn small" onclick="saMakeAgent('${a.employeeId}')">Make Agent</button>`
+            : `<button class="btn small" onclick="saMakeAdmin('${a.employeeId}')">Make Admin</button>`}
           <button class="btn small danger" onclick="saDelete('${a.employeeId}')">Delete</button>
         </td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
   }catch(e){
     console.error('Load agents failed', e);
-    tbody.innerHTML = '<tr><td colspan="6">Server error.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7">Server error.</td></tr>';
   }
+}
+
+/* Promote/demote an employee between Agent and Admin roles.
+   On next login, completeEmployeeLogin() reads data.role from the login response
+   and grants Admin-only UI access accordingly. */
+async function saMakeAdmin(id){
+  if(!confirm(`${id} কে Admin বানাতে চান? এরপর সে লগইন করলে Admin অ্যাক্সেস পাবে।`)) return;
+  const data = await empApiPost('setAgentRole', { token: superAdminToken, employeeId: id, role: 'admin' });
+  if(!data || data.ok !== true){ showToast((data && data.error) || 'Role update failed.'); return; }
+  showToast(`${id} এখন Admin।`);
+  saLoadAgents();
+}
+async function saMakeAgent(id){
+  if(!confirm(`${id} কে আবার সাধারণ Agent বানাতে চান?`)) return;
+  const data = await empApiPost('setAgentRole', { token: superAdminToken, employeeId: id, role: 'agent' });
+  if(!data || data.ok !== true){ showToast((data && data.error) || 'Role update failed.'); return; }
+  showToast(`${id} এখন Agent।`);
+  saLoadAgents();
+}
+
+/* Super Admin's own password change/reset */
+async function saChangeOwnPassword(){
+  const errBox = document.getElementById('saPasswordChangeError');
+  errBox.textContent = '';
+  const current = document.getElementById('saCurrentPassword').value;
+  const next = document.getElementById('saNewPassword').value;
+  const confirm_ = document.getElementById('saConfirmNewPassword').value;
+  if(!current || !next || !confirm_){ errBox.textContent = 'সবগুলো ফিল্ড পূরণ করুন।'; return; }
+  if(next !== confirm_){ errBox.textContent = 'New password ও Confirm password মিলছে না।'; return; }
+
+  const data = await empApiPost('superAdminChangePassword', {
+    token: superAdminToken, currentPassword: current, newPassword: next, confirmPassword: confirm_
+  });
+  if(!data || data.ok !== true){ errBox.textContent = (data && data.error) || 'Password change failed.'; return; }
+  document.getElementById('saCurrentPassword').value = '';
+  document.getElementById('saNewPassword').value = '';
+  document.getElementById('saConfirmNewPassword').value = '';
+  showToast('Super Admin password পরিবর্তন সফল হয়েছে।');
 }
 
 async function saCreateAgent(){
