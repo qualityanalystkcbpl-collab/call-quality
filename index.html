@@ -2327,8 +2327,10 @@ transform:translateY(0);
       </div>
       <div class="login-divider"><span>OR</span></div>
 
-      <h2>Sign in</h2>
-      <p class="hint">Select your role and enter your password.</p>
+      <div class="agent-admin-heading">
+        <h2>Sign in</h2>
+        <p class="hint">Select your role and enter your password.</p>
+      </div>
       <div class="role-toggle">
         <button type="button" class="active" data-role="agent" onclick="selectRole('agent')">Agent</button>
         <button type="button" data-role="admin" onclick="selectRole('admin')">Admin</button>
@@ -2404,12 +2406,13 @@ transform:translateY(0);
       </div>
       <div class="emp-welcome-right">
         <button class="emp-mini-btn" onclick="openChangePasswordModal()">🔒 Change Password</button>
-        <button class="emp-mini-btn danger" onclick="employeeLogout('Manual')">⏻ Logout</button>
+        <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
       </div>
     </div>
     <div id="employeeStatCards" style="display:none;">
       <div class="emp-stat-card"><span>Login Time</span><b id="empStatLoginTime">--:--:--</b></div>
       <div class="emp-stat-card"><span>Previous Login</span><b id="empStatPrevLogin">--</b></div>
+      <div class="emp-stat-card"><span>Current IP Address</span><b id="empStatCurrentIP">--</b></div>
       <div class="emp-stat-card"><span>Current Session</span><b id="empStatSession">00:00:00</b></div>
       <div class="emp-stat-card"><span>Today's Total Login</span><b id="empStatTodayTotal">00:00:00</b></div>
     </div>
@@ -2447,7 +2450,7 @@ transform:translateY(0);
       </div>
       <div class="user-block">
         <span class="role-pill" id="rolePill">AGENT</span>
-        <button class="logout-btn" onclick="doLogout()">⏻Logout</button>
+        <button class="logout-btn" onclick="handleLogoutClick()">⏻Logout</button>
       </div>
     </header>
   </div>
@@ -4427,7 +4430,7 @@ setInterval(() => {
       <label>Confirm New Password</label>
       <input type="password" id="forceConfirmPassword" placeholder="••••••••">
     </div>
-    <p class="emp-pw-rules">Minimum 8 characters, with uppercase, lowercase, number &amp; special character.</p>
+    <p class="emp-pw-rules">Any password is accepted — no minimum length, no uppercase/number/special-character requirement (e.g. simply "12345" works).</p>
     <button class="login-btn" onclick="submitForceChangePassword()">Save &amp; Continue</button>
     <div class="login-error" id="forceChangeError"></div>
   </div>
@@ -4450,7 +4453,7 @@ setInterval(() => {
       <label>Confirm New Password</label>
       <input type="password" id="cpConfirmPassword" placeholder="••••••••">
     </div>
-    <p class="emp-pw-rules">Minimum 8 characters, with uppercase, lowercase, number &amp; special character.</p>
+    <p class="emp-pw-rules">Any password is accepted — no minimum length, no uppercase/number/special-character requirement (e.g. simply "12345" works).</p>
     <button class="login-btn" onclick="submitChangePassword()">Save</button>
     <div class="login-error" id="cpError"></div>
   </div>
@@ -4490,29 +4493,39 @@ setInterval(() => {
   display:flex;
   align-items:center;
   gap:14px;
-  padding:14px 16px;
+  padding:16px 18px;
   border-radius:var(--radius, 12px);
-  border:1.5px solid var(--agent, #33C9B0);
+  border:2px solid transparent;
   background:
-    linear-gradient(135deg, var(--agent-dim, #143832) 0%, transparent 70%),
-    var(--surface, #0E1A2B);
+    linear-gradient(var(--surface, #0E1A2B), var(--surface, #0E1A2B)) padding-box,
+    linear-gradient(120deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #33C9B0) border-box;
+  background-size: 100% 100%, 300% 300%;
+  animation: empHeroBorderFlow 5s ease infinite;
   cursor:pointer;
   text-align:left;
   font-family:'Inter', sans-serif;
-  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  transition: transform .18s ease, box-shadow .18s ease;
+  box-shadow:0 0 0 3px rgba(51,201,176,0.08);
 }
 .emp-login-hero:hover{
   transform:translateY(-2px);
-  box-shadow:0 10px 24px rgba(51,201,176,0.22);
+  box-shadow:0 12px 28px rgba(51,201,176,0.28);
+}
+@keyframes empHeroBorderFlow{
+  0%{ background-position:0% 0%, 0% 50%; }
+  50%{ background-position:0% 0%, 100% 50%; }
+  100%{ background-position:0% 0%, 0% 50%; }
 }
 .emp-login-hero-icon{
   flex-shrink:0;
-  width:42px; height:42px;
+  width:44px; height:44px;
   border-radius:50%;
-  background: var(--agent, #33C9B0);
-  color:#06231d;
+  background: linear-gradient(135deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857);
+  background-size:300% 300%;
+  animation: empHeroBorderFlow 5s ease infinite;
+  color:#06131a;
   display:flex; align-items:center; justify-content:center;
-  font-size:19px;
+  font-size:20px;
   box-shadow:0 0 0 4px rgba(51,201,176,0.15);
 }
 .emp-login-hero-text{
@@ -4522,8 +4535,22 @@ setInterval(() => {
 }
 .emp-login-hero-text b{
   font-family:'Space Grotesk', sans-serif;
-  font-size:15.5px;
-  color: var(--text, #EAF0F6);
+  font-size:16px;
+  font-weight:700;
+  background: linear-gradient(120deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #33C9B0);
+  background-size:300% 300%;
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  animation: empHeroBorderFlow 5s ease infinite;
+}
+
+/* Agent/Admin sign-in heading — de-emphasized now that Employee Login is the primary CTA */
+.agent-admin-heading h2{
+  font-size:15px;
+  margin-bottom:2px;
+}
+.agent-admin-heading p.hint{
+  font-size:11.5px;
+  margin-bottom:16px;
 }
 .emp-login-hero-text small{
   font-size:11.5px;
@@ -4801,6 +4828,28 @@ function completeEmployeeLogin(data){
   enterApp();
   showEmployeeWelcomeBar();
   startEmployeeSessionTracking();
+  showLoginPopupIfNeeded();
+}
+
+/* Sheet cells storing only a time-of-day (no real date) come back from Apps Script as a
+   full JS Date.toString(), whose date portion is the Google Sheets time-only epoch
+   ("Sat Dec 30 1899") plus a "GMT+xxxx (Time Zone Name)" suffix. Strip that noise out and
+   show the REAL weekday (computed from the DD-MM-YYYY date we do have) plus a clean time. */
+function formatPreviousLogin(raw){
+  if(!raw || raw === '--') return '--';
+
+  const dateMatch = raw.match(/^(\d{2})-(\d{2})-(\d{4})/);
+  const timeMatch = raw.match(/(\d{1,2}:\d{2}:\d{2})/);
+
+  if(!dateMatch) return raw.replace(/\s*GMT[^\n]*$/i, '').trim(); // fallback: just strip GMT/tz noise
+
+  const [, dd, mm, yyyy] = dateMatch;
+  const realDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+  const weekday = realDate.toLocaleDateString('en-US', { weekday: 'long' });
+  const datePart = `${dd}-${mm}-${yyyy}`;
+  const timePart = timeMatch ? timeMatch[1] : '';
+
+  return timePart ? `${weekday}, ${datePart}, ${timePart}` : `${weekday}, ${datePart}`;
 }
 
 function showEmployeeWelcomeBar(){
@@ -4809,7 +4858,11 @@ function showEmployeeWelcomeBar(){
   document.body.classList.add('has-emp-bar');
   document.getElementById('empWelcomeName').textContent = (empAgentName || localStorage.getItem('qa_emp_name') || '').toUpperCase();
   document.getElementById('empStatLoginTime').textContent = localStorage.getItem('qa_emp_login_time_display') || '--:--:--';
-  document.getElementById('empStatPrevLogin').textContent = localStorage.getItem('qa_emp_prev_login') || '--';
+  document.getElementById('empStatPrevLogin').textContent = formatPreviousLogin(localStorage.getItem('qa_emp_prev_login'));
+
+  const ipEl = document.getElementById('empStatCurrentIP');
+  ipEl.textContent = 'Loading...';
+  getClientIP().then(ip=>{ ipEl.textContent = ip || 'Unavailable'; });
 }
 
 function startEmployeeSessionTracking(){
@@ -4879,6 +4932,17 @@ async function employeeLogout(logoutType){
 
   doLogout(); // existing function — hides mainScreen, shows loginScreen
   backToMainLogin();
+}
+
+/* Header "Logout" button (top-right) and the Employee welcome-bar "Logout" button must always
+   do the exact same thing. If an employee session is active, route through the full
+   employeeLogout cleanup; otherwise (plain Agent/Admin login) just doLogout(). */
+function handleLogoutClick(){
+  if(localStorage.getItem('qa_emp_session_id')){
+    employeeLogout('Manual');
+  }else{
+    doLogout();
+  }
 }
 
 /* Restore an employee session after a page refresh (within the still-active session) */
