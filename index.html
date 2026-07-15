@@ -1558,6 +1558,48 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 .stat-card .value{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;}
 .stat-card .value.gold{color:var(--admin);}
 .stat-card .value.teal{color:var(--agent);}
+.best-achiever-value{
+  animation: bestAchieverGlow 2.8s ease-in-out infinite;
+}
+@keyframes bestAchieverGlow{
+  0%,100%{ opacity:1; text-shadow:0 0 1px rgba(51,201,176,0.15); }
+  50%{ opacity:0.9; text-shadow:0 0 8px rgba(51,201,176,0.55); }
+}
+.best-achiever-card{
+  position:relative;
+  isolation:isolate;
+}
+.best-achiever-card > *{ position:relative; z-index:2; }
+.best-achiever-card::before{
+  content:'';
+  position:absolute; inset:0;
+  border-radius:inherit;
+  background:linear-gradient(120deg,#33C9B0,#E3A857,#E0524A,#3FBF7F,#4A7FE0,#B94AE0,#E0C341,#33C9B0);
+  background-size:400% 400%;
+  opacity:0.16;
+  animation: bestAchieverColorMix 9s ease infinite;
+  z-index:0;
+  pointer-events:none;
+}
+.best-achiever-card::after{
+  content:'';
+  position:absolute; inset:-2px;
+  border-radius:inherit;
+  padding:2px;
+  background:linear-gradient(120deg,#33C9B0,#E3A857,#E0524A,#3FBF7F,#4A7FE0,#B94AE0,#E0C341,#33C9B0);
+  background-size:400% 400%;
+  animation: bestAchieverColorMix 9s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index:1;
+  pointer-events:none;
+}
+@keyframes bestAchieverColorMix{
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
 .chart-box{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:18px;margin-bottom:22px;height:280px;
@@ -4047,7 +4089,7 @@ async function renderVerticalPanel(tab){
       <div class="stat-card"><div class="label">Total Agents</div><div class="value" data-countup="${rows.length}">0</div></div>
       <div class="stat-card"><div class="label">Total Audited Calls</div><div class="value teal" data-countup="${totalAudits}">0</div></div>
       <div class="stat-card"><div class="label">Vertical Avg Score</div><div class="value gold" data-countup="${avgScore}" data-suffix="%">0%</div></div>
-      <div class="stat-card"><div class="label">Best Achiever</div><div class="value" style="font-size:15px; color:var(--agent);">${escapeHtml(top.agent)}</div></div>
+      <div class="stat-card best-achiever-card"><div class="label">Best Achiever</div><div class="value best-achiever-value" style="font-size:15px; color:var(--agent);">${escapeHtml(top.agent)}</div></div>
       <div class="stat-card"><div class="label">Under Performance</div><div class="value" data-countup="${needCount}" data-suffix=" Agents" style="color:var(--need);">0 Agents</div></div>
     </div>
     <div class="chart-box"><canvas id="chart-${tab}"></canvas></div>
