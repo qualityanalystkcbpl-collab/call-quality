@@ -2473,15 +2473,18 @@ transform:translateY(0);
         <span class="emp-online-chip"><span class="pulse-dot" style="display:inline-block;"></span> You are currently online on the Call Quality Portal.</span>
         <span class="brand-strip-online-badge" id="onlineCountPill" title="Currently online on this portal"><span class="pulse-dot" style="display:inline-block;"></span><span id="onlineCountBadge">--</span> Total Agent(s) Currently Online </span>
         <span class="emp-inline-stats">
+          <span class="emp-inline-stat">ID: <b id="empStatId">--</b></span>
           <span class="emp-inline-stat">Login: <b id="empStatLoginTime">--:--:--</b></span>
           <span class="emp-inline-stat">Previous: <b id="empStatPrevLogin">--</b></span>
           <span class="emp-inline-stat">IP: <b id="empStatCurrentIP">--</b></span>
           <span class="emp-inline-stat">Session: <b id="empStatSession">00:00:00</b></span>
           <span class="emp-inline-stat">Today: <b id="empStatTodayTotal">00:00:00</b></span>
+          <span class="emp-inline-stat">Device: <b id="empStatDevice">--</b></span>
+          <span class="emp-inline-stat">Browser: <b id="empStatBrowser">--</b></span>
         </span>
       </div>
       <div class="emp-welcome-right">
-        <button class="emp-mini-btn" onclick="openChangePasswordModal()">Change Password</button>
+        <button class="emp-mini-btn" onclick="openChangePasswordModal()">Change Pass</button>
         <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
       </div>
     </div>
@@ -4783,8 +4786,8 @@ setInterval(() => {
   background: var(--surface-3, #1B3150);
   border:1px solid var(--border, #203859);
   color: var(--text, #EAF0F6);
-  border-radius:7px; padding:6px 18px; font-size:11.5px; cursor:pointer;
-  min-width:130px;
+  border-radius:7px; padding:6px 14px; font-size:11px; cursor:pointer;
+  min-width:100px;
 }
 .emp-mini-btn:hover{ opacity:0.85; }
 .emp-mini-btn.danger{
@@ -5003,6 +5006,10 @@ function completeEmployeeLogin(data){
   localStorage.setItem('qa_emp_prev_login', data.previousLogin || '--');
   localStorage.setItem('qa_emp_last_activity', Date.now());
 
+  // Track a running login count for this employee on this device (not cleared on logout)
+  const loginCountKey = `qa_emp_login_count_${empEmployeeId}`;
+  localStorage.setItem(loginCountKey, (Number(localStorage.getItem(loginCountKey)) || 0) + 1);
+
   // Employee Login opens the Agent Dashboard by default — unless Super Admin has
   // promoted this employee to Admin (data.role === 'admin'), in which case they get
   // Admin-only access too, same as a normal Admin login.
@@ -5083,6 +5090,9 @@ function showEmployeeWelcomeBar(){
   empGreetingInterval = setInterval(updateEmpWelcomeGreeting, 60000); // refresh every minute so it stays fixed AND accurate
   document.getElementById('empStatLoginTime').textContent = to12Hour(localStorage.getItem('qa_emp_login_time_display')) || '--:--:--';
   document.getElementById('empStatPrevLogin').textContent = formatPreviousLogin(localStorage.getItem('qa_emp_prev_login'));
+  document.getElementById('empStatId').textContent = empEmployeeId || localStorage.getItem('qa_emp_id') || '--';
+  document.getElementById('empStatDevice').textContent = getDeviceType();
+  document.getElementById('empStatBrowser').textContent = getBrowserName();
 
   const ipEl = document.getElementById('empStatCurrentIP');
   ipEl.textContent = 'Loading...';
@@ -5147,6 +5157,12 @@ async function employeeLogout(logoutType){
       await empApiPost('employeeLogout', { employeeId: empEmployeeId, sessionId: empSessionId, logoutType: logoutType || 'Manual' });
     }
   }catch(e){ console.error('Logout log failed', e); }
+
+  // Track a running logout count for this employee on this device (not cleared below)
+  if(empEmployeeId){
+    const logoutCountKey = `qa_emp_logout_count_${empEmployeeId}`;
+    localStorage.setItem(logoutCountKey, (Number(localStorage.getItem(logoutCountKey)) || 0) + 1);
+  }
 
   ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity']
     .forEach(k=>localStorage.removeItem(k));
