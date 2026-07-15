@@ -233,6 +233,23 @@ body::before{
   transition:border-color .2s;
 }
 .field input:focus{border-color:var(--agent);}
+.show-pass-row{
+  display:flex !important;
+  align-items:center;
+  gap:6px;
+  margin-top:8px;
+  font-size:12px !important;
+  text-transform:none !important;
+  letter-spacing:normal !important;
+  color:var(--text-muted);
+  cursor:pointer;
+  user-select:none;
+}
+.show-pass-row input[type="checkbox"]{
+  width:14px; height:14px; margin:0;
+  accent-color:var(--agent);
+  cursor:pointer;
+}
 .login-btn{
   width:100%;
   padding:13px;
@@ -2602,11 +2619,15 @@ transform:translateY(0);
       <p class="hint">Enter your Employee ID and Password.</p>
       <div class="field">
         <label>Employee ID</label>
-        <input type="text" id="empId" placeholder="e.g. GTPL1024" autocomplete="username">
+        <input type="text" id="empId" placeholder="e.g. GTPL1024" autocomplete="username" onkeydown="if(event.key==='Enter'){ event.preventDefault(); employeeLogin(); }">
       </div>
       <div class="field">
         <label>Password</label>
-        <input type="password" id="empPassword" placeholder="••••••••" autocomplete="current-password">
+        <input type="password" id="empPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter'){ event.preventDefault(); employeeLogin(); }">
+        <label class="show-pass-row">
+          <input type="checkbox" id="empShowPassword" onchange="toggleEmpPasswordVisibility()">
+          <span>Show Password</span>
+        </label>
       </div>
       <button class="login-btn" id="empLoginBtn" data-role="agent" onclick="employeeLogin()">Enter as Employee/Agent</button>
       <div class="login-error" id="empLoginError"></div>
@@ -5355,6 +5376,13 @@ function backToMainLogin(){
 function openForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'flex'; }
 function closeForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'none'; }
 
+/* ---------- Show/Hide Password (Employee Sign in) ---------- */
+function toggleEmpPasswordVisibility(){
+  const pass = document.getElementById('empPassword');
+  const chk = document.getElementById('empShowPassword');
+  if(!pass || !chk) return;
+  pass.type = chk.checked ? 'text' : 'password';
+}
 /* ---------- Employee Login ---------- */
 async function employeeLogin(){
   const empId = document.getElementById('empId').value.trim();
