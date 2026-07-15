@@ -2471,7 +2471,7 @@ transform:translateY(0);
         <span>👋 Welcome, <b id="empWelcomeName">-</b></span>
         <span id="empWelcomeGreeting" class="emp-welcome-greeting">Good Morning</span>
         <span class="emp-online-chip"><span class="pulse-dot" style="display:inline-block;"></span> You are currently online on the Call Quality Portal.</span>
-        <span class="brand-strip-online-badge" id="onlineCountPill" title="Currently online on this portal"><span class="pulse-dot" style="display:inline-block;"></span><span id="onlineCountBadge">--</span> Total Agent(s) Currently Online </span>
+        <span class="brand-strip-online-badge" id="onlineCountPill" title="Click to see who's currently online" onclick="openOnlineAgentsModal()" style="cursor:pointer;"><span class="pulse-dot" style="display:inline-block;"></span><span id="onlineCountBadge">--</span> Total Agent(s) Currently Online </span>
         <span class="emp-inline-stats">
           <span class="emp-inline-stat">ID: <b id="empStatId">--</b></span>
           <span class="emp-inline-stat">Login: <b id="empStatLoginTime">--:--:--</b></span>
@@ -3098,6 +3098,11 @@ function renderOnlineCount(count){
   if(b) b.textContent = count;
 }
 
+// পুরনো ফরম্যাট (শুধু নাম্বার timestamp) এবং নতুন ফরম্যাট ({ts,name,id}) — দুটোই নিরাপদে হ্যান্ডল করার জন্য
+function getSessionTs(entry){
+  return (entry && typeof entry === 'object') ? entry.ts : entry;
+}
+
 async function pingOnlinePresence(){
   try{
     const mySessionId = getMySessionId();
@@ -3105,9 +3110,12 @@ async function pingOnlinePresence(){
     let sessions = (await storageGet('onlineSessions')) || {};
     // পুরনো/মৃত সেশনগুলো বাদ দেওয়া হচ্ছে
     Object.keys(sessions).forEach(id=>{
-      if(now - sessions[id] > ONLINE_TIMEOUT_MS) delete sessions[id];
+      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
     });
-    sessions[mySessionId] = now;
+    // নিজের নাম/আইডি (লগইন করা থাকলে) — না থাকলে null (যেমন লগইন স্ক্রিনে থাকা অবস্থায়)
+    const myName = localStorage.getItem('qa_emp_name') || null;
+    const myEmpId = localStorage.getItem('qa_emp_id') || null;
+    sessions[mySessionId] = { ts: now, name: myName, id: myEmpId };
     await storageSet('onlineSessions', sessions);
     renderOnlineCount(Object.keys(sessions).length);
   }catch(e){
@@ -3116,6 +3124,75 @@ async function pingOnlinePresence(){
 }
 pingOnlinePresence();
 setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
+
+/* ===================== "কারা অনলাইন আছে" মোডাল ===================== */
+async function openOnlineAgentsModal(){
+  const modal = document.getElementById('onlineAgentsModal');
+  const listEl = document.getElementById('onlineAgentsList');
+  const countEl = document.getElementById('onlineAgentsModalCount');
+  if(!modal || !listEl) return;
+  modal.style.display = 'flex';
+  listEl.innerHTML = '<div class="online-agents-loading">Loading…</div>';
+  try{
+    const now = Date.now();
+    let sessions = (await storageGet('onlineSessions')) || {};
+    Object.keys(sessions).forEach(id=>{
+      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
+    });
+    const entries = Object.values(sessions);
+    if(countEl) countEl.textContent = entries.length;
+
+    // নাম অনুযায়ী unique agents বের করা হচ্ছে (একই এজেন্ট একাধিক ট্যাব খুললে একবারই দেখানো হবে)
+    const seen = new Map();
+    let anonymousCount = 0;
+    entries.forEach(e=>{
+      const name = e && e.name;
+      if(!name){ anonymousCount++; return; }
+      const key = (e.id || name);
+      if(seen.has(key)) seen.set(key, seen.get(key) + 1);
+      else seen.set(key, 1);
+    });
+
+    if(seen.size === 0 && anonymousCount === 0){
+      listEl.innerHTML = '<div class="online-agents-empty">No one is currently online.</div>';
+      return;
+    }
+
+    const nameMap = new Map();
+    entries.forEach(e=>{
+      if(e && e.name){
+        const key = (e.id || e.name);
+        if(!nameMap.has(key)) nameMap.set(key, e.name);
+      }
+    });
+
+    let html = '';
+    Array.from(seen.keys())
+      .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
+      .forEach(key=>{
+        const displayName = nameMap.get(key) || 'Agent';
+        const tabCount = seen.get(key);
+        html += `<div class="online-agent-row">
+          <span class="pulse-dot" style="display:inline-block;"></span>
+          <span class="online-agent-name">${displayName}</span>
+          ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
+        </div>`;
+      });
+
+    if(anonymousCount > 0){
+      html += `<div class="online-agents-anon">+ ${anonymousCount} more session(s) online — name not available yet (that browser tab needs a refresh to show up by name)</div>`;
+    }
+
+    listEl.innerHTML = html || '<div class="online-agents-empty">No one is currently online.</div>';
+  }catch(e){
+    console.error('Failed to load online agents', e);
+    listEl.innerHTML = '<div class="online-agents-empty">Could not load the online agent list. Please try again.</div>';
+  }
+}
+function closeOnlineAgentsModal(){
+  const modal = document.getElementById('onlineAgentsModal');
+  if(modal) modal.style.display = 'none';
+}
 window.addEventListener('beforeunload', ()=>{
   // ট্যাব বন্ধ হওয়ার সময় নিজের সেশনটি সরিয়ে ফেলার একটি best-effort চেষ্টা
   navigator.sendBeacon && storageGet('onlineSessions').then(sessions=>{
@@ -4653,6 +4730,18 @@ setInterval(() => {
   </div>
 </div>
 
+<!-- Who's currently online (opens when clicking the "Total Agent(s) Currently Online" badge) -->
+<div class="emp-modal-overlay" id="onlineAgentsModal" style="display:none;" onclick="if(event.target===this) closeOnlineAgentsModal()">
+  <div class="emp-modal-box online-agents-box">
+    <button class="login-popup-close" onclick="closeOnlineAgentsModal()" title="Close">✕</button>
+    <h2><span class="pulse-dot" style="display:inline-block;margin-right:6px;"></span>Currently Online (<span id="onlineAgentsModalCount">--</span>)</h2>
+    <p class="hint">Agents who currently have the portal open.</p>
+    <div class="online-agents-list" id="onlineAgentsList">
+      <div class="online-agents-loading">Loading…</div>
+    </div>
+  </div>
+</div>
+
 <style>
 /* ============ NEW ADDITIVE STYLES — Employee Login / Super Admin / Session UI ============
    এই স্টাইলগুলো শুধুমাত্র নতুন যোগ করা এলিমেন্টের জন্য।
@@ -4862,6 +4951,34 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 .emp-pw-rules{ font-size:11.5px; color: var(--text-muted, #8FA0B5); margin-top:8px; }
 .emp-modal-box .login-btn{ width:100%; margin-top:16px; }
 .emp-modal-box .login-error{ margin-top:8px; }
+
+/* "Currently Online" agents modal */
+.online-agents-box{ max-width:340px; }
+.online-agents-box h2{ font-size:18px; display:flex; align-items:center; }
+.online-agents-list{
+  margin-top:14px; max-height:320px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:6px;
+}
+.online-agent-row{
+  display:flex; align-items:center; gap:8px;
+  padding:9px 10px;
+  background: var(--surface-2, #14253D);
+  border:1px solid var(--border, #203859);
+  border-radius:8px;
+  font-size:13px;
+}
+.online-agent-name{ font-weight:600; flex:1; }
+.online-agent-tabs{
+  font-size:10.5px; color: var(--text-muted, #8FA0B5);
+  background: var(--surface-3, #1B3150);
+  padding:2px 6px; border-radius:6px;
+}
+.online-agents-loading, .online-agents-empty{
+  color: var(--text-muted, #8FA0B5); font-size:13px; padding:10px 2px;
+}
+.online-agents-anon{
+  color: var(--text-muted, #8FA0B5); font-size:11.5px; padding:6px 2px 2px; font-style:italic;
+}
 
 @media (max-width: 640px){
   #employeeWelcomeBar{ flex-direction:column; align-items:flex-start; gap:6px; }
