@@ -1703,6 +1703,120 @@ input[type=file]{display:none;}
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:4px;}
 /* ==========================
+   Decorative Animated Scene — house, tree, sun, boat, birds, water
+========================== */
+.scene-strip{
+  width:100%;
+  line-height:0;
+  overflow:hidden;
+  background:#0A1730;
+}
+.scene-svg{
+  display:block;
+  width:100%;
+  height:130px;
+}
+@media (min-width:900px){
+  .scene-svg{ height:170px; }
+}
+.scene-sun{
+  animation: sceneSunGlow 5s ease-in-out infinite;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+@keyframes sceneSunGlow{
+  0%,100%{ opacity:1; transform:scale(1); }
+  50%{ opacity:0.92; transform:scale(1.08); }
+}
+.scene-tree{ transform-box:fill-box; transform-origin:bottom center; }
+.scene-tree-1{ animation: sceneTreeSway1 6s ease-in-out infinite; }
+.scene-tree-2{ animation: sceneTreeSway2 5s ease-in-out infinite 0.4s; }
+.scene-tree-3{ animation: sceneTreeSway3 7s ease-in-out infinite 0.8s; }
+@keyframes sceneTreeSway1{
+  0%,100%{ rotate:0deg; }
+  50%{ rotate:2deg; }
+}
+@keyframes sceneTreeSway2{
+  0%,100%{ rotate:0deg; }
+  50%{ rotate:-2.4deg; }
+}
+@keyframes sceneTreeSway3{
+  0%,100%{ rotate:0deg; }
+  50%{ rotate:2.2deg; }
+}
+.scene-smoke circle{
+  animation: sceneSmokeRise 4s ease-in infinite;
+}
+.scene-smoke circle:nth-child(2){ animation-delay:0.6s; }
+.scene-smoke circle:nth-child(3){ animation-delay:1.2s; }
+@keyframes sceneSmokeRise{
+  0%{ opacity:0.55; transform:translateY(0); }
+  100%{ opacity:0; transform:translateY(-14px); }
+}
+.scene-wave-1{ animation: sceneWaveMove 9s ease-in-out infinite; }
+.scene-wave-2{ animation: sceneWaveMove 12s ease-in-out infinite reverse; }
+@keyframes sceneWaveMove{
+  0%{ transform:translateX(0); }
+  50%{ transform:translateX(-55px); }
+  100%{ transform:translateX(0); }
+}
+.scene-boat-move{
+  animation: sceneBoatMove 18s ease-in-out infinite;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+@keyframes sceneBoatMove{
+  0%{ transform:translate(130px,0) scaleX(1); }
+  47%{ transform:translate(870px,0) scaleX(1); }
+  53%{ transform:translate(870px,0) scaleX(-1); }
+  97%{ transform:translate(130px,0) scaleX(-1); }
+  100%{ transform:translate(130px,0) scaleX(1); }
+}
+.scene-boat-bob{
+  animation: sceneBoatBob 3.4s ease-in-out infinite;
+}
+@keyframes sceneBoatBob{
+  0%,100%{ transform:translate(0,172px) rotate(0deg); }
+  50%{ transform:translate(0,168px) rotate(-2deg); }
+}
+.scene-birds{ animation-timing-function:linear; animation-iteration-count:infinite; }
+.scene-birds-1{ animation-name: sceneBirdFly1; animation-duration:13s; }
+.scene-birds-2{ animation-name: sceneBirdFly2; animation-duration:17s; animation-delay:1.5s; }
+.scene-birds-3{ animation-name: sceneBirdFly3; animation-duration:21s; animation-delay:4s; }
+.scene-birds-4{ animation-name: sceneBirdFly4; animation-duration:15s; animation-delay:2.5s; }
+.scene-birds-5{ animation-name: sceneBirdFly5; animation-duration:19s; animation-delay:6s; }
+.scene-birds-6{ animation-name: sceneBirdFly6; animation-duration:24s; animation-delay:8s; }
+@keyframes sceneBirdFly1{
+  0%{ transform:translate(-40px,55px); }
+  100%{ transform:translate(1040px,15px); }
+}
+@keyframes sceneBirdFly2{
+  0%{ transform:translate(-40px,85px); }
+  100%{ transform:translate(1040px,45px); }
+}
+@keyframes sceneBirdFly3{
+  0%{ transform:translate(-40px,30px); }
+  100%{ transform:translate(1040px,70px); }
+}
+@keyframes sceneBirdFly4{
+  0%{ transform:translate(-40px,68px); }
+  100%{ transform:translate(1040px,28px); }
+}
+@keyframes sceneBirdFly5{
+  0%{ transform:translate(-40px,20px); }
+  100%{ transform:translate(1040px,58px); }
+}
+@keyframes sceneBirdFly6{
+  0%{ transform:translate(-40px,100px); }
+  100%{ transform:translate(1040px,62px); }
+}
+.scene-wing{ animation: sceneWingFlap 0.7s ease-in-out infinite alternate; transform-box:fill-box; transform-origin:center; }
+@keyframes sceneWingFlap{
+  0%{ transform:scaleY(1); }
+  100%{ transform:scaleY(0.35); }
+}
+
+/* ==========================
    Page Footer — সাইডবারে নয়, পাতার একদম নিচে, normal flow-এ (fixed নয়), lekha choto
 ========================== */
 .page-footer{
@@ -1770,6 +1884,11 @@ input[type=file]{display:none;}
     font-size:12px;
     font-weight:700;
     color:#53ff78;
+    animation: devNameGlow 2.6s ease-in-out infinite;
+}
+@keyframes devNameGlow{
+    0%,100%{ text-shadow:0 0 2px rgba(83,255,120,0.25); opacity:1; }
+    50%{ text-shadow:0 0 10px rgba(83,255,120,0.85), 0 0 18px rgba(83,255,120,0.45); opacity:0.92; }
 }
 
 .page-footer-version{
@@ -2836,6 +2955,131 @@ transform:translateY(0);
         </div>
       </div>
     </main>
+  </div>
+  <!-- ============ DECORATIVE ANIMATED SCENE (house, tree, sun, boat, birds, water) ============ -->
+  <div class="scene-strip" aria-hidden="true">
+    <svg class="scene-svg" viewBox="0 0 1000 200" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sceneSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0A1730"/>
+          <stop offset="100%" stop-color="#123056"/>
+        </linearGradient>
+        <linearGradient id="sceneWater" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0E5C86"/>
+          <stop offset="100%" stop-color="#083A57"/>
+        </linearGradient>
+        <radialGradient id="sceneSun" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#FFF6D8"/>
+          <stop offset="35%" stop-color="#FFD873"/>
+          <stop offset="70%" stop-color="#F0A93E"/>
+          <stop offset="100%" stop-color="#C77A1F"/>
+        </radialGradient>
+        <filter id="sceneSunGlowFilter" x="-150%" y="-150%" width="400%" height="400%">
+          <feGaussianBlur stdDeviation="7" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Sky -->
+      <rect x="0" y="0" width="1000" height="200" fill="url(#sceneSky)"/>
+
+      <!-- Sun -->
+      <g class="scene-sun">
+        <circle cx="860" cy="46" r="60" fill="#FFD873" opacity="0.16"/>
+        <circle cx="860" cy="46" r="42" fill="#FFD873" opacity="0.22"/>
+        <circle cx="860" cy="46" r="30" fill="url(#sceneSun)" filter="url(#sceneSunGlowFilter)"/>
+      </g>
+
+      <!-- Birds -->
+      <g class="scene-birds scene-birds-1" fill="none" stroke="#EAF4FF" stroke-width="2.4" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q6 -7 12 0 Q18 -7 24 0"/>
+      </g>
+      <g class="scene-birds scene-birds-2" fill="none" stroke="#EAF4FF" stroke-width="2.2" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q5 -6 10 0 Q15 -6 20 0"/>
+      </g>
+      <g class="scene-birds scene-birds-3" fill="none" stroke="#EAF4FF" stroke-width="2" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q5 -6 10 0 Q15 -6 20 0"/>
+      </g>
+      <g class="scene-birds scene-birds-4" fill="none" stroke="#EAF4FF" stroke-width="2.3" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q6 -7 12 0 Q18 -7 24 0"/>
+      </g>
+      <g class="scene-birds scene-birds-5" fill="none" stroke="#EAF4FF" stroke-width="1.9" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q4.5 -5.5 9 0 Q13.5 -5.5 18 0"/>
+      </g>
+      <g class="scene-birds scene-birds-6" fill="none" stroke="#EAF4FF" stroke-width="2.1" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q5 -6 10 0 Q15 -6 20 0"/>
+      </g>
+
+      <!-- Tree 1 : deep green -->
+      <g class="scene-tree scene-tree-1" transform="translate(55,178)">
+        <rect x="-5" y="-46" width="10" height="46" rx="2" fill="#5A3A22"/>
+        <circle cx="0" cy="-58" r="26" fill="#0F4C2E"/>
+        <circle cx="-18" cy="-46" r="18" fill="#145A32"/>
+        <circle cx="18" cy="-46" r="18" fill="#145A32"/>
+        <circle cx="0" cy="-40" r="20" fill="#1B6B3D"/>
+      </g>
+
+      <!-- Tree 2 : deep teal / emerald -->
+      <g class="scene-tree scene-tree-2" transform="translate(150,178)">
+        <rect x="-4" y="-38" width="8" height="38" rx="2" fill="#4A3320"/>
+        <circle cx="0" cy="-48" r="21" fill="#0B4D45"/>
+        <circle cx="-14" cy="-38" r="15" fill="#0E6B5C"/>
+        <circle cx="14" cy="-38" r="15" fill="#0E6B5C"/>
+        <circle cx="0" cy="-33" r="16" fill="#128C72"/>
+      </g>
+
+      <!-- Tree 3 : deep olive -->
+      <g class="scene-tree scene-tree-3" transform="translate(455,178)">
+        <rect x="-5" y="-42" width="9" height="42" rx="2" fill="#4E3A20"/>
+        <circle cx="0" cy="-53" r="23" fill="#3E4A14"/>
+        <circle cx="-16" cy="-42" r="16" fill="#556B1B"/>
+        <circle cx="16" cy="-42" r="16" fill="#556B1B"/>
+        <circle cx="0" cy="-36" r="18" fill="#6B7F22"/>
+      </g>
+
+      <!-- House 1 : main -->
+      <g class="scene-house" transform="translate(255,178)">
+        <rect x="-46" y="-52" width="92" height="52" fill="#7A4A28"/>
+        <polygon points="-56,-52 0,-92 56,-52" fill="#14532D"/>
+        <rect x="-6" y="-84" width="10" height="22" fill="#3E2A18"/>
+        <g class="scene-smoke">
+          <circle cx="-1" cy="-92" r="4" fill="#9FB3C4" opacity="0.55"/>
+          <circle cx="2" cy="-102" r="5" fill="#9FB3C4" opacity="0.4"/>
+          <circle cx="-2" cy="-114" r="6" fill="#9FB3C4" opacity="0.28"/>
+        </g>
+        <rect x="-14" y="-24" width="20" height="24" fill="#3E2A18"/>
+        <circle cx="0" cy="-12" r="1.6" fill="#E3A857"/>
+        <rect x="14" y="-38" width="16" height="16" fill="#CFE3F0" opacity="0.85"/>
+        <rect x="-34" y="-38" width="16" height="16" fill="#CFE3F0" opacity="0.85"/>
+      </g>
+
+      <!-- House 2 : smaller, next to the main house -->
+      <g class="scene-house scene-house-2" transform="translate(345,178) scale(0.6)">
+        <rect x="-46" y="-52" width="92" height="52" fill="#6E4A30"/>
+        <polygon points="-56,-52 0,-92 56,-52" fill="#0F4C2E"/>
+        <rect x="-6" y="-84" width="10" height="22" fill="#3E2A18"/>
+        <rect x="-14" y="-24" width="20" height="24" fill="#3E2A18"/>
+        <circle cx="0" cy="-12" r="1.6" fill="#E3A857"/>
+        <rect x="14" y="-38" width="16" height="16" fill="#CFE3F0" opacity="0.85"/>
+        <rect x="-34" y="-38" width="16" height="16" fill="#CFE3F0" opacity="0.85"/>
+      </g>
+
+      <!-- Water -->
+      <path class="scene-wave scene-wave-1" d="M-50 176 Q 0 171 50 176 T 150 176 T 250 176 T 350 176 T 450 176 T 550 176 T 650 176 T 750 176 T 850 176 T 950 176 T 1050 176 V200 H-50 Z" fill="url(#sceneWater)"/>
+      <path class="scene-wave scene-wave-2" d="M-50 183 Q 0 179 50 183 T 150 183 T 250 183 T 350 183 T 450 183 T 550 183 T 650 183 T 750 183 T 850 183 T 950 183 T 1050 183 V200 H-50 Z" fill="#0A4A70" opacity="0.75"/>
+
+      <!-- Boat : sails back and forth across the water -->
+      <g class="scene-boat-move">
+        <g class="scene-boat-bob">
+          <path d="M-24 0 Q0 12 24 0 L18 -4 L-18 -4 Z" fill="#7A4A28"/>
+          <rect x="-2" y="-26" width="3" height="24" fill="#3E2A18"/>
+          <polygon points="1,-24 1,-6 20,-8" fill="#E3A857"/>
+        </g>
+      </g>
+    </svg>
   </div>
   <!-- ============ PAGE FOOTER (সাইডবারে নয়, একদম পাতার শেষে, fixed নয়, normal flow-এ scroll হবে) ============ -->
   <footer class="page-footer">
