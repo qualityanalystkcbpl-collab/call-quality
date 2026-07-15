@@ -4976,7 +4976,7 @@ setInterval(() => {
     location.reload();
 }, 10 * 60 * 1000); // 10 Minutes
 </script>
-<div class="login-popup-overlay" id="loginPopupOverlay">
+<div class="login-popup-overlay" id="loginPopupOverlay" onclick="if(event.target===this) closeLoginPopup()">
   <div class="login-popup-box">
     <button class="login-popup-close" onclick="closeLoginPopup()" title="Close">✕</button>
     <div class="login-popup-text" id="loginPopupText"></div>
@@ -5005,7 +5005,7 @@ setInterval(() => {
 </div>
 
 <!-- Voluntary change password (from welcome bar, can be closed) -->
-<div class="emp-modal-overlay" id="changePasswordModal" style="display:none;">
+<div class="emp-modal-overlay" id="changePasswordModal" style="display:none;" onclick="if(event.target===this) closeChangePasswordModal()">
   <div class="emp-modal-box">
     <button class="login-popup-close" onclick="closeChangePasswordModal()" title="Close">✕</button>
     <h2>Change Password</h2>
@@ -5028,7 +5028,7 @@ setInterval(() => {
 </div>
 
 <!-- Forgot password info (only Super Admin can reset) -->
-<div class="emp-modal-overlay" id="forgotPasswordModal" style="display:none;">
+<div class="emp-modal-overlay" id="forgotPasswordModal" style="display:none;" onclick="if(event.target===this) closeForgotPasswordInfo()">
   <div class="emp-modal-box">
     <button class="login-popup-close" onclick="closeForgotPasswordInfo()" title="Close">✕</button>
     <h2>Forgot Password?</h2>
