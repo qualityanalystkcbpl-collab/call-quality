@@ -322,7 +322,7 @@ body::before{
   background-size: 300% 300%;
   animation: brandStripGlow 10s ease infinite;
   border-bottom:1px solid var(--border);
-  overflow:hidden;
+  overflow:visible;
   transition:padding .2s ease, min-height .2s ease;
   position:relative;
 }
@@ -367,6 +367,43 @@ body::before{
   box-shadow: 0 2px 14px rgba(0,0,0,0.30);
 }
 .brand-strip.no-logo{ display:none; }
+
+/* Decorative flowing arcs flanking both sides of the logo — animated, layered glow */
+.logo-deco{
+  display:flex; align-items:center; justify-content:center;
+  width:150px; height:96px; flex-shrink:0;
+}
+.logo-deco svg{ width:100%; height:100%; overflow:visible; }
+.deco-arc{
+  fill:none;
+  stroke-width:2.5;
+  stroke-linecap:round;
+}
+.deco-arc-1{ stroke:#33C9B0; stroke-dasharray:150 40; filter:drop-shadow(0 0 5px rgba(51,201,176,0.8)); animation: decoFlow1 3.2s ease-in-out infinite; }
+.deco-arc-2{ stroke:#4A7FE0; stroke-dasharray:170 40; filter:drop-shadow(0 0 5px rgba(74,127,224,0.8)); animation: decoFlow2 3.6s ease-in-out infinite .3s; }
+.deco-arc-3{ stroke:#B94AE0; stroke-dasharray:190 40; filter:drop-shadow(0 0 5px rgba(185,74,224,0.8)); animation: decoFlow3 4s ease-in-out infinite .6s; }
+@keyframes decoFlow1{ 0%,100%{ stroke-dashoffset:0; opacity:.5; } 50%{ stroke-dashoffset:70; opacity:1; } }
+@keyframes decoFlow2{ 0%,100%{ stroke-dashoffset:0; opacity:.45; } 50%{ stroke-dashoffset:-70; opacity:1; } }
+@keyframes decoFlow3{ 0%,100%{ stroke-dashoffset:0; opacity:.4; } 50%{ stroke-dashoffset:80; opacity:1; } }
+@media (max-width:820px){ .logo-deco{ display:none; } }
+
+/* A light, slowly-spinning world globe tucked into the empty space further out,
+   beyond the decorative arcs on each side of the logo. */
+.brand-globe{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:130px; height:130px;
+  opacity:0.6;
+  filter: drop-shadow(0 0 10px rgba(74,127,224,0.35));
+  pointer-events:none;
+}
+.brand-globe svg{
+  width:100%; height:100%; display:block;
+}
+.brand-globe-left{ left:160px; }
+.brand-globe-right{ right:160px; }
+@media (max-width:1300px){ .brand-globe{ display:none; } }
 header.topbar{
   display:flex;
   align-items:center;
@@ -2450,7 +2487,95 @@ transform:translateY(0);
     </div>
     <!-- 1) Logo placeholder — GitHub-এ পাবলিশ করার পর এখানে আপনার logo.png রাখলেই এটি অটো লোড হবে -->
     <div class="brand-strip" id="brandStrip">
+      <div class="brand-globe brand-globe-left" aria-hidden="true">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="oceanGradL" cx="32%" cy="28%" r="80%">
+              <stop offset="0%" stop-color="#9FD8F2"/>
+              <stop offset="45%" stop-color="#3E8FD6"/>
+              <stop offset="100%" stop-color="#154A82"/>
+            </radialGradient>
+            <linearGradient id="landGradL" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8ED17C"/>
+              <stop offset="100%" stop-color="#4E9A4A"/>
+            </linearGradient>
+            <clipPath id="clipCircleL"><circle cx="32" cy="32" r="30"/></clipPath>
+          </defs>
+          <!-- Sphere shading stays put — only the land surface scrolls across it, like a real rotating globe -->
+          <circle cx="32" cy="32" r="30" fill="url(#oceanGradL)"/>
+          <g clip-path="url(#clipCircleL)">
+            <g>
+              <animateTransform attributeName="transform" type="translate" from="0 0" to="-64 0" dur="10s" repeatCount="indefinite"/>
+              <path d="M22,2 C26,1 30,3 31,6 C32,8 29,9 26,9 C23,9 20,8 19,6 C18,4 19,2 22,2 Z" fill="url(#landGradL)"/>
+              <path d="M22,12 C28,9 36,9 41,13 C44,15 45,19 42,21 C46,23 49,27 45,31
+                       C43,33 39,32 37,34 C39,39 37,45 35,49 C33,53 31,56 29,57
+                       C27,55 26,51 24,47 C21,43 19,37 18,31 C17,25 16,19 22,12 Z" fill="url(#landGradL)"/>
+              <path d="M46,24 C50,23 54,26 53,30 C52,33 48,34 46,32 C44,29 44,26 46,24 Z" fill="url(#landGradL)"/>
+              <path d="M22,2 C26,1 30,3 31,6 C32,8 29,9 26,9 C23,9 20,8 19,6 C18,4 19,2 22,2 Z" fill="url(#landGradL)" transform="translate(64,0)"/>
+              <path d="M22,12 C28,9 36,9 41,13 C44,15 45,19 42,21 C46,23 49,27 45,31
+                       C43,33 39,32 37,34 C39,39 37,45 35,49 C33,53 31,56 29,57
+                       C27,55 26,51 24,47 C21,43 19,37 18,31 C17,25 16,19 22,12 Z" fill="url(#landGradL)" transform="translate(64,0)"/>
+              <path d="M46,24 C50,23 54,26 53,30 C52,33 48,34 46,32 C44,29 44,26 46,24 Z" fill="url(#landGradL)" transform="translate(64,0)"/>
+            </g>
+          </g>
+          <!-- Static latitude/longitude grid — the projection lines of the sphere itself -->
+          <ellipse cx="32" cy="32" rx="30" ry="12" fill="none" stroke="#EAF6FF" stroke-width="0.6" opacity="0.3"/>
+          <ellipse cx="32" cy="32" rx="30" ry="22" fill="none" stroke="#EAF6FF" stroke-width="0.6" opacity="0.22"/>
+          <line x1="32" y1="2" x2="32" y2="62" stroke="#EAF6FF" stroke-width="0.6" opacity="0.3"/>
+          <circle cx="32" cy="32" r="30" fill="none" stroke="#EAF6FF" stroke-width="1" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="logo-deco logo-deco-left" aria-hidden="true">
+        <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+          <path class="deco-arc deco-arc-1" d="M10 122 C 62 122, 92 90, 92 38"/>
+          <path class="deco-arc deco-arc-2" d="M30 132 C 82 132, 112 96, 112 48"/>
+          <path class="deco-arc deco-arc-3" d="M50 137 C 96 137, 126 106, 126 66"/>
+        </svg>
+      </div>
       <img id="siteLogo" src="logo2.png" alt="Company Logo" onerror="this.style.display='none'; this.parentElement.classList.add('no-logo');">
+      <div class="logo-deco logo-deco-right" aria-hidden="true">
+        <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+          <path class="deco-arc deco-arc-1" d="M190 122 C 138 122, 108 90, 108 38"/>
+          <path class="deco-arc deco-arc-2" d="M170 132 C 118 132, 88 96, 88 48"/>
+          <path class="deco-arc deco-arc-3" d="M150 137 C 104 137, 74 106, 74 66"/>
+        </svg>
+      </div>
+      <div class="brand-globe brand-globe-right" aria-hidden="true">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="oceanGradR" cx="32%" cy="28%" r="80%">
+              <stop offset="0%" stop-color="#9FD8F2"/>
+              <stop offset="45%" stop-color="#3E8FD6"/>
+              <stop offset="100%" stop-color="#154A82"/>
+            </radialGradient>
+            <linearGradient id="landGradR" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8ED17C"/>
+              <stop offset="100%" stop-color="#4E9A4A"/>
+            </linearGradient>
+            <clipPath id="clipCircleR"><circle cx="32" cy="32" r="30"/></clipPath>
+          </defs>
+          <circle cx="32" cy="32" r="30" fill="url(#oceanGradR)"/>
+          <g clip-path="url(#clipCircleR)">
+            <g>
+              <animateTransform attributeName="transform" type="translate" from="0 0" to="64 0" dur="10s" repeatCount="indefinite"/>
+              <path d="M22,2 C26,1 30,3 31,6 C32,8 29,9 26,9 C23,9 20,8 19,6 C18,4 19,2 22,2 Z" fill="url(#landGradR)"/>
+              <path d="M22,12 C28,9 36,9 41,13 C44,15 45,19 42,21 C46,23 49,27 45,31
+                       C43,33 39,32 37,34 C39,39 37,45 35,49 C33,53 31,56 29,57
+                       C27,55 26,51 24,47 C21,43 19,37 18,31 C17,25 16,19 22,12 Z" fill="url(#landGradR)"/>
+              <path d="M46,24 C50,23 54,26 53,30 C52,33 48,34 46,32 C44,29 44,26 46,24 Z" fill="url(#landGradR)"/>
+              <path d="M22,2 C26,1 30,3 31,6 C32,8 29,9 26,9 C23,9 20,8 19,6 C18,4 19,2 22,2 Z" fill="url(#landGradR)" transform="translate(-64,0)"/>
+              <path d="M22,12 C28,9 36,9 41,13 C44,15 45,19 42,21 C46,23 49,27 45,31
+                       C43,33 39,32 37,34 C39,39 37,45 35,49 C33,53 31,56 29,57
+                       C27,55 26,51 24,47 C21,43 19,37 18,31 C17,25 16,19 22,12 Z" fill="url(#landGradR)" transform="translate(-64,0)"/>
+              <path d="M46,24 C50,23 54,26 53,30 C52,33 48,34 46,32 C44,29 44,26 46,24 Z" fill="url(#landGradR)" transform="translate(-64,0)"/>
+            </g>
+          </g>
+          <ellipse cx="32" cy="32" rx="30" ry="12" fill="none" stroke="#EAF6FF" stroke-width="0.6" opacity="0.3"/>
+          <ellipse cx="32" cy="32" rx="30" ry="22" fill="none" stroke="#EAF6FF" stroke-width="0.6" opacity="0.22"/>
+          <line x1="32" y1="2" x2="32" y2="62" stroke="#EAF6FF" stroke-width="0.6" opacity="0.3"/>
+          <circle cx="32" cy="32" r="30" fill="none" stroke="#EAF6FF" stroke-width="1" opacity="0.4"/>
+        </svg>
+      </div>
     </div>
 <div class="app-header-fixed">
     <header class="topbar">
@@ -4623,14 +4748,14 @@ setInterval(() => {
 #employeeWelcomeBar{
   position:fixed; top:0; left:0; right:0; z-index:10000;
   display:flex; align-items:center; justify-content:space-between;
-  padding:10px 18px;
+  padding:6px 18px;
   background: var(--surface-2, #14253D);
   border-bottom:1px solid var(--border, #203859);
   color: var(--text, #EAF0F6);
   font-family:'Inter', sans-serif;
-  font-size:13.5px;
+  font-size:12.5px;
 }
-.emp-welcome-left{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.emp-welcome-left{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .emp-welcome-greeting{
   font-weight:600;
   background:linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0, #33C9B0);
@@ -4658,8 +4783,8 @@ setInterval(() => {
   background: var(--surface-3, #1B3150);
   border:1px solid var(--border, #203859);
   color: var(--text, #EAF0F6);
-  border-radius:8px; padding:8px 22px; font-size:12px; cursor:pointer;
-  min-width:150px;
+  border-radius:7px; padding:6px 18px; font-size:11.5px; cursor:pointer;
+  min-width:130px;
 }
 .emp-mini-btn:hover{ opacity:0.85; }
 .emp-mini-btn.danger{
@@ -4677,9 +4802,17 @@ setInterval(() => {
 
 /* Small inline session stats, shown right next to "Currently Online" in the welcome bar */
 .emp-inline-stats{
-  display:flex; gap:12px; flex-wrap:wrap;
+  display:flex; gap:10px; flex-wrap:wrap;
   font-family:'IBM Plex Mono', monospace;
-  font-size:11px;
+  font-size:10px;
+  padding:3px 12px;
+  border-radius:7px;
+  border:1px solid rgba(51,201,176,0.22);
+  animation: empStatsGlow 5s ease-in-out infinite;
+}
+@keyframes empStatsGlow{
+  0%,100%{ box-shadow:0 0 0 rgba(51,201,176,0); border-color:rgba(51,201,176,0.22); }
+  50%{     box-shadow:0 0 12px rgba(51,201,176,0.28); border-color:rgba(51,201,176,0.55); }
 }
 .emp-inline-stat{ color: var(--text-muted, #8FA0B5); white-space:nowrap; }
 .emp-inline-stat b{ color: var(--text, #EAF0F6); font-size:11.5px; font-weight:600; }
