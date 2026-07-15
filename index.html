@@ -168,6 +168,7 @@ body::before{
 .login-form-wrap{
   flex:0.9;
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
   padding:40px;
@@ -209,6 +210,8 @@ body::before{
 }
 .role-toggle button.active[data-role="agent"]{background:var(--agent-dim);color:var(--agent);}
 .role-toggle button.active[data-role="admin"]{background:var(--admin-dim);color:var(--admin);}
+.role-toggle button.active[data-role="superadmin"]{background:rgba(185,74,224,0.16);color:#B94AE0;}
+.staff-role-toggle button{font-size:12px;padding:10px 4px;}
 .field{margin-bottom:16px;}
 .field label{
   display:block;
@@ -245,6 +248,7 @@ body::before{
 .login-btn:active{transform:scale(0.98);}
 .login-btn[data-role="agent"]{background:var(--agent);color:#04211C;}
 .login-btn[data-role="admin"]{background:var(--admin);color:#2B1D06;}
+.login-btn[data-role="superadmin"]{background:#B94AE0;color:#2B0C3B;}
 .login-error{
   color:var(--need);
   font-size:12.5px;
@@ -314,11 +318,18 @@ body::before{
   justify-content:center;
   align-items:center;
   min-height:0;
-  background:var(--bg);
+  background: linear-gradient(120deg, var(--bg), rgba(51,201,176,0.10), var(--bg), rgba(74,127,224,0.10), var(--bg));
+  background-size: 300% 300%;
+  animation: brandStripGlow 10s ease infinite;
   border-bottom:1px solid var(--border);
   overflow:hidden;
   transition:padding .2s ease, min-height .2s ease;
   position:relative;
+}
+@keyframes brandStripGlow{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
 }
 .brand-strip-online-badge{
   position:fixed;
@@ -349,14 +360,18 @@ body::before{
   max-height:70px;
   max-width:320px;
   object-fit:contain;
-  padding:6px 0;
+  padding:8px 20px;
+  margin:6px 0;
+  background: rgba(255,255,255,0.94);
+  border-radius:10px;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.30);
 }
 .brand-strip.no-logo{ display:none; }
 header.topbar{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:14px 24px;
+  padding:8px 24px;
   border-bottom:1px solid var(--border);
   background:var(--surface);
   gap:20px;
@@ -374,8 +389,8 @@ header.topbar{
 .logo-mark{ animation: logoGlowPulse 3.5s ease-in-out infinite; }
 .fire-loader{
     position:relative;
-    width:24px;
-    height:24px;
+    width:20px;
+    height:20px;
     animation:fireRotate 3s linear infinite;
 }
 
@@ -402,15 +417,15 @@ header.topbar{
 }
 
 .fire-loader span:nth-child(1){
-    transform:translateY(-10px);
+    transform:translateY(-8px);
 }
 
 .fire-loader span:nth-child(2){
-    transform:rotate(120deg) translateY(-10px);
+    transform:rotate(120deg) translateY(-8px);
 }
 
 .fire-loader span:nth-child(3){
-    transform:rotate(240deg) translateY(-10px);
+    transform:rotate(240deg) translateY(-8px);
 }
 
 @keyframes fireRotate{
@@ -427,9 +442,9 @@ header.topbar{
 .logo-text small{ animation: fadeInSmallText 1.1s ease .35s both; }
 @keyframes fadeInSmallText{ from{opacity:0; transform:translateY(-3px);} to{opacity:1; transform:translateY(0);} }
 .logo-mark{
-    width:46px;
-    height:46px;
-    border-radius:12px;
+    width:36px;
+    height:36px;
+    border-radius:10px;
     background:#111;
     border:1px solid rgba(255,255,255,.08);
 
@@ -449,7 +464,7 @@ header.topbar{
 .logo-rotator{
   position:relative;
   min-width:170px;
-  min-height:44px;
+  min-height:34px;
   display:flex;
   align-items:center;
 }
@@ -472,7 +487,7 @@ header.topbar{
 .logo-text-main{
   font-family:'Space Grotesk',sans-serif;
   font-weight:800;
-  font-size:16px;
+  font-size:14px;
   line-height:1.15;
   color:var(--text);
   letter-spacing:.3px;
@@ -485,7 +500,7 @@ header.topbar{
   color:var(--text-muted);
   font-weight:600;
   letter-spacing:1.1px;
-  margin-top:3px;
+  margin-top:2px;
 }
 .logo-text-sub .dot{
   width:9px; height:9px; border-radius:50%;
@@ -595,8 +610,8 @@ header.topbar{
     overflow:hidden;
     white-space:nowrap;
 
-    padding:10px 16px;
-    min-height:52px;
+    padding:6px 16px;
+    min-height:36px;
     box-sizing:border-box;
     display:flex;
     align-items:center;
@@ -793,7 +808,7 @@ width:max-content;
 }
 .user-block{display:flex;align-items:center;gap:16px;min-width:170px;justify-content:flex-end;}
 .role-pill{
-  padding:6px 12px;
+  padding:4px 10px;
   border-radius:20px;
   font-size:11px;
   font-weight:700;
@@ -816,7 +831,7 @@ width:max-content;
     border:1px solid #ff6fd0;
     border-radius:10px;
 
-    padding:8px 18px;
+    padding:6px 14px;
 
     font-size:13px;
     font-weight:700;
@@ -1810,9 +1825,24 @@ input[type=file]{display:none;}
     position:relative;
 }
 
+.login-top-glow{
+    position:absolute;
+    top:0; left:0; right:0;
+    height:4px;
+    background: linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #33C9B0);
+    background-size:300% 100%;
+    animation: topGlowFlow 7s linear infinite;
+    box-shadow:0 0 14px rgba(51,201,176,0.65), 0 0 26px rgba(185,74,224,0.35);
+    z-index:1000;
+}
+@keyframes topGlowFlow{
+    0%{ background-position:0% 50%; }
+    100%{ background-position:300% 50%; }
+}
+
 .login-header-logo{
     position:absolute;
-    top:25px;
+    top:22px;
     left:50%;
     transform:translateX(-50%);
     z-index:999;
@@ -1820,13 +1850,35 @@ input[type=file]{display:none;}
     animation:logoFade .8s ease;
 }
 
+.login-header-logo::before{
+    content:'';
+    position:absolute;
+    inset:-18px;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(51,201,176,0.28), rgba(227,168,87,0.16) 55%, transparent 75%);
+    filter: blur(8px);
+    animation: logoAuraPulse 4s ease-in-out infinite;
+    z-index:-1;
+}
+
 .login-header-logo img{
     width:200px;          /* Logo Size */
     max-width:90%;
     height:auto;
     filter:
-        drop-shadow(0 0 15px rgba(51,201,176,.35))
-        drop-shadow(0 0 25px rgba(227,168,87,.20));
+        drop-shadow(0 0 15px rgba(51,201,176,.4))
+        drop-shadow(0 0 25px rgba(227,168,87,.22));
+    animation: logoFloat 4s ease-in-out infinite;
+}
+
+@keyframes logoAuraPulse{
+    0%,100%{ opacity:0.55; transform:scale(1); }
+    50%{ opacity:1; transform:scale(1.14); }
+}
+
+@keyframes logoFloat{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-6px); }
 }
 
 @keyframes logoFade{
@@ -2270,6 +2322,7 @@ transform:translateY(0);
 <body>
 <!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
+<div class="login-top-glow"></div>
 <div class="login-header-logo">
     <img src="logo.png" alt="GTPL KCBPL Logo">
 </div>
@@ -2283,6 +2336,29 @@ transform:translateY(0);
       <div class="login-stat"><b>4</b><span>Calls / Week / Agent</span></div>
       <div class="login-stat"><b>Live</b><span>Analytics</span></div>
       <div class="login-stat"><b id="loginStatOnline" style="color:var(--agent);"><span class="pulse-dot" style="display:inline-block;margin-right:4px;"></span>--</b><span>Online Now</span></div>
+    </div>
+
+    <!-- ============ STAFF ACCESS — Quality Team / Admin / Super Admin, tucked under the stats, tiny & unobtrusive ============ -->
+    <div class="login-card staff-login-card" id="staffLoginCard">
+      <div class="agent-admin-heading">
+        <h2>Quality Team &amp; Admin</h2>
+        <p class="hint">Select your role and enter your password.</p>
+      </div>
+      <div class="role-toggle staff-role-toggle">
+        <button type="button" class="active" data-role="agent" onclick="selectRole('agent')">Quality Team</button>
+        <button type="button" data-role="admin" onclick="selectRole('admin')">Admin</button>
+        <button type="button" data-role="superadmin" onclick="selectRole('superadmin')">Super Admin</button>
+      </div>
+      <div class="field" id="saIdField" style="display:none;">
+        <label>Super Admin ID</label>
+        <input type="text" id="saId" placeholder="Super Admin ID" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="login-btn" id="loginBtn" data-role="agent" onclick="submitStaffLogin()">Enter as QA</button>
+      <div class="login-error" id="loginError"></div>
     </div>
   </div>
   <div class="login-form-wrap">
@@ -2314,37 +2390,10 @@ transform:translateY(0);
 
 </div>
 
-      <!-- ============ EMPLOYEE LOGIN — moved above Agent/Admin, restyled as a hero button ============ -->
-      <div class="emp-login-hero-wrap" id="empLoginHeroWrap">
-        <button type="button" class="emp-login-hero" onclick="showEmployeeLoginCard()">
-          <span class="emp-login-hero-icon">👤</span>
-          <span class="emp-login-hero-text">
-            <b>Employee Login</b>
-            <small>Employee ID দিয়ে সরাসরি প্রবেশ করুন</small>
-          </span>
-          <span class="emp-login-hero-arrow">→</span>
-        </button>
-      </div>
-      <div class="login-divider"><span>OR</span></div>
-
-      <div class="agent-admin-heading">
-        <h2>Sign in</h2>
-        <p class="hint">Select your role and enter your password.</p>
-      </div>
-      <div class="role-toggle">
-        <button type="button" class="active" data-role="agent" onclick="selectRole('agent')">QA</button>
-        <button type="button" data-role="admin" onclick="selectRole('admin')">Admin</button>
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="loginPassword" placeholder="••••••••">
-      </div>
-      <button class="login-btn" id="loginBtn" data-role="agent" onclick="doLogin()">Enter as QA</button>
-      <div class="login-error" id="loginError"></div>
-      <div class="login-demo"> . <b> . </b></div>
     </div>
 
-    <div class="login-card emp-login-card" id="employeeLoginCard" style="display:none;">
+    <!-- ============ EMPLOYEE SIGN IN — primary/default card, highlighted ============ -->
+    <div class="login-card emp-highlight-box" id="employeeLoginCard">
       <h2>Employee Sign in</h2>
       <p class="hint">Enter your Employee ID and Password.</p>
       <div class="field">
@@ -2355,30 +2404,10 @@ transform:translateY(0);
         <label>Password</label>
         <input type="password" id="empPassword" placeholder="••••••••" autocomplete="current-password">
       </div>
-      <button class="login-btn" id="empLoginBtn" onclick="employeeLogin()">Login</button>
+      <button class="login-btn" id="empLoginBtn" data-role="agent" onclick="employeeLogin()">Enter as Employee/Agent</button>
       <div class="login-error" id="empLoginError"></div>
       <div class="emp-login-footer-row">
         <button type="button" class="emp-switch-link" onclick="openForgotPasswordInfo()">Forgot Password?</button>
-        <button type="button" class="emp-switch-link" onclick="backToMainLogin()">← Back</button>
-      </div>
-      <div class="login-demo">First-time password: <b>GTPL@123</b> (you will be asked to set a new one)</div>
-    </div>
-
-    <div class="login-card emp-login-card" id="superAdminLoginCard" style="display:none;">
-      <h2>Super Admin Sign in</h2>
-      <p class="hint">Full system access. Authorized personnel only.</p>
-      <div class="field">
-        <label>Super Admin ID</label>
-        <input type="text" id="saId" placeholder="Super Admin ID" autocomplete="username">
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="saPassword" placeholder="••••••••" autocomplete="current-password">
-      </div>
-      <button class="login-btn" id="saLoginBtn" onclick="superAdminLogin()">Login as Super Admin</button>
-      <div class="login-error" id="saLoginError"></div>
-      <div class="emp-login-footer-row">
-        <button type="button" class="emp-switch-link" onclick="backToMainLogin()">← Back</button>
       </div>
     </div>
   </div>
@@ -2390,11 +2419,6 @@ transform:translateY(0);
     </label>
     <span>☀️ Light</span>
   </div>
-
-  <!-- ============ SUPER ADMIN LOGIN — moved to the very bottom of the page ============ -->
-  <div class="sa-login-footer-row" id="saLoginFooterRow">
-    <button type="button" class="emp-switch-link" onclick="showSuperAdminLoginCard()">🛡 Super Admin Login</button>
-  </div>
 </div>
 <!-- ============ MAIN APP ============ -->
 <div id="mainScreen">
@@ -2403,7 +2427,8 @@ transform:translateY(0);
       <div class="emp-welcome-left">
         <span>👋 Welcome, <b id="empWelcomeName">-</b></span>
         <span id="empWelcomeGreeting" class="emp-welcome-greeting">Good Morning</span>
-        <span class="emp-online-chip"><span class="pulse-dot" style="display:inline-block;"></span> Currently Online</span>
+        <span class="emp-online-chip"><span class="pulse-dot" style="display:inline-block;"></span> You are currently online on the Call Quality Portal.</span>
+        <span class="brand-strip-online-badge" id="onlineCountPill" title="Currently online on this portal"><span class="pulse-dot" style="display:inline-block;"></span><span id="onlineCountBadge">--</span> Total Agent(s) Currently Online </span>
         <span class="emp-inline-stats">
           <span class="emp-inline-stat">Login: <b id="empStatLoginTime">--:--:--</b></span>
           <span class="emp-inline-stat">Previous: <b id="empStatPrevLogin">--</b></span>
@@ -2413,14 +2438,13 @@ transform:translateY(0);
         </span>
       </div>
       <div class="emp-welcome-right">
-        <button class="emp-mini-btn" onclick="openChangePasswordModal()">🔒 Change Password</button>
+        <button class="emp-mini-btn" onclick="openChangePasswordModal()">Change Password</button>
         <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
       </div>
     </div>
     <!-- 1) Logo placeholder — GitHub-এ পাবলিশ করার পর এখানে আপনার logo.png রাখলেই এটি অটো লোড হবে -->
     <div class="brand-strip" id="brandStrip">
       <img id="siteLogo" src="logo2.png" alt="Company Logo" onerror="this.style.display='none'; this.parentElement.classList.add('no-logo');">
-      <span class="brand-strip-online-badge" id="onlineCountPill" title="Currently online on this portal"><span class="pulse-dot" style="display:inline-block;"></span><span id="onlineCountBadge">--</span> Agent(s) Online on Portal</span>
     </div>
 <div class="app-header-fixed">
     <header class="topbar">
@@ -2977,13 +3001,27 @@ function showToast(msg){
 /* ===================== LOGIN SYSTEMS ===================== */
 function selectRole(role){
   selectedRole = role;
-  document.querySelectorAll('.role-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.role===role));
+  document.querySelectorAll('.staff-role-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.role===role));
   const btn = document.getElementById('loginBtn');
   btn.dataset.role = role;
   btn.className = 'login-btn';
   btn.setAttribute('data-role', role);
-  btn.textContent = role === 'admin' ? 'Enter as Admin' : 'Enter as QA';
+  const saIdField = document.getElementById('saIdField');
+  if(role === 'superadmin'){
+    saIdField.style.display = 'block';
+    btn.textContent = 'Login as Super Admin';
+  }else{
+    saIdField.style.display = 'none';
+    btn.textContent = role === 'admin' ? 'Enter as Admin' : 'Enter as QA';
+  }
   document.getElementById('loginError').textContent = '';
+}
+function submitStaffLogin(){
+  if(selectedRole === 'superadmin'){
+    superAdminLogin();
+  }else{
+    doLogin();
+  }
 }
 async function doLogin(){
   const pass = document.getElementById('loginPassword').value.trim();
@@ -3586,11 +3624,11 @@ async function renderVerticalPanel(tab){
     <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif;">📊 Additional Performance Analysis</h3>
     <div class="analysis-grid">
       <div class="chart-box small">
-        <div class="chart-box-title">Score Distribution</div>
+        <div class="chart-box-title">Team Score Distribution</div>
         <canvas id="distChart-${tab}"></canvas>
       </div>
       <div class="chart-box small">
-        <div class="chart-box-title">Top 5 vs Bottom 5 Agents</div>
+        <div class="chart-box-title">'Top 5' vs 'Bottom 5' Agents</div>
         <canvas id="topBottomChart-${tab}"></canvas>
       </div>
     </div>`;
@@ -4498,106 +4536,53 @@ setInterval(() => {
 .emp-switch-link:hover{ text-decoration:underline; }
 .emp-switch-sep{ color: var(--text-muted, #8FA0B5); }
 
-/* Employee Login — prominent hero button (shown above the Agent/Admin toggle) */
-.emp-login-hero-wrap{ margin-bottom:18px; }
-.emp-login-hero{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap:14px;
-  padding:16px 18px;
-  border-radius:var(--radius, 12px);
-  border:2.5px solid transparent;
-  background:
-    linear-gradient(135deg, rgba(51,201,176,0.14), rgba(185,74,224,0.10) 60%, var(--surface, #0E1A2B)) padding-box,
-    linear-gradient(120deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0, #33C9B0) border-box;
-  background-size: 200% 200%, 300% 300%;
-  animation: empHeroBorderFlow 4s ease infinite, empGlowPulse 1.8s ease-in-out infinite;
-  cursor:pointer;
-  text-align:left;
-  font-family:'Inter', sans-serif;
-  transition: transform .18s ease;
+/* Employee Sign-in is now the primary card; Staff Access sits below it as its own box */
+/* Employee Sign-in is the primary, most important card — wrap it in a soft animated glow */
+.emp-highlight-box{
+  position:relative;
+  border-radius:calc(var(--radius, 12px) + 6px);
+  padding:26px 24px;
+  background:var(--surface, #0E1A2B);
+  border:1.5px solid rgba(51,201,176,0.55);
+  animation: empBoxGlow 10.5s ease infinite;
 }
-.emp-login-hero:hover{ transform:translateY(-2px); }
-@keyframes empHeroBorderFlow{
-  0%{ background-position:0% 0%, 0% 50%; }
-  50%{ background-position:100% 100%, 100% 50%; }
-  100%{ background-position:0% 0%, 0% 50%; }
+@keyframes empBoxGlow{
+  0%,100%{ box-shadow:0 0 34px rgba(51,201,176,0.55), 0 0 75px rgba(51,201,176,0.30); border-color:rgba(51,201,176,0.85); }
+  14%{  box-shadow:0 0 36px rgba(74,127,224,0.55), 0 0 75px rgba(74,127,224,0.30); border-color:rgba(74,127,224,0.85); }
+  29%{  box-shadow:0 0 36px rgba(185,74,224,0.55), 0 0 75px rgba(185,74,224,0.30); border-color:rgba(185,74,224,0.85); }
+  43%{  box-shadow:0 0 36px rgba(227,168,87,0.55), 0 0 75px rgba(227,168,87,0.30); border-color:rgba(227,168,87,0.85); }
+  57%{  box-shadow:0 0 36px rgba(255,107,107,0.55), 0 0 75px rgba(255,107,107,0.30); border-color:rgba(255,107,107,0.85); }
+  71%{  box-shadow:0 0 36px rgba(255,111,208,0.55), 0 0 75px rgba(255,111,208,0.30); border-color:rgba(255,111,208,0.85); }
+  86%{  box-shadow:0 0 36px rgba(0,255,157,0.55), 0 0 75px rgba(0,255,157,0.30); border-color:rgba(0,255,157,0.85); }
 }
-@keyframes empGlowPulse{
-  0%,100%{ box-shadow:0 0 14px rgba(51,201,176,0.55), 0 0 30px rgba(51,201,176,0.20), 0 0 0 3px rgba(51,201,176,0.10); }
-  33%{    box-shadow:0 0 22px rgba(185,74,224,0.75), 0 0 45px rgba(185,74,224,0.35), 0 0 0 3px rgba(185,74,224,0.15); }
-  66%{    box-shadow:0 0 22px rgba(255,111,208,0.75), 0 0 45px rgba(255,111,208,0.35), 0 0 0 3px rgba(255,111,208,0.15); }
-}
-.emp-login-hero-icon{
-  flex-shrink:0;
-  width:46px; height:46px;
-  border-radius:50%;
-  background: linear-gradient(135deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0);
-  background-size:300% 300%;
-  animation: empHeroBorderFlow 4s ease infinite, empIconGlowPulse 1.8s ease-in-out infinite;
-  color:#06131a;
-  display:flex; align-items:center; justify-content:center;
-  font-size:21px;
-}
-@keyframes empIconGlowPulse{
-  0%,100%{ box-shadow:0 0 0 4px rgba(51,201,176,0.22), 0 0 18px rgba(51,201,176,0.65); transform:scale(1); }
-  50%{     box-shadow:0 0 0 6px rgba(185,74,224,0.28), 0 0 26px rgba(185,74,224,0.85); transform:scale(1.06); }
-}
-.emp-login-hero-text{
-  flex:1;
-  display:flex; flex-direction:column; gap:2px;
-  min-width:0;
-}
-.emp-login-hero-text b{
-  font-family:'Space Grotesk', sans-serif;
-  font-size:18px;
-  font-weight:800;
-  color: var(--text, #EAF0F6);
-  text-shadow:0 0 10px rgba(51,201,176,0.55);
-  letter-spacing:.2px;
-}
-.emp-login-hero-text small{
-  font-size:11.5px;
-  color: var(--text-muted, #8FA0B5);
-}
-.emp-login-hero-arrow{
-  flex-shrink:0;
-  color: var(--agent, #33C9B0);
-  font-size:19px;
-  font-weight:700;
-  transition: transform .18s ease;
-}
-.emp-login-hero:hover .emp-login-hero-arrow{ transform:translateX(3px); }
+.emp-highlight-box h2{ font-size:24px; }
+.emp-highlight-box p.hint{ color:var(--text, #EAF0F6); opacity:0.85; }
+.emp-highlight-box .field label{ color:var(--text, #EAF0F6); opacity:0.85; }
 
-/* OR divider between Employee Login hero and the Agent/Admin sign-in form */
-.login-divider{
-  display:flex; align-items:center; gap:12px;
-  margin:4px 0 20px;
-  color: var(--text-muted, #8FA0B5);
-  font-size:10.5px;
-  font-weight:600;
-  letter-spacing:2px;
-  text-transform:uppercase;
+/* Quality Team / Admin / Super Admin — rarely used, tucked under the "Online Now" stat, kept tiny & low-key */
+.staff-login-card{
+  margin-top:22px;
+  max-width:190px;
+  background:var(--surface, #0E1A2B);
+  border:1px solid var(--border, #203859);
+  border-radius:9px;
+  padding:9px 10px;
+  opacity:0.55;
+  transition:opacity .2s ease;
 }
-.login-divider::before, .login-divider::after{
-  content:''; flex:1; height:1px;
-  background: var(--border, #203859);
-}
+.staff-login-card:hover, .staff-login-card:focus-within{ opacity:1; }
+.staff-login-card .agent-admin-heading h2{ font-size:9.5px; margin-bottom:1px; }
+.staff-login-card .agent-admin-heading p.hint{ font-size:8px; margin-bottom:6px; line-height:1.3; }
+.staff-login-card .role-toggle{ padding:2px; margin-bottom:6px; border-radius:6px; }
+.staff-login-card .staff-role-toggle button{ font-size:8px; padding:5px 1px; border-radius:4px; line-height:1.2; }
+.staff-login-card .field{ margin-bottom:6px; }
+.staff-login-card .field label{ font-size:7.5px; margin-bottom:2px; }
+.staff-login-card .field input{ padding:5px 7px; font-size:10px; border-radius:6px; }
+.staff-login-card .login-btn{ padding:6px; font-size:9.5px; border-radius:6px; margin-top:2px; }
+.staff-login-card .login-error{ font-size:8.5px; margin-top:4px; min-height:0; }
 
-/* Agent/Admin sign-in heading — de-emphasized now that Employee Login is the primary CTA */
-.agent-admin-heading h2{ font-size:15px; margin-bottom:2px; }
-.agent-admin-heading p.hint{ font-size:11.5px; margin-bottom:16px; }
-
-/* Super Admin Login — kept subtle, at the very bottom of the login screen */
-.sa-login-footer-row{
-  display:flex; align-items:center; justify-content:center;
-  padding:18px 0 8px;
-}
-
-.emp-login-card{ margin-top:14px; }
 .emp-login-footer-row{
-  display:flex; justify-content:space-between; align-items:center; margin-top:8px;
+  display:flex; justify-content:center; align-items:center; margin-top:8px;
 }
 
 /* Fixed Employee Welcome Bar */
@@ -4627,12 +4612,20 @@ setInterval(() => {
   display:inline-flex; align-items:center; gap:6px;
   color: var(--agent, #33C9B0); font-weight:600; font-size:12px;
 }
+/* Online-on-portal badge now sits inline right next to "Currently Online"
+   instead of floating as a fixed pill in the corner of the screen. */
+#employeeWelcomeBar .brand-strip-online-badge{
+  position:static;
+  padding:4px 10px;
+  font-size:11px;
+}
 .emp-welcome-right{ display:flex; gap:8px; }
 .emp-mini-btn{
   background: var(--surface-3, #1B3150);
   border:1px solid var(--border, #203859);
   color: var(--text, #EAF0F6);
-  border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer;
+  border-radius:8px; padding:8px 22px; font-size:12px; cursor:pointer;
+  min-width:150px;
 }
 .emp-mini-btn:hover{ opacity:0.85; }
 .emp-mini-btn.danger{
@@ -4661,11 +4654,14 @@ setInterval(() => {
    The bar now wraps its own content (name, greeting, online chip, inline stats) rather
    than needing a second stacked bar, so a smaller offset is enough — but it can still
    wrap onto 2 lines on narrow screens, hence the taller mobile value below. */
-body.has-emp-bar #mainScreen{ padding-top:54px; }
+body.has-emp-bar #mainScreen{ padding-top:var(--emp-bar-h, 54px); }
 /* The Welcome/Greeting bar is position:fixed at the very top so it never scrolls away.
    The app's own sticky header (logo strip + topbar) must stick BELOW it, not at top:0,
-   or it would slide up and overlap/hide the fixed employee bar while scrolling. */
-body.has-emp-bar .app-header-fixed{ top:54px; }
+   or it would slide up and overlap/hide the fixed employee bar while scrolling.
+   --emp-bar-h is measured live in JS (see syncEmpBarOffset) because the bar's real
+   height changes when its content wraps onto 2 lines, and a hardcoded px value here
+   caused the ticker bar to get tucked under it while scrolling. */
+body.has-emp-bar .app-header-fixed{ top:var(--emp-bar-h, 54px); }
 /* Employee sessions already show their own Logout button in the welcome bar above —
    hide the header's Logout button in that mode so only ONE Logout button is ever visible. */
 body.has-emp-bar header .user-block .logout-btn{ display:none; }
@@ -4699,8 +4695,6 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 
 @media (max-width: 640px){
   #employeeWelcomeBar{ flex-direction:column; align-items:flex-start; gap:6px; }
-  body.has-emp-bar #mainScreen{ padding-top:150px; }
-  body.has-emp-bar .app-header-fixed{ top:150px; }
 }
 </style>
 
@@ -4776,25 +4770,14 @@ async function empApiGet(action, params){
   return res.json();
 }
 
-/* ---------- login screen switching (independent of Admin/Agent toggle above) ---------- */
-function showEmployeeLoginCard(){
-  document.getElementById('employeeLoginCard').style.display = 'block';
-  document.getElementById('superAdminLoginCard').style.display = 'none';
-  document.getElementById('empLoginHeroWrap').style.display = 'none';
-  document.getElementById('saLoginFooterRow').style.display = 'none';
-}
-function showSuperAdminLoginCard(){
-  document.getElementById('superAdminLoginCard').style.display = 'block';
-  document.getElementById('employeeLoginCard').style.display = 'none';
-  document.getElementById('empLoginHeroWrap').style.display = 'none';
-  document.getElementById('saLoginFooterRow').style.display = 'none';
-}
+/* ---------- login screen reset (Employee Sign-in + Staff Access are both always visible now) ---------- */
 function backToMainLogin(){
-  document.getElementById('employeeLoginCard').style.display = 'none';
-  document.getElementById('superAdminLoginCard').style.display = 'none';
-  document.getElementById('empLoginHeroWrap').style.display = 'block';
-  document.getElementById('saLoginFooterRow').style.display = 'flex';
+  document.getElementById('empId').value = '';
+  document.getElementById('empPassword').value = '';
   document.getElementById('empLoginError').textContent = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('saId').value = '';
+  selectRole('agent');
 }
 function openForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'flex'; }
 function closeForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'none'; }
@@ -4815,7 +4798,7 @@ async function employeeLogin(){
       employeeId: empId, password: pass,
       browser: getBrowserName(), device: getDeviceType(), ip
     });
-    btn.disabled = false; btn.textContent = 'Login';
+    btn.disabled = false; btn.textContent = 'Enter as Employee/Agent';
 
     if(!data || data.ok !== true){
       errBox.textContent = (data && data.error) || 'Invalid Employee ID or Password';
@@ -4832,7 +4815,7 @@ async function employeeLogin(){
     }
   }catch(e){
     console.error('Employee login failed', e);
-    btn.disabled = false; btn.textContent = 'Login';
+    btn.disabled = false; btn.textContent = 'Enter as Employee/Agent';
     errBox.textContent = 'Server is temporarily unavailable. Please try again in 2 minutes.';
   }
 }
@@ -4866,6 +4849,18 @@ function completeEmployeeLogin(data){
   showLoginPopupIfNeeded();
 }
 
+/* Convert a raw "HH:MM:SS" (24-hour) string to a 12-hour "hh:mm:ss am/pm" string,
+   matching the am/pm style already used elsewhere on the login screen. */
+function to12Hour(timeStr){
+  if(!timeStr) return timeStr;
+  const m = String(timeStr).match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+  if(!m) return timeStr;
+  let h = Number(m[1]);
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12; if(h === 0) h = 12;
+  return `${String(h).padStart(2,'0')}:${m[2]}:${m[3]} ${ampm}`;
+}
+
 /* Sheet cells storing only a time-of-day (no real date) come back from Apps Script as a
    full JS Date.toString(), whose date portion is the Google Sheets time-only epoch
    ("Sat Dec 30 1899") plus a "GMT+xxxx (Time Zone Name)" suffix. Strip that noise out and
@@ -4882,7 +4877,7 @@ function formatPreviousLogin(raw){
   const realDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
   const weekday = realDate.toLocaleDateString('en-US', { weekday: 'long' });
   const datePart = `${dd}-${mm}-${yyyy}`;
-  const timePart = timeMatch ? timeMatch[1] : '';
+  const timePart = timeMatch ? to12Hour(timeMatch[1]) : '';
 
   return timePart ? `${weekday}, ${datePart}, ${timePart}` : `${weekday}, ${datePart}`;
 }
@@ -4901,6 +4896,17 @@ function updateEmpWelcomeGreeting(){
   if(el) el.textContent = currentGreetingText();
 }
 
+/* Measures the welcome bar's ACTUAL rendered height (it can wrap onto 2 lines on
+   medium-width screens) and stores it in --emp-bar-h so the sticky ticker header
+   below it (top:var(--emp-bar-h)) always sits right underneath instead of being
+   tucked/hidden under it while scrolling. */
+function syncEmpBarOffset(){
+  const bar = document.getElementById('employeeWelcomeBar');
+  if(!bar || bar.style.display === 'none') return;
+  const h = bar.offsetHeight;
+  if(h) document.documentElement.style.setProperty('--emp-bar-h', h + 'px');
+}
+
 function showEmployeeWelcomeBar(){
   document.getElementById('employeeWelcomeBar').style.display = 'flex';
   document.body.classList.add('has-emp-bar');
@@ -4908,12 +4914,18 @@ function showEmployeeWelcomeBar(){
   updateEmpWelcomeGreeting();
   if(empGreetingInterval) clearInterval(empGreetingInterval);
   empGreetingInterval = setInterval(updateEmpWelcomeGreeting, 60000); // refresh every minute so it stays fixed AND accurate
-  document.getElementById('empStatLoginTime').textContent = localStorage.getItem('qa_emp_login_time_display') || '--:--:--';
+  document.getElementById('empStatLoginTime').textContent = to12Hour(localStorage.getItem('qa_emp_login_time_display')) || '--:--:--';
   document.getElementById('empStatPrevLogin').textContent = formatPreviousLogin(localStorage.getItem('qa_emp_prev_login'));
 
   const ipEl = document.getElementById('empStatCurrentIP');
   ipEl.textContent = 'Loading...';
-  getClientIP().then(ip=>{ ipEl.textContent = ip || 'Unavailable'; });
+  getClientIP().then(ip=>{ ipEl.textContent = ip || 'Unavailable'; syncEmpBarOffset(); });
+
+  requestAnimationFrame(syncEmpBarOffset);
+  if(!window.__empBarResizeBound){
+    window.addEventListener('resize', syncEmpBarOffset);
+    window.__empBarResizeBound = true;
+  }
 }
 
 function startEmployeeSessionTracking(){
@@ -5094,9 +5106,9 @@ async function submitChangePassword(){
    ===================================================================== */
 async function superAdminLogin(){
   const id = document.getElementById('saId').value.trim();
-  const pass = document.getElementById('saPassword').value;
-  const errBox = document.getElementById('saLoginError');
-  const btn = document.getElementById('saLoginBtn');
+  const pass = document.getElementById('loginPassword').value;
+  const errBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
   errBox.textContent = '';
   if(!id || !pass){ errBox.textContent = 'Super Admin ID ও Password দিন।'; return; }
 
