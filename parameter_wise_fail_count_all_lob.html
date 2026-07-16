@@ -920,7 +920,15 @@ animation:gridMove 30s linear infinite;
   .chart-card .chart-sub{font-size:10.5px;color:var(--text-faint);margin-bottom:12px;line-height:1.5;}
   .chart-card .chart-canvas-wrap{position:relative;flex:1;min-height:225px;}
   .chart-card canvas{max-width:100%;}
-  .chart-card.wide{grid-column:1 / -1;}
+  .chart-card.wide{grid-column:1 / -1; --chart-c1:#2DD4BF; --chart-c2:#7C9EFF;}
+  .proc-compare-table{width:100%;}
+  .proc-compare-table table{width:100%;}
+  .proc-compare-table thead th{padding:9px 12px;font-size:11px;}
+  .proc-compare-table tbody td{padding:9px 12px;font-size:12.5px;}
+  .proc-compare-table td.proc-name{
+    text-align:left;font-family:var(--display);font-weight:700;color:var(--text);
+  }
+  .proc-compare-table th.proc-name-head{text-align:left;}
   .chart-empty{
     display:flex;align-items:center;justify-content:center;flex:1;
     color:var(--text-faint);font-size:12px;text-align:center;padding:20px;
@@ -1478,8 +1486,7 @@ body.has-emp-bar .wrap{ padding-top:calc(110px + var(--emp-bar-h, 54px)); }
       <div class="chart-card"><div class="chart-title"><span class="num">6</span>🔬 Score vs Fails Correlation</div><div class="chart-sub">প্রতিটি বিন্দু একজন এজেন্ট — Avg Score বনাম Total Fails</div><div class="chart-canvas-wrap"><canvas id="chart6"></canvas></div></div>
       <div class="chart-card"><div class="chart-title"><span class="num">7</span>⚠️ Fail Severity Distribution</div><div class="chart-sub">টেবিলের Low/Medium/High badge অনুযায়ী কতগুলো সেল কোন লেভেলে</div><div class="chart-canvas-wrap"><canvas id="chart7"></canvas></div></div>
       <div class="chart-card"><div class="chart-title"><span class="num">8</span>📚 Top 5 Agents · Parameter Breakdown</div><div class="chart-sub">সবচেয়ে বেশি fail থাকা ৫ জন এজেন্টের প্যারামিটার-ভিত্তিক বিভাজন</div><div class="chart-canvas-wrap"><canvas id="chart8"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title"><span class="num">9</span>🕸️ Top 6 Agents · Parameter Radar</div><div class="chart-sub">সেরা/দুর্বল দিক তুলনা — কম fail এলাকা মানে ভালো পারফরম্যান্স</div><div class="chart-canvas-wrap"><canvas id="chart9"></canvas></div></div>
-      <div class="chart-card wide"><div class="chart-title"><span class="num">10</span>⚖️ Process Comparison · CATV vs BB Tech vs Renewal</div><div class="chart-sub">সব প্রসেস মিলিয়ে Total Audits, Total Fails ও Avg Score</div><div class="chart-canvas-wrap"><canvas id="chart10"></canvas></div></div>
+      <div class="chart-card wide"><div class="chart-title"><span class="num">10</span>⚖️ Process Comparison · CATV vs BB Tech vs Renewal</div><div class="chart-sub">সব প্রসেস মিলিয়ে Total Audits, Total Fails ও Avg Score</div><div class="chart-canvas-wrap"><div id="chart10" class="proc-compare-table"></div></div></div>
     </div>
   </div>
 
@@ -1770,6 +1777,39 @@ document.getElementById('tableScroll').innerHTML=
     if(s >= 90) return 'score-cell s-good';
     if(s >= 75) return 'score-cell s-mid';
     return 'score-cell s-bad';
+  }
+
+  // Conditional formatting for a process's Fail Rate (Total Fails ÷ Total Audits) —
+  // used by the Process Comparison table (point 10), since raw fail counts aren't
+  // directly comparable across processes with different audit volumes.
+  function procFailRateClass(rate){
+    if(rate <= 10) return 'fail-cell f-low';
+    if(rate <= 25) return 'fail-cell f-mid';
+    return 'fail-cell f-high';
+  }
+
+  function renderProcessComparisonTable(procStats){
+    var el = document.getElementById('chart10');
+    if(!el) return;
+    if(!procStats || !procStats.length){
+      el.innerHTML = '<div class="chart-empty">কোনো ডেটা পাওয়া যায়নি।</div>';
+      return;
+    }
+    var html = '<table><thead><tr>'
+      + '<th class="proc-name-head">Process</th><th>Total Audits</th><th>Total Fails</th><th>Fail Rate</th><th>Avg Score</th>'
+      + '</tr></thead><tbody>';
+    procStats.forEach(function(p){
+      var rate = p.totalAudits ? Math.round((p.totalFails / p.totalAudits) * 1000) / 10 : 0;
+      html += '<tr>'
+        + '<td class="proc-name">'+escapeHtml(p.key)+'</td>'
+        + '<td>'+p.totalAudits+'</td>'
+        + '<td class="'+procFailRateClass(rate)+'"><span class="badge">'+p.totalFails+'</span></td>'
+        + '<td class="'+procFailRateClass(rate)+'"><span class="badge">'+rate+'%</span></td>'
+        + '<td class="'+scoreClass(p.avgScore)+'"><span class="badge">'+p.avgScore+'</span></td>'
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
   }
 
   function renderTable(proc, parameters){
@@ -2108,28 +2148,6 @@ document.getElementById('tableScroll').innerHTML=
       options: chartBaseOptions({ scales:{ x:{stacked:true, ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{color:cssVar('--border')}}, y:{stacked:true, ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{color:cssVar('--border')}} } })
     });
 
-    // 9. Top 6 agents · parameter radar
-    var top6 = agents.map(function(a){ return {a:a, val:agentTotalFails(a)}; })
-      .sort(function(x,y){ return y.val - x.val; }).slice(0,6).map(function(x){return x.a;});
-    makeChart('chart9', {
-      type:'radar',
-      data:{
-        labels:parameters,
-        datasets:top6.map(function(a,i){
-          var c = CHART_PALETTE[i%CHART_PALETTE.length];
-          return { label:a.name, data:parameters.map(function(p){ return (a.fails && a.fails[p]) || 0; }),
-            borderColor:c, backgroundColor:hexToRgba(c,.14), pointBackgroundColor:c, pointBorderColor:cssVar('--panel'),
-            pointRadius:3, pointHoverRadius:5, borderWidth:2, tension:.15 };
-        })
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false, animation:{duration:650, easing:'easeOutQuart'},
-        plugins:{ legend:{ position:'bottom', labels:{color:cssVar('--text-dim'), font:{size:9.5}, boxWidth:9, usePointStyle:true, pointStyle:'circle'} }, tooltip: tooltipStyle() },
-        scales:{ r:{ angleLines:{color:cssVar('--border')}, grid:{color:cssVar('--border')},
-          pointLabels:{color:cssVar('--text-dim'), font:{size:9.5}}, ticks:{color:cssVar('--text-faint'), backdropColor:'transparent'} } }
-      }
-    });
-
     // 10. Process comparison — CATV vs BB Tech vs Renewal (all processes, not just active tab)
     var procKeys = Object.keys((fullData && fullData.processes) || {});
     var orderedKeys = DEFAULT_PROCESS_ORDER.filter(function(k){ return procKeys.indexOf(k)!==-1; })
@@ -2144,25 +2162,7 @@ document.getElementById('tableScroll').innerHTML=
       });
       return { key:k, totalAudits:ta, totalFails:tf, avgScore: sn ? Math.round((ss/sn)*10)/10 : 0 };
     });
-    makeChart('chart10', {
-      type:'bar',
-      data:{
-        labels:procStats.map(function(p){return p.key;}),
-        datasets:[
-          { label:'Total Audits', data:procStats.map(function(p){return p.totalAudits;}), backgroundColor:hexToRgba(cssVar('--accent-2'),.9), borderRadius:8, borderSkipped:false, yAxisID:'y' },
-          { label:'Total Fails', data:procStats.map(function(p){return p.totalFails;}), backgroundColor:hexToRgba(cssVar('--danger'),.9), borderRadius:8, borderSkipped:false, yAxisID:'y' },
-          { label:'Avg Score', data:procStats.map(function(p){return p.avgScore;}), backgroundColor:hexToRgba(cssVar('--good'),.9), borderRadius:8, borderSkipped:false, yAxisID:'y1' }
-        ]
-      },
-      options: chartBaseOptions({
-        plugins:{ legend:{ position:'top', labels:{color:cssVar('--text-dim'), font:{size:10.5}, boxWidth:11, usePointStyle:true, pointStyle:'circle'} } },
-        scales:{
-          x:{ ticks:{color:cssVar('--text-dim'),font:{size:10.5, weight:'600'}}, grid:{color:cssVar('--border')} },
-          y:{ position:'left', ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{color:cssVar('--border')} },
-          y1:{ position:'right', min:0, max:100, ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{drawOnChartArea:false} }
-        }
-      })
-    });
+    renderProcessComparisonTable(procStats);
   }
 
   // ---------------- boot ----------------
