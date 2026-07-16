@@ -1486,6 +1486,7 @@ body.has-emp-bar .wrap{ padding-top:calc(110px + var(--emp-bar-h, 54px)); }
       <div class="chart-card"><div class="chart-title"><span class="num">6</span>🔬 Score vs Fails Correlation</div><div class="chart-sub">প্রতিটি বিন্দু একজন এজেন্ট — Avg Score বনাম Total Fails</div><div class="chart-canvas-wrap"><canvas id="chart6"></canvas></div></div>
       <div class="chart-card"><div class="chart-title"><span class="num">7</span>⚠️ Fail Severity Distribution</div><div class="chart-sub">টেবিলের Low/Medium/High badge অনুযায়ী কতগুলো সেল কোন লেভেলে</div><div class="chart-canvas-wrap"><canvas id="chart7"></canvas></div></div>
       <div class="chart-card"><div class="chart-title"><span class="num">8</span>📚 Top 5 Agents · Parameter Breakdown</div><div class="chart-sub">সবচেয়ে বেশি fail থাকা ৫ জন এজেন্টের প্যারামিটার-ভিত্তিক বিভাজন</div><div class="chart-canvas-wrap"><canvas id="chart8"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title"><span class="num">9</span>🌟 Top 10 Best Performing Agents (Lowest Fails)</div><div class="chart-sub">সবচেয়ে কম fail থাকা এজেন্টরা — horizontal bar</div><div class="chart-canvas-wrap"><canvas id="chart9"></canvas></div></div>
       <div class="chart-card wide"><div class="chart-title"><span class="num">10</span>⚖️ Process Comparison · CATV vs BB Tech vs Renewal</div><div class="chart-sub">সব প্রসেস মিলিয়ে Total Audits, Total Fails ও Avg Score</div><div class="chart-canvas-wrap"><div id="chart10" class="proc-compare-table"></div></div></div>
     </div>
   </div>
@@ -2146,6 +2147,19 @@ document.getElementById('tableScroll').innerHTML=
         })
       },
       options: chartBaseOptions({ scales:{ x:{stacked:true, ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{color:cssVar('--border')}}, y:{stacked:true, ticks:{color:cssVar('--text-dim'),font:{size:10}}, grid:{color:cssVar('--border')}} } })
+    });
+
+    // 9. Top 10 best performing agents (lowest total fails, horizontal bar — easy to read: shorter bar = better)
+    var agentFailsAsc = agents.map(function(a){ return {name:a.name, val: agentTotalFails(a)}; })
+      .sort(function(x,y){ return x.val - y.val; }).slice(0,10);
+    makeChart('chart9', {
+      type:'bar',
+      data:{ labels:agentFailsAsc.map(function(a){return a.name;}),
+        datasets:[{ label:'Total Fails', data:agentFailsAsc.map(function(a){return a.val;}),
+          backgroundColor:function(ctx){ return vGradient(ctx.chart.canvas, hexToRgba(cssVar('--good'),.95), hexToRgba('#34D399',.45)); },
+          hoverBackgroundColor: cssVar('--good'),
+          borderRadius:8, borderSkipped:false, maxBarThickness:20 }] },
+      options: chartBaseOptions({ indexAxis:'y', plugins:{ legend:{display:false} } })
     });
 
     // 10. Process comparison — CATV vs BB Tech vs Renewal (all processes, not just active tab)
