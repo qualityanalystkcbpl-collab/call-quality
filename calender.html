@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অ্যানিমেটেড লাইভ ক্যালেন্ডার ও সাইডবার ইভেন্ট লিস্ট</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .calendar-wrapper {
+            max-width: 1200px;
+            margin: auto;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            animation: wrapperLoad 0.8s ease-out;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        #live-clock {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 5px;
+        }
+        #live-date {
+            font-size: 1.1em;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #bdc3c7;
+            background-color: #ecf0f1;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        select:hover {
+            background-color: #bdc3c7;
+        }
+        
+        /* দুই কলামের লেআউট (ক্যালেন্ডার + সাইডবার) */
+        .main-layout {
+            display: flex;
+            gap: 20px;
+        }
+        .calendar-section {
+            flex: 3;
+        }
+        .sidebar-section {
+            flex: 1;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            max-height: 630px;
+            overflow-y: auto;
+        }
+        .sidebar-section h2 {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 5px;
+            text-align: center;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th {
+            background-color: #34495e;
+            color: #ffffff;
+            padding: 12px;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        td {
+            border: 1px solid #ecf0f1;
+            height: 100px;
+            vertical-align: top;
+            padding: 6px;
+            background-color: #fafbfc;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        td:hover {
+            background-color: #ffffff;
+            transform: translateY(-4px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            z-index: 2;
+            border-radius: 4px;
+        }
+        .date-number {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .today .date-number {
+            color: #fff;
+            background-color: #3498db;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 50%;
+        }
+        .today {
+            background-color: #ebf5fb;
+            border: 2px solid #3498db;
+        }
+        
+        /* ইভেন্ট স্টাইল */
+        .event {
+            font-size: 0.8em;
+            padding: 4px;
+            margin-bottom: 3px;
+            border-radius: 4px;
+            color: white;
+            display: block;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            word-wrap: break-word;
+            transition: transform 0.2s ease;
+        }
+        .event:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+        
+        /* সাইডবার ইভেন্ট লিস্ট স্টাইল */
+        .sidebar-event-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .sidebar-event-item span {
+            display: block;
+            font-size: 0.8em;
+            font-weight: normal;
+            margin-top: 3px;
+            opacity: 0.9;
+        }
+        .no-event {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: 20px;
+        }
+
+        .fade-in-row {
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @keyframes wrapperLoad {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* ইভেন্ট কালার কোড */
+        .color-0 { background-color: #e74c3c; } 
+        .color-1 { background-color: #27ae60; } 
+        .color-2 { background-color: #8e44ad; } 
+        .color-3 { background-color: #f39c12; } 
+        .color-4 { background-color: #16a085; } 
+        .color-5 { background-color: #d35400; } 
+    </style>
+</head>
+<body>
+
+<div class="calendar-wrapper">
+    <div class="header">
+        <h1>বিশেষ দিন ও ক্যালেন্ডার</h1>
+        <div id="live-clock"></div>
+        <div id="live-date"></div>
+    </div>
+
+    <div class="controls">
+        <select id="monthSelect" onchange="renderCalendar()">
+            <option value="0">জানুয়ারি</option>
+            <option value="1">ফেব্রুয়ারি</option>
+            <option value="2">মার্চ</option>
+            <option value="3">এপ্রিল</option>
+            <option value="4">মে</option>
+            <option value="5">জুন</option>
+            <option value="6">জুলাই</option>
+            <option value="7">আগস্ট</option>
+            <option value="8">সেপ্টেম্বর</option>
+            <option value="9">অক্টোবর</option>
+            <option value="10">নভেম্বর</option>
+            <option value="11">ডিসেম্বর</option>
+        </select>
+        <select id="yearSelect" onchange="renderCalendar()">
+            <option value="2026">২০২৬</option>
+            <option value="2027">২০২৭</option>
+            <option value="2028">২০২৮</option>
+        </select>
+    </div>
+
+    <!-- মূল লেআউট শুরু -->
+    <div class="main-layout">
+        <!-- ক্যালেন্ডার অংশ -->
+        <div class="calendar-section">
+            <table id="calendarTable">
+                <thead>
+                    <tr>
+                        <th>রবি</th>
+                        <th>সোম</th>
+                        <th>মঙ্গল</th>
+                        <th>বুধ</th>
+                        <th>বৃহঃ</th>
+                        <th>শুক্র</th>
+                        <th>শনি</th>
+                    </tr>
+                </thead>
+                <tbody id="calendarBody"></tbody>
+            </table>
+        </div>
+        
+        <!-- সাইডবার ইভেন্ট লিস্ট অংশ -->
+        <div class="sidebar-section">
+            <h2>এই মাসের বিশেষ দিনসমূহ</h2>
+            <div id="sidebarEventList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const holidays = {
+        // 2026
+        "2026-01-01": ["New Years Day"],
+        "2026-01-12": ["Birthday of Swami Vivekananda"],
+        "2026-01-23": ["Saraswati Puja", "Birthday of Netaji"],
+        "2026-01-26": ["Republic Day"],
+        "2026-03-03": ["Doljatra"],
+        "2026-03-21": ["Eid Ul-Fitar"],
+        "2026-03-26": ["Ram Navami"],
+        "2026-03-31": ["Mahavir Jayanti"],
+        "2026-04-03": ["Good Friday"],
+        "2026-04-14": ["Birthday of Dr. B.R. Ambedkar"],
+        "2026-04-15": ["Bengali New Year"],
+        "2026-05-01": ["Buddha Purnima", "May Day"],
+        "2026-05-09": ["Birthday of Rabindra Nath Tagore"],
+        "2026-05-31": ["Id-Ud-Zoha (Bakrid)"],
+        "2026-06-26": ["Muharram"],
+        "2026-08-15": ["Independence Day"],
+        "2026-09-04": ["Janmashtami"],
+        "2026-10-02": ["Birthday of Gandhiji"],
+        "2026-10-10": ["Mahalaya"],
+        "2026-10-18": ["Durga Puja - Saptami"],
+        "2026-10-19": ["Durga Puja - Astami"],
+        "2026-10-20": ["Durga Puja - Nabami", "Durga Puja - Vijaya Dasami"],
+        "2026-10-25": ["Lakshmi Puja"],
+        "2026-11-08": ["Kali Puja"],
+        "2026-11-11": ["Bharatridwitiya"],
+        "2026-11-15": ["Chhat Puja"],
+        "2026-11-24": ["Birth Day of Guru Nanak"],
+        "2026-12-25": ["Christmas Day"],
+
+        // 2027
+        "2027-01-01": ["New Years Day"],
+        "2027-01-12": ["Birthday of Swami Vivekananda"],
+        "2027-01-23": ["Birthday of Netaji"],
+        "2027-01-26": ["Republic Day"],
+        "2027-02-11": ["Saraswati Puja (Shree Panchami)"],
+        "2027-03-10": ["Id Ul-Fitar"],
+        "2027-03-22": ["Doljatra"],
+        "2027-03-26": ["Good Friday"],
+        "2027-04-14": ["Birthday of Dr. B.R. Ambedkar"],
+        "2027-04-15": ["Bengali New Year", "Ram Navami"],
+        "2027-04-19": ["Mahavir Jayanti"],
+        "2027-05-01": ["May Day"],
+        "2027-05-09": ["Birthday of Rabindra Nath Tagore"],
+        "2027-05-17": ["Id-Ud-Zoha (Bakrid)"],
+        "2027-05-20": ["Buddha Purnima"],
+        "2027-06-15": ["Muharram"],
+        "2027-08-15": ["Independence Day"],
+        "2027-08-25": ["Janmashtami"],
+        "2027-09-29": ["Mahalaya"],
+        "2027-10-02": ["Birthday of Gandhiji"],
+        "2027-10-06": ["Durga Puja - Saptami"],
+        "2027-10-08": ["Durga Puja - Astami"],
+        "2027-10-09": ["Durga Puja - Nabami"],
+        "2027-10-10": ["Durga Puja - Vijaya Dasami"],
+        "2027-10-29": ["Lakshmi Puja"],
+        "2027-10-31": ["Bharatridwitiya"],
+        "2027-11-04": ["Chhat Puja"],
+        "2027-11-14": ["Birth Day of Guru Nanak"],
+        "2027-12-25": ["Christmas Day"],
+
+        // 2028
+        "2028-01-01": ["New Years Day"],
+        "2028-01-12": ["Birthday of Swami Vivekananda"],
+        "2028-01-23": ["Birthday of Netaji"],
+        "2028-01-26": ["Republic Day"],
+        "2028-01-31": ["Saraswati Puja"],
+        "2028-02-27": ["Id Ul-Fitar"],
+        "2028-03-22": ["Doljatra"],
+        "2028-04-03": ["Ram Navami"],
+        "2028-04-07": ["Mahavir Jayanti"],
+        "2028-04-14": ["Good Friday", "Birthday of Dr. B.R. Ambedkar"],
+        "2028-04-15": ["Bengali New Year"],
+        "2028-05-01": ["May Day"],
+        "2028-05-05": ["Id-Ud-Zoha (Bakrid)"],
+        "2028-05-08": ["Buddha Purnima"],
+        "2028-05-09": ["Birthday of Rabindra Nath Tagore"],
+        "2028-06-03": ["Muharram"],
+        "2028-08-13": ["Janmashtami"],
+        "2028-08-15": ["Independence Day"],
+        "2028-09-18": ["Mahalaya"],
+        "2028-09-25": ["Durga Puja - Saptami"],
+        "2028-09-26": ["Durga Puja - Astami", "Durga Puja - Nabami"],
+        "2028-09-27": ["Durga Puja - Vijaya Dasami"],
+        "2028-10-02": ["Birthday of Gandhiji"],
+        "2028-10-17": ["Lakshmi Puja"],
+        "2028-10-23": ["Chhat Puja"],
+        "2028-11-02": ["Birth Day of Guru Nanak"],
+        "2028-12-25": ["Christmas Day"]
+    };
+
+    function updateLiveTime() {
+        const now = new Date();
+        document.getElementById('live-clock').innerText = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('live-date').innerText = now.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    
+    setInterval(updateLiveTime, 1000);
+    updateLiveTime();
+
+    function renderCalendar() {
+        const month = parseInt(document.getElementById('monthSelect').value);
+        const year = parseInt(document.getElementById('yearSelect').value);
+        const tbody = document.getElementById('calendarBody');
+        const sidebarList = document.getElementById('sidebarEventList');
+        
+        tbody.innerHTML = "";
+        sidebarList.innerHTML = ""; // সাইডবার লিস্ট ও ক্লিয়ার করা হচ্ছে
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        const today = new Date();
+        const isCurrentMonth = (today.getMonth() === month && today.getFullYear() === year);
+        const currentDay = today.getDate();
+
+        let monthHolidays = []; // সাইডবারে দেখানোর জন্য এই মাসের ইভেন্টগুলো জমা করার অ্যারে
+
+        let date = 1;
+        for (let i = 0; i < 6; i++) {
+            let row = document.createElement("tr");
+            row.className = "fade-in-row";
+            let hasDate = false;
+
+            for (let j = 0; j < 7; j++) {
+                let cell = document.createElement("td");
+                
+                if (i === 0 && j < firstDay) {
+                    // ফাঁকা ঘর
+                } else if (date > daysInMonth) {
+                    // ফাঁকা ঘর
+                } else {
+                    hasDate = true;
+                    let dateSpan = document.createElement("span");
+                    dateSpan.className = "date-number";
+                    dateSpan.innerText = date;
+                    cell.appendChild(dateSpan);
+
+                    if (isCurrentMonth && date === currentDay) {
+                        cell.className = "today";
+                    }
+
+                    let formattedMonth = (month + 1).toString().padStart(2, '0');
+                    let formattedDate = date.toString().padStart(2, '0');
+                    let dateString = `${year}-${formattedMonth}-${formattedDate}`;
+
+                    if (holidays[dateString]) {
+                        holidays[dateString].forEach((event, index) => {
+                            let colorIndex = (date + index) % 6;
+                            let colorClass = `color-${colorIndex}`;
+                            
+                            // ক্যালেন্ডারের ভেতরে ইভেন্ট যোগ করা
+                            let eventDiv = document.createElement("div");
+                            eventDiv.className = `event ${colorClass}`;
+                            eventDiv.innerText = event;
+                            cell.appendChild(eventDiv);
+
+                            // সাইডবার লিস্টের জন্য ডেটা অবজেক্ট তৈরি
+                            monthHolidays.push({
+                                date: `${date}ই ${document.getElementById('monthSelect').options[month].text}`,
+                                name: event,
+                                colorClass: colorClass
+                            });
+                        });
+                    }
+                    date++;
+                }
+                row.appendChild(cell);
+            }
+            if (hasDate) {
+                tbody.appendChild(row);
+            }
+        }
+
+        // সাইডবারে ইভেন্ট লিস্ট রেন্ডার করা
+        if (monthHolidays.length > 0) {
+            monthHolidays.forEach(h => {
+                let item = document.createElement("div");
+                item.className = `sidebar-event-item ${h.colorClass}`;
+                item.innerHTML = `${h.name} <span>তারিখ: ${h.date}</span>`;
+                sidebarList.appendChild(item);
+            });
+        } else {
+            let noEventDiv = document.createElement("div");
+            noEventDiv.className = "no-event";
+            noEventDiv.innerText = "এই মাসে কোনো বিশেষ দিন নেই।";
+            sidebarList.appendChild(noEventDiv);
+        }
+    }
+
+    window.onload = function() {
+        const today = new Date();
+        let currentYear = today.getFullYear();
+        if(currentYear < 2026) currentYear = 2026;
+        if(currentYear > 2028) currentYear = 2028;
+
+        document.getElementById('monthSelect').value = today.getMonth();
+        document.getElementById('yearSelect').value = currentYear;
+        
+        renderCalendar();
+    };
+</script>
+
+</body>
+</html>
