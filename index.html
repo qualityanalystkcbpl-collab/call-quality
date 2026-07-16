@@ -1539,6 +1539,37 @@ aside.sidebar{
     text-shadow:0 0 10px rgba(255,94,126,0.55);
   }
 }
+/* ✨ Calendar — রঙিন গ্লো ইফেক্ট (Quick Link এর ঠিক নিচে) */
+.nav-item.nav-calendar-glow{
+  color:#fff;
+  font-weight:700;
+  border:1px solid rgba(124,131,253,0.35);
+  animation: calendarGlow 2.8s ease-in-out infinite;
+}
+.nav-item.nav-calendar-glow .dot{
+  background: linear-gradient(135deg, #7c83fd, #ff5ea8);
+  box-shadow:0 0 6px #7c83fd;
+}
+.nav-item.nav-calendar-glow:hover{
+  transform:translateX(4px) scale(1.02);
+}
+@keyframes calendarGlow{
+  0%,100%{
+    box-shadow:0 0 6px rgba(124,131,253,0.35), inset 0 0 6px rgba(124,131,253,0.08);
+    border-color:rgba(124,131,253,0.35);
+    text-shadow:0 0 4px rgba(124,131,253,0.35);
+  }
+  33%{
+    box-shadow:0 0 16px rgba(255,94,168,0.55), inset 0 0 10px rgba(255,94,168,0.10);
+    border-color:rgba(255,94,168,0.5);
+    text-shadow:0 0 10px rgba(255,94,168,0.6);
+  }
+  66%{
+    box-shadow:0 0 18px rgba(89,209,255,0.5), inset 0 0 10px rgba(89,209,255,0.10);
+    border-color:rgba(89,209,255,0.5);
+    text-shadow:0 0 10px rgba(89,209,255,0.55);
+  }
+}
 main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 .panel{display:none;}
 .panel.active{display:block;}
@@ -2893,6 +2924,13 @@ transform:translateY(0);
      onclick="window.location.href='https://qualityanalystkcbpl-collab.github.io/call-quality/quick_link.html'">
     <span class="dot"></span>
     Quick Link
+</div>
+
+<!-- Quick Link এর ঠিক নিচে — আলাদা Calendar পেজ -->
+<div class="nav-item nav-calendar-glow"
+     onclick="window.location.href='calender.html'">
+    <span class="dot"></span>
+    Calendar
 </div>
 
     </aside>
@@ -5412,7 +5450,6 @@ async function employeeLogin(){
   errBox.textContent = '';
   if(!empId || !pass){ errBox.textContent = 'Employee ID ও Password দিন।'; return; }
 
-  showToast('Signing in.... Please wait...');
   btn.disabled = true; btn.textContent = 'Signing in...';
   try{
     const ip = await getClientIP();
@@ -5636,7 +5673,6 @@ async function employeeLogout(logoutType){
    do the exact same thing. If an employee session is active, route through the full
    employeeLogout cleanup; otherwise (plain Agent/Admin login) just doLogout(). */
 function handleLogoutClick(){
-  showToast('Logging out......');
   if(localStorage.getItem('qa_emp_session_id')){
     employeeLogout('Manual');
   }else{
