@@ -5412,6 +5412,7 @@ async function employeeLogin(){
   errBox.textContent = '';
   if(!empId || !pass){ errBox.textContent = 'Employee ID ও Password দিন।'; return; }
 
+  showToast('Signing in.... Please wait...');
   btn.disabled = true; btn.textContent = 'Signing in...';
   try{
     const ip = await getClientIP();
@@ -5635,6 +5636,7 @@ async function employeeLogout(logoutType){
    do the exact same thing. If an employee session is active, route through the full
    employeeLogout cleanup; otherwise (plain Agent/Admin login) just doLogout(). */
 function handleLogoutClick(){
+  showToast('Logging out......');
   if(localStorage.getItem('qa_emp_session_id')){
     employeeLogout('Manual');
   }else{
