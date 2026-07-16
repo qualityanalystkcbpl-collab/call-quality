@@ -339,6 +339,58 @@
     .cal-ticker{order:3;width:100%;}
     .go-home-fab{padding:12px 18px;font-size:13.5px;left:14px;bottom:14px;}
   }
+
+  /* ===== Day events popup (opens when an event badge on a date is clicked) ===== */
+  .day-modal-overlay{
+    position:fixed; inset:0; z-index:20000;
+    background:rgba(3,6,14,.74); backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:18px;
+  }
+  .day-modal-overlay.show{display:flex;}
+  .day-modal-box{
+    position:relative; width:100%; max-width:420px; max-height:80vh;
+    background:var(--surface-2); border-radius:20px; padding:26px 22px 20px;
+    box-shadow:0 20px 60px rgba(0,0,0,.55), 0 0 40px rgba(124,131,253,.25);
+    animation:dayModalPop .35s cubic-bezier(.22,.95,.32,1.25);
+    overflow:hidden;
+  }
+  /* rotating neon-gradient border glow — the "lighting" effect */
+  .day-modal-box::before{
+    content:''; position:absolute; inset:0; border-radius:20px; padding:2px;
+    background:linear-gradient(120deg,#7c83fd,#ff5ea8,#38f9d7,#ffd200,#a770ef,#7c83fd);
+    background-size:300% 300%;
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    animation:dayModalBorderFlow 3s linear infinite;
+    pointer-events:none;
+  }
+  /* diagonal shine sweep — extra "lighting" flash across the card */
+  .day-modal-box::after{
+    content:''; position:absolute; top:0; left:-60%; width:45%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,.35), transparent);
+    transform:skewX(-20deg); animation:dayModalShine 3s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes dayModalBorderFlow{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+  @keyframes dayModalShine{0%{left:-60%;}100%{left:130%;}}
+  @keyframes dayModalPop{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
+  .day-modal-close{
+    position:absolute; top:12px; right:14px; z-index:2;
+    background:none; border:none; color:var(--text-muted); font-size:19px; cursor:pointer; line-height:1;
+  }
+  .day-modal-close:hover{color:var(--text);}
+  .day-modal-header{ text-align:center; margin-bottom:14px; position:relative; z-index:1; }
+  .day-modal-date{
+    font-weight:800; font-size:17px;
+    background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent4),var(--accent3),var(--accent1));
+    background-size:300% 100%; -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    animation:titleShift 6s linear infinite;
+  }
+  .day-modal-time{ font-size:13px; color:var(--text-muted); margin-top:4px; font-family:'IBM Plex Mono',monospace; letter-spacing:.5px; }
+  .day-modal-body{ max-height:50vh; overflow-y:auto; position:relative; z-index:1; }
+  @media (max-width:480px){
+    .day-modal-box{padding:22px 16px 16px;}
+  }
 </style>
 </head>
 <body>
@@ -359,6 +411,17 @@
 </div>
 
 <a href="index.html" class="go-home-fab" title="Go to Home"><span class="icon">🏠</span> Go to Home</a>
+
+<div class="day-modal-overlay" id="dayEventsModal" onclick="if(event.target===this) closeDayEventsModal()">
+  <div class="day-modal-box">
+    <button class="day-modal-close" onclick="closeDayEventsModal()" title="Close">✕</button>
+    <div class="day-modal-header">
+      <div class="day-modal-date" id="dayModalDate">--</div>
+      <div class="day-modal-time" id="dayModalTime">--:--:--</div>
+    </div>
+    <div class="day-modal-body" id="dayModalBody"></div>
+  </div>
+</div>
 
 <!-- Fixed Employee Welcome Bar -->
 <div id="employeeWelcomeBar" style="display:none;">
@@ -881,6 +944,7 @@ function renderCalendar() {
                 let formattedMonth = (month + 1).toString().padStart(2, '0');
                 let formattedDate = date.toString().padStart(2, '0');
                 let dateString = `${year}-${formattedMonth}-${formattedDate}`;
+                const dayNum = date; // captured per-iteration so click handlers below get the right day
 
                 if (holidays[dateString]) {
                     holidays[dateString].forEach((event, index) => {
@@ -890,6 +954,7 @@ function renderCalendar() {
                         let eventDiv = document.createElement("div");
                         eventDiv.className = `event ${colorClass}`;
                         eventDiv.innerText = event;
+                        eventDiv.onclick = (e) => { e.stopPropagation(); openDayEventsModal(dateString, dayNum, month, year); };
                         cell.appendChild(eventDiv);
 
                         monthHolidays.push({
@@ -904,6 +969,7 @@ function renderCalendar() {
                     let eventDiv = document.createElement("div");
                     eventDiv.className = "event sat-off";
                     eventDiv.innerText = recurringSaturdays[date];
+                    eventDiv.onclick = (e) => { e.stopPropagation(); openDayEventsModal(dateString, dayNum, month, year); };
                     cell.appendChild(eventDiv);
 
                     monthHolidays.push({
@@ -935,6 +1001,56 @@ function renderCalendar() {
         noEventDiv.innerText = "এই মাসে কোনো বিশেষ দিন নেই।";
         sidebarList.appendChild(noEventDiv);
     }
+}
+
+/* ===================== DAY EVENTS POPUP ===================== */
+function openDayEventsModal(dateString, dayNum, monthIdx, yearNum) {
+    const modal = document.getElementById('dayEventsModal');
+    const dateEl = document.getElementById('dayModalDate');
+    const bodyEl = document.getElementById('dayModalBody');
+    if (!modal || !dateEl || !bodyEl) return;
+
+    const dateObj = new Date(yearNum, monthIdx, dayNum);
+    dateEl.innerText = dateObj.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    let items = [];
+    (holidays[dateString] || []).forEach((name, index) => {
+        items.push({ name: name, colorClass: `color-${(dayNum + index) % 6}` });
+    });
+    const recurring = getRecurringSaturdayEvents(yearNum, monthIdx);
+    if (recurring[dayNum]) items.push({ name: recurring[dayNum], colorClass: 'sat-off' });
+
+    bodyEl.innerHTML = '';
+    if (items.length === 0) {
+        let none = document.createElement('div');
+        none.className = 'no-event';
+        none.innerText = 'এই দিনে কোনো বিশেষ ইভেন্ট নেই।';
+        bodyEl.appendChild(none);
+    } else {
+        items.forEach((it, idx) => {
+            let div = document.createElement('div');
+            div.className = `sidebar-event-item ${it.colorClass}`;
+            div.style.animationDelay = (idx * 0.08) + 's';
+            div.innerText = it.name;
+            bodyEl.appendChild(div);
+        });
+    }
+
+    modal.classList.add('show');
+    updateDayModalTime();
+    if (window.__dayModalTimeTimer) clearInterval(window.__dayModalTimeTimer);
+    window.__dayModalTimeTimer = setInterval(updateDayModalTime, 1000);
+}
+
+function updateDayModalTime() {
+    const t = document.getElementById('dayModalTime');
+    if (t) t.innerText = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function closeDayEventsModal() {
+    const modal = document.getElementById('dayEventsModal');
+    if (modal) modal.classList.remove('show');
+    if (window.__dayModalTimeTimer) clearInterval(window.__dayModalTimeTimer);
 }
 
 window.onload = function() {
