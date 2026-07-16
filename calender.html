@@ -45,6 +45,7 @@
     background:var(--bg);
     transition:background .5s ease, color .4s ease;
     overflow-x:hidden;
+    overflow-y:auto; /* Ensures normal page scrolling */
   }
 
   /* ===== animated aurora background blobs ===== */
@@ -120,9 +121,9 @@
 
   /* ===== premium top bar: logo + scrolling ticker + theme toggle ===== */
   .cal-topbar{
-    position:sticky; z-index:900;
+    position:sticky; top: 0; z-index:900;
     display:flex; align-items:center; gap:16px;
-    padding:12px 20px; margin-top:var(--bar-h,0px);
+    padding:12px 20px;
     background:var(--surface); backdrop-filter:blur(8px);
     border-bottom:1px solid var(--border);
   }
@@ -223,7 +224,7 @@
     border-bottom:2px solid var(--border);
   }
   td{
-    border:1px solid var(--border); height:96px; vertical-align:top; padding:6px;
+    border:1px solid var(--border); height:auto; min-height:96px; vertical-align:top; padding:6px;
     background:var(--surface); position:relative; border-radius:8px;
     transition:all .3s cubic-bezier(.25,.8,.25,1);
   }
@@ -263,9 +264,11 @@
   .color-4{background:linear-gradient(135deg,#00c9ff,#7c83fd);}
   .color-5{background:linear-gradient(135deg,#f857a6,#ff5858);}
 
-  ::-webkit-scrollbar{width:9px;}
-  ::-webkit-scrollbar-track{background:transparent;}
-  ::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:6px;}
+  /* ===== Premium Visible Scrollbar Fix ===== */
+  ::-webkit-scrollbar{width:10px; height:10px;}
+  ::-webkit-scrollbar-track{background:rgba(0, 0, 0, 0.1); border-radius:10px;}
+  ::-webkit-scrollbar-thumb{background:linear-gradient(180deg, var(--accent1), var(--accent2)); border-radius:6px; border:2px solid transparent; background-clip:padding-box;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--accent3); border:2px solid transparent; background-clip:padding-box;}
 
   @media (max-width:720px){
     #employeeWelcomeBar{flex-direction:column;align-items:flex-start;gap:6px;}
@@ -278,7 +281,7 @@
 
 <div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
 
-<!-- Fixed Employee Welcome Bar — mirrors the main portal so logged-in employees see the same live info here -->
+<!-- Fixed Employee Welcome Bar -->
 <div id="employeeWelcomeBar" style="display:none;">
   <div class="emp-welcome-left">
     <span>👋 Welcome, <b id="empWelcomeName">-</b></span>
@@ -312,7 +315,7 @@
   <div class="cal-brand">📅 Live Calendar</div>
   <a class="cal-back" href="QA_Control_Room_Updated.html">← Dashboard</a>
   <div class="cal-ticker">
-    <div class="cal-ticker-track">🎉 <b>Special Occasions</b> auto-highlighted every month &nbsp;•&nbsp; সব সরকারি ছুটি ও বিশেষ দিন লাইভ দেখুন &nbsp;•&nbsp; নতুন বছরের ক্যালেন্ডার ২০২৬–২০২৮ পর্যন্ত উপলব্ধ &nbsp;•&nbsp; 🎉</div>
+    <div class="cal-ticker-track">🎉 <b>Special Occasions</b> auto-highlighted every month &nbsp;•&nbsp; সব ছুটি ও বিশেষ দিন  &nbsp;•&nbsp; নতুন বছরের ক্যালেন্ডার ২০২৬–২০২৮ পর্যন্ত উপলব্ধ &nbsp;•&nbsp; 🎉</div>
   </div>
   <div class="theme-toggle-wrap">
     <span>🌙</span>
@@ -488,8 +491,10 @@ function initWelcomeBar(){
   const role = localStorage.getItem('qa_role');
 
   if(empId && empName){
-    // Full employee session — show the rich stats bar, same as the main portal
-    document.getElementById('employeeWelcomeBar').style.display = 'flex';
+    const bar = document.getElementById('employeeWelcomeBar');
+    bar.style.display = 'flex';
+    document.body.style.paddingTop = bar.offsetHeight + 'px'; // Dynamically avoid content clipping
+    
     document.getElementById('empWelcomeName').textContent = empName.toUpperCase();
     document.getElementById('empWelcomeGreeting').textContent = currentGreetingText();
     setInterval(()=>{ document.getElementById('empWelcomeGreeting').textContent = currentGreetingText(); }, 60000);
@@ -516,14 +521,16 @@ function initWelcomeBar(){
     setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
 
   }else if(role){
-    // Plain Agent/Admin (Staff Access) login — lightweight bar
-    document.getElementById('guestBar').style.display = 'flex';
+    const bar = document.getElementById('guestBar');
+    bar.style.display = 'flex';
+    document.body.style.paddingTop = bar.offsetHeight + 'px';
     document.getElementById('guestRoleText').textContent = `👋 Logged in as ${role.toUpperCase()}`;
     pingOnlinePresence();
     setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
   }else{
-    // No active session — simple guest bar pointing back to login
-    document.getElementById('guestBar').style.display = 'flex';
+    const bar = document.getElementById('guestBar');
+    bar.style.display = 'flex';
+    document.body.style.paddingTop = bar.offsetHeight + 'px';
     document.getElementById('guestRoleText').textContent = `👋 Welcome, Guest`;
   }
 }
@@ -546,7 +553,7 @@ async function handleCalLogout(){
 
 initWelcomeBar();
 
-/* ===================== HOLIDAYS DATA (unchanged) ===================== */
+/* ===================== HOLIDAYS DATA ===================== */
 const holidays = {
     // 2026
     "2026-01-01": ["New Years Day"],
@@ -564,324 +571,102 @@ const holidays = {
     "2026-05-09": ["Birthday of Rabindra Nath Tagore"],
     "2026-05-31": ["Id-Ud-Zoha (Bakrid)"],
     "2026-06-26": ["Muharram"],
-    "2026-07-01": [
-  "National Doctors' Day",
-  "Chartered Accountants Day"
-],
-"2026-07-02": [
-  "World UFO Day"
-],
-"2026-07-03": [
-  "International Plastic Bag Free Day"
-],
-"2026-07-06": [
-  "World Zoonoses Day"
-],
-"2026-07-07": [
-  "World Chocolate Day"
-],
-"2026-07-10": [
-  "Yogini Ekadashi"
-],
-"2026-07-11": [
-  "World Population Day"
-],
-"2026-07-12": [
-  "Malala Day"
-],
-"2026-07-15": [
-  "World Youth Skills Day"
-],
-"2026-07-16": [
-  "Jagannath Rath Yatra",
-  "Karka Sankranti"
-],
-"2026-07-17": [
-  "World Day for International Justice",
-  "World Emoji Day"
-],
-"2026-07-18": [
-  "Nelson Mandela International Day"
-],
-"2026-07-20": [
-  "International Chess Day"
-],
-"2026-07-22": [
-  "National Flag Adoption Day"
-],
-"2026-07-24": [
-  "Income Tax Day"
-],
-"2026-07-25": [
-  "Devshayani Ekadashi"
-],
-"2026-07-26": [
-  "Kargil Vijay Diwas"
-],
-"2026-07-27": [
-  "Dr. A.P.J. Abdul Kalam Memorial Day"
-],
-"2026-07-28": [
-  "World Hepatitis Day",
-  "World Nature Conservation Day"
-],
-"2026-07-29": [
-  "Guru Purnima",
-  "Ashadha Purnima",
-  "International Tiger Day"
-],
-"2026-07-30": [
-  "International Day of Friendship"
-],
-
-"2026-08-02": [
-  "Friendship Day"
-],
-"2026-08-09": [
-  "Nagasaki Day"
-],
-"2026-08-12": [
-  "International Youth Day"
-],
-"2026-08-15": [
-  "Independence Day",
-  "Hariyali Teej"
-],
-"2026-08-17": [
-  "Nag Panchami"
-],
-"2026-08-18": [
-  "Kalki Jayanti"
-],
-"2026-08-19": [
-  "World Photography Day"
-],
-"2026-08-20": [
-  "World Mosquito Day"
-],
-"2026-08-26": [
-  "Onam"
-],
-"2026-08-28": [
-  "Raksha Bandhan",
-  "Gayatri Jayanti",
-  "Sanskrit Day"
-],
-"2026-08-29": [
-  "National Sports Day"
-],
-"2026-08-31": [
-  "Kajari Teej"
-],
-
-"2026-09-04": [
-  "Janmashtami"
-],
-"2026-09-05": [
-  "Teachers' Day"
-],
-"2026-09-08": [
-  "International Literacy Day"
-],
-"2026-09-14": [
-  "Hindi Diwas",
-  "Ganesh Chaturthi",
-  "Hartalika Teej"
-],
-"2026-09-15": [
-  "Engineers' Day",
-  "Rishi Panchami"
-],
-"2026-09-16": [
-  "Balarama Jayanti"
-],
-"2026-09-17": [
-  "Vishwakarma Puja"
-],
-"2026-09-19": [
-  "Radha Ashtami"
-],
-"2026-09-21": [
-  "International Day of Peace"
-],
-"2026-09-22": [
-  "World Rose Day"
-],
-"2026-09-25": [
-  "Anant Chaturdashi",
-  "Ganesh Visarjan"
-],
-"2026-09-26": [
-  "World Environmental Health Day"
-],
-"2026-09-27": [
-  "World Tourism Day",
-  "Pitru Paksha Begins"
-],
-"2026-09-28": [
-  "World Rabies Day"
-],
-"2026-09-29": [
-  "World Heart Day"
-],
-
-"2026-10-01": [
-  "International Day of Older Persons"
-],
-"2026-10-02": [
-  "Gandhi Jayanti",
-  "International Day of Non-Violence"
-],
-"2026-10-04": [
-  "World Animal Day"
-],
-"2026-10-05": [
-  "World Teachers' Day"
-],
-"2026-10-08": [
-  "Indian Air Force Day"
-],
-"2026-10-09": [
-  "World Post Day"
-],
-"2026-10-10": [
-  "Mahalaya",
-  "World Mental Health Day"
-],
-"2026-10-11": [
-  "International Day of the Girl Child"
-],
-"2026-10-13": [
-  "Karwa Chauth",
-  "International Day for Disaster Risk Reduction"
-],
-"2026-10-14": [
-  "World Standards Day"
-],
-"2026-10-15": [
-  "Global Handwashing Day"
-],
-"2026-10-16": [
-  "Durga Puja - Maha Panchami",
-  "World Food Day"
-],
-"2026-10-17": [
-  "Durga Puja - Maha Shashthi"
-],
-"2026-10-18": [
-  "Durga Puja - Maha Saptami"
-],
-"2026-10-19": [
-  "Durga Puja - Maha Ashtami"
-],
-"2026-10-20": [
-  "Durga Puja - Maha Navami"
-],
-"2026-10-21": [
-  "Durga Puja - Vijaya Dashami"
-],
-"2026-10-24": [
-  "United Nations Day"
-],
-"2026-10-25": [
-  "Lakshmi Puja"
-],
-"2026-10-31": [
-  "National Unity Day",
-  "Halloween"
-],
-
-"2026-11-01": [
-  "World Vegan Day"
-],
-"2026-11-07": [
-  "National Cancer Awareness Day"
-],
-"2026-11-08": [
-  "Kali Puja",
-  "Diwali",
-  "World Radiography Day"
-],
-"2026-11-09": [
-  "Bhai Dooj"
-],
-"2026-11-10": [
-  "World Science Day for Peace and Development"
-],
-"2026-11-11": [
-  "Bharatridwitiya",
-  "National Education Day"
-],
-"2026-11-14": [
-  "Children's Day",
-  "World Diabetes Day"
-],
-"2026-11-15": [
-  "Chhat Puja"
-],
-"2026-11-16": [
-  "International Day for Tolerance"
-],
-"2026-11-19": [
-  "International Men's Day",
-  "World Toilet Day"
-],
-"2026-11-20": [
-  "Universal Children's Day"
-],
-"2026-11-21": [
-  "World Television Day"
-],
-"2026-11-24": [
-  "Guru Nanak Jayanti"
-],
-"2026-11-26": [
-  "Constitution Day of India"
-],
-
-"2026-12-01": [
-  "World AIDS Day"
-],
-"2026-12-02": [
-  "National Pollution Control Day"
-],
-"2026-12-03": [
-  "International Day of Persons with Disabilities"
-],
-"2026-12-04": [
-  "Indian Navy Day"
-],
-"2026-12-05": [
-  "World Soil Day"
-],
-"2026-12-07": [
-  "Armed Forces Flag Day"
-],
-"2026-12-10": [
-  "Human Rights Day"
-],
-"2026-12-14": [
-  "National Energy Conservation Day"
-],
-"2026-12-16": [
-  "Vijay Diwas"
-],
-"2026-12-18": [
-  "International Migrants Day"
-],
-"2026-12-22": [
-  "National Mathematics Day"
-],
-"2026-12-23": [
-  "Kisan Diwas"
-],
-"2026-12-24": [
-  "National Consumer Day"
-],
-"2026-12-25": [
-  "Christmas Day",
-  "Good Governance Day"
-],
+    "2026-07-01": ["National Doctors' Day", "Chartered Accountants Day"],
+    "2026-07-02": ["World UFO Day"],
+    "2026-07-03": ["International Plastic Bag Free Day"],
+    "2026-07-06": ["World Zoonoses Day"],
+    "2026-07-07": ["World Chocolate Day"],
+    "2026-07-10": ["Yogini Ekadashi"],
+    "2026-07-11": ["World Population Day"],
+    "2026-07-12": ["Malala Day"],
+    "2026-07-15": ["World Youth Skills Day"],
+    "2026-07-16": ["Jagannath Rath Yatra", "Karka Sankranti"],
+    "2026-07-17": ["World Day for International Justice", "World Emoji Day"],
+    "2026-07-18": ["Nelson Mandela International Day"],
+    "2026-07-20": ["International Chess Day"],
+    "2026-07-22": ["National Flag Adoption Day"],
+    "2026-07-24": ["Income Tax Day"],
+    "2026-07-25": ["Devshayani Ekadashi"],
+    "2026-07-26": ["Kargil Vijay Diwas"],
+    "2026-07-27": ["Dr. A.P.J. Abdul Kalam Memorial Day"],
+    "2026-07-28": ["World Hepatitis Day", "World Nature Conservation Day"],
+    "2026-07-29": ["Guru Purnima", "Ashadha Purnima", "International Tiger Day"],
+    "2026-07-30": ["International Day of Friendship"],
+    "2026-08-02": ["Friendship Day"],
+    "2026-08-09": ["Nagasaki Day"],
+    "2026-08-12": ["International Youth Day"],
+    "2026-08-15": ["Independence Day", "Hariyali Teej"],
+    "2026-08-17": ["Nag Panchami"],
+    "2026-08-18": ["Kalki Jayanti"],
+    "2026-08-19": ["World Photography Day"],
+    "2026-08-20": ["World Mosquito Day"],
+    "2026-08-26": ["Onam"],
+    "2026-08-28": ["Raksha Bandhan", "Gayatri Jayanti", "Sanskrit Day"],
+    "2026-08-29": ["National Sports Day"],
+    "2026-08-31": ["Kajari Teej"],
+    "2026-09-04": ["Janmashtami"],
+    "2026-09-05": ["Teachers' Day"],
+    "2026-09-08": ["International Literacy Day"],
+    "2026-09-14": ["Hindi Diwas", "Ganesh Chaturthi", "Hartalika Teej"],
+    "2026-09-15": ["Engineers' Day", "Rishi Panchami"],
+    "2026-09-16": ["Balarama Jayanti"],
+    "2026-09-17": ["Vishwakarma Puja"],
+    "2026-09-19": ["Radha Ashtami"],
+    "2026-09-21": ["International Day of Peace"],
+    "2026-09-22": ["World Rose Day"],
+    "2026-09-25": ["Anant Chaturdashi", "Ganesh Visarjan"],
+    "2026-09-26": ["World Environmental Health Day"],
+    "2026-09-27": ["World Tourism Day", "Pitru Paksha Begins"],
+    "2026-09-28": ["World Rabies Day"],
+    "2026-09-29": ["World Heart Day"],
+    "2026-10-01": ["International Day of Older Persons"],
+    "2026-10-02": ["Gandhi Jayanti", "International Day of Non-Violence"],
+    "2026-10-04": ["World Animal Day"],
+    "2026-10-05": ["World Teachers' Day"],
+    "2026-10-08": ["Indian Air Force Day"],
+    "2026-10-09": ["World Post Day"],
+    "2026-10-10": ["Mahalaya", "World Mental Health Day"],
+    "2026-10-11": ["International Day of the Girl Child"],
+    "2026-10-13": ["Karwa Chauth", "International Day for Disaster Risk Reduction"],
+    "2026-10-14": ["World Standards Day"],
+    "2026-10-15": ["Global Handwashing Day"],
+    "2026-10-16": ["Durga Puja - Maha Panchami", "World Food Day"],
+    "2026-10-17": ["Durga Puja - Maha Shashthi"],
+    "2026-10-18": ["Durga Puja - Maha Saptami"],
+    "2026-10-19": ["Durga Puja - Maha Ashtami"],
+    "2026-10-20": ["Durga Puja - Maha Navami"],
+    "2026-10-21": ["Durga Puja - Vijaya Dashami"],
+    "2026-10-24": ["United Nations Day"],
+    "2026-10-25": ["Lakshmi Puja"],
+    "2026-10-31": ["National Unity Day", "Halloween"],
+    "2026-11-01": ["World Vegan Day"],
+    "2026-11-07": ["National Cancer Awareness Day"],
+    "2026-11-08": ["Kali Puja", "Diwali", "World Radiography Day"],
+    "2026-11-09": ["Bhai Dooj"],
+    "2026-11-10": ["World Science Day for Peace and Development"],
+    "2026-11-11": ["Bharatridwitiya", "National Education Day"],
+    "2026-11-14": ["Children's Day", "World Diabetes Day"],
+    "2026-11-15": ["Chhat Puja"],
+    "2026-11-16": ["International Day for Tolerance"],
+    "2026-11-19": ["International Men's Day", "World Toilet Day"],
+    "2026-11-20": ["Universal Children's Day"],
+    "2026-11-21": ["World Television Day"],
+    "2026-11-24": ["Guru Nanak Jayanti"],
+    "2026-11-26": ["Constitution Day of India"],
+    "2026-12-01": ["World AIDS Day"],
+    "2026-12-02": ["National Pollution Control Day"],
+    "2026-12-03": ["International Day of Persons with Disabilities"],
+    "2026-12-04": ["Indian Navy Day"],
+    "2026-12-05": ["World Soil Day"],
+    "2026-12-07": ["Armed Forces Flag Day"],
+    "2026-12-10": ["Human Rights Day"],
+    "2026-12-14": ["National Energy Conservation Day"],
+    "2026-12-16": ["Vijay Diwas"],
+    "2026-12-18": ["International Migrants Day"],
+    "2026-12-22": ["National Mathematics Day"],
+    "2026-12-23": ["Kisan Diwas"],
+    "2026-12-24": ["National Consumer Day"],
+    "2026-12-25": ["Christmas Day", "Good Governance Day"],
 
     // 2027
     "2027-01-01": ["New Years Day"],
@@ -953,7 +738,7 @@ function updateLiveTime() {
 setInterval(updateLiveTime, 1000);
 updateLiveTime();
 
-/* ===================== CALENDAR RENDER (premium visuals, same logic) ===================== */
+/* ===================== CALENDAR RENDER ===================== */
 function renderCalendar() {
     const month = parseInt(document.getElementById('monthSelect').value);
     const year = parseInt(document.getElementById('yearSelect').value);
