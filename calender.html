@@ -102,7 +102,11 @@
   @keyframes statsGlow{0%,100%{box-shadow:0 0 0 rgba(56,249,215,0);border-color:rgba(56,249,215,0.22);}50%{box-shadow:0 0 12px rgba(56,249,215,0.25);border-color:rgba(56,249,215,0.5);}}
   .emp-inline-stat{color:var(--text-muted);white-space:nowrap;}
   .emp-inline-stat b{color:var(--text);font-size:11.5px;font-weight:700;}
-  .emp-welcome-right{display:flex;gap:8px;align-items:center;}
+  .emp-welcome-right{
+    position:fixed; top:10px; right:16px; z-index:10010;
+    display:flex; gap:8px; align-items:center;
+  }
+  #employeeWelcomeBar{ padding-right:220px; }
   .emp-mini-btn{
     background:var(--surface-3);border:1px solid var(--border);color:var(--text);
     border-radius:7px;padding:6px 14px;font-size:11px;cursor:pointer;min-width:88px;font-family:inherit;
@@ -134,11 +138,6 @@
     animation:brandShift 6s linear infinite;
   }
   @keyframes brandShift{0%{background-position:0% 50%;}100%{background-position:220% 50%;}}
-  .cal-back{
-    font-size:11.5px; color:var(--text-muted); text-decoration:none; border:1px solid var(--border);
-    padding:6px 12px; border-radius:20px; white-space:nowrap; transition:.25s;
-  }
-  .cal-back:hover{color:var(--text); border-color:var(--accent1); box-shadow:0 0 10px var(--glow1);}
   .cal-ticker{ flex:1; overflow:hidden; position:relative; height:22px; -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
   .cal-ticker-track{
     position:absolute; white-space:nowrap; font-size:12.5px; font-weight:600; letter-spacing:.3px;
@@ -192,11 +191,14 @@
 
   .controls{display:flex;justify-content:center;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
   select{
-    padding:10px 14px;font-size:14px;border-radius:10px;border:1px solid var(--border);
-    background:var(--surface-2);color:var(--text);cursor:pointer;outline:none;font-weight:600;
+    padding:10px 16px;font-size:14px;border-radius:10px;border:1px solid transparent;
+    background:linear-gradient(135deg, var(--accent1), var(--accent2));
+    color:#fff;cursor:pointer;outline:none;font-weight:700;
+    box-shadow:0 4px 14px rgba(124,131,253,.35);
     transition:all .25s ease;
   }
-  select:hover{border-color:var(--accent1);box-shadow:0 0 12px var(--glow1);}
+  select:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(255,94,168,.45);}
+  select option{background:var(--surface-3);color:var(--text);font-weight:600;}
 
   .main-layout{display:flex;gap:22px;flex-wrap:wrap;}
   .calendar-section{flex:3;min-width:320px;}
@@ -263,6 +265,7 @@
   .color-3{background:linear-gradient(135deg,#f7971e,#ffd200);}
   .color-4{background:linear-gradient(135deg,#00c9ff,#7c83fd);}
   .color-5{background:linear-gradient(135deg,#f857a6,#ff5858);}
+  .sat-off{background:linear-gradient(135deg,#6c93ff,#3d5afe);}
 
   /* ===== Premium Visible Scrollbar Fix ===== */
   ::-webkit-scrollbar{width:10px; height:10px;}
@@ -270,16 +273,92 @@
   ::-webkit-scrollbar-thumb{background:linear-gradient(180deg, var(--accent1), var(--accent2)); border-radius:6px; border:2px solid transparent; background-clip:padding-box;}
   ::-webkit-scrollbar-thumb:hover{background:var(--accent3); border:2px solid transparent; background-clip:padding-box;}
 
+  /* ===== colorful round balloons floating across the whole page ===== */
+  .balloons{position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none;}
+  .balloon{
+    position:absolute; bottom:-18vh; border-radius:50%;
+    box-shadow:inset -8px -10px 18px rgba(0,0,0,.18), inset 6px 8px 14px rgba(255,255,255,.35);
+    opacity:0; animation-name:balloonFloat; animation-timing-function:ease-in-out; animation-iteration-count:infinite;
+  }
+  .balloon::before{
+    content:''; position:absolute; left:50%; top:100%; width:1px; height:22px;
+    background:rgba(255,255,255,.4); transform:translateX(-50%);
+  }
+  .balloon::after{
+    content:''; position:absolute; left:50%; top:calc(100% + 20px); width:5px; height:5px;
+    background:inherit; border-radius:2px; transform:translateX(-50%) rotate(45deg);
+  }
+  @keyframes balloonFloat{
+    0%{ transform:translateY(0) translateX(0) rotate(-4deg); opacity:0; }
+    10%{ opacity:.8; }
+    50%{ transform:translateY(-58vh) translateX(24px) rotate(4deg); }
+    90%{ opacity:.8; }
+    100%{ transform:translateY(-118vh) translateX(-18px) rotate(-4deg); opacity:0; }
+  }
+  .balloon.b1{left:4%;  width:46px; height:56px; background:linear-gradient(160deg,#ff9a9e,#ff5e5e); animation-duration:17s; animation-delay:0s;}
+  .balloon.b2{left:14%; width:34px; height:42px; background:linear-gradient(160deg,#a1c4fd,#4a7fe0); animation-duration:14s; animation-delay:2.5s;}
+  .balloon.b3{left:24%; width:52px; height:62px; background:linear-gradient(160deg,#fbc2eb,#ff5ea8); animation-duration:19s; animation-delay:1s;}
+  .balloon.b4{left:36%; width:30px; height:38px; background:linear-gradient(160deg,#fddb92,#ffd200); animation-duration:13s; animation-delay:4s;}
+  .balloon.b5{left:48%; width:44px; height:54px; background:linear-gradient(160deg,#84fab0,#38f9d7); animation-duration:16s; animation-delay:0.5s;}
+  .balloon.b6{left:60%; width:38px; height:46px; background:linear-gradient(160deg,#c2a1fc,#a770ef); animation-duration:18s; animation-delay:3s;}
+  .balloon.b7{left:70%; width:50px; height:60px; background:linear-gradient(160deg,#ffecd2,#f7971e); animation-duration:15s; animation-delay:5.5s;}
+  .balloon.b8{left:80%; width:32px; height:40px; background:linear-gradient(160deg,#a8edea,#00c9ff); animation-duration:20s; animation-delay:2s;}
+  .balloon.b9{left:90%; width:42px; height:50px; background:linear-gradient(160deg,#f6d365,#f857a6); animation-duration:16.5s; animation-delay:6s;}
+  .balloon.b10{left:56%; width:26px; height:32px; background:linear-gradient(160deg,#fff1eb,#ff5e5e); animation-duration:12s; animation-delay:7s;}
+
+  /* ===== fixed floating "Go to Home" button (was: small "Dashboard" link) ===== */
+  .go-home-fab{
+    position:fixed; left:20px; bottom:20px; z-index:9500;
+    display:flex; align-items:center; gap:9px;
+    padding:15px 24px; border-radius:50px;
+    font-size:15.5px; font-weight:800; letter-spacing:.2px; color:#fff; text-decoration:none; white-space:nowrap;
+    background:linear-gradient(120deg,#7c83fd,#ff5ea8,#38f9d7,#ffd200,#a770ef,#7c83fd);
+    background-size:400% 400%;
+    box-shadow:0 10px 30px rgba(124,131,253,.4), 0 0 42px rgba(255,94,168,.28);
+    animation:goHomeColorShift 7s ease infinite, goHomeFloat 3.2s ease-in-out infinite;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .go-home-fab:hover{
+    transform:scale(1.08);
+    box-shadow:0 12px 36px rgba(124,131,253,.55), 0 0 58px rgba(255,94,168,.42);
+  }
+  .go-home-fab .icon{font-size:19px;}
+  @keyframes goHomeColorShift{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+  }
+  @keyframes goHomeFloat{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-7px);}
+  }
   @media (max-width:720px){
-    #employeeWelcomeBar{flex-direction:column;align-items:flex-start;gap:6px;}
+    #employeeWelcomeBar{flex-direction:column;align-items:flex-start;gap:6px;padding-right:18px;}
+    .emp-welcome-right{top:auto;bottom:14px;right:14px;}
     .cal-topbar{flex-wrap:wrap;}
     .cal-ticker{order:3;width:100%;}
+    .go-home-fab{padding:12px 18px;font-size:13.5px;left:14px;bottom:14px;}
   }
 </style>
 </head>
 <body>
 
 <div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+
+<div class="balloons">
+  <div class="balloon b1"></div>
+  <div class="balloon b2"></div>
+  <div class="balloon b3"></div>
+  <div class="balloon b4"></div>
+  <div class="balloon b5"></div>
+  <div class="balloon b6"></div>
+  <div class="balloon b7"></div>
+  <div class="balloon b8"></div>
+  <div class="balloon b9"></div>
+  <div class="balloon b10"></div>
+</div>
+
+<a href="index.html" class="go-home-fab" title="Go to Home"><span class="icon">🏠</span> Go to Home</a>
 
 <!-- Fixed Employee Welcome Bar -->
 <div id="employeeWelcomeBar" style="display:none;">
@@ -313,9 +392,8 @@
 
 <div class="cal-topbar" id="calTopbar">
   <div class="cal-brand">📅 Live Calendar</div>
-  <a class="cal-back" href="index.html">← Dashboard</a>
   <div class="cal-ticker">
-    <div class="cal-ticker-track">🎉 <b>Special Occasions</b> auto-highlighted every month &nbsp;•&nbsp; সব সরকারি ছুটি ও বিশেষ দিন লাইভ দেখুন &nbsp;•&nbsp; নতুন বছরের ক্যালেন্ডার ২০২৬–২০২৮ পর্যন্ত উপলব্ধ &nbsp;•&nbsp; 🎉</div>
+    <div class="cal-ticker-track">🎉 <b>Special Occasions</b> auto-highlighted every month &nbsp;•&nbsp; See all public holidays and special days live &nbsp;•&nbsp; New calendar years available through 2026–2028 &nbsp;•&nbsp; 🎉</div>
   </div>
   <div class="theme-toggle-wrap">
     <span>🌙</span>
@@ -732,11 +810,28 @@ const holidays = {
 /* ===================== LIVE CLOCK ===================== */
 function updateLiveTime() {
     const now = new Date();
-    document.getElementById('live-clock').innerText = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('live-clock').innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     document.getElementById('live-date').innerText = now.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 setInterval(updateLiveTime, 1000);
 updateLiveTime();
+
+/* Every month's 2nd and 4th Saturday (a common recurring off-day) — computed
+   on the fly for whichever month/year is being rendered, so it automatically
+   works for every month/year without hardcoding dates into `holidays`. */
+function getRecurringSaturdayEvents(year, month) {
+    const events = {};
+    let satCount = 0;
+    const daysInThisMonth = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= daysInThisMonth; d++) {
+        if (new Date(year, month, d).getDay() === 6) { // 6 = Saturday
+            satCount++;
+            if (satCount === 2) events[d] = "2nd Saturday";
+            if (satCount === 4) events[d] = "4th Saturday";
+        }
+    }
+    return events;
+}
 
 /* ===================== CALENDAR RENDER ===================== */
 function renderCalendar() {
@@ -750,6 +845,7 @@ function renderCalendar() {
 
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const recurringSaturdays = getRecurringSaturdayEvents(year, month);
 
     const today = new Date();
     const isCurrentMonth = (today.getMonth() === month && today.getFullYear() === year);
@@ -801,6 +897,19 @@ function renderCalendar() {
                             name: event,
                             colorClass: colorClass
                         });
+                    });
+                }
+
+                if (recurringSaturdays[date]) {
+                    let eventDiv = document.createElement("div");
+                    eventDiv.className = "event sat-off";
+                    eventDiv.innerText = recurringSaturdays[date];
+                    cell.appendChild(eventDiv);
+
+                    monthHolidays.push({
+                        date: `${date}ই ${document.getElementById('monthSelect').options[month].text}`,
+                        name: recurringSaturdays[date],
+                        colorClass: "sat-off"
                     });
                 }
                 date++;
