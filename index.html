@@ -3594,7 +3594,27 @@ localStorage.removeItem("qa_role");
   if(bannerTimer) clearInterval(bannerTimer);
   closePlayerBar();
 }
+/* If this page was opened with ?return=someFile.html (sent here by the
+   Parameter Wise page's login gate because that page wasn't logged in),
+   figure out a safe local filename to bounce back to after a successful
+   login. Only a bare "name.html" is accepted — no protocols, no "//", no
+   ".." — so this can never be turned into an open redirect. */
+function getSafeReturnTarget(){
+  try{
+    const ret = new URLSearchParams(window.location.search).get('return');
+    if(ret && /^[a-zA-Z0-9_\-]+\.html(\?[^\s]*)?$/.test(ret)) return ret;
+  }catch(e){}
+  return null;
+}
 async function enterApp(){
+  // Forceful login-gate hookup: if we got here (fresh login OR restored
+  // session) because a gated page sent us here, go straight back to it
+  // instead of opening the main dashboard.
+  const returnTarget = getSafeReturnTarget();
+  if(returnTarget){
+    window.location.replace(returnTarget);
+    return;
+  }
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('mainScreen').style.display = 'flex';
   const pill = document.getElementById('rolePill');
