@@ -4,6 +4,53 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Business Dev BB | Call Quality Audit</title>
+<script>
+/* =====================================================================
+   FORCEFUL LOGIN-GATE (runs first, before anything else on this page)
+   ---------------------------------------------------------------------
+   - If the main portal was already logged into in this same browser,
+     the login is shared automatically via localStorage (same origin) —
+     this page just picks it up, no separate sign-in needed.
+   - If there is no valid session (e.g. someone opens this page's link
+     directly without logging in on the main page first), the page is
+     hidden instantly and the visitor is redirected to the main portal's
+     login screen. Nothing on this page renders until a valid session
+     exists — after logging in there, the visitor is sent straight back
+     here automatically.
+   ===================================================================== */
+(function loginGate(){
+  var GATE_MAIN_PORTAL_URL = "https://qualityanalystkcbpl-collab.github.io/call-quality/";
+  var GATE_STAFF_SESSION_MS = 60 * 60 * 1000;     // matches the main page's 1-hour staff/admin session
+  var GATE_EMP_SESSION_MS   = 30 * 60 * 1000;     // matches EMP_AUTO_LOGOUT_MS below
+
+  function hasValidSession(){
+    try{
+      var role = localStorage.getItem('qa_role');
+      if(!role) return false;
+
+      var empSid = localStorage.getItem('qa_emp_session_id');
+      var empId  = localStorage.getItem('qa_emp_id');
+      if(empSid && empId){
+        var lastActive = Number(localStorage.getItem('qa_emp_last_activity') || 0);
+        return (Date.now() - lastActive) <= GATE_EMP_SESSION_MS;
+      }
+
+      var loginTime = localStorage.getItem('qa_login_time');
+      if(!loginTime) return false;
+      return (Date.now() - Number(loginTime)) < GATE_STAFF_SESSION_MS;
+    }catch(e){
+      return false; // if localStorage can't be read, fail closed (no access)
+    }
+  }
+
+  if(!hasValidSession()){
+    // Hide everything instantly so no dashboard content ever flashes on screen.
+    document.documentElement.style.display = 'none';
+    var here = (location.pathname.split('/').pop() || 'business-dev-bb.html');
+    window.location.replace(GATE_MAIN_PORTAL_URL + '?return=' + encodeURIComponent(here));
+  }
+})();
+</script>
 <style>
   /* ====================== CONFIG (উপরে বদলান) ======================
      API_URL   -> আপনার Apps Script Web App URL এখানে বসান
@@ -394,6 +441,187 @@ tbody tr:hover{
   .score-mid{ color:var(--accent-yellow); font-weight:700; }
   .score-bad{ color:var(--accent-red); font-weight:700; }
 
+/* =====================================================================
+   EMPLOYEE WELCOME BAR — merged in from the main Call Quality Control
+   Room page so a logged-in employee sees the exact same top bar here.
+   Colors are hardcoded (not tied to this page's --panel/--accent theme
+   vars) so this block is self-contained and safe to copy to any page.
+   ===================================================================== */
+#employeeWelcomeBar{
+  position:fixed; top:0; left:0; right:0; z-index:10050;
+  display:none; align-items:center; justify-content:space-between;
+  padding:6px 18px;
+  background:#14253D;
+  border-bottom:1px solid #203859;
+  color:#EAF0F6;
+  font-family:'Inter', sans-serif;
+  font-size:12.5px;
+}
+.emp-welcome-left{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.emp-welcome-greeting{
+  font-weight:600;
+  background:linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0, #33C9B0);
+  background-size:300% 100%;
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  animation: empGreetingColorShift 6s linear infinite;
+}
+@keyframes empGreetingColorShift{
+  0%{ background-position:0% 50%; }
+  100%{ background-position:300% 50%; }
+}
+.emp-online-chip{
+  display:inline-flex; align-items:center; gap:6px;
+  color:#33C9B0; font-weight:600; font-size:12px;
+}
+.emp-pulse-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:#33C9B0;
+  box-shadow:0 0 0 0 rgba(51,201,176,0.6);
+  animation:empPulse 2s infinite;
+}
+@keyframes empPulse{
+  0%{box-shadow:0 0 0 0 rgba(51,201,176,0.5);}
+  70%{box-shadow:0 0 0 10px rgba(51,201,176,0);}
+  100%{box-shadow:0 0 0 0 rgba(51,201,176,0);}
+}
+.emp-online-badge{
+  display:flex; align-items:center; gap:6px;
+  padding:4px 10px;
+  border-radius:20px;
+  font-family:'IBM Plex Mono','JetBrains Mono',monospace;
+  font-size:11px; font-weight:600; white-space:nowrap;
+  border:1px solid #203859;
+  cursor:pointer;
+  animation: empOnlineBadgeGlow 4s ease-in-out infinite;
+}
+@keyframes empOnlineBadgeGlow{
+  0%{   background:#143832; color:#33C9B0; box-shadow:0 0 10px rgba(51,201,176,0.55); }
+  25%{  background:#3D2E18; color:#E3A857; box-shadow:0 0 16px rgba(227,168,87,0.85); }
+  50%{  background:#3A1518; color:#FF6B6B; box-shadow:0 0 16px rgba(255,107,107,0.85); }
+  75%{  background:#12203A; color:#4A7FE0; box-shadow:0 0 16px rgba(74,127,224,0.85); }
+  100%{ background:#143832; color:#33C9B0; box-shadow:0 0 10px rgba(51,201,176,0.55); }
+}
+.emp-online-badge .emp-pulse-dot{ background:currentColor; box-shadow:none; }
+.emp-welcome-right{ display:flex; gap:8px; }
+.emp-mini-btn{
+  background:#1B3150;
+  border:1px solid #203859;
+  color:#EAF0F6;
+  border-radius:7px; padding:6px 14px; font-size:11px; cursor:pointer;
+  min-width:100px;
+}
+.emp-mini-btn:hover{ opacity:0.85; }
+.emp-mini-btn.danger{
+  background:linear-gradient(135deg,#ff2fb0,#c2007a);
+  border-color:#ff6fd0;
+  color:#fff;
+  font-weight:700;
+  box-shadow:0 0 10px rgba(255,32,180,.45);
+  animation:empLogoutPulse 2s infinite;
+}
+@keyframes empLogoutPulse{
+  0%,100%{ box-shadow:0 0 10px rgba(255,32,180,.45); }
+  50%{ box-shadow:0 0 18px rgba(255,32,180,.75); }
+}
+.emp-mini-btn.danger:hover{
+  background:linear-gradient(135deg,#ff4dc4,#a5006a);
+  box-shadow:0 0 18px rgba(255,32,180,.75), 0 0 35px rgba(255,32,180,.50);
+}
+.emp-inline-stats{
+  display:flex; gap:10px; flex-wrap:wrap;
+  font-family:'IBM Plex Mono','JetBrains Mono',monospace;
+  font-size:10px;
+  padding:3px 12px;
+  border-radius:7px;
+  border:1px solid rgba(51,201,176,0.22);
+  animation: empStatsGlow 5s ease-in-out infinite;
+}
+@keyframes empStatsGlow{
+  0%,100%{ box-shadow:0 0 0 rgba(51,201,176,0); border-color:rgba(51,201,176,0.22); }
+  50%{     box-shadow:0 0 12px rgba(51,201,176,0.28); border-color:rgba(51,201,176,0.55); }
+}
+.emp-inline-stat{ color:#8FA0B5; white-space:nowrap; }
+.emp-inline-stat b{ color:#EAF0F6; font-size:11.5px; font-weight:600; }
+
+/* Push this page's own content down (simple body padding, no fixed topbar
+   here) when the employee bar is visible */
+body.has-emp-bar{ padding-top:calc(24px + var(--emp-bar-h, 54px)); }
+
+@media (max-width: 640px){
+  #employeeWelcomeBar{ flex-direction:column; align-items:flex-start; gap:6px; }
+}
+
+/* Modals (Change Password / Who's Online) */
+.emp-modal-overlay{
+  position:fixed; inset:0; z-index:20000;
+  background:rgba(3,8,14,0.72);
+  display:none; align-items:center; justify-content:center;
+  padding:16px;
+}
+.emp-modal-box{
+  position:relative;
+  background:#0E1A2B;
+  border:1px solid #203859;
+  border-radius:12px;
+  padding:24px; width:100%; max-width:380px;
+  color:#EAF0F6;
+  font-family:'Inter', sans-serif;
+}
+.emp-modal-box h2{ margin:0 0 8px; font-family:'Sora', sans-serif; }
+.emp-modal-box p.hint{ color:#8FA0B5; font-size:13px; }
+.emp-modal-box .field{ margin-top:12px; }
+.emp-modal-box .field label{
+  font-size:12px; color:#8FA0B5; display:block; margin-bottom:6px;
+  text-transform:uppercase; letter-spacing:1px;
+}
+.emp-modal-box .field input{
+  width:100%; padding:10px 12px; background:#14253D;
+  border:1px solid #203859; border-radius:8px; color:#EAF0F6; font-size:13px; outline:none;
+}
+.emp-pw-rules{ font-size:11.5px; color:#8FA0B5; margin-top:8px; }
+.emp-modal-box .emp-login-btn{
+  width:100%; padding:13px; border:none; border-radius:12px;
+  font-family:'Inter',sans-serif; font-weight:700; font-size:14px; cursor:pointer;
+  margin-top:16px; background:#33C9B0; color:#04211C;
+}
+.emp-modal-box .emp-login-error{ color:#E0524A; font-size:12.5px; margin-top:12px; min-height:16px; }
+.emp-modal-close{
+  position:absolute; top:14px; right:14px;
+  background:none; border:none; color:#8FA0B5; font-size:16px; cursor:pointer;
+}
+.online-agents-box{ max-width:340px; }
+.online-agents-box h2{ font-size:18px; display:flex; align-items:center; }
+.online-agents-list{
+  margin-top:14px; max-height:320px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:6px;
+}
+.online-agent-row{
+  display:flex; align-items:center; gap:8px;
+  padding:9px 10px;
+  background:#14253D;
+  border:1px solid #203859;
+  border-radius:8px;
+  font-size:13px;
+}
+.online-agent-name{ font-weight:600; flex:1; }
+.online-agent-tabs{
+  font-size:10.5px; color:#8FA0B5;
+  background:#1B3150;
+  padding:2px 6px; border-radius:6px;
+}
+.online-agents-loading, .online-agents-empty{
+  color:#8FA0B5; font-size:13px; padding:10px 2px;
+}
+.online-agents-anon{
+  color:#8FA0B5; font-size:11.5px; padding:6px 2px 2px; font-style:italic;
+}
+.emp-toast{
+  position:fixed;bottom:20px;right:20px;
+  background:#14253D;border:1px solid #33C9B0;color:#EAF0F6;
+  padding:12px 18px;border-radius:9px;font-size:13px;z-index:20500;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);display:none;
+}
+
   /* ---- Scrollable "box" table (shows ~10 rows, drag/scroll for more) ---- */
   .table-box{
     background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius);
@@ -587,6 +815,65 @@ opacity:.75;
 </style>
 </head>
 <body>
+<!-- ============ EMPLOYEE WELCOME BAR (merged from main Call Quality Control Room page) ============ -->
+<div id="employeeWelcomeBar" style="display:none;">
+  <div class="emp-welcome-left">
+    <span>👋 Welcome, <b id="empWelcomeName">-</b></span>
+    <span id="empWelcomeGreeting" class="emp-welcome-greeting">Good Morning</span>
+    <span class="emp-online-chip"><span class="emp-pulse-dot" style="display:inline-block;"></span> You are currently online on the Call Quality Portal.</span>
+    <span class="emp-online-badge" id="onlineCountPill" title="Click to see who's currently online" onclick="openOnlineAgentsModal()"><span class="emp-pulse-dot" style="display:inline-block;"></span><span id="onlineCountBadge">--</span> Total Agent(s) Currently Online</span>
+    <span class="emp-inline-stats">
+      <span class="emp-inline-stat">ID: <b id="empStatId">--</b></span>
+      <span class="emp-inline-stat">Login: <b id="empStatLoginTime">--:--:--</b></span>
+      <span class="emp-inline-stat">Previous: <b id="empStatPrevLogin">--</b></span>
+      <span class="emp-inline-stat">IP: <b id="empStatCurrentIP">--</b></span>
+      <span class="emp-inline-stat">Session: <b id="empStatSession">00:00:00</b></span>
+      <span class="emp-inline-stat">Today: <b id="empStatTodayTotal">00:00:00</b></span>
+      <span class="emp-inline-stat">Device: <b id="empStatDevice">--</b></span>
+      <span class="emp-inline-stat">Browser: <b id="empStatBrowser">--</b></span>
+    </span>
+  </div>
+  <div class="emp-welcome-right">
+    <button class="emp-mini-btn" onclick="openChangePasswordModal()">Change Pass</button>
+    <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
+  </div>
+</div>
+
+<div class="emp-modal-overlay" id="changePasswordModal" onclick="if(event.target===this) closeChangePasswordModal()">
+  <div class="emp-modal-box">
+    <button class="emp-modal-close" onclick="closeChangePasswordModal()" title="Close">✕</button>
+    <h2>Change Password</h2>
+    <div class="field">
+      <label>Current Password</label>
+      <input type="password" id="cpCurrentPassword" placeholder="••••••••">
+    </div>
+    <div class="field">
+      <label>New Password</label>
+      <input type="password" id="cpNewPassword" placeholder="••••••••">
+    </div>
+    <div class="field">
+      <label>Confirm New Password</label>
+      <input type="password" id="cpConfirmPassword" placeholder="••••••••">
+    </div>
+    <p class="emp-pw-rules">Any password is accepted — no minimum length, no uppercase/number/special-character requirement.</p>
+    <button class="emp-login-btn" onclick="submitChangePassword()">Save</button>
+    <div class="emp-login-error" id="cpError"></div>
+  </div>
+</div>
+
+<div class="emp-modal-overlay" id="onlineAgentsModal" onclick="if(event.target===this) closeOnlineAgentsModal()">
+  <div class="emp-modal-box online-agents-box">
+    <button class="emp-modal-close" onclick="closeOnlineAgentsModal()" title="Close">✕</button>
+    <h2><span class="emp-pulse-dot" style="display:inline-block;margin-right:6px;"></span>Currently Online (<span id="onlineAgentsModalCount">--</span>)</h2>
+    <p class="hint">Agents who currently have the portal open.</p>
+    <div class="online-agents-list" id="onlineAgentsList">
+      <div class="online-agents-loading">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<div class="emp-toast" id="empToast"></div>
+
 <div class="bg-particles">
   <span style="left:5%;  --s:5px; --c:rgba(91,141,239,.6);  --d:18s; --delay:0s;"></span>
   <span style="left:15%; --s:3px; --c:rgba(62,207,142,.55); --d:14s; --delay:2s;"></span>
@@ -972,5 +1259,380 @@ setInterval(updateClock,1000);
 
 loadData();
 </script>
+<script>
+/* =====================================================================
+   EMPLOYEE WELCOME BAR — merged in from the main Call Quality Control
+   Room page. The login-gate script at the very top of <head> already
+   guarantees a valid session exists in localStorage by the time this
+   code runs (set by the main page, same-origin so it's automatically
+   shared, or restored by the gate's own redirect-and-return flow). If
+   an employee session specifically isn't found, the bar simply stays
+   hidden — everything else on the page still requires the login-gate
+   to have passed.
+   ===================================================================== */
+const MAIN_PORTAL_URL = "https://qualityanalystkcbpl-collab.github.io/call-quality/";
+const EMP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwktIZBumwKZM7z9rUZsT6vDoj1PBsMgcZL6VyH8HejBnBsx879O3Jy1dSLaGAiOLjr/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbCrtIR8ww9F8eJBKZl92Ml-L7TwDq_hZBu3VHK8D8H-EYz2FM5nw/exec";
+
+const EMP_HEARTBEAT_MS = 60 * 1000;
+const EMP_AUTO_LOGOUT_MS = 30 * 60 * 1000;
+const ONLINE_HEARTBEAT_MS = 30 * 1000;
+const ONLINE_TIMEOUT_MS = 90 * 1000;
+
+let empSessionId = null;
+let empEmployeeId = null;
+let empAgentName = null;
+let empSessionStartEpoch = null;
+let empTodayPriorSeconds = 0;
+let empSessionTimerInterval = null;
+let empHeartbeatInterval = null;
+let empGreetingInterval = null;
+let empInactivityTimeout = null;
+
+/* ---------- small helpers (same logic as the main page) ---------- */
+function getBrowserName(){
+  const ua = navigator.userAgent;
+  if(ua.includes('Edg/')) return 'Edge';
+  if(ua.includes('Chrome/') && !ua.includes('OPR')) return 'Chrome';
+  if(ua.includes('Firefox/')) return 'Firefox';
+  if(ua.includes('Safari/') && !ua.includes('Chrome')) return 'Safari';
+  if(ua.includes('OPR')) return 'Opera';
+  return 'Unknown';
+}
+function getDeviceType(){
+  const ua = navigator.userAgent;
+  if(/Mobi|Android/i.test(ua)) return 'Mobile';
+  if(/Tablet|iPad/i.test(ua)) return 'Tablet';
+  return 'Desktop';
+}
+async function getClientIP(){
+  try{
+    const res = await fetch('https://api.ipify.org?format=json');
+    const d = await res.json();
+    return d.ip || '';
+  }catch(e){ return ''; }
+}
+function secToHMSClient(sec){
+  sec = Math.max(0, Math.round(sec));
+  const h = String(Math.floor(sec/3600)).padStart(2,'0');
+  const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
+  const s = String(sec%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+async function empApiPost(action, payload){
+  const res = await fetch(`${EMP_WEB_APP_URL}?action=${encodeURIComponent(action)}`, {
+    method: 'POST',
+    body: JSON.stringify(payload || {})
+  });
+  return res.json();
+}
+function to12Hour(timeStr){
+  if(!timeStr) return timeStr;
+  const m = String(timeStr).match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+  if(!m) return timeStr;
+  let h = Number(m[1]);
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12; if(h === 0) h = 12;
+  return `${String(h).padStart(2,'0')}:${m[2]}:${m[3]} ${ampm}`;
+}
+function formatPreviousLogin(raw){
+  if(!raw || raw === '--') return '--';
+  const dateMatch = raw.match(/^(\d{2})-(\d{2})-(\d{4})/);
+  const timeMatch = raw.match(/(\d{1,2}:\d{2}:\d{2})/);
+  if(!dateMatch) return raw.replace(/\s*GMT[^\n]*$/i, '').trim();
+  const [, dd, mm, yyyy] = dateMatch;
+  const realDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+  const weekday = realDate.toLocaleDateString('en-US', { weekday: 'long' });
+  const datePart = `${dd}-${mm}-${yyyy}`;
+  const timePart = timeMatch ? to12Hour(timeMatch[1]) : '';
+  return timePart ? `${weekday}, ${datePart}, ${timePart}` : `${weekday}, ${datePart}`;
+}
+function currentGreetingText(){
+  const h = new Date().getHours();
+  if(h>=5 && h<12) return 'Good Morning';
+  if(h>=12 && h<17) return 'Good Afternoon';
+  if(h>=17 && h<20) return 'Good Evening';
+  return 'Good Night';
+}
+function updateEmpWelcomeGreeting(){
+  const el = document.getElementById('empWelcomeGreeting');
+  if(el) el.textContent = currentGreetingText();
+}
+function showEmpToast(msg){
+  const t = document.getElementById('empToast');
+  if(!t) return;
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(window.__empToastTimer);
+  window.__empToastTimer = setTimeout(()=>{ t.style.display = 'none'; }, 3000);
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- "who's online" presence (same generic getSettings/saveSettings store as the main page) ---------- */
+function getMySessionId(){
+  let id = sessionStorage.getItem('qa_session_id');
+  if(!id){
+    id = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    sessionStorage.setItem('qa_session_id', id);
+  }
+  return id;
+}
+function getSessionTs(entry){ return (entry && typeof entry === 'object') ? entry.ts : entry; }
+async function storageGet(key){
+  try{
+    const res = await fetch(`${WEB_APP_URL}?action=getSettings&key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    return data && data.value ? JSON.parse(data.value) : null;
+  }catch(e){ console.error('Storage read system issue', e); return null; }
+}
+async function storageSet(key, value){
+  try{
+    await fetch(`${WEB_APP_URL}?action=saveSettings`, { method:'POST', body: JSON.stringify({ key, value: JSON.stringify(value) }) });
+    return true;
+  }catch(e){ console.error('Storage write system issue', e); return false; }
+}
+function renderOnlineCount(count){
+  const b = document.getElementById('onlineCountBadge');
+  if(b) b.textContent = count;
+}
+async function pingOnlinePresence(){
+  try{
+    const mySessionId = getMySessionId();
+    const now = Date.now();
+    let sessions = (await storageGet('onlineSessions')) || {};
+    Object.keys(sessions).forEach(id=>{
+      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
+    });
+    const myName = localStorage.getItem('qa_emp_name') || null;
+    const myEmpId = localStorage.getItem('qa_emp_id') || null;
+    sessions[mySessionId] = { ts: now, name: myName, id: myEmpId };
+    await storageSet('onlineSessions', sessions);
+    renderOnlineCount(Object.keys(sessions).length);
+  }catch(e){ console.error('Online presence update failed', e); }
+}
+async function openOnlineAgentsModal(){
+  const modal = document.getElementById('onlineAgentsModal');
+  const listEl = document.getElementById('onlineAgentsList');
+  const countEl = document.getElementById('onlineAgentsModalCount');
+  if(!modal || !listEl) return;
+  modal.style.display = 'flex';
+  listEl.innerHTML = '<div class="online-agents-loading">Loading…</div>';
+  try{
+    const now = Date.now();
+    let sessions = (await storageGet('onlineSessions')) || {};
+    Object.keys(sessions).forEach(id=>{
+      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
+    });
+    const entries = Object.values(sessions);
+    if(countEl) countEl.textContent = entries.length;
+    const seen = new Map();
+    let anonymousCount = 0;
+    entries.forEach(e=>{
+      const name = e && e.name;
+      if(!name){ anonymousCount++; return; }
+      const key = (e.id || name);
+      seen.set(key, (seen.get(key) || 0) + 1);
+    });
+    if(seen.size === 0 && anonymousCount === 0){
+      listEl.innerHTML = '<div class="online-agents-empty">No one is currently online.</div>';
+      return;
+    }
+    const nameMap = new Map();
+    entries.forEach(e=>{
+      if(e && e.name){ const key = (e.id || e.name); if(!nameMap.has(key)) nameMap.set(key, e.name); }
+    });
+    let html = '';
+    Array.from(seen.keys())
+      .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
+      .forEach(key=>{
+        const displayName = nameMap.get(key) || 'Agent';
+        const tabCount = seen.get(key);
+        html += `<div class="online-agent-row">
+          <span class="emp-pulse-dot" style="display:inline-block;"></span>
+          <span class="online-agent-name">${escapeHtml(displayName)}</span>
+          ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
+        </div>`;
+      });
+    if(anonymousCount > 0){
+      html += `<div class="online-agents-anon">+ ${anonymousCount} more session(s) online — name not available yet (that browser tab needs a refresh to show up by name)</div>`;
+    }
+    listEl.innerHTML = html || '<div class="online-agents-empty">No one is currently online.</div>';
+  }catch(e){
+    console.error('Failed to load online agents', e);
+    listEl.innerHTML = '<div class="online-agents-empty">Could not load the online agent list. Please try again.</div>';
+  }
+}
+function closeOnlineAgentsModal(){
+  const modal = document.getElementById('onlineAgentsModal');
+  if(modal) modal.style.display = 'none';
+}
+pingOnlinePresence();
+setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
+window.addEventListener('beforeunload', ()=>{
+  navigator.sendBeacon && storageGet('onlineSessions').then(sessions=>{
+    if(!sessions) return;
+    delete sessions[getMySessionId()];
+    const blob = new Blob([JSON.stringify({ key:'onlineSessions', value: JSON.stringify(sessions) })], {type:'application/json'});
+    navigator.sendBeacon(`${WEB_APP_URL}?action=saveSettings`, blob);
+  });
+});
+
+/* Measures the welcome bar's actual rendered height (it can wrap onto 2 lines on
+   medium-width screens) and stores it in --emp-bar-h so this page's own content
+   (pushed down via body.has-emp-bar padding) sits right underneath instead of
+   being tucked under it. */
+function syncEmpBarOffset(){
+  const bar = document.getElementById('employeeWelcomeBar');
+  if(!bar || bar.style.display === 'none') return;
+  const h = bar.offsetHeight;
+  if(h) document.documentElement.style.setProperty('--emp-bar-h', h + 'px');
+}
+
+function showEmployeeWelcomeBar(){
+  document.getElementById('employeeWelcomeBar').style.display = 'flex';
+  document.body.classList.add('has-emp-bar');
+  document.getElementById('empWelcomeName').textContent = (empAgentName || localStorage.getItem('qa_emp_name') || '').toUpperCase();
+  updateEmpWelcomeGreeting();
+  if(empGreetingInterval) clearInterval(empGreetingInterval);
+  empGreetingInterval = setInterval(updateEmpWelcomeGreeting, 60000);
+  document.getElementById('empStatLoginTime').textContent = to12Hour(localStorage.getItem('qa_emp_login_time_display')) || '--:--:--';
+  document.getElementById('empStatPrevLogin').textContent = formatPreviousLogin(localStorage.getItem('qa_emp_prev_login'));
+  document.getElementById('empStatId').textContent = empEmployeeId || localStorage.getItem('qa_emp_id') || '--';
+  document.getElementById('empStatDevice').textContent = getDeviceType();
+  document.getElementById('empStatBrowser').textContent = getBrowserName();
+
+  const ipEl = document.getElementById('empStatCurrentIP');
+  ipEl.textContent = 'Loading...';
+  getClientIP().then(ip=>{ ipEl.textContent = ip || 'Unavailable'; syncEmpBarOffset(); });
+
+  requestAnimationFrame(syncEmpBarOffset);
+  if(!window.__empBarResizeBound){
+    window.addEventListener('resize', syncEmpBarOffset);
+    window.__empBarResizeBound = true;
+  }
+}
+
+function startEmployeeSessionTracking(){
+  if(empSessionTimerInterval) clearInterval(empSessionTimerInterval);
+  if(empHeartbeatInterval) clearInterval(empHeartbeatInterval);
+
+  empSessionTimerInterval = setInterval(()=>{
+    const elapsed = Math.round((Date.now() - Number(empSessionStartEpoch)) / 1000);
+    document.getElementById('empStatSession').textContent = secToHMSClient(elapsed);
+    document.getElementById('empStatTodayTotal').textContent = secToHMSClient(empTodayPriorSeconds + elapsed);
+  }, 1000);
+
+  empHeartbeatInterval = setInterval(sendEmpHeartbeat, EMP_HEARTBEAT_MS);
+  sendEmpHeartbeat();
+  setupInactivityWatch();
+}
+
+async function sendEmpHeartbeat(){
+  if(!empEmployeeId) return;
+  try{
+    await empApiPost('heartbeat', { employeeId: empEmployeeId, page: 'Business Dev BB', status: 'Active' });
+  }catch(e){ console.error('Heartbeat failed', e); }
+}
+
+function setupInactivityWatch(){
+  ['mousemove','keydown','click','scroll','touchstart'].forEach(evt=>{
+    window.addEventListener(evt, resetInactivityTimer, { passive: true });
+  });
+  resetInactivityTimer();
+  window.addEventListener('beforeunload', ()=>{
+    if(!empSessionId) return;
+    const payload = JSON.stringify({ action:'employeeLogout', employeeId: empEmployeeId, sessionId: empSessionId, logoutType: 'Auto' });
+    navigator.sendBeacon && navigator.sendBeacon(`${EMP_WEB_APP_URL}?action=employeeLogout`, new Blob([payload], {type:'text/plain'}));
+  });
+}
+function resetInactivityTimer(){
+  localStorage.setItem('qa_emp_last_activity', Date.now());
+  if(empInactivityTimeout) clearTimeout(empInactivityTimeout);
+  empInactivityTimeout = setTimeout(()=> employeeLogout('Auto'), EMP_AUTO_LOGOUT_MS);
+}
+
+/* After logging out, send the person back to the main portal (same
+   behaviour as clicking Logout there) — the login-gate at the top of this
+   page will then require a fresh login before this page can be viewed again. */
+async function employeeLogout(logoutType){
+  try{
+    if(empEmployeeId && empSessionId){
+      await empApiPost('employeeLogout', { employeeId: empEmployeeId, sessionId: empSessionId, logoutType: logoutType || 'Manual' });
+    }
+  }catch(e){ console.error('Logout log failed', e); }
+
+  if(empEmployeeId){
+    const logoutCountKey = `qa_emp_logout_count_${empEmployeeId}`;
+    localStorage.setItem(logoutCountKey, (Number(localStorage.getItem(logoutCountKey)) || 0) + 1);
+  }
+
+  ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity','qa_role','qa_login_time']
+    .forEach(k=>localStorage.removeItem(k));
+
+  window.location.href = MAIN_PORTAL_URL;
+}
+function handleLogoutClick(){
+  showEmpToast('Logging out......');
+  employeeLogout('Manual');
+}
+
+/* Restore an employee session after a page load, using the session localStorage
+   already set by the main page (same origin, shared automatically). */
+function restoreEmployeeSessionIfAny(){
+  const sid = localStorage.getItem('qa_emp_session_id');
+  const eid = localStorage.getItem('qa_emp_id');
+  const lastActive = Number(localStorage.getItem('qa_emp_last_activity') || 0);
+  if(!sid || !eid) return; // no active employee session — bar just stays hidden, page unchanged
+
+  if(Date.now() - lastActive > EMP_AUTO_LOGOUT_MS){
+    ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity']
+      .forEach(k=>localStorage.removeItem(k));
+    return;
+  }
+
+  empSessionId = sid;
+  empEmployeeId = eid;
+  empAgentName = localStorage.getItem('qa_emp_name');
+  empSessionStartEpoch = Number(localStorage.getItem('qa_emp_session_start'));
+  empTodayPriorSeconds = Number(localStorage.getItem('qa_emp_today_prior') || 0);
+
+  showEmployeeWelcomeBar();
+  startEmployeeSessionTracking();
+}
+window.addEventListener('load', ()=> setTimeout(restoreEmployeeSessionIfAny, 300));
+
+/* ---------- Change password (from welcome bar) ---------- */
+function openChangePasswordModal(){ document.getElementById('changePasswordModal').style.display = 'flex'; }
+function closeChangePasswordModal(){
+  document.getElementById('changePasswordModal').style.display = 'none';
+  document.getElementById('cpCurrentPassword').value = '';
+  document.getElementById('cpNewPassword').value = '';
+  document.getElementById('cpConfirmPassword').value = '';
+  document.getElementById('cpError').textContent = '';
+}
+async function submitChangePassword(){
+  const errBox = document.getElementById('cpError');
+  const current = document.getElementById('cpCurrentPassword').value;
+  const next = document.getElementById('cpNewPassword').value;
+  const confirm = document.getElementById('cpConfirmPassword').value;
+  errBox.textContent = '';
+  if(next !== confirm){ errBox.textContent = 'New password ও Confirm password মিলছে না।'; return; }
+  try{
+    const data = await empApiPost('changePassword', {
+      employeeId: empEmployeeId, currentPassword: current, newPassword: next, confirmPassword: confirm
+    });
+    if(!data || data.ok !== true){
+      errBox.textContent = (data && data.error) || 'Password change failed.';
+      return;
+    }
+    showEmpToast('Password পরিবর্তন সফল হয়েছে।');
+    closeChangePasswordModal();
+  }catch(e){
+    console.error('Change password failed', e);
+    errBox.textContent = 'Server is temporarily unavailable. Please try again in 2 minutes.';
+  }
+}
+</script>
+
 </body>
 </html>
