@@ -1,467 +1,754 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="bn" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>অ্যানিমেটেড লাইভ ক্যালেন্ডার ও সাইডবার ইভেন্ট লিস্ট</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f4f8;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        .calendar-wrapper {
-            max-width: 1200px;
-            margin: auto;
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            animation: wrapperLoad 0.8s ease-out;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-        #live-clock {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #e74c3c;
-            margin-bottom: 5px;
-        }
-        #live-date {
-            font-size: 1.1em;
-            color: #7f8c8d;
-            margin-bottom: 20px;
-        }
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        select {
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 6px;
-            border: 1px solid #bdc3c7;
-            background-color: #ecf0f1;
-            cursor: pointer;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-        select:hover {
-            background-color: #bdc3c7;
-        }
-        
-        /* দুই কলামের লেআউট (ক্যালেন্ডার + সাইডবার) */
-        .main-layout {
-            display: flex;
-            gap: 20px;
-        }
-        .calendar-section {
-            flex: 3;
-        }
-        .sidebar-section {
-            flex: 1;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            border: 1px solid #e2e8f0;
-            max-height: 630px;
-            overflow-y: auto;
-        }
-        .sidebar-section h2 {
-            font-size: 1.2em;
-            color: #2c3e50;
-            margin-top: 0;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #34495e;
-            padding-bottom: 5px;
-            text-align: center;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        th {
-            background-color: #34495e;
-            color: #ffffff;
-            padding: 12px;
-            text-transform: uppercase;
-            font-size: 14px;
-        }
-        td {
-            border: 1px solid #ecf0f1;
-            height: 100px;
-            vertical-align: top;
-            padding: 6px;
-            background-color: #fafbfc;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        td:hover {
-            background-color: #ffffff;
-            transform: translateY(-4px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-            z-index: 2;
-            border-radius: 4px;
-        }
-        .date-number {
-            font-weight: bold;
-            font-size: 1.1em;
-            color: #2c3e50;
-            display: block;
-            margin-bottom: 5px;
-        }
-        .today .date-number {
-            color: #fff;
-            background-color: #3498db;
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 50%;
-        }
-        .today {
-            background-color: #ebf5fb;
-            border: 2px solid #3498db;
-        }
-        
-        /* ইভেন্ট স্টাইল */
-        .event {
-            font-size: 0.8em;
-            padding: 4px;
-            margin-bottom: 3px;
-            border-radius: 4px;
-            color: white;
-            display: block;
-            text-align: center;
-            font-weight: bold;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            word-wrap: break-word;
-            transition: transform 0.2s ease;
-        }
-        .event:hover {
-            transform: scale(1.05);
-            cursor: pointer;
-        }
-        
-        /* সাইডবার ইভেন্ট লিস্ট স্টাইল */
-        .sidebar-event-item {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            color: white;
-            font-weight: bold;
-            font-size: 0.9em;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            animation: fadeIn 0.4s ease-in-out;
-        }
-        .sidebar-event-item span {
-            display: block;
-            font-size: 0.8em;
-            font-weight: normal;
-            margin-top: 3px;
-            opacity: 0.9;
-        }
-        .no-event {
-            text-align: center;
-            color: #7f8c8d;
-            font-style: italic;
-            margin-top: 20px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📅 Live Calendar — QA Control Room</title>
+<style>
+  :root{
+    --bg:#05060c;
+    --glow1: rgba(124,131,253,0.30);
+    --glow2: rgba(255,94,168,0.22);
+    --glow3: rgba(56,249,215,0.18);
+    --surface: rgba(255,255,255,0.045);
+    --surface-2: rgba(255,255,255,0.075);
+    --surface-3: rgba(255,255,255,0.10);
+    --border: rgba(255,255,255,0.10);
+    --text:#eaf0f6;
+    --text-muted:#93a3b8;
+    --accent1:#7c83fd;
+    --accent2:#ff5ea8;
+    --accent3:#38f9d7;
+    --accent4:#ffd200;
+    --shadow: 0 8px 32px rgba(0,0,0,0.45);
+  }
+  html[data-theme="light"]{
+    --bg:#eef1f8;
+    --glow1: rgba(124,131,253,0.14);
+    --glow2: rgba(255,94,168,0.12);
+    --glow3: rgba(56,249,215,0.12);
+    --surface: rgba(255,255,255,0.72);
+    --surface-2: rgba(255,255,255,0.92);
+    --surface-3: rgba(255,255,255,1);
+    --border: rgba(20,30,55,0.10);
+    --text:#141b26;
+    --text-muted:#5c6b80;
+    --shadow: 0 8px 28px rgba(20,30,60,0.10);
+  }
 
-        .fade-in-row {
-            animation: fadeIn 0.5s ease-in-out forwards;
-        }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Inter','Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    transition:background .5s ease, color .4s ease;
+    overflow-x:hidden;
+  }
 
-        @keyframes wrapperLoad {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
-        }
+  /* ===== animated aurora background blobs ===== */
+  .bg-orbs{position:fixed; inset:0; z-index:-1; overflow:hidden; background:var(--bg);}
+  .orb{position:absolute; border-radius:50%; filter:blur(70px); opacity:.9;}
+  .orb1{width:520px;height:520px; background:var(--glow1); top:-140px; left:-100px; animation:float1 16s ease-in-out infinite;}
+  .orb2{width:480px;height:480px; background:var(--glow2); bottom:-160px; right:-120px; animation:float2 18s ease-in-out infinite;}
+  .orb3{width:420px;height:420px; background:var(--glow3); top:40%; left:50%; animation:float3 20s ease-in-out infinite;}
+  @keyframes float1{0%,100%{transform:translate(0,0);}50%{transform:translate(80px,60px);}}
+  @keyframes float2{0%,100%{transform:translate(0,0);}50%{transform:translate(-70px,-50px);}}
+  @keyframes float3{0%,100%{transform:translate(-50%,-50%);}50%{transform:translate(-45%,-58%);}}
 
-        /* ইভেন্ট কালার কোড */
-        .color-0 { background-color: #e74c3c; } 
-        .color-1 { background-color: #27ae60; } 
-        .color-2 { background-color: #8e44ad; } 
-        .color-3 { background-color: #f39c12; } 
-        .color-4 { background-color: #16a085; } 
-        .color-5 { background-color: #d35400; } 
-    </style>
+  /* ===== fixed employee welcome bar (mirrors main portal) ===== */
+  #employeeWelcomeBar{
+    position:fixed; top:0; left:0; right:0; z-index:10000;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:7px 18px; gap:10px; flex-wrap:wrap;
+    background: var(--surface-2);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid var(--border);
+    color: var(--text);
+    font-size:12.5px;
+  }
+  .emp-welcome-left{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .emp-welcome-greeting{
+    font-weight:700;
+    background:linear-gradient(90deg,#33C9B0,#4A7FE0,#B94AE0,#E3A857,#FF6FD0,#33C9B0);
+    background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    animation:empGreetingShift 6s linear infinite;
+  }
+  @keyframes empGreetingShift{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+  .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--accent3);box-shadow:0 0 0 0 rgba(56,249,215,.6);animation:pulse 2s infinite;display:inline-block;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(56,249,215,.55);}70%{box-shadow:0 0 0 9px rgba(56,249,215,0);}100%{box-shadow:0 0 0 0 rgba(56,249,215,0);}}
+  .emp-online-chip{display:inline-flex;align-items:center;gap:6px;color:var(--accent3);font-weight:600;font-size:12px;}
+  .online-badge{
+    display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;
+    font-size:11px;font-weight:700;white-space:nowrap;border:1px solid var(--border);
+    animation:onlineGlow 4s ease-in-out infinite;
+  }
+  @keyframes onlineGlow{
+    0%{background:#143832;color:#33C9B0;}
+    25%{background:#3D2E18;color:#E3A857;}
+    50%{background:#3A1518;color:#FF6B6B;}
+    75%{background:#12203A;color:#4A7FE0;}
+    100%{background:#143832;color:#33C9B0;}
+  }
+  .online-badge .pulse-dot{background:currentColor;box-shadow:none;}
+  .emp-inline-stats{
+    display:flex;gap:10px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:10px;
+    padding:3px 12px;border-radius:7px;border:1px solid rgba(56,249,215,0.22);
+    animation:statsGlow 5s ease-in-out infinite;
+  }
+  @keyframes statsGlow{0%,100%{box-shadow:0 0 0 rgba(56,249,215,0);border-color:rgba(56,249,215,0.22);}50%{box-shadow:0 0 12px rgba(56,249,215,0.25);border-color:rgba(56,249,215,0.5);}}
+  .emp-inline-stat{color:var(--text-muted);white-space:nowrap;}
+  .emp-inline-stat b{color:var(--text);font-size:11.5px;font-weight:700;}
+  .emp-welcome-right{display:flex;gap:8px;align-items:center;}
+  .emp-mini-btn{
+    background:var(--surface-3);border:1px solid var(--border);color:var(--text);
+    border-radius:7px;padding:6px 14px;font-size:11px;cursor:pointer;min-width:88px;font-family:inherit;
+  }
+  .emp-mini-btn:hover{opacity:.85;}
+  .emp-mini-btn.danger{
+    background:linear-gradient(135deg,#ff2fb0,#c2007a);border-color:#ff6fd0;color:#fff;font-weight:700;
+    box-shadow:0 0 10px rgba(255,32,180,.45);animation:logoutPulse 2s infinite;
+  }
+  @keyframes logoutPulse{0%,100%{box-shadow:0 0 10px rgba(255,32,180,.45);}50%{box-shadow:0 0 18px rgba(255,32,180,.8);}}
+  .guest-bar{
+    position:fixed;top:0;left:0;right:0;z-index:10000;display:flex;align-items:center;justify-content:space-between;
+    padding:10px 18px;background:var(--surface-2);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);font-size:13px;
+  }
+  .guest-bar a{color:var(--accent1);font-weight:700;text-decoration:none;}
+
+  /* ===== premium top bar: logo + scrolling ticker + theme toggle ===== */
+  .cal-topbar{
+    position:sticky; z-index:900;
+    display:flex; align-items:center; gap:16px;
+    padding:12px 20px; margin-top:var(--bar-h,0px);
+    background:var(--surface); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .cal-brand{
+    display:flex; align-items:center; gap:8px; font-weight:800; font-size:15px; white-space:nowrap;
+    background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3));
+    background-size:220% 100%; -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    animation:brandShift 6s linear infinite;
+  }
+  @keyframes brandShift{0%{background-position:0% 50%;}100%{background-position:220% 50%;}}
+  .cal-back{
+    font-size:11.5px; color:var(--text-muted); text-decoration:none; border:1px solid var(--border);
+    padding:6px 12px; border-radius:20px; white-space:nowrap; transition:.25s;
+  }
+  .cal-back:hover{color:var(--text); border-color:var(--accent1); box-shadow:0 0 10px var(--glow1);}
+  .cal-ticker{ flex:1; overflow:hidden; position:relative; height:22px; -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
+  .cal-ticker-track{
+    position:absolute; white-space:nowrap; font-size:12.5px; font-weight:600; letter-spacing:.3px;
+    animation:tickerScroll 22s linear infinite;
+    color:var(--text-muted);
+  }
+  .cal-ticker-track b{color:var(--accent2);}
+  @keyframes tickerScroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+  .theme-toggle-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);white-space:nowrap;}
+  .theme-switch{position:relative;display:inline-block;width:44px;height:24px;}
+  .theme-switch input{opacity:0;width:0;height:0;}
+  .theme-slider{position:absolute;cursor:pointer;inset:0;background:var(--surface-3);border:1px solid var(--border);border-radius:24px;transition:.3s;}
+  .theme-slider:before{content:"";position:absolute;height:16px;width:16px;left:3px;top:3px;background:linear-gradient(135deg,var(--accent1),var(--accent2));border-radius:50%;transition:.3s;}
+  .theme-switch input:checked + .theme-slider:before{transform:translateX(20px);}
+
+  /* ===== page layout ===== */
+  .page-wrap{max-width:1240px;margin:26px auto 60px;padding:0 20px;}
+
+  .calendar-wrapper{
+    background:var(--surface);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:26px;
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+    animation:cardLoad .7s ease-out;
+  }
+  .calendar-wrapper::before{
+    content:'';position:absolute;inset:0;border-radius:20px;padding:1px;
+    background:linear-gradient(120deg,var(--accent1),var(--accent2),var(--accent3),var(--accent1));
+    background-size:300% 300%;
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    animation:borderFlow 8s linear infinite; opacity:.55; pointer-events:none;
+  }
+  @keyframes borderFlow{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+  @keyframes cardLoad{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
+
+  .header{text-align:center;margin-bottom:18px;}
+  h1.title{
+    margin:0 0 8px; font-size:26px; font-weight:800; letter-spacing:.3px;
+    background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent4),var(--accent3),var(--accent1));
+    background-size:300% 100%; -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    animation:titleShift 7s linear infinite;
+  }
+  @keyframes titleShift{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+  #live-clock{font-size:1.5em;font-weight:800;color:var(--accent2);text-shadow:0 0 14px var(--glow2);margin-bottom:4px;}
+  #live-date{font-size:1.05em;color:var(--text-muted);margin-bottom:6px;}
+
+  .controls{display:flex;justify-content:center;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+  select{
+    padding:10px 14px;font-size:14px;border-radius:10px;border:1px solid var(--border);
+    background:var(--surface-2);color:var(--text);cursor:pointer;outline:none;font-weight:600;
+    transition:all .25s ease;
+  }
+  select:hover{border-color:var(--accent1);box-shadow:0 0 12px var(--glow1);}
+
+  .main-layout{display:flex;gap:22px;flex-wrap:wrap;}
+  .calendar-section{flex:3;min-width:320px;}
+  .sidebar-section{
+    flex:1; min-width:250px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:14px;
+    padding:16px; max-height:640px; overflow-y:auto;
+  }
+  .sidebar-section h2{
+    margin:0 0 6px; font-size:1.05em; text-align:center; font-weight:800;
+    background:linear-gradient(90deg,var(--accent2),var(--accent1),var(--accent3),var(--accent2));
+    background-size:280% 100%; -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    animation:titleShift 6s linear infinite;
+  }
+  .sidebar-divider{
+    height:3px;border:none;border-radius:2px;margin:0 0 14px;
+    background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3),var(--accent1));
+    background-size:300% 100%; animation:borderFlow 5s linear infinite;
+  }
+
+  table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  th{
+    background:var(--surface-3); color:var(--text); padding:11px 4px;
+    text-transform:uppercase; font-size:12.5px; font-weight:700; letter-spacing:.5px;
+    border-bottom:2px solid var(--border);
+  }
+  td{
+    border:1px solid var(--border); height:96px; vertical-align:top; padding:6px;
+    background:var(--surface); position:relative; border-radius:8px;
+    transition:all .3s cubic-bezier(.25,.8,.25,1);
+  }
+  td:hover{background:var(--surface-3);transform:translateY(-4px) scale(1.02);box-shadow:0 10px 24px rgba(0,0,0,.25);z-index:2;}
+  .date-number{font-weight:700;font-size:1.05em;color:var(--text);display:block;margin-bottom:5px;}
+  .today{background:linear-gradient(135deg, rgba(124,131,253,.18), rgba(255,94,168,.14)); border:2px solid var(--accent1); box-shadow:0 0 16px var(--glow1);}
+  .today .date-number{color:#fff;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:inline-block;padding:2px 8px;border-radius:50%;}
+
+  .event{
+    font-size:.76em;padding:4px 3px;margin-bottom:3px;border-radius:6px;color:#fff;display:block;
+    text-align:center;font-weight:700;word-wrap:break-word;box-shadow:0 2px 8px rgba(0,0,0,.25);
+    transition:transform .2s ease; cursor:pointer;
+  }
+  .event:hover{transform:scale(1.08);}
+
+  .sidebar-event-item{
+    padding:11px 12px;margin-bottom:10px;border-radius:10px;color:#fff;font-weight:700;font-size:.9em;
+    box-shadow:0 4px 14px rgba(0,0,0,.25); opacity:0; transform:translateX(14px) scale(.96);
+    animation:eventIn .5s ease forwards; position:relative; overflow:hidden;
+  }
+  .sidebar-event-item::after{
+    content:''; position:absolute; inset:0; background:linear-gradient(120deg,transparent,rgba(255,255,255,.35),transparent);
+    transform:translateX(-120%); animation:eventShine 3.2s ease-in-out infinite;
+  }
+  @keyframes eventShine{0%{transform:translateX(-120%);}50%{transform:translateX(120%);}100%{transform:translateX(120%);}}
+  .sidebar-event-item span{display:block;font-size:.8em;font-weight:500;margin-top:3px;opacity:.92;}
+  @keyframes eventIn{to{opacity:1;transform:translateX(0) scale(1);}}
+  .no-event{text-align:center;color:var(--text-muted);font-style:italic;margin-top:20px;}
+  .fade-in-row{animation:fadeIn .5s ease-in-out forwards;}
+  @keyframes fadeIn{from{opacity:0;transform:scale(.98);}to{opacity:1;transform:scale(1);}}
+
+  /* premium gradient event colors */
+  .color-0{background:linear-gradient(135deg,#ff5e5e,#ff2e63);}
+  .color-1{background:linear-gradient(135deg,#43e97b,#38f9d7);}
+  .color-2{background:linear-gradient(135deg,#a770ef,#cf8bf3);}
+  .color-3{background:linear-gradient(135deg,#f7971e,#ffd200);}
+  .color-4{background:linear-gradient(135deg,#00c9ff,#7c83fd);}
+  .color-5{background:linear-gradient(135deg,#f857a6,#ff5858);}
+
+  ::-webkit-scrollbar{width:9px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:6px;}
+
+  @media (max-width:720px){
+    #employeeWelcomeBar{flex-direction:column;align-items:flex-start;gap:6px;}
+    .cal-topbar{flex-wrap:wrap;}
+    .cal-ticker{order:3;width:100%;}
+  }
+</style>
 </head>
 <body>
 
-<div class="calendar-wrapper">
+<div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+
+<!-- Fixed Employee Welcome Bar — mirrors the main portal so logged-in employees see the same live info here -->
+<div id="employeeWelcomeBar" style="display:none;">
+  <div class="emp-welcome-left">
+    <span>👋 Welcome, <b id="empWelcomeName">-</b></span>
+    <span id="empWelcomeGreeting" class="emp-welcome-greeting">Good Morning</span>
+    <span class="emp-online-chip"><span class="pulse-dot"></span> You are online. Your portal activity is being monitored by the Portal Administrator.</span>
+    <span class="online-badge" id="onlineCountPill"><span class="pulse-dot"></span><span id="onlineCountBadge">--</span> Total Agent(s) Currently Online</span>
+    <span class="emp-inline-stats">
+      <span class="emp-inline-stat">ID: <b id="empStatId">--</b></span>
+      <span class="emp-inline-stat">Login: <b id="empStatLoginTime">--:--:--</b></span>
+      <span class="emp-inline-stat">Previous: <b id="empStatPrevLogin">--</b></span>
+      <span class="emp-inline-stat">IP: <b id="empStatCurrentIP">--</b></span>
+      <span class="emp-inline-stat">Session: <b id="empStatSession">00:00:00</b></span>
+      <span class="emp-inline-stat">Today: <b id="empStatTodayTotal">00:00:00</b></span>
+      <span class="emp-inline-stat">Device: <b id="empStatDevice">--</b></span>
+      <span class="emp-inline-stat">Browser: <b id="empStatBrowser">--</b></span>
+    </span>
+  </div>
+  <div class="emp-welcome-right">
+    <button class="emp-mini-btn" onclick="window.location.href='QA_Control_Room_Updated.html'">Change Pass</button>
+    <button class="emp-mini-btn danger" onclick="handleCalLogout()">⏻ Logout</button>
+  </div>
+</div>
+
+<!-- Simple bar for guests / non-employee roles -->
+<div class="guest-bar" id="guestBar" style="display:none;">
+  <span id="guestRoleText">👋 Welcome</span>
+  <a href="QA_Control_Room_Updated.html">← Back to Dashboard</a>
+</div>
+
+<div class="cal-topbar" id="calTopbar">
+  <div class="cal-brand">📅 Live Calendar</div>
+  <a class="cal-back" href="QA_Control_Room_Updated.html">← Dashboard</a>
+  <div class="cal-ticker">
+    <div class="cal-ticker-track">🎉 <b>Special Occasions</b> auto-highlighted every month &nbsp;•&nbsp; সব সরকারি ছুটি ও বিশেষ দিন লাইভ দেখুন &nbsp;•&nbsp; নতুন বছরের ক্যালেন্ডার ২০২৬–২০২৮ পর্যন্ত উপলব্ধ &nbsp;•&nbsp; 🎉</div>
+  </div>
+  <div class="theme-toggle-wrap">
+    <span>🌙</span>
+    <label class="theme-switch">
+      <input type="checkbox" id="themeSwitch" onchange="toggleTheme()">
+      <span class="theme-slider"></span>
+    </label>
+    <span>☀️</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <div class="calendar-wrapper">
     <div class="header">
-        <h1>বিশেষ দিন ও ক্যালেন্ডার</h1>
-        <div id="live-clock"></div>
-        <div id="live-date"></div>
+      <h1 class="title">✨ ক্যালেন্ডার ✨</h1>
+      <div id="live-clock"></div>
+      <div id="live-date"></div>
     </div>
 
     <div class="controls">
-        <select id="monthSelect" onchange="renderCalendar()">
-            <option value="0">জানুয়ারি</option>
-            <option value="1">ফেব্রুয়ারি</option>
-            <option value="2">মার্চ</option>
-            <option value="3">এপ্রিল</option>
-            <option value="4">মে</option>
-            <option value="5">জুন</option>
-            <option value="6">জুলাই</option>
-            <option value="7">আগস্ট</option>
-            <option value="8">সেপ্টেম্বর</option>
-            <option value="9">অক্টোবর</option>
-            <option value="10">নভেম্বর</option>
-            <option value="11">ডিসেম্বর</option>
-        </select>
-        <select id="yearSelect" onchange="renderCalendar()">
-            <option value="2026">২০২৬</option>
-            <option value="2027">২০২৭</option>
-            <option value="2028">২০২৮</option>
-        </select>
+      <select id="monthSelect" onchange="renderCalendar()">
+        <option value="0">জানুয়ারি</option>
+        <option value="1">ফেব্রুয়ারি</option>
+        <option value="2">মার্চ</option>
+        <option value="3">এপ্রিল</option>
+        <option value="4">মে</option>
+        <option value="5">জুন</option>
+        <option value="6">জুলাই</option>
+        <option value="7">আগস্ট</option>
+        <option value="8">সেপ্টেম্বর</option>
+        <option value="9">অক্টোবর</option>
+        <option value="10">নভেম্বর</option>
+        <option value="11">ডিসেম্বর</option>
+      </select>
+      <select id="yearSelect" onchange="renderCalendar()">
+        <option value="2026">২০২৬</option>
+        <option value="2027">২০২৭</option>
+        <option value="2028">২০২৮</option>
+      </select>
     </div>
 
-    <!-- মূল লেআউট শুরু -->
     <div class="main-layout">
-        <!-- ক্যালেন্ডার অংশ -->
-        <div class="calendar-section">
-            <table id="calendarTable">
-                <thead>
-                    <tr>
-                        <th>রবি</th>
-                        <th>সোম</th>
-                        <th>মঙ্গল</th>
-                        <th>বুধ</th>
-                        <th>বৃহঃ</th>
-                        <th>শুক্র</th>
-                        <th>শনি</th>
-                    </tr>
-                </thead>
-                <tbody id="calendarBody"></tbody>
-            </table>
-        </div>
-        
-        <!-- সাইডবার ইভেন্ট লিস্ট অংশ -->
-        <div class="sidebar-section">
-            <h2>এই মাসের বিশেষ দিনসমূহ</h2>
-            <div id="sidebarEventList"></div>
-        </div>
+      <div class="calendar-section">
+        <table id="calendarTable">
+          <thead>
+            <tr>
+              <th>রবি</th><th>সোম</th><th>মঙ্গল</th><th>বুধ</th><th>বৃহঃ</th><th>শুক্র</th><th>শনি</th>
+            </tr>
+          </thead>
+          <tbody id="calendarBody"></tbody>
+        </table>
+      </div>
+
+      <div class="sidebar-section">
+        <h2>📅 Upcoming Special Occasions</h2>
+        <hr class="sidebar-divider">
+        <div id="sidebarEventList"></div>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
-    const holidays = {
-        // 2026
-        "2026-01-01": ["New Years Day"],
-        "2026-01-12": ["Birthday of Swami Vivekananda"],
-        "2026-01-23": ["Saraswati Puja", "Birthday of Netaji"],
-        "2026-01-26": ["Republic Day"],
-        "2026-03-03": ["Doljatra"],
-        "2026-03-21": ["Eid Ul-Fitar"],
-        "2026-03-26": ["Ram Navami"],
-        "2026-03-31": ["Mahavir Jayanti"],
-        "2026-04-03": ["Good Friday"],
-        "2026-04-14": ["Birthday of Dr. B.R. Ambedkar"],
-        "2026-04-15": ["Bengali New Year"],
-        "2026-05-01": ["Buddha Purnima", "May Day"],
-        "2026-05-09": ["Birthday of Rabindra Nath Tagore"],
-        "2026-05-31": ["Id-Ud-Zoha (Bakrid)"],
-        "2026-06-26": ["Muharram"],
-        "2026-08-15": ["Independence Day"],
-        "2026-09-04": ["Janmashtami"],
-        "2026-10-02": ["Birthday of Gandhiji"],
-        "2026-10-10": ["Mahalaya"],
-        "2026-10-18": ["Durga Puja - Saptami"],
-        "2026-10-19": ["Durga Puja - Astami"],
-        "2026-10-20": ["Durga Puja - Nabami", "Durga Puja - Vijaya Dasami"],
-        "2026-10-25": ["Lakshmi Puja"],
-        "2026-11-08": ["Kali Puja"],
-        "2026-11-11": ["Bharatridwitiya"],
-        "2026-11-15": ["Chhat Puja"],
-        "2026-11-24": ["Birth Day of Guru Nanak"],
-        "2026-12-25": ["Christmas Day"],
+/* ===================== THEME (shared with main portal via 'qa_theme') ===================== */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const chk = document.getElementById('themeSwitch');
+  if(chk) chk.checked = (theme === 'light');
+}
+function toggleTheme(){
+  const isLight = document.getElementById('themeSwitch').checked;
+  applyTheme(isLight ? 'light' : 'dark');
+  localStorage.setItem('qa_theme', isLight ? 'light' : 'dark');
+}
+applyTheme(localStorage.getItem('qa_theme') || 'dark');
 
-        // 2027
-        "2027-01-01": ["New Years Day"],
-        "2027-01-12": ["Birthday of Swami Vivekananda"],
-        "2027-01-23": ["Birthday of Netaji"],
-        "2027-01-26": ["Republic Day"],
-        "2027-02-11": ["Saraswati Puja (Shree Panchami)"],
-        "2027-03-10": ["Id Ul-Fitar"],
-        "2027-03-22": ["Doljatra"],
-        "2027-03-26": ["Good Friday"],
-        "2027-04-14": ["Birthday of Dr. B.R. Ambedkar"],
-        "2027-04-15": ["Bengali New Year", "Ram Navami"],
-        "2027-04-19": ["Mahavir Jayanti"],
-        "2027-05-01": ["May Day"],
-        "2027-05-09": ["Birthday of Rabindra Nath Tagore"],
-        "2027-05-17": ["Id-Ud-Zoha (Bakrid)"],
-        "2027-05-20": ["Buddha Purnima"],
-        "2027-06-15": ["Muharram"],
-        "2027-08-15": ["Independence Day"],
-        "2027-08-25": ["Janmashtami"],
-        "2027-09-29": ["Mahalaya"],
-        "2027-10-02": ["Birthday of Gandhiji"],
-        "2027-10-06": ["Durga Puja - Saptami"],
-        "2027-10-08": ["Durga Puja - Astami"],
-        "2027-10-09": ["Durga Puja - Nabami"],
-        "2027-10-10": ["Durga Puja - Vijaya Dasami"],
-        "2027-10-29": ["Lakshmi Puja"],
-        "2027-10-31": ["Bharatridwitiya"],
-        "2027-11-04": ["Chhat Puja"],
-        "2027-11-14": ["Birth Day of Guru Nanak"],
-        "2027-12-25": ["Christmas Day"],
+/* ===================== SMALL HELPERS (mirrors main portal) ===================== */
+function getBrowserName(){
+  const ua = navigator.userAgent;
+  if(ua.includes('Edg/')) return 'Edge';
+  if(ua.includes('Chrome/') && !ua.includes('OPR')) return 'Chrome';
+  if(ua.includes('Firefox/')) return 'Firefox';
+  if(ua.includes('Safari/') && !ua.includes('Chrome')) return 'Safari';
+  if(ua.includes('OPR')) return 'Opera';
+  return 'Unknown';
+}
+function getDeviceType(){
+  const ua = navigator.userAgent;
+  if(/Mobi|Android/i.test(ua)) return 'Mobile';
+  if(/Tablet|iPad/i.test(ua)) return 'Tablet';
+  return 'Desktop';
+}
+async function getClientIP(){
+  try{
+    const res = await fetch('https://api.ipify.org?format=json');
+    const d = await res.json();
+    return d.ip || '';
+  }catch(e){ return ''; }
+}
+function secToHMS(sec){
+  sec = Math.max(0, Math.round(sec));
+  const h = String(Math.floor(sec/3600)).padStart(2,'0');
+  const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
+  const s = String(sec%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+function to12Hour(t){
+  if(!t) return '';
+  const d = new Date(t);
+  if(!isNaN(d.getTime())) return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  return t;
+}
+function formatPreviousLogin(v){ return v || '--'; }
+function currentGreetingText(){
+  const h = new Date().getHours();
+  if(h>=5 && h<12) return 'Good Morning';
+  if(h>=12 && h<17) return 'Good Afternoon';
+  if(h>=17 && h<20) return 'Good Evening';
+  return 'Good Night';
+}
 
-        // 2028
-        "2028-01-01": ["New Years Day"],
-        "2028-01-12": ["Birthday of Swami Vivekananda"],
-        "2028-01-23": ["Birthday of Netaji"],
-        "2028-01-26": ["Republic Day"],
-        "2028-01-31": ["Saraswati Puja"],
-        "2028-02-27": ["Id Ul-Fitar"],
-        "2028-03-22": ["Doljatra"],
-        "2028-04-03": ["Ram Navami"],
-        "2028-04-07": ["Mahavir Jayanti"],
-        "2028-04-14": ["Good Friday", "Birthday of Dr. B.R. Ambedkar"],
-        "2028-04-15": ["Bengali New Year"],
-        "2028-05-01": ["May Day"],
-        "2028-05-05": ["Id-Ud-Zoha (Bakrid)"],
-        "2028-05-08": ["Buddha Purnima"],
-        "2028-05-09": ["Birthday of Rabindra Nath Tagore"],
-        "2028-06-03": ["Muharram"],
-        "2028-08-13": ["Janmashtami"],
-        "2028-08-15": ["Independence Day"],
-        "2028-09-18": ["Mahalaya"],
-        "2028-09-25": ["Durga Puja - Saptami"],
-        "2028-09-26": ["Durga Puja - Astami", "Durga Puja - Nabami"],
-        "2028-09-27": ["Durga Puja - Vijaya Dasami"],
-        "2028-10-02": ["Birthday of Gandhiji"],
-        "2028-10-17": ["Lakshmi Puja"],
-        "2028-10-23": ["Chhat Puja"],
-        "2028-11-02": ["Birth Day of Guru Nanak"],
-        "2028-12-25": ["Christmas Day"]
-    };
+/* ===================== ONLINE PRESENCE (same key/store as main portal) ===================== */
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbCrtIR8ww9F8eJBKZl92Ml-L7TwDq_hZBu3VHK8D8H-EYz2FM5nw/exec";
+const EMP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwktIZBumwKZM7z9rUZsT6vDoj1PBsMgcZL6VyH8HejBnBsx879O3Jy1dSLaGAiOLjr/exec";
+const ONLINE_HEARTBEAT_MS = 30 * 1000;
+const ONLINE_TIMEOUT_MS   = 90 * 1000;
 
-    function updateLiveTime() {
-        const now = new Date();
-        document.getElementById('live-clock').innerText = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        document.getElementById('live-date').innerText = now.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+async function storageGet(key){
+  try{
+    const res = await fetch(`${WEB_APP_URL}?action=getSettings&key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    return data && data.value ? JSON.parse(data.value) : null;
+  }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  try{
+    await fetch(`${WEB_APP_URL}?action=saveSettings`, { method:'POST', body: JSON.stringify({ key, value: JSON.stringify(value) }) });
+    return true;
+  }catch(e){ return false; }
+}
+function getMySessionId(){
+  let id = sessionStorage.getItem('qa_session_id');
+  if(!id){ id = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2,10); sessionStorage.setItem('qa_session_id', id); }
+  return id;
+}
+function getSessionTs(entry){ return (entry && typeof entry === 'object') ? entry.ts : entry; }
+function renderOnlineCount(count){
+  const b = document.getElementById('onlineCountBadge');
+  if(b) b.textContent = count;
+}
+async function pingOnlinePresence(){
+  try{
+    const mySessionId = getMySessionId();
+    const now = Date.now();
+    let sessions = (await storageGet('onlineSessions')) || {};
+    Object.keys(sessions).forEach(id=>{ if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id]; });
+    const myName = localStorage.getItem('qa_emp_name') || null;
+    const myEmpId = localStorage.getItem('qa_emp_id') || null;
+    sessions[mySessionId] = { ts: now, name: myName, id: myEmpId };
+    await storageSet('onlineSessions', sessions);
+    renderOnlineCount(Object.keys(sessions).length);
+  }catch(e){}
+}
+
+/* ===================== EMPLOYEE / GUEST WELCOME BAR ===================== */
+let calSessionStartEpoch = null;
+let calTodayPriorSeconds = 0;
+let calSessionTimer = null;
+
+function initWelcomeBar(){
+  const empId = localStorage.getItem('qa_emp_id');
+  const empName = localStorage.getItem('qa_emp_name');
+  const role = localStorage.getItem('qa_role');
+
+  if(empId && empName){
+    // Full employee session — show the rich stats bar, same as the main portal
+    document.getElementById('employeeWelcomeBar').style.display = 'flex';
+    document.getElementById('empWelcomeName').textContent = empName.toUpperCase();
+    document.getElementById('empWelcomeGreeting').textContent = currentGreetingText();
+    setInterval(()=>{ document.getElementById('empWelcomeGreeting').textContent = currentGreetingText(); }, 60000);
+
+    document.getElementById('empStatId').textContent = empId;
+    document.getElementById('empStatLoginTime').textContent = to12Hour(localStorage.getItem('qa_emp_login_time_display')) || '--:--:--';
+    document.getElementById('empStatPrevLogin').textContent = formatPreviousLogin(localStorage.getItem('qa_emp_prev_login'));
+    document.getElementById('empStatDevice').textContent = getDeviceType();
+    document.getElementById('empStatBrowser').textContent = getBrowserName();
+
+    const ipEl = document.getElementById('empStatCurrentIP');
+    ipEl.textContent = 'Loading...';
+    getClientIP().then(ip=>{ ipEl.textContent = ip || 'Unavailable'; });
+
+    calSessionStartEpoch = Number(localStorage.getItem('qa_emp_session_start')) || Date.now();
+    calTodayPriorSeconds = Number(localStorage.getItem('qa_emp_today_prior')) || 0;
+    calSessionTimer = setInterval(()=>{
+      const elapsed = Math.round((Date.now() - calSessionStartEpoch) / 1000);
+      document.getElementById('empStatSession').textContent = secToHMS(elapsed);
+      document.getElementById('empStatTodayTotal').textContent = secToHMS(calTodayPriorSeconds + elapsed);
+    }, 1000);
+
+    pingOnlinePresence();
+    setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
+
+  }else if(role){
+    // Plain Agent/Admin (Staff Access) login — lightweight bar
+    document.getElementById('guestBar').style.display = 'flex';
+    document.getElementById('guestRoleText').textContent = `👋 Logged in as ${role.toUpperCase()}`;
+    pingOnlinePresence();
+    setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
+  }else{
+    // No active session — simple guest bar pointing back to login
+    document.getElementById('guestBar').style.display = 'flex';
+    document.getElementById('guestRoleText').textContent = `👋 Welcome, Guest`;
+  }
+}
+
+async function handleCalLogout(){
+  const empId = localStorage.getItem('qa_emp_id');
+  const sid = localStorage.getItem('qa_emp_session_id');
+  try{
+    if(empId && sid){
+      await fetch(`${EMP_WEB_APP_URL}?action=employeeLogout`, {
+        method:'POST',
+        body: JSON.stringify({ action:'employeeLogout', employeeId: empId, sessionId: sid, logoutType:'Manual' })
+      });
     }
-    
-    setInterval(updateLiveTime, 1000);
-    updateLiveTime();
+  }catch(e){}
+  ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity','qa_role','qa_login_time']
+    .forEach(k=>localStorage.removeItem(k));
+  window.location.href = 'QA_Control_Room_Updated.html';
+}
 
-    function renderCalendar() {
-        const month = parseInt(document.getElementById('monthSelect').value);
-        const year = parseInt(document.getElementById('yearSelect').value);
-        const tbody = document.getElementById('calendarBody');
-        const sidebarList = document.getElementById('sidebarEventList');
-        
-        tbody.innerHTML = "";
-        sidebarList.innerHTML = ""; // সাইডবার লিস্ট ও ক্লিয়ার করা হচ্ছে
+initWelcomeBar();
 
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
-        const today = new Date();
-        const isCurrentMonth = (today.getMonth() === month && today.getFullYear() === year);
-        const currentDay = today.getDate();
+/* ===================== HOLIDAYS DATA (unchanged) ===================== */
+const holidays = {
+    // 2026
+    "2026-01-01": ["New Years Day"],
+    "2026-01-12": ["Birthday of Swami Vivekananda"],
+    "2026-01-23": ["Saraswati Puja", "Birthday of Netaji"],
+    "2026-01-26": ["Republic Day"],
+    "2026-03-03": ["Doljatra"],
+    "2026-03-21": ["Eid Ul-Fitar"],
+    "2026-03-26": ["Ram Navami"],
+    "2026-03-31": ["Mahavir Jayanti"],
+    "2026-04-03": ["Good Friday"],
+    "2026-04-14": ["Birthday of Dr. B.R. Ambedkar"],
+    "2026-04-15": ["Bengali New Year"],
+    "2026-05-01": ["Buddha Purnima", "May Day"],
+    "2026-05-09": ["Birthday of Rabindra Nath Tagore"],
+    "2026-05-31": ["Id-Ud-Zoha (Bakrid)"],
+    "2026-06-26": ["Muharram"],
+    "2026-08-15": ["Independence Day"],
+    "2026-09-04": ["Janmashtami"],
+    "2026-10-02": ["Birthday of Gandhiji"],
+    "2026-10-10": ["Mahalaya"],
+    "2026-10-18": ["Durga Puja - Saptami"],
+    "2026-10-19": ["Durga Puja - Astami"],
+    "2026-10-20": ["Durga Puja - Nabami", "Durga Puja - Vijaya Dasami"],
+    "2026-10-25": ["Lakshmi Puja"],
+    "2026-11-08": ["Kali Puja"],
+    "2026-11-11": ["Bharatridwitiya"],
+    "2026-11-15": ["Chhat Puja"],
+    "2026-11-24": ["Birth Day of Guru Nanak"],
+    "2026-12-25": ["Christmas Day"],
 
-        let monthHolidays = []; // সাইডবারে দেখানোর জন্য এই মাসের ইভেন্টগুলো জমা করার অ্যারে
+    // 2027
+    "2027-01-01": ["New Years Day"],
+    "2027-01-12": ["Birthday of Swami Vivekananda"],
+    "2027-01-23": ["Birthday of Netaji"],
+    "2027-01-26": ["Republic Day"],
+    "2027-02-11": ["Saraswati Puja (Shree Panchami)"],
+    "2027-03-10": ["Id Ul-Fitar"],
+    "2027-03-22": ["Doljatra"],
+    "2027-03-26": ["Good Friday"],
+    "2027-04-14": ["Birthday of Dr. B.R. Ambedkar"],
+    "2027-04-15": ["Bengali New Year", "Ram Navami"],
+    "2027-04-19": ["Mahavir Jayanti"],
+    "2027-05-01": ["May Day"],
+    "2027-05-09": ["Birthday of Rabindra Nath Tagore"],
+    "2027-05-17": ["Id-Ud-Zoha (Bakrid)"],
+    "2027-05-20": ["Buddha Purnima"],
+    "2027-06-15": ["Muharram"],
+    "2027-08-15": ["Independence Day"],
+    "2027-08-25": ["Janmashtami"],
+    "2027-09-29": ["Mahalaya"],
+    "2027-10-02": ["Birthday of Gandhiji"],
+    "2027-10-06": ["Durga Puja - Saptami"],
+    "2027-10-08": ["Durga Puja - Astami"],
+    "2027-10-09": ["Durga Puja - Nabami"],
+    "2027-10-10": ["Durga Puja - Vijaya Dasami"],
+    "2027-10-29": ["Lakshmi Puja"],
+    "2027-10-31": ["Bharatridwitiya"],
+    "2027-11-04": ["Chhat Puja"],
+    "2027-11-14": ["Birth Day of Guru Nanak"],
+    "2027-12-25": ["Christmas Day"],
 
-        let date = 1;
-        for (let i = 0; i < 6; i++) {
-            let row = document.createElement("tr");
-            row.className = "fade-in-row";
-            let hasDate = false;
+    // 2028
+    "2028-01-01": ["New Years Day"],
+    "2028-01-12": ["Birthday of Swami Vivekananda"],
+    "2028-01-23": ["Birthday of Netaji"],
+    "2028-01-26": ["Republic Day"],
+    "2028-01-31": ["Saraswati Puja"],
+    "2028-02-27": ["Id Ul-Fitar"],
+    "2028-03-22": ["Doljatra"],
+    "2028-04-03": ["Ram Navami"],
+    "2028-04-07": ["Mahavir Jayanti"],
+    "2028-04-14": ["Good Friday", "Birthday of Dr. B.R. Ambedkar"],
+    "2028-04-15": ["Bengali New Year"],
+    "2028-05-01": ["May Day"],
+    "2028-05-05": ["Id-Ud-Zoha (Bakrid)"],
+    "2028-05-08": ["Buddha Purnima"],
+    "2028-05-09": ["Birthday of Rabindra Nath Tagore"],
+    "2028-06-03": ["Muharram"],
+    "2028-08-13": ["Janmashtami"],
+    "2028-08-15": ["Independence Day"],
+    "2028-09-18": ["Mahalaya"],
+    "2028-09-25": ["Durga Puja - Saptami"],
+    "2028-09-26": ["Durga Puja - Astami", "Durga Puja - Nabami"],
+    "2028-09-27": ["Durga Puja - Vijaya Dasami"],
+    "2028-10-02": ["Birthday of Gandhiji"],
+    "2028-10-17": ["Lakshmi Puja"],
+    "2028-10-23": ["Chhat Puja"],
+    "2028-11-02": ["Birth Day of Guru Nanak"],
+    "2028-12-25": ["Christmas Day"]
+};
 
-            for (let j = 0; j < 7; j++) {
-                let cell = document.createElement("td");
-                
-                if (i === 0 && j < firstDay) {
-                    // ফাঁকা ঘর
-                } else if (date > daysInMonth) {
-                    // ফাঁকা ঘর
-                } else {
-                    hasDate = true;
-                    let dateSpan = document.createElement("span");
-                    dateSpan.className = "date-number";
-                    dateSpan.innerText = date;
-                    cell.appendChild(dateSpan);
+/* ===================== LIVE CLOCK ===================== */
+function updateLiveTime() {
+    const now = new Date();
+    document.getElementById('live-clock').innerText = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('live-date').innerText = now.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+setInterval(updateLiveTime, 1000);
+updateLiveTime();
 
-                    if (isCurrentMonth && date === currentDay) {
-                        cell.className = "today";
-                    }
+/* ===================== CALENDAR RENDER (premium visuals, same logic) ===================== */
+function renderCalendar() {
+    const month = parseInt(document.getElementById('monthSelect').value);
+    const year = parseInt(document.getElementById('yearSelect').value);
+    const tbody = document.getElementById('calendarBody');
+    const sidebarList = document.getElementById('sidebarEventList');
 
-                    let formattedMonth = (month + 1).toString().padStart(2, '0');
-                    let formattedDate = date.toString().padStart(2, '0');
-                    let dateString = `${year}-${formattedMonth}-${formattedDate}`;
+    tbody.innerHTML = "";
+    sidebarList.innerHTML = "";
 
-                    if (holidays[dateString]) {
-                        holidays[dateString].forEach((event, index) => {
-                            let colorIndex = (date + index) % 6;
-                            let colorClass = `color-${colorIndex}`;
-                            
-                            // ক্যালেন্ডারের ভেতরে ইভেন্ট যোগ করা
-                            let eventDiv = document.createElement("div");
-                            eventDiv.className = `event ${colorClass}`;
-                            eventDiv.innerText = event;
-                            cell.appendChild(eventDiv);
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-                            // সাইডবার লিস্টের জন্য ডেটা অবজেক্ট তৈরি
-                            monthHolidays.push({
-                                date: `${date}ই ${document.getElementById('monthSelect').options[month].text}`,
-                                name: event,
-                                colorClass: colorClass
-                            });
-                        });
-                    }
-                    date++;
+    const today = new Date();
+    const isCurrentMonth = (today.getMonth() === month && today.getFullYear() === year);
+    const currentDay = today.getDate();
+
+    let monthHolidays = [];
+
+    let date = 1;
+    for (let i = 0; i < 6; i++) {
+        let row = document.createElement("tr");
+        row.className = "fade-in-row";
+        row.style.animationDelay = (i * 0.05) + "s";
+        let hasDate = false;
+
+        for (let j = 0; j < 7; j++) {
+            let cell = document.createElement("td");
+
+            if (i === 0 && j < firstDay) {
+                // empty
+            } else if (date > daysInMonth) {
+                // empty
+            } else {
+                hasDate = true;
+                let dateSpan = document.createElement("span");
+                dateSpan.className = "date-number";
+                dateSpan.innerText = date;
+                cell.appendChild(dateSpan);
+
+                if (isCurrentMonth && date === currentDay) {
+                    cell.className = "today";
                 }
-                row.appendChild(cell);
-            }
-            if (hasDate) {
-                tbody.appendChild(row);
-            }
-        }
 
-        // সাইডবারে ইভেন্ট লিস্ট রেন্ডার করা
-        if (monthHolidays.length > 0) {
-            monthHolidays.forEach(h => {
-                let item = document.createElement("div");
-                item.className = `sidebar-event-item ${h.colorClass}`;
-                item.innerHTML = `${h.name} <span>তারিখ: ${h.date}</span>`;
-                sidebarList.appendChild(item);
-            });
-        } else {
-            let noEventDiv = document.createElement("div");
-            noEventDiv.className = "no-event";
-            noEventDiv.innerText = "এই মাসে কোনো বিশেষ দিন নেই।";
-            sidebarList.appendChild(noEventDiv);
+                let formattedMonth = (month + 1).toString().padStart(2, '0');
+                let formattedDate = date.toString().padStart(2, '0');
+                let dateString = `${year}-${formattedMonth}-${formattedDate}`;
+
+                if (holidays[dateString]) {
+                    holidays[dateString].forEach((event, index) => {
+                        let colorIndex = (date + index) % 6;
+                        let colorClass = `color-${colorIndex}`;
+
+                        let eventDiv = document.createElement("div");
+                        eventDiv.className = `event ${colorClass}`;
+                        eventDiv.innerText = event;
+                        cell.appendChild(eventDiv);
+
+                        monthHolidays.push({
+                            date: `${date}ই ${document.getElementById('monthSelect').options[month].text}`,
+                            name: event,
+                            colorClass: colorClass
+                        });
+                    });
+                }
+                date++;
+            }
+            row.appendChild(cell);
+        }
+        if (hasDate) {
+            tbody.appendChild(row);
         }
     }
 
-    window.onload = function() {
-        const today = new Date();
-        let currentYear = today.getFullYear();
-        if(currentYear < 2026) currentYear = 2026;
-        if(currentYear > 2028) currentYear = 2028;
+    if (monthHolidays.length > 0) {
+        monthHolidays.forEach((h, idx) => {
+            let item = document.createElement("div");
+            item.className = `sidebar-event-item ${h.colorClass}`;
+            item.style.animationDelay = (idx * 0.08) + "s";
+            item.innerHTML = `${h.name} <span>তারিখ: ${h.date}</span>`;
+            sidebarList.appendChild(item);
+        });
+    } else {
+        let noEventDiv = document.createElement("div");
+        noEventDiv.className = "no-event";
+        noEventDiv.innerText = "এই মাসে কোনো বিশেষ দিন নেই।";
+        sidebarList.appendChild(noEventDiv);
+    }
+}
 
-        document.getElementById('monthSelect').value = today.getMonth();
-        document.getElementById('yearSelect').value = currentYear;
-        
-        renderCalendar();
-    };
+window.onload = function() {
+    const today = new Date();
+    let currentYear = today.getFullYear();
+    if(currentYear < 2026) currentYear = 2026;
+    if(currentYear > 2028) currentYear = 2028;
+
+    document.getElementById('monthSelect').value = today.getMonth();
+    document.getElementById('yearSelect').value = currentYear;
+
+    renderCalendar();
+};
 </script>
 
 </body>
