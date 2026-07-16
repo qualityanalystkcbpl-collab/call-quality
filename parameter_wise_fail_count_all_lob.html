@@ -2483,6 +2483,7 @@ async function employeeLogout(logoutType){
   window.location.href = MAIN_PORTAL_URL;
 }
 function handleLogoutClick(){
+  showEmpToast('Logging out......');
   employeeLogout('Manual');
 }
 
