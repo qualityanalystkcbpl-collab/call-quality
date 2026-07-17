@@ -178,7 +178,42 @@
   @keyframes borderFlow{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
   @keyframes cardLoad{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
 
-  .header{text-align:center;margin-bottom:18px;}
+  .header{text-align:center;margin-bottom:18px;position:relative;}
+
+  /* ===== folding logo badge (top-left of header) ===== */
+  .header-logo{
+    position:absolute;
+    top:0;
+    left:0;
+    width:64px;
+    height:64px;
+    border-radius:16px;
+    background:#ffffff;
+    border:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 8px 20px rgba(0,0,0,.35);
+    perspective:600px;
+    transform-origin:top center;
+    padding:8px;
+    animation:logoFoldIn 1s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .header-logo-icon{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));
+  }
+  @keyframes logoFoldIn{
+    0%{ transform:rotateX(-100deg); opacity:0; }
+    60%{ transform:rotateX(12deg); opacity:1; }
+    80%{ transform:rotateX(-6deg); }
+    100%{ transform:rotateX(0deg); opacity:1; }
+  }
+  @media (max-width:640px){
+    .header-logo{ width:48px; height:48px; border-radius:12px; }
+  }
   h1.title{
     margin:0 0 8px; font-size:26px; font-weight:800; letter-spacing:.3px;
     background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent4),var(--accent3),var(--accent1));
@@ -434,6 +469,51 @@
   @media (max-width:480px){
     .day-modal-box{padding:22px 16px 16px;}
   }
+
+  /* ===== back to top button (sits above the Go to Home button) ===== */
+  #backToTopBtn{
+    position:fixed;
+    left:24px;
+    bottom:88px;
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:linear-gradient(145deg,var(--accent3),#1fb8a0);
+    color:#06231c;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index:9500;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(-115vh) scale(.5);
+    transition:transform .5s cubic-bezier(.55,0,.85,.35), opacity .5s ease, visibility 0s linear .5s, box-shadow .2s ease;
+  }
+  #backToTopBtn.show{
+    opacity:1;
+    visibility:visible;
+    transform:translateY(0) scale(1);
+    transition:transform .6s cubic-bezier(.34,1.56,.64,1), opacity .2s ease, visibility 0s linear 0s, box-shadow .2s ease;
+  }
+  #backToTopBtn:hover{
+    box-shadow:0 8px 22px rgba(0,0,0,.45);
+    filter:brightness(1.08);
+  }
+  #backToTopBtn svg{
+    width:19px;
+    height:19px;
+    stroke:#06231c;
+    stroke-width:2.6;
+    fill:none;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  @media (max-width:640px){
+    #backToTopBtn{ left:16px; bottom:78px; width:42px; height:42px; }
+  }
 </style>
 </head>
 <body>
@@ -514,6 +594,7 @@
 <div class="page-wrap">
   <div class="calendar-wrapper">
     <div class="header">
+      <div class="header-logo"><img class="header-logo-icon" src="logo2.png" alt="Company Logo"></div>
       <h1 class="title">✨ বিশেষ দিন ও ক্যালেন্ডার ✨</h1>
       <div id="live-clock"></div>
       <div id="live-date"></div>
@@ -1109,5 +1190,22 @@ window.onload = function() {
 };
 </script>
 
+<button id="backToTopBtn" title="Back to Top" aria-label="Back to Top" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+  <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+</button>
+<script>
+(function(){
+  var btn = document.getElementById('backToTopBtn');
+  function toggleBtn(){
+    if(window.scrollY > 250){
+      btn.classList.add('show');
+    }else{
+      btn.classList.remove('show');
+    }
+  }
+  window.addEventListener('scroll', toggleBtn, {passive:true});
+  toggleBtn();
+})();
+</script>
 </body>
 </html>
