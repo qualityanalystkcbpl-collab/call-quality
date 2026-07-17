@@ -219,12 +219,54 @@
     background-size:300% 100%; animation:borderFlow 5s linear infinite;
   }
 
-  table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  table{width:100%;border-collapse:separate;border-spacing:6px 6px;table-layout:fixed;}
   th{
     background:var(--surface-3); color:var(--text); padding:11px 4px;
     text-transform:uppercase; font-size:12.5px; font-weight:700; letter-spacing:.5px;
     border-bottom:2px solid var(--border);
   }
+
+  /* ===== weekday header boxes with color animation ===== */
+  thead th{
+    border-radius:10px;
+    border-bottom:none;
+    border:1px solid var(--border);
+    color:#fff;
+    padding:12px 4px;
+    background-size:220% 220%;
+    animation:weekdayGlow 6s ease-in-out infinite;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  thead th:hover{ transform:translateY(-3px) scale(1.05); box-shadow:0 8px 20px rgba(0,0,0,.35); }
+  @keyframes weekdayGlow{
+    0%,100%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+  }
+  thead th:nth-child(1){ background-image:linear-gradient(135deg,#ff5e6e,#ff2f6b); animation-delay:0s; }
+  thead th:nth-child(2){ background-image:linear-gradient(135deg,#7c83fd,#4a7fe0); animation-delay:.15s; }
+  thead th:nth-child(3){ background-image:linear-gradient(135deg,#ff5ea8,#b94ae0); animation-delay:.3s; }
+  thead th:nth-child(4){ background-image:linear-gradient(135deg,#38f9d7,#1fb8a0); animation-delay:.45s; }
+  thead th:nth-child(5){ background-image:linear-gradient(135deg,#ffd200,#ff9a3d); animation-delay:.6s; }
+  thead th:nth-child(6){ background-image:linear-gradient(135deg,#4a7fe0,#38c6f9); animation-delay:.75s; }
+  thead th:nth-child(7){ background-image:linear-gradient(135deg,#ff9a3d,#ff5e6e); animation-delay:.9s; }
+
+  /* ===== light-red Sunday date cells ===== */
+  #calendarBody tr td:nth-child(1){
+    background:rgba(255,90,90,0.14);
+    border-color:rgba(255,90,90,0.35);
+  }
+  #calendarBody tr td:nth-child(1):hover{
+    background:rgba(255,90,90,0.24);
+  }
+  html[data-theme="light"] #calendarBody tr td:nth-child(1){
+    background:rgba(255,70,70,0.10);
+    border-color:rgba(255,70,70,0.28);
+  }
+  html[data-theme="light"] #calendarBody tr td:nth-child(1):hover{
+    background:rgba(255,70,70,0.18);
+  }
+
   td{
     border:1px solid var(--border); height:auto; min-height:96px; vertical-align:top; padding:6px;
     background:var(--surface); position:relative; border-radius:8px;
@@ -233,6 +275,7 @@
   td:hover{background:var(--surface-3);transform:translateY(-4px) scale(1.02);box-shadow:0 10px 24px rgba(0,0,0,.25);z-index:2;}
   .date-number{font-weight:700;font-size:1.05em;color:var(--text);display:block;margin-bottom:5px;}
   .today{background:linear-gradient(135deg, rgba(124,131,253,.18), rgba(255,94,168,.14)); border:2px solid var(--accent1); box-shadow:0 0 16px var(--glow1);}
+  #calendarBody tr td:nth-child(1).today{background:linear-gradient(135deg, rgba(124,131,253,.18), rgba(255,94,168,.14)); border:2px solid var(--accent1); box-shadow:0 0 16px var(--glow1);}
   .today .date-number{color:#fff;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:inline-block;padding:2px 8px;border-radius:50%;}
 
   .event{
