@@ -138,14 +138,51 @@
     animation:brandShift 6s linear infinite;
   }
   @keyframes brandShift{0%{background-position:0% 50%;}100%{background-position:220% 50%;}}
-  .cal-ticker{ flex:1; overflow:hidden; position:relative; height:22px; -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
+  .cal-ticker{
+    flex:1; overflow:hidden; position:relative; height:32px; margin-top:6px;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+  }
   .cal-ticker-track{
-    position:absolute; white-space:nowrap; font-size:12.5px; font-weight:600; letter-spacing:.3px;
-    animation:tickerScroll 22s linear infinite;
+    position:absolute; top:0; left:0;
+    white-space:nowrap; font-size:16px; font-weight:400; letter-spacing:.3px;
+    line-height:32px;
+    animation:tickerScroll 32s linear infinite;
     color:var(--text-muted);
   }
   .cal-ticker-track b{color:var(--accent2);}
-  @keyframes tickerScroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+  .ticker-today-badge{
+    font-weight:700;
+    padding:2px 4px;
+    background:linear-gradient(90deg,#ff5e6e,#ffd200,#38f9d7,#7c83fd,#ff5ea8,#ff5e6e);
+    background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    animation:todayEventShift 4s linear infinite;
+  }
+  @keyframes todayEventShift{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+  @keyframes tickerScroll{
+    0%{transform:translateX(100%);}
+    65%{transform:translateX(-100%);}
+    100%{transform:translateX(-100%);}
+  }
+  .cal-ticker-flash{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    pointer-events:none; opacity:0;
+    animation:tickerFlashFade 32s ease-in-out infinite;
+  }
+  .cal-ticker-flash span{
+    font-size:16px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+    background:linear-gradient(90deg,#7c83fd,#ff5ea8,#38f9d7,#ffd200,#7c83fd);
+    background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    animation:todayEventShift 3s linear infinite;
+  }
+  @keyframes tickerFlashFade{
+    0%,66%{opacity:0;}
+    74%{opacity:1;}
+    88%{opacity:1;}
+    97%,100%{opacity:0;}
+  }
   .theme-toggle-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);white-space:nowrap;}
   .theme-switch{position:relative;display:inline-block;width:44px;height:24px;}
   .theme-switch input{opacity:0;width:0;height:0;}
@@ -376,23 +413,23 @@
   .balloon.b9{left:90%; width:42px; height:50px; background:linear-gradient(160deg,#f6d365,#f857a6); animation-duration:16.5s; animation-delay:6s;}
   .balloon.b10{left:56%; width:26px; height:32px; background:linear-gradient(160deg,#fff1eb,#ff5e5e); animation-duration:12s; animation-delay:7s;}
 
-  /* ===== fixed floating "Go to Home" button (was: small "Dashboard" link) ===== */
+  /* ===== "Go to Home" button — now docked in the top bar ===== */
   .go-home-fab{
-    position:fixed; left:20px; bottom:20px; z-index:9500;
-    display:flex; align-items:center; gap:9px;
-    padding:15px 24px; border-radius:50px;
-    font-size:15.5px; font-weight:800; letter-spacing:.2px; color:#fff; text-decoration:none; white-space:nowrap;
+    position:relative; z-index:2; flex-shrink:0;
+    display:flex; align-items:center; gap:8px;
+    padding:8px 18px; border-radius:50px;
+    font-size:12.5px; font-weight:800; letter-spacing:.2px; color:#fff; text-decoration:none; white-space:nowrap;
     background:linear-gradient(120deg,#7c83fd,#ff5ea8,#38f9d7,#ffd200,#a770ef,#7c83fd);
     background-size:400% 400%;
-    box-shadow:0 10px 30px rgba(124,131,253,.4), 0 0 42px rgba(255,94,168,.28);
+    box-shadow:0 6px 18px rgba(124,131,253,.35), 0 0 26px rgba(255,94,168,.22);
     animation:goHomeColorShift 7s ease infinite, goHomeFloat 3.2s ease-in-out infinite;
     transition:transform .25s ease, box-shadow .25s ease;
   }
   .go-home-fab:hover{
     transform:scale(1.08);
-    box-shadow:0 12px 36px rgba(124,131,253,.55), 0 0 58px rgba(255,94,168,.42);
+    box-shadow:0 8px 24px rgba(124,131,253,.5), 0 0 36px rgba(255,94,168,.35);
   }
-  .go-home-fab .icon{font-size:19px;}
+  .go-home-fab .icon{font-size:16px;}
   @keyframes goHomeColorShift{
     0%{background-position:0% 50%;}
     50%{background-position:100% 50%;}
@@ -400,14 +437,14 @@
   }
   @keyframes goHomeFloat{
     0%,100%{transform:translateY(0);}
-    50%{transform:translateY(-7px);}
+    50%{transform:translateY(-3px);}
   }
   @media (max-width:720px){
     #employeeWelcomeBar{flex-direction:column;align-items:flex-start;gap:6px;padding-right:18px;}
     .emp-welcome-right{top:auto;bottom:14px;right:14px;}
     .cal-topbar{flex-wrap:wrap;}
     .cal-ticker{order:3;width:100%;}
-    .go-home-fab{padding:12px 18px;font-size:13.5px;left:14px;bottom:14px;}
+    .go-home-fab{padding:7px 14px;font-size:11.5px;}
   }
 
   /* ===== Day events popup (opens when an event badge on a date is clicked) ===== */
@@ -466,7 +503,7 @@
   #backToTopBtn{
     position:fixed;
     left:24px;
-    bottom:88px;
+    bottom:24px;
     width:46px;
     height:46px;
     border-radius:50%;
@@ -504,7 +541,7 @@
     stroke-linejoin:round;
   }
   @media (max-width:640px){
-    #backToTopBtn{ left:16px; bottom:78px; width:42px; height:42px; }
+    #backToTopBtn{ left:16px; bottom:16px; width:42px; height:42px; }
   }
 </style>
 </head>
@@ -525,7 +562,6 @@
   <div class="balloon b10"></div>
 </div>
 
-<a href="index.html" class="go-home-fab" title="Go to Home"><span class="icon">🏠</span> Go to Home</a>
 
 <div class="day-modal-overlay" id="dayEventsModal" onclick="if(event.target===this) closeDayEventsModal()">
   <div class="day-modal-box">
@@ -571,8 +607,10 @@
 <div class="cal-topbar" id="calTopbar">
   <div class="cal-brand">📅 Live Calendar</div>
   <div class="cal-ticker">
-    <div class="cal-ticker-track">🎉 <b>Special Occasions</b> auto-highlighted every month &nbsp;•&nbsp; See all public holidays and special days live &nbsp;•&nbsp; New calendar years available through 2026–2028 &nbsp;•&nbsp; 🎉</div>
+    <div class="cal-ticker-track" id="tickerTrack">🎉 <b>Special Occasions</b> auto-highlighted every month &nbsp;•&nbsp; See all public holidays and special days live &nbsp;•&nbsp; New calendar years available through 2026–2028 &nbsp;•&nbsp; 🎉</div>
+    <div class="cal-ticker-flash"><span id="tickerFlashText">📅 আজ</span></div>
   </div>
+  <a href="index.html" class="go-home-fab" title="Go to Home"><span class="icon">🏠</span> Go to Home</a>
   <div class="theme-toggle-wrap">
     <span>🌙</span>
     <label class="theme-switch">
@@ -991,6 +1029,10 @@ function updateLiveTime() {
     const now = new Date();
     document.getElementById('live-clock').innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     document.getElementById('live-date').innerText = now.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const flashEl = document.getElementById('tickerFlashText');
+    if (flashEl) {
+        flashEl.innerText = '📅 আজ — ' + now.toLocaleDateString('bn-BD', { weekday: 'long', month: 'long', day: 'numeric' });
+    }
 }
 setInterval(updateLiveTime, 1000);
 updateLiveTime();
@@ -1011,6 +1053,31 @@ function getRecurringSaturdayEvents(year, month) {
     }
     return events;
 }
+
+/* ===================== TODAY'S EVENT(S) IN TICKER ===================== */
+function updateTodayEventTicker() {
+    const track = document.getElementById('tickerTrack');
+    if (!track) return;
+
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const d = now.getDate();
+    const dateString = `${y}-${(m + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+
+    let todaysEvents = [];
+    if (holidays[dateString]) todaysEvents = todaysEvents.concat(holidays[dateString]);
+
+    const recurring = getRecurringSaturdayEvents(y, m);
+    if (recurring[d]) todaysEvents.push(recurring[d]);
+
+    if (todaysEvents.length > 0) {
+        const eventsText = todaysEvents.join(' এবং ');
+        const badge = `<span class="ticker-today-badge">🎊 আজকের ইভেন্ট — ${eventsText} 🎊</span> &nbsp;•&nbsp; `;
+        track.innerHTML = badge + track.innerHTML;
+    }
+}
+updateTodayEventTicker();
 
 /* ===================== CALENDAR RENDER ===================== */
 function renderCalendar() {
