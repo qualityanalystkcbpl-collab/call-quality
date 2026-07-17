@@ -1722,6 +1722,73 @@ table.score-table tr:hover td{background:rgba(255,255,255,0.02);}
   padding:26px;text-align:center;color:var(--text-muted);font-size:13px;
 }
 
+/* ---------- System tabs: live data grid (mirrors merged cells from the sheet) ---------- */
+.raw-sheet-wrap{
+  overflow:auto;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--surface);
+  margin-bottom:22px;
+  box-shadow:0 6px 26px rgba(0,0,0,0.25);
+  max-height:640px;
+  padding:2px;
+}
+table.raw-sheet-table{
+  border-collapse:separate;
+  border-spacing:0;
+  width:max-content;
+  min-width:100%;
+  table-layout:auto;
+}
+table.raw-sheet-table td{
+  padding:9px 14px;
+  font-size:13px;
+  line-height:1.4;
+  color:var(--text);
+  border:1px solid var(--border);
+  max-width:280px;
+  min-width:76px;
+  overflow-wrap:break-word;
+  white-space:normal;
+  vertical-align:middle;
+  background:var(--surface);
+  transition:background .18s ease, transform .18s ease;
+}
+table.raw-sheet-table td.rs-head{
+  position:sticky;top:0;z-index:6;
+  background:linear-gradient(120deg,#1B3150,#143832,#1B3150);
+  background-size:220% 100%;
+  animation:rsHeadShine 6s linear infinite;
+  color:#fff;
+  font-size:11.5px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  font-weight:800;
+  white-space:nowrap;
+  border:1px solid rgba(255,255,255,0.16);
+  text-align:center;
+}
+@keyframes rsHeadShine{0%{background-position:0% 50%;}100%{background-position:220% 50%;}}
+table.raw-sheet-table tr:not(.rs-header-row):nth-child(even) td:not(.rs-head){
+  background:rgba(51,201,176,0.045);
+}
+table.raw-sheet-table tr:not(.rs-header-row):hover td:not(.rs-head){
+  background:rgba(51,201,176,0.14);
+  transform:translateY(-1px);
+}
+table.raw-sheet-table tr:not(.rs-header-row) td:first-child{
+  font-weight:600;
+}
+/* সারিগুলো একে একে হালকা করে ভেসে উঠবে */
+.rs-anim-row{
+  opacity:0;
+  animation:rsRowIn .45s ease forwards;
+}
+@keyframes rsRowIn{
+  from{opacity:0; transform:translateY(6px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
 .badge{
   padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;
 }
@@ -2855,6 +2922,16 @@ transform:translateY(0);
       
       <div class="nav-label">System</div>
 
+<!-- সবাই (employee login) দেখবে — গুগল শিট থেকে সরাসরি লাইভ ডাটা -->
+<div class="nav-item" data-tab="AUDITNEW" onclick="switchTab('AUDITNEW')"><span class="dot"></span>Audit Sheet (NEW)</div>
+<div class="nav-item" data-tab="CATVDISPO" onclick="switchTab('CATVDISPO')"><span class="dot"></span>CATV DISPO</div>
+<div class="nav-item" data-tab="BBTECHDISPO" onclick="switchTab('BBTECHDISPO')"><span class="dot"></span>BB TECH DISPO</div>
+<div class="nav-item" data-tab="BBRENEWALDISPO" onclick="switchTab('BBRENEWALDISPO')"><span class="dot"></span>BB RENEWAL DISPO</div>
+<div class="nav-item" data-tab="LIVEAUDITSCORES" onclick="switchTab('LIVEAUDITSCORES')"><span class="dot"></span>Live Call Audit Scores Dashboard</div>
+<div class="nav-item" data-tab="CALLSCRIPTHINDI" onclick="switchTab('CALLSCRIPTHINDI')"><span class="dot"></span>Call Script in Hindi</div>
+<div class="nav-item" data-tab="AUDITPARAMETER" onclick="switchTab('AUDITPARAMETER')"><span class="dot"></span>Audit Parameter</div>
+<div class="nav-item" data-tab="DASHBOARDAPRMAR" onclick="switchTab('DASHBOARDAPRMAR')"><span class="dot"></span>Dashboard Apr'25-Mar'26</div>
+
 <!-- সবাই দেখবে -->
 <div class="nav-item"
      data-tab="UPDATES"
@@ -2945,6 +3022,15 @@ transform:translateY(0);
       <div class="panel" id="panel-DASH-BBRENEWAL"></div>
       <!-- Answered Within 3 Sec panel -->
       <div class="panel" id="panel-ANS3SEC"></div>
+      <!-- System: live Google Sheet DISPO / Audit tabs -->
+      <div class="panel" id="panel-AUDITNEW"></div>
+      <div class="panel" id="panel-CATVDISPO"></div>
+      <div class="panel" id="panel-BBTECHDISPO"></div>
+      <div class="panel" id="panel-BBRENEWALDISPO"></div>
+      <div class="panel" id="panel-LIVEAUDITSCORES"></div>
+      <div class="panel" id="panel-CALLSCRIPTHINDI"></div>
+      <div class="panel" id="panel-AUDITPARAMETER"></div>
+      <div class="panel" id="panel-DASHBOARDAPRMAR"></div>
       <!-- Updates panel -->
       <div class="panel" id="panel-UPDATES">
         <div class="panel-header">
@@ -3262,6 +3348,20 @@ const ANS3SEC_SHEETS = {
   CATV: 'CATV_ANSWERED_3SEC',
   BBTECH: 'BBTECH_ANSWERED_3SEC',
   BBRENEWAL: 'BBRENEWAL_ANSWERED_3SEC'
+};
+/* System সেকশনের ট্যাবগুলো — এগুলো একটি নতুন/আলাদা গুগল শিট থেকে ডাটা আনে, তাই এর জন্য
+   আলাদা একটি Google Apps Script Web App ডিপ্লয় করে তার /exec URL নিচের
+   RAW_SHEET_WEB_APP_URL ভ্যারিয়েবলে বসিয়ে দিতে হবে (নিচে নোট দেখুন)। */
+const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweHhwH_NAuH-fRKtLUdJC9d6t5GxKKN3Th0_0HHVoV4lIf7vbfaGt1VY8dgz0zlRSm/exec";
+const RAW_SHEET_TABS = {
+  AUDITNEW:        { label: 'Audit Sheet (NEW)',              sheetName: 'Audit sheet(NEW)',        icon: '🗂️' },
+  CATVDISPO:       { label: 'CATV DISPO',                     sheetName: 'CATV DISPO',               icon: '📋' },
+  BBTECHDISPO:     { label: 'BB TECH DISPO',                  sheetName: 'BB TECH DISPO',            icon: '🛠️' },
+  BBRENEWALDISPO:  { label: 'BB RENEWAL DISPO',               sheetName: 'BB RENEWAL DISPO',         icon: '🔄' },
+  LIVEAUDITSCORES: { label: 'Live Call Audit Scores Dashboard', sheetName: 'Live Audit Scores',      icon: '📈' },
+  CALLSCRIPTHINDI: { label: 'Call Script in Hindi',           sheetName: 'Call script in hindi',     icon: '📜' },
+  AUDITPARAMETER:  { label: 'Audit Parameter',                sheetName: 'Audit parameter',          icon: '📐' },
+  DASHBOARDAPRMAR: { label: "Dashboard Apr'25-Mar'26",        sheetName: "Dashbord Apr'25-Mar'26",   icon: '📊' }
 };
 let ans3secSubTab = 'CATV';
 let currentRole = null;
@@ -4052,6 +4152,8 @@ function switchTab(tab){
     renderDedicatedDashboard(vKey);
   } else if (tab === 'ANS3SEC') {
     renderAnswered3SecPanel(ans3secSubTab);
+  } else if (RAW_SHEET_TABS[tab]) {
+    renderRawSheetTabPanel(tab);
   } else if (tab === 'HELP') {
     renderHelpPanel();
   } else if (tab === 'QUICKLINK') {
@@ -4620,6 +4722,215 @@ async function renderAnswered3SecPanel(sub){
       ${ans3secSubTabsHtml(sub)}
       <div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
   }
+}
+/* ===================== SYSTEM: LIVE RAW GOOGLE SHEET TABS (Audit / DISPO) ===================== */
+async function renderRawSheetTabPanel(tab){
+  const meta = RAW_SHEET_TABS[tab];
+  const panel = document.getElementById('panel-'+tab);
+  if(!panel || !meta) return;
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>${meta.icon} ${meta.label}</h1><p>লাইভ ডাটা লোড হচ্ছে...</p></div>
+    </div>
+    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+
+  try{
+    const response = await fetch(RAW_SHEET_WEB_APP_URL + "?vertical=" + encodeURIComponent(meta.sheetName));
+    const raw = await response.json();
+
+    // ব্যাকএন্ড দুই ধরনের রেসপন্স দিতে পারে: পুরনো ফরম্যাট (plain array-of-arrays)
+    // অথবা নতুন ফরম্যাট { values, merges } — merge cell তথ্যসহ। দুটোই সাপোর্ট করা হচ্ছে।
+    let values, merges;
+    if(Array.isArray(raw)){
+      values = raw; merges = [];
+    }else if(raw && Array.isArray(raw.values)){
+      values = raw.values; merges = Array.isArray(raw.merges) ? raw.merges : [];
+    }else{
+      values = []; merges = [];
+    }
+
+    if(!Array.isArray(values) || values.length === 0){
+      panel.innerHTML = `
+        <div class="panel-header">
+          <div><h1>${meta.icon} ${meta.label}</h1><p>লাইভ আপডেট</p></div>
+          <button class="btn" onclick="renderRawSheetTabPanel('${tab}')">↻ Refresh Live Data</button>
+        </div>
+        <div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b><br>এই মুহূর্তে কোনো রেকর্ড উপলব্ধ নেই, একটু পর আবার চেক করুন।</div>`;
+      return;
+    }
+
+    const recordCount = Math.max(0, values.length - 1);
+
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div>
+          <h1>${meta.icon} ${meta.label}</h1>
+          <p>সম্পূর্ণ লাইভ ডাটা এখানে দেখা যাচ্ছে। কোনো নতুন তথ্য যোগ হলে "Refresh Live Data" চাপলেই সর্বশেষ আপডেটেড ডাটা দেখতে পাবেন।</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span style="font-size:11px;color:var(--text-muted);">মোট রেকর্ড: <b style="color:var(--text);">${recordCount}</b></span>
+          <button class="btn primary" onclick="renderRawSheetTabPanel('${tab}')">↻ Refresh Live Data</button>
+        </div>
+      </div>
+      <div class="table-search-wrap">
+        <span class="table-search-icon">🔎</span>
+        <input type="text" class="table-search-input" id="rawSheetSearch-${tab}" placeholder="যেকোনো তথ্য দিয়ে খুঁজুন..." oninput="filterRawSheetTable(this,'rawSheetTable-${tab}')">
+      </div>
+      <div class="raw-sheet-wrap">
+        ${buildMergedSheetTableHtml(values, merges, tab)}
+        <div class="table-no-match" style="display:none;">😕 কোনো তথ্য পাওয়া যায়নি।</div>
+      </div>`;
+  }catch(err){
+    console.error("Raw sheet tab fetch failed:", err);
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div><h1>${meta.icon} ${meta.label}</h1><p>লাইভ ট্র্যাকিং</p></div>
+        <button class="btn" onclick="renderRawSheetTabPanel('${tab}')">↻ Refresh Live Data</button>
+      </div>
+      <div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
+  }
+}
+
+/* শিটে যেভাবে সেলগুলো merge করা আছে ঠিক সেভাবেই টেবিলে দেখানো হবে (rowspan/colspan দিয়ে),
+   একদম ফাঁকা কলামগুলো বাদ দেওয়া হবে, এবং প্রতিটা সারি সুন্দরভাবে অ্যানিমেট হয়ে আসবে। */
+/* গুগল শিটের Time/Date টাইপ সেল, Apps Script থেকে JSON হয়ে আসার সময়
+   "1899-12-30T06:52:50.000Z" এর মতো raw ISO স্ট্রিং হয়ে যায় (1899-12-30 মানে শুধু সময়,
+   কোনো তারিখ নেই)। এই ফাংশনটা সেগুলোকে মানুষের পড়ার মতো সময়/তারিখে রূপান্তর করে। */
+function formatSheetCellValue(val){
+  if(val === null || val === undefined) return '';
+  const s = String(val);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/);
+  if(!m) return s;
+
+  const [, y, mo, d, h, mi, se] = m;
+  const year = +y, month = +mo, day = +d, hour = +h, min = +mi, sec = +se;
+
+  const hh = ((hour % 12) === 0) ? 12 : (hour % 12);
+  const ampm = hour < 12 ? 'AM' : 'PM';
+  const timeStr = `${String(hh).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')} ${ampm}`;
+
+  // ১৮৯৯-১২-৩০ হলো গুগল শিটের "শুধু সময়" (Time only) সেলের epoch তারিখ — এক্ষেত্রে শুধু সময় দেখানো হবে
+  if(year === 1899 && month === 12 && day === 30){
+    return timeStr;
+  }
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr = `${String(day).padStart(2,'0')}-${MONTHS[month-1]}-${year}`;
+
+  // সময়ের অংশ 00:00:00 হলে সেটা শুধু তারিখ (Date only) সেল, নাহলে তারিখ + সময় দুটোই দেখানো হবে
+  if(hour === 0 && min === 0 && sec === 0){
+    return dateStr;
+  }
+  return `${dateStr} ${timeStr}`;
+}
+function buildMergedSheetTableHtml(values, merges, tab){
+  const numRows = values.length;
+  const numCols = values.reduce((m, r) => Math.max(m, r.length), 0);
+
+  // পুরো গ্রিড সমান সাইজের করে নেওয়া হচ্ছে (কোনো row ছোট হলে ফাঁকা সেল বসিয়ে)
+  const grid = values.map(r => {
+    const row = r.slice(0, numCols);
+    while(row.length < numCols) row.push('');
+    return row;
+  });
+
+  // কোন কলাম সম্পূর্ণ ফাঁকা (হেডার + সব ডাটা মিলিয়ে) সেটা বের করা হচ্ছে
+  const isColBlank = [];
+  for(let c = 0; c < numCols; c++){
+    let blank = true;
+    for(let r = 0; r < numRows; r++){
+      if(String(grid[r][c] ?? '').trim() !== ''){ blank = false; break; }
+    }
+    isColBlank.push(blank);
+  }
+
+  // পুরনো কলাম ইনডেক্স -> নতুন (ফাঁকা কলাম বাদ দেওয়ার পর) কলাম ইনডেক্স ম্যাপিং
+  const newColIndex = [];
+  let running = 0;
+  for(let c = 0; c < numCols; c++){
+    newColIndex.push(isColBlank[c] ? -1 : running);
+    if(!isColBlank[c]) running++;
+  }
+  const newNumCols = running;
+
+  if(newNumCols === 0){
+    return `<div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b></div>`;
+  }
+
+  // নতুন গ্রিড তৈরি (ফাঁকা কলাম বাদ দিয়ে)
+  const newGrid = grid.map(row => row.filter((_, c) => !isColBlank[c]));
+
+  // merge রেঞ্জগুলোকে নতুন কলাম ইনডেক্সের সাথে মিলিয়ে অ্যাডজাস্ট করা হচ্ছে
+  const adjustedMerges = [];
+  (merges || []).forEach(m => {
+    const r0 = m.row, c0 = m.col, nr = m.numRows, nc = m.numCols;
+    if(r0 == null || c0 == null || !nr || !nc) return;
+    let firstNewCol = -1, lastNewCol = -1;
+    for(let c = c0; c < c0 + nc; c++){
+      if(c >= 0 && c < numCols && !isColBlank[c]){
+        const nci = newColIndex[c];
+        if(firstNewCol === -1) firstNewCol = nci;
+        lastNewCol = nci;
+      }
+    }
+    if(firstNewCol === -1) return; // পুরো merge টাই ফাঁকা কলামের মধ্যে ছিল
+    adjustedMerges.push({ row: r0, col: firstNewCol, numRows: nr, numCols: (lastNewCol - firstNewCol + 1) });
+  });
+
+  // কোন সেল অন্য একটা merge-এর ভেতরে ঢাকা পড়ে আছে (তাই আলাদা <td> বসবে না) সেটার ম্যাপ
+  const covered = Array.from({length: numRows}, () => new Array(newNumCols).fill(false));
+  const origin = Array.from({length: numRows}, () => new Array(newNumCols).fill(null));
+  adjustedMerges.forEach(m => {
+    for(let r = m.row; r < m.row + m.numRows && r < numRows; r++){
+      for(let c = m.col; c < m.col + m.numCols && c < newNumCols; c++){
+        if(r === m.row && c === m.col){
+          origin[r][c] = m;
+        }else{
+          covered[r][c] = true;
+        }
+      }
+    }
+  });
+
+  let rowsHtml = '';
+  for(let r = 0; r < numRows; r++){
+    const isHeaderRow = (r === 0);
+    const rowText = newGrid[r].map(v => isHeaderRow ? v : formatSheetCellValue(v)).join(' ').toLowerCase();
+    const rowClass = isHeaderRow ? 'rs-header-row' : '';
+    const delay = Math.min(r, 40) * 0.02;
+    let cellsHtml = '';
+    for(let c = 0; c < newNumCols; c++){
+      if(covered[r][c]) continue;
+      const m = origin[r][c];
+      const rowspan = m ? m.numRows : 1;
+      const colspan = m ? m.numCols : 1;
+      const val = newGrid[r][c];
+      const cellText = (val===null || val===undefined) ? '' : (isHeaderRow ? val : formatSheetCellValue(val));
+      const attrs = (rowspan>1?` rowspan="${rowspan}"`:'') + (colspan>1?` colspan="${colspan}"`:'');
+      const cls = isHeaderRow ? ' class="rs-head"' : '';
+      cellsHtml += `<td${cls}${attrs}>${escapeHtml(cellText)}</td>`;
+    }
+    rowsHtml += `<tr class="rs-anim-row ${rowClass}" style="animation-delay:${delay}s" ${isHeaderRow?'':`data-row-text="${escapeAttr(rowText)}"`}>${cellsHtml}</tr>`;
+  }
+
+  return `<table class="raw-sheet-table" id="rawSheetTable-${tab}"><tbody>${rowsHtml}</tbody></table>`;
+}
+
+function filterRawSheetTable(input, tableId){
+  const q = input.value.trim().toLowerCase();
+  const table = document.getElementById(tableId);
+  if(!table) return;
+  const rows = table.querySelectorAll('tr[data-row-text]');
+  let anyVisible = false;
+  rows.forEach(tr=>{
+    const text = tr.getAttribute('data-row-text') || '';
+    const match = !q || text.indexOf(q) !== -1;
+    tr.style.display = match ? '' : 'none';
+    if(match) anyVisible = true;
+  });
+  const noMatch = table.parentElement.querySelector('.table-no-match');
+  if(noMatch) noMatch.style.display = anyVisible ? 'none' : 'block';
 }
 /* ===================== HELP PANEL (New Update-এর মতোই — Admin post/delete করতে পারবে) ===================== */
 async function loadHelp(){
