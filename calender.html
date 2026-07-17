@@ -180,30 +180,22 @@
 
   .header{text-align:center;margin-bottom:18px;position:relative;}
 
-  /* ===== folding logo badge (top-left of header) ===== */
+  /* ===== folding logo (top-left of header) ===== */
   .header-logo{
     position:absolute;
     top:0;
     left:0;
-    width:64px;
-    height:64px;
-    border-radius:16px;
-    background:#ffffff;
-    border:1px solid var(--border);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow:0 8px 20px rgba(0,0,0,.35);
+    width:110px;
     perspective:600px;
     transform-origin:top center;
-    padding:8px;
     animation:logoFoldIn 1s cubic-bezier(.34,1.56,.64,1) both;
   }
   .header-logo-icon{
     width:100%;
-    height:100%;
+    height:auto;
+    display:block;
     object-fit:contain;
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
   }
   @keyframes logoFoldIn{
     0%{ transform:rotateX(-100deg); opacity:0; }
@@ -212,7 +204,7 @@
     100%{ transform:rotateX(0deg); opacity:1; }
   }
   @media (max-width:640px){
-    .header-logo{ width:48px; height:48px; border-radius:12px; }
+    .header-logo{ width:72px; }
   }
   h1.title{
     margin:0 0 8px; font-size:26px; font-weight:800; letter-spacing:.3px;
