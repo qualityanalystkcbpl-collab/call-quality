@@ -2630,6 +2630,51 @@ transform:translateY(0);
 #panel-BBRENEWAL .stat-card:nth-child(3){ animation-delay:.11s; border-top:3px solid #FF5E7E; }
 #panel-BBRENEWAL .stat-card:nth-child(4){ animation-delay:.15s; border-top:3px solid #FF5E7E; }
 #panel-BBRENEWAL .stat-card:nth-child(5){ animation-delay:.19s; border-top:3px solid #FF5E7E; }
+
+/* Back to top button */
+#backToTopBtn{
+  position:fixed;
+  left:22px;
+  bottom:58px;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:linear-gradient(145deg, var(--agent), #1f9f89);
+  color:#062019;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:9999;
+  box-shadow:0 6px 18px rgba(0,0,0,.35);
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(-115vh) scale(.5);
+  transition:transform .5s cubic-bezier(.55,0,.85,.35), opacity .5s ease, visibility 0s linear .5s, box-shadow .2s ease;
+}
+#backToTopBtn.show{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0) scale(1);
+  transition:transform .6s cubic-bezier(.34,1.56,.64,1), opacity .2s ease, visibility 0s linear 0s, box-shadow .2s ease;
+}
+#backToTopBtn:hover{
+  box-shadow:0 8px 22px rgba(0,0,0,.45);
+  filter:brightness(1.08);
+}
+#backToTopBtn svg{
+  width:20px;
+  height:20px;
+  stroke:#062019;
+  stroke-width:2.6;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+@media (max-width:640px){
+  #backToTopBtn{ left:14px; bottom:44px; width:44px; height:44px; }
+}
 </style>
 </head>
 <body>
@@ -6270,6 +6315,23 @@ doLogout = function(){
   superAdminToken = null;
   _origDoLogout();
 };
+</script>
+<button id="backToTopBtn" title="Back to Top" aria-label="Back to Top" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+  <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+</button>
+<script>
+(function(){
+  var btn = document.getElementById('backToTopBtn');
+  function toggleBtn(){
+    if(window.scrollY > 250){
+      btn.classList.add('show');
+    }else{
+      btn.classList.remove('show');
+    }
+  }
+  window.addEventListener('scroll', toggleBtn, {passive:true});
+  toggleBtn();
+})();
 </script>
 </body>
 </html>
