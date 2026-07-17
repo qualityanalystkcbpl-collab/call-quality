@@ -139,14 +139,14 @@
   }
   @keyframes brandShift{0%{background-position:0% 50%;}100%{background-position:220% 50%;}}
   .cal-ticker{
-    flex:1; overflow:hidden; position:relative; height:32px; margin-top:6px;
+    flex:1; overflow:hidden; position:relative; height:20px; margin-top:0;
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
     mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
   }
   .cal-ticker-track{
     position:absolute; top:0; left:0;
-    white-space:nowrap; font-size:16px; font-weight:400; letter-spacing:.3px;
-    line-height:32px;
+    white-space:nowrap; font-size:13px; font-weight:400; letter-spacing:.2px;
+    line-height:20px;
     animation:tickerScroll 32s linear infinite;
     color:var(--text-muted);
   }
@@ -171,17 +171,18 @@
     animation:tickerFlashFade 32s ease-in-out infinite;
   }
   .cal-ticker-flash span{
-    font-size:16px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+    font-size:13px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
     background:linear-gradient(90deg,#7c83fd,#ff5ea8,#38f9d7,#ffd200,#7c83fd);
     background-size:300% 100%;
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
     animation:todayEventShift 3s linear infinite;
   }
   @keyframes tickerFlashFade{
-    0%,66%{opacity:0;}
-    74%{opacity:1;}
-    88%{opacity:1;}
-    97%,100%{opacity:0;}
+    0%,66%{opacity:0; transform:scale(.8);}
+    74%{opacity:1; transform:scale(1);}
+    88%{opacity:1; transform:scale(1);}
+    97%{opacity:0; transform:scale(1.6);}
+    100%{opacity:0; transform:scale(1.6);}
   }
   .theme-toggle-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);white-space:nowrap;}
   .theme-switch{position:relative;display:inline-block;width:44px;height:24px;}
@@ -222,7 +223,7 @@
     position:absolute;
     top:0;
     left:0;
-    width:110px;
+    width:170px;
     perspective:600px;
     transform-origin:top center;
     animation:logoFoldIn 1s cubic-bezier(.34,1.56,.64,1) both;
@@ -241,7 +242,7 @@
     100%{ transform:rotateX(0deg); opacity:1; }
   }
   @media (max-width:640px){
-    .header-logo{ width:72px; }
+    .header-logo{ width:100px; }
   }
   h1.title{
     margin:0 0 8px; font-size:26px; font-weight:800; letter-spacing:.3px;
@@ -1071,10 +1072,15 @@ function updateTodayEventTicker() {
     const recurring = getRecurringSaturdayEvents(y, m);
     if (recurring[d]) todaysEvents.push(recurring[d]);
 
+    const fullText = '🎉 <b>Special Occasions</b> auto-highlighted every month &nbsp;•&nbsp; See all public holidays and special days live &nbsp;•&nbsp; New calendar years available through 2026–2028 &nbsp;•&nbsp; 🎉';
+    const shortText = '🎉 <b>Special Occasions</b> auto-highlighted every month &nbsp;•&nbsp; 🎉';
+
     if (todaysEvents.length > 0) {
         const eventsText = todaysEvents.join(' এবং ');
         const badge = `<span class="ticker-today-badge">🎊 আজকের ইভেন্ট — ${eventsText} 🎊</span> &nbsp;•&nbsp; `;
-        track.innerHTML = badge + track.innerHTML;
+        track.innerHTML = badge + shortText;
+    } else {
+        track.innerHTML = fullText;
     }
 }
 updateTodayEventTicker();
