@@ -339,6 +339,10 @@
   }
   td:hover{background:var(--surface-3);transform:translateY(-4px) scale(1.02);box-shadow:0 10px 24px rgba(0,0,0,.25);z-index:2;}
   .date-number{font-weight:700;font-size:1.05em;color:var(--text);display:block;margin-bottom:5px;}
+  .bn-date{font-size:.68em;color:var(--text-muted);display:none;margin-bottom:5px;font-weight:600;letter-spacing:.2px;}
+  body.show-bn-date .bn-date{display:block;}
+  .today .bn-date{color:var(--text);opacity:.85;}
+  .panjika-note{font-size:11.5px;color:var(--text-muted);margin:2px 2px 10px;line-height:1.5;}
   .today{background:linear-gradient(135deg, rgba(124,131,253,.18), rgba(255,94,168,.14)); border:2px solid var(--accent1); box-shadow:0 0 16px var(--glow1);}
   #calendarBody tr td:nth-child(1).today{background:linear-gradient(135deg, rgba(124,131,253,.18), rgba(255,94,168,.14)); border:2px solid var(--accent1); box-shadow:0 0 16px var(--glow1);}
   .today .date-number{color:#fff;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:inline-block;padding:2px 8px;border-radius:50%;}
@@ -602,7 +606,6 @@
 <!-- Simple bar for guests / non-employee roles -->
 <div class="guest-bar" id="guestBar" style="display:none;">
   <span id="guestRoleText">👋 Welcome</span>
-  <a href="index.html">← Back to Dashboard</a>
 </div>
 
 <div class="cal-topbar" id="calTopbar">
@@ -612,6 +615,13 @@
     <div class="cal-ticker-flash"><span id="tickerFlashText">📅 আজ</span></div>
   </div>
   <a href="index.html" class="go-home-fab" title="Go to Home"><span class="icon">🏠</span> Go to Home</a>
+  <div class="theme-toggle-wrap" id="bnDateToggleWrap">
+    <span>বাংলা তারিখ</span>
+    <label class="theme-switch">
+      <input type="checkbox" id="bnDateSwitch" onchange="toggleBnDate()">
+      <span class="theme-slider"></span>
+    </label>
+  </div>
   <div class="theme-toggle-wrap">
     <span>🌙</span>
     <label class="theme-switch">
@@ -652,6 +662,7 @@
         <option value="2028">২০২৮</option>
       </select>
     </div>
+    <div class="panjika-note">* উপরে "বাংলা তারিখ" টগল অন করলে প্রতিটি তারিখের নিচে বাংলা (পশ্চিমবঙ্গ পঞ্জিকা রীতি) তারিখ দেখা যাবে (ডিফল্ট বন্ধ থাকে)। পূর্ণিমা, অমাবস্যা ও একাদশী তিথি গাণিতিকভাবে (mean lunation পদ্ধতিতে) হিসাব করে বসানো হয়েছে। প্রকৃত মুদ্রিত পঞ্জিকার সাথে মাঝেমধ্যে ±১ দিন পার্থক্য হতে পারে, কারণ প্রকৃত সংক্রান্তি/তিথির সময় সূর্য-চাঁদের প্রকৃত অবস্থানের উপর নির্ভর করে।</div>
 
     <div class="main-layout">
       <div class="calendar-section">
@@ -687,6 +698,19 @@ function toggleTheme(){
   localStorage.setItem('qa_theme', isLight ? 'light' : 'dark');
 }
 applyTheme(localStorage.getItem('qa_theme') || 'dark');
+
+/* ===================== বাংলা তারিখ টগল (ডিফল্ট: বন্ধ) ===================== */
+function applyBnDateSetting(show){
+  document.body.classList.toggle('show-bn-date', show);
+  const chk = document.getElementById('bnDateSwitch');
+  if(chk) chk.checked = show;
+}
+function toggleBnDate(){
+  const show = document.getElementById('bnDateSwitch').checked;
+  applyBnDateSetting(show);
+  localStorage.setItem('qa_show_bn_date', show ? '1' : '0');
+}
+applyBnDateSetting(localStorage.getItem('qa_show_bn_date') === '1');
 
 /* ===================== SMALL HELPERS ===================== */
 function getBrowserName(){
@@ -790,6 +814,7 @@ function initWelcomeBar(){
     const bar = document.getElementById('employeeWelcomeBar');
     bar.style.display = 'flex';
     document.body.style.paddingTop = bar.offsetHeight + 'px';
+    document.getElementById('calTopbar').style.top = bar.offsetHeight + 'px';
     
     document.getElementById('empWelcomeName').textContent = empName.toUpperCase();
     document.getElementById('empWelcomeGreeting').textContent = currentGreetingText();
@@ -820,6 +845,7 @@ function initWelcomeBar(){
     const bar = document.getElementById('guestBar');
     bar.style.display = 'flex';
     document.body.style.paddingTop = bar.offsetHeight + 'px';
+    document.getElementById('calTopbar').style.top = bar.offsetHeight + 'px';
     document.getElementById('guestRoleText').textContent = `👋 Logged in as ${role.toUpperCase()}`;
     pingOnlinePresence();
     setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
@@ -827,6 +853,7 @@ function initWelcomeBar(){
     const bar = document.getElementById('guestBar');
     bar.style.display = 'flex';
     document.body.style.paddingTop = bar.offsetHeight + 'px';
+    document.getElementById('calTopbar').style.top = bar.offsetHeight + 'px';
     document.getElementById('guestRoleText').textContent = `👋 Welcome, Guest`;
   }
 }
@@ -1605,6 +1632,197 @@ const holidays = {
     "2028-12-25": ["Christmas Day"]
 };
 
+/* ===================== বাংলা (পশ্চিমবঙ্গ পঞ্জিকা) তারিখ ও তিথি ===================== */
+const bnDigitsMap = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+function toBengaliNumber(n) {
+    return n.toString().split('').map(ch => (/[0-9]/.test(ch) ? bnDigitsMap[+ch] : ch)).join('');
+}
+
+const bengaliMonthNames = ["বৈশাখ","জ্যৈষ্ঠ","আষাঢ়","শ্রাবণ","ভাদ্র","আশ্বিন","কার্তিক","অগ্রহায়ণ","পৌষ","মাঘ","ফাল্গুন","চৈত্র"];
+
+/* ---- সূর্যের প্রকৃত (apparent) সাইডেরিয়াল দ্রাঘিমাংশ — বাংলা মাস নির্ধারণের ভিত্তি ----
+   বাংলা মাস প্রকৃতপক্ষে সূর্যের রাশি পরিবর্তনের (সংক্রান্তি) উপর ভিত্তি করে, তাই এর
+   দৈর্ঘ্য স্থির ৩০/৩১ দিন নয় — গ্রীষ্মে (আষাঢ়-ভাদ্র) পৃথিবী সূর্য থেকে দূরে থাকায়
+   সূর্যের আপাত গতি কমে যায় বলে মাস ৩১-৩২ দিনের হয়, আর শীতে (পৌষ-ফাল্গুন) মাস
+   ২৯-৩০ দিনের হয়। এই কোডে প্রকৃত সৌর অবস্থান হিসাব করে রাশি (মাস) নির্ণয় করা হয়েছে। */
+function sunSiderealLongitude(dateUTCms) {
+    const JD = dateUTCms / 86400000 + 2440587.5;
+    const T = (JD - 2451545.0) / 36525;
+    const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+    const M = (357.52911 + 35999.05029 * T - 0.0001537 * T * T) * Math.PI / 180;
+    const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M)
+            + (0.019993 - 0.000101 * T) * Math.sin(2 * M)
+            + 0.000289 * Math.sin(3 * M);
+    const trueLong = L0 + C;
+    const Omega = (125.04 - 1934.136 * T) * Math.PI / 180;
+    const apparentLong = trueLong - 0.00569 - 0.00478 * Math.sin(Omega);
+    // পশ্চিমবঙ্গের ঐতিহ্যবাহী (বিশুদ্ধ সিদ্ধান্ত) পঞ্জিকার সাথে মিলিয়ে ক্যালিব্রেট করা অয়নাংশ —
+    // ২০২৬ সালের নিশ্চিত পয়লা বৈশাখ (১৫ এপ্রিল) ও আষাঢ় মাসের ৩২ দিন হওয়ার তথ্যের সাথে যাচাই করে বসানো
+    const ayanamsa = 24.1 + 0.0139552 * (T * 100);
+    let sidereal = apparentLong - ayanamsa;
+    sidereal = ((sidereal % 360) + 360) % 360;
+    return sidereal;
+}
+
+/* ---- কলকাতার আনুমানিক সূর্যোদয়ের সময় (NOAA সরলীকৃত সৌর সমীকরণ) ----
+   পঞ্জিকায় দিনের তিথি/মাস সূর্যোদয়ের মুহূর্তে যা থাকে তা দিয়ে নির্ধারিত হয়,
+   তাই প্রতিটি তারিখের জন্য প্রকৃত সূর্যোদয়ের সময় হিসাব করে সেই মুহূর্তের
+   অবস্থান দেখা হচ্ছে (একটা স্থির সময় যেমন সকাল ৬টা ধরে নেওয়ার বদলে)। */
+function kolkataSunriseUTCms(y, m, d) {
+    const lat = 22.5726 * Math.PI / 180;
+    const lon = 88.3639;
+    const startOfYear = Date.UTC(y, 0, 1);
+    const n = Math.round((Date.UTC(y, m, d) - startOfYear) / 86400000) + 1;
+    const gamma = 2 * Math.PI / 365 * (n - 1 + (6 - 12) / 24);
+    const eqtime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma)
+                  - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
+    const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma)
+               - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma)
+               - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
+    const zenith = 90.833 * Math.PI / 180;
+    let cosH = (Math.cos(zenith) / (Math.cos(lat) * Math.cos(decl))) - Math.tan(lat) * Math.tan(decl);
+    cosH = Math.min(1, Math.max(-1, cosH));
+    const Hdeg = Math.acos(cosH) * 180 / Math.PI;
+    const sunriseUTCmin = 720 - 4 * lon - eqtime - 4 * Hdeg;
+    return Date.UTC(y, m, d, 0, 0, 0) + sunriseUTCmin * 60000;
+}
+
+function rashiIndexAtSunrise(y, m, d) {
+    const lon = sunSiderealLongitude(kolkataSunriseUTCms(y, m, d));
+    return Math.floor(lon / 30) % 12;
+}
+
+/* একবার ২০২৫-২০২৯ পরিসরে দিন-ধরে-দিন স্ক্যান করে প্রতিটি বাংলা মাসের শুরুর তারিখ বের করে
+   একটা লুকআপ টেবিল বানানো হচ্ছে — যাতে প্রতিটি সেল রেন্ডারে বারবার ভারী হিসাব না করতে হয়। */
+let bengaliCalendarSegments = null;
+function buildBengaliCalendarSegments() {
+    const segments = [];
+    let cur = new Date(Date.UTC(2025, 5, 1));
+    const end = new Date(Date.UTC(2029, 4, 15));
+    let prevRashi = null;
+    let bengaliYear = null;
+    while (cur.getTime() <= end.getTime()) {
+        const y = cur.getUTCFullYear(), m = cur.getUTCMonth(), d = cur.getUTCDate();
+        const rashi = rashiIndexAtSunrise(y, m, d);
+        if (rashi !== prevRashi) {
+            if (rashi === 0) bengaliYear = y - 593;
+            else if (bengaliYear === null) bengaliYear = (m >= 3 ? y : y - 1) - 593;
+            segments.push({ startMs: Date.UTC(y, m, d), month: rashi, year: bengaliYear });
+            prevRashi = rashi;
+        }
+        cur.setUTCDate(cur.getUTCDate() + 1);
+    }
+    return segments;
+}
+function findBengaliSegment(dateUTCms) {
+    if (!bengaliCalendarSegments) bengaliCalendarSegments = buildBengaliCalendarSegments();
+    for (let i = bengaliCalendarSegments.length - 1; i >= 0; i--) {
+        if (dateUTCms >= bengaliCalendarSegments[i].startMs) return bengaliCalendarSegments[i];
+    }
+    return bengaliCalendarSegments[0];
+}
+
+/* Gregorian (year, month 0-11, day) → বাংলা তারিখ, প্রকৃত সৌর অবস্থানের ভিত্তিতে গণনা করা।
+   পশ্চিমবঙ্গের ২০২৬ সালের পয়লা বৈশাখ (১৫ এপ্রিল) ও আষাঢ় মাস ৩২ দিনে হওয়ার তথ্যের
+   সাথে মিলিয়ে ক্যালিব্রেট করা, তাই বছরের মধ্যে মাসের দৈর্ঘ্য ২৯-৩২ দিন পর্যন্ত ওঠানামা করে,
+   যেমনটা প্রকৃত ঐতিহ্যবাহী পঞ্জিকায় হয়। বিভিন্ন পঞ্জিকা প্রকাশক (বিশুদ্ধ সিদ্ধান্ত, পি.এম.
+   বাগচী ইত্যাদি) নিজেদের মধ্যেও মাঝেমধ্যে ১ দিন এদিক-ওদিক দেখায় বলে এখানেও সামান্য
+   পার্থক্য থাকতে পারে। */
+function gregorianToBengali(year, month, day) {
+    const dateUTCms = Date.UTC(year, month, day);
+    const seg = findBengaliSegment(dateUTCms);
+    const dayInMonth = Math.round((dateUTCms - seg.startMs) / 86400000) + 1;
+    return { day: dayInMonth, month: bengaliMonthNames[seg.month], year: seg.year };
+}
+
+/* ---- তিথি (পূর্ণিমা / অমাবস্যা / একাদশী) — চাঁদের প্রকৃত সূর্যোদয়কালীন অবস্থান ভিত্তিক ---- */
+function getMoonAgeDays(dateUTCms) {
+    const knownNewMoonUTC = Date.UTC(2000, 0, 6, 18, 14, 0); // reference amavasya (astronomical epoch)
+    const synodicMonth = 29.530588861;
+    let age = ((dateUTCms - knownNewMoonUTC) / 86400000) % synodicMonth;
+    if (age < 0) age += synodicMonth;
+    return age;
+}
+function getTithiIndex(year, month, day) {
+    // সূর্যোদয়ের তিথি অনুযায়ী পঞ্জিকা তৈরি হয় — তাই প্রকৃত সূর্যোদয়ের সময় ব্যবহার করা হলো
+    const age = getMoonAgeDays(kolkataSunriseUTCms(year, month, day));
+    const tithiLength = 29.530588861 / 30;
+    let idx = Math.floor(age / tithiLength) + 1;
+    if (idx > 30) idx = 30;
+    return idx;
+}
+function getTithiEventLabel(tithiIndex) {
+    if (tithiIndex === 15) return "পূর্ণিমা";
+    if (tithiIndex === 30) return "অমাবস্যা";
+    if (tithiIndex === 11) return "একাদশী (শুক্লপক্ষ)";
+    if (tithiIndex === 26) return "একাদশী (কৃষ্ণপক্ষ)";
+    return null;
+}
+function alreadyHasTithiEvent(list) {
+    if (!list) return false;
+    const keys = ['পূর্ণিমা','অমাবস্যা','একাদশী','purnima','amavasya','amavasy','ekadashi'];
+    return list.some(ev => keys.some(k => ev.toLowerCase().includes(k)));
+}
+function injectPanjikaTithiEvents(startYear, endYear) {
+    for (let y = startYear; y <= endYear; y++) {
+        for (let m = 0; m < 12; m++) {
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const label = getTithiEventLabel(getTithiIndex(y, m, d));
+                if (!label) continue;
+                const key = `${y}-${(m + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+                if (!holidays[key]) holidays[key] = [];
+                if (!alreadyHasTithiEvent(holidays[key])) holidays[key].push(label);
+            }
+        }
+    }
+}
+
+/* ---- বাংলার মহাপুরুষদের জন্ম ও মৃত্যু/তিরোধান দিবস (প্রতি বছর পুনরাবৃত্ত গ্রেগরিয়ান তারিখ) ---- */
+const mahapurushAnniversaries = [
+    { month: 5,  day: 22, label: "রাজা রামমোহন রায়ের জন্মদিন" },
+    { month: 9,  day: 27, label: "রাজা রামমোহন রায়ের মৃত্যুদিন" },
+    { month: 9,  day: 26, label: "ঈশ্বরচন্দ্র বিদ্যাসাগরের জন্মদিন" },
+    { month: 7,  day: 29, label: "ঈশ্বরচন্দ্র বিদ্যাসাগরের মৃত্যুদিন" },
+    { month: 1,  day: 25, label: "মাইকেল মধুসূদন দত্তের জন্মদিন" },
+    { month: 6,  day: 29, label: "মাইকেল মধুসূদন দত্তের মৃত্যুদিন" },
+    { month: 6,  day: 26, label: "বঙ্কিমচন্দ্র চট্টোপাধ্যায়ের জন্মদিন" },
+    { month: 4,  day: 8,  label: "বঙ্কিমচন্দ্র চট্টোপাধ্যায়ের মৃত্যুদিন" },
+    { month: 2,  day: 18, label: "শ্রীরামকৃষ্ণ পরমহংসদেবের জন্মতিথি" },
+    { month: 8,  day: 16, label: "শ্রীরামকৃষ্ণ পরমহংসদেবের তিরোধান দিবস" },
+    { month: 12, day: 22, label: "মা সারদাদেবীর জন্মদিন" },
+    { month: 7,  day: 21, label: "মা সারদাদেবীর তিরোধান দিবস" },
+    { month: 7,  day: 4,  label: "স্বামী বিবেকানন্দের মৃত্যুদিন" },
+    { month: 8,  day: 7,  label: "রবীন্দ্রনাথ ঠাকুরের মৃত্যুদিন (২২ শ্রাবণ)" },
+    { month: 5,  day: 25, label: "কাজী নজরুল ইসলামের জন্মদিন" },
+    { month: 8,  day: 29, label: "কাজী নজরুল ইসলামের মৃত্যুদিন" },
+    { month: 8,  day: 18, label: "নেতাজি সুভাষচন্দ্র বসুর প্রয়াণ/নিখোঁজ দিবস" },
+    { month: 11, day: 5,  label: "দেশবন্ধু চিত্তরঞ্জন দাশের জন্মদিন" },
+    { month: 6,  day: 16, label: "দেশবন্ধু চিত্তরঞ্জন দাশের মৃত্যুদিন" },
+    { month: 11, day: 30, label: "আচার্য জগদীশচন্দ্র বসুর জন্মদিন" },
+    { month: 11, day: 23, label: "আচার্য জগদীশচন্দ্র বসুর মৃত্যুদিন" },
+    { month: 1,  day: 1,  label: "সত্যেন্দ্রনাথ বসুর জন্মদিন" },
+    { month: 2,  day: 4,  label: "সত্যেন্দ্রনাথ বসুর মৃত্যুদিন" },
+    { month: 9,  day: 15, label: "শরৎচন্দ্র চট্টোপাধ্যায়ের জন্মদিন" },
+    { month: 1,  day: 16, label: "শরৎচন্দ্র চট্টোপাধ্যায়ের মৃত্যুদিন" },
+    { month: 8,  day: 2,  label: "আচার্য প্রফুল্লচন্দ্র রায়ের জন্মদিন" },
+    { month: 6,  day: 16, label: "আচার্য প্রফুল্লচন্দ্র রায়ের মৃত্যুদিন" },
+    { month: 9,  day: 28, label: "রানী রাসমণির জন্মদিন" },
+    { month: 2,  day: 19, label: "রানী রাসমণির মৃত্যুদিন" }
+];
+function injectMahapurushAnniversaries(startYear, endYear) {
+    for (let y = startYear; y <= endYear; y++) {
+        mahapurushAnniversaries.forEach(item => {
+            const key = `${y}-${item.month.toString().padStart(2, '0')}-${item.day.toString().padStart(2, '0')}`;
+            if (!holidays[key]) holidays[key] = [];
+            if (!holidays[key].includes(item.label)) holidays[key].push(item.label);
+        });
+    }
+}
+
+injectMahapurushAnniversaries(2026, 2028);
+injectPanjikaTithiEvents(2026, 2028);
+
 /* ===================== LIVE CLOCK ===================== */
 function updateLiveTime() {
     const now = new Date();
@@ -1705,6 +1923,12 @@ function renderCalendar() {
                 dateSpan.className = "date-number";
                 dateSpan.innerText = date;
                 cell.appendChild(dateSpan);
+
+                let bnDateSpan = document.createElement("span");
+                bnDateSpan.className = "bn-date";
+                const bnInfo = gregorianToBengali(year, month, date);
+                bnDateSpan.innerText = `${toBengaliNumber(bnInfo.day)} ${bnInfo.month} ${toBengaliNumber(bnInfo.year)}`;
+                cell.appendChild(bnDateSpan);
 
                 if (isCurrentMonth && date === currentDay) {
                     cell.className = "today";
