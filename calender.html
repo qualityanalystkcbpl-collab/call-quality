@@ -343,6 +343,76 @@
   body.show-bn-date .bn-date{display:block;}
   .today .bn-date{color:var(--text);opacity:.85;}
   .panjika-note{font-size:11.5px;color:var(--text-muted);margin:2px 2px 10px;line-height:1.5;}
+
+  /* ===================== নিচের অ্যানিমেটেড দৃশ্য (গ্রাম, নদী, নৌকা, পাখি) ===================== */
+  .village-scene-section{padding:50px 16px 60px;display:flex;flex-direction:column;align-items:center;}
+  .village-scene-wrap{width:100%;max-width:840px;border-radius:18px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border);}
+  .village-scene{display:block;width:100%;height:auto;}
+
+  .sun{animation:sunGlow 4s ease-in-out infinite;}
+  @keyframes sunGlow{0%,100%{opacity:1;}50%{opacity:.75;}}
+
+  /* পাখি */
+  .bird{transform-box:fill-box; transform-origin:center;}
+  .bird path{transform-box:fill-box; transform-origin:center; animation:flap .6s ease-in-out infinite;}
+  .b1{animation:flyAcross 9s linear infinite;}
+  .b2{animation:flyAcross 11s linear infinite; animation-delay:-2s;}
+  .b3{animation:flyAcross 8s linear infinite; animation-delay:-4s;}
+  .b4{animation:flyAcross 12s linear infinite; animation-delay:-6s;}
+  .b5{animation:flyAcross 10s linear infinite; animation-delay:-1s;}
+  .b2 path, .b4 path{animation-duration:.5s;}
+  @keyframes flyAcross{
+    0%{transform:translate(-40px,6px); opacity:0;}
+    8%{opacity:1;}
+    50%{transform:translate(440px,-16px);}
+    92%{opacity:1;}
+    100%{transform:translate(950px,6px); opacity:0;}
+  }
+  @keyframes flap{0%,100%{transform:scaleY(1);}50%{transform:scaleY(.35);}}
+
+  /* গাছ */
+  .tree{transform-box:fill-box; transform-origin:bottom center; animation:sway 3.6s ease-in-out infinite;}
+  .t2{animation-duration:4.2s; animation-delay:-1s;}
+  .t3{animation-duration:3.2s; animation-delay:-2s;}
+  .t4{animation-duration:4s; animation-delay:-.6s;}
+  @keyframes sway{0%,100%{transform:rotate(-2.2deg);}50%{transform:rotate(2.2deg);}}
+
+  /* ঘরের ধোঁয়া */
+  .smoke{animation:smokeRise 3.2s ease-out infinite; transform-box:fill-box;}
+  .smoke.d2{animation-delay:1.1s;}
+  .smoke.d3{animation-delay:2.2s;}
+  @keyframes smokeRise{
+    0%{transform:translate(0,0) scale(.5); opacity:.85;}
+    100%{transform:translate(6px,-38px) scale(1.4); opacity:0;}
+  }
+
+  /* হাঁটা মানুষ */
+  .walker{transform-box:fill-box;}
+  .w1{animation:walk1 7s ease-in-out infinite;}
+  .w2{animation:walk2 8s ease-in-out infinite;}
+  @keyframes walk1{0%{transform:translateX(0);}48%{transform:translateX(600px) scaleX(1);}50%{transform:translateX(600px) scaleX(-1);}98%{transform:translateX(0px) scaleX(-1);}100%{transform:translateX(0) scaleX(1);}}
+  @keyframes walk2{0%{transform:translateX(640px) scaleX(-1);}48%{transform:translateX(20px) scaleX(-1);}50%{transform:translateX(20px) scaleX(1);}98%{transform:translateX(640px) scaleX(1);}100%{transform:translateX(640px) scaleX(-1);}}
+  .leg-l, .leg-r{transform-box:fill-box; transform-origin:top center; animation:legSwing .5s ease-in-out infinite alternate;}
+  .leg-r{animation-delay:.25s;}
+  @keyframes legSwing{0%{transform:rotate(-18deg);}100%{transform:rotate(18deg);}}
+
+  /* নদী ও ঢেউ */
+  .wave-group{animation:waveFlow 6s linear infinite;}
+  .wave-group.w-back{animation-duration:9s; opacity:.5;}
+  @keyframes waveFlow{0%{transform:translateX(0);}100%{transform:translateX(-100px);}}
+
+  /* নৌকা */
+  .boat{transform-box:fill-box; transform-origin:center; animation:bob 3.4s ease-in-out infinite;}
+  .bo2{animation-duration:4s; animation-delay:-1.5s;}
+  @keyframes bob{0%,100%{transform:translate(0,0) rotate(-1.5deg);}50%{transform:translate(6px,-5px) rotate(1.5deg);}}
+
+  .scene-caption{margin-top:22px; text-align:center;}
+  .scene-title{font-size:22px; font-weight:800; letter-spacing:.5px; color:var(--text);
+    background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    background-size:200% 100%; animation:empGreetingShift 6s linear infinite;}
+  .scene-credit{margin-top:6px; font-size:12.5px; color:var(--text-muted);}
+  .scene-credit b{color:var(--text); font-weight:800;}
   .today{background:linear-gradient(135deg, rgba(124,131,253,.18), rgba(255,94,168,.14)); border:2px solid var(--accent1); box-shadow:0 0 16px var(--glow1);}
   #calendarBody tr td:nth-child(1).today{background:linear-gradient(135deg, rgba(124,131,253,.18), rgba(255,94,168,.14)); border:2px solid var(--accent1); box-shadow:0 0 16px var(--glow1);}
   .today .date-number{color:#fff;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:inline-block;padding:2px 8px;border-radius:50%;}
@@ -662,7 +732,6 @@
         <option value="2028">২০২৮</option>
       </select>
     </div>
-    <div class="panjika-note">* উপরে "বাংলা তারিখ" টগল অন করলে প্রতিটি তারিখের নিচে বাংলা (পশ্চিমবঙ্গ পঞ্জিকা রীতি) তারিখ দেখা যাবে (ডিফল্ট বন্ধ থাকে)। পূর্ণিমা, অমাবস্যা ও একাদশী তিথি গাণিতিকভাবে (mean lunation পদ্ধতিতে) হিসাব করে বসানো হয়েছে। প্রকৃত মুদ্রিত পঞ্জিকার সাথে মাঝেমধ্যে ±১ দিন পার্থক্য হতে পারে, কারণ প্রকৃত সংক্রান্তি/তিথির সময় সূর্য-চাঁদের প্রকৃত অবস্থানের উপর নির্ভর করে।</div>
 
     <div class="main-layout">
       <div class="calendar-section">
@@ -2076,5 +2145,149 @@ window.onload = function() {
   toggleBtn();
 })();
 </script>
+<section class="village-scene-section">
+  <div class="village-scene-wrap">
+    <svg class="village-scene" viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#8ec9f0"/>
+          <stop offset="100%" stop-color="#eaf6ff"/>
+        </linearGradient>
+        <linearGradient id="riverGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6cc0e8"/>
+          <stop offset="100%" stop-color="#2f7fb0"/>
+        </linearGradient>
+        <clipPath id="riverClip"><rect x="0" y="346" width="900" height="74"/></clipPath>
+      </defs>
+
+      <!-- আকাশ -->
+      <rect x="0" y="0" width="900" height="270" fill="url(#skyGrad)"/>
+      <circle class="sun" cx="825" cy="48" r="28" fill="#ffe08a"/>
+
+      <!-- সবুজ টিলা -->
+      <path d="M0,210 Q225,170 450,192 T900,185 L900,270 L0,270 Z" fill="#8fce7a"/>
+
+      <!-- গাছ (৪টি, ছোট-বড়) -->
+      <g class="tree t1" transform="translate(35,248)">
+        <rect x="-4" y="0" width="8" height="24" fill="#6b4a2f"/>
+        <circle cx="0" cy="-10" r="16" fill="#4f9e52"/>
+        <circle cx="-10" cy="0" r="12" fill="#3f8a45"/>
+        <circle cx="10" cy="0" r="12" fill="#5aab5c"/>
+      </g>
+      <g class="tree t2" transform="translate(230,232)">
+        <rect x="-5" y="0" width="10" height="34" fill="#6b4a2f"/>
+        <circle cx="0" cy="-16" r="22" fill="#4f9e52"/>
+        <circle cx="-14" cy="-2" r="16" fill="#3f8a45"/>
+        <circle cx="14" cy="-2" r="16" fill="#5aab5c"/>
+      </g>
+      <g class="tree t3" transform="translate(660,215)">
+        <rect x="-6" y="0" width="12" height="46" fill="#6b4a2f"/>
+        <circle cx="0" cy="-22" r="28" fill="#4f9e52"/>
+        <circle cx="-18" cy="-4" r="20" fill="#3f8a45"/>
+        <circle cx="18" cy="-4" r="20" fill="#5aab5c"/>
+      </g>
+      <g class="tree t4" transform="translate(500,250)">
+        <rect x="-4" y="0" width="8" height="20" fill="#6b4a2f"/>
+        <circle cx="0" cy="-9" r="15" fill="#4f9e52"/>
+        <circle cx="-9" cy="1" r="10" fill="#3f8a45"/>
+        <circle cx="9" cy="1" r="10" fill="#5aab5c"/>
+      </g>
+
+      <!-- ঘর (২টি) -->
+      <g class="house h1">
+        <rect x="330" y="185" width="60" height="55" fill="#c96b4e" rx="2"/>
+        <polygon points="324,185 360,150 396,185" fill="#7a3b2e"/>
+        <rect x="350" y="213" width="18" height="27" fill="#5b3a29"/>
+        <rect x="337" y="196" width="14" height="14" fill="#bfe3ff" stroke="#5b3a29" stroke-width="1.5"/>
+        <rect x="378" y="158" width="8" height="20" fill="#4a4a4a"/>
+        <circle class="smoke" cx="382" cy="154" r="4" fill="#eef2f5"/>
+        <circle class="smoke d2" cx="382" cy="154" r="4" fill="#eef2f5"/>
+        <circle class="smoke d3" cx="382" cy="154" r="4" fill="#eef2f5"/>
+      </g>
+      <g class="house h2">
+        <rect x="560" y="155" width="80" height="85" fill="#4f7fbf" rx="2"/>
+        <polygon points="553,155 600,110 647,155" fill="#2f4f80"/>
+        <rect x="590" y="196" width="20" height="44" fill="#22344f"/>
+        <rect x="570" y="172" width="16" height="16" fill="#ffe9b0" stroke="#22344f" stroke-width="1.5"/>
+        <rect x="614" y="172" width="16" height="16" fill="#ffe9b0" stroke="#22344f" stroke-width="1.5"/>
+        <rect x="622" y="118" width="9" height="24" fill="#3a3a3a"/>
+        <circle class="smoke" cx="626" cy="113" r="4.5" fill="#eef2f5"/>
+        <circle class="smoke d2" cx="626" cy="113" r="4.5" fill="#eef2f5"/>
+        <circle class="smoke d3" cx="626" cy="113" r="4.5" fill="#eef2f5"/>
+      </g>
+
+      <!-- রাস্তা -->
+      <rect x="0" y="270" width="900" height="48" fill="#d9bd86"/>
+      <line x1="0" y1="294" x2="900" y2="294" stroke="#ffffff" stroke-width="3" stroke-dasharray="16 12" opacity="0.55"/>
+
+      <!-- হাঁটা মানুষ (২ জন) -->
+      <g class="walker w1">
+        <g transform="translate(60,290)">
+          <circle cx="0" cy="-34" r="6" fill="#3a2a20"/>
+          <rect x="-4" y="-28" width="8" height="18" rx="3" fill="#c0453f"/>
+          <line x1="-4" y1="-24" x2="-10" y2="-14" stroke="#c0453f" stroke-width="3" stroke-linecap="round"/>
+          <line x1="4" y1="-24" x2="10" y2="-16" stroke="#c0453f" stroke-width="3" stroke-linecap="round"/>
+          <line class="leg-l" x1="-2" y1="-10" x2="-2" y2="4" stroke="#2c3e50" stroke-width="3.5" stroke-linecap="round"/>
+          <line class="leg-r" x1="2" y1="-10" x2="2" y2="4" stroke="#2c3e50" stroke-width="3.5" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g class="walker w2">
+        <g transform="translate(40,290)">
+          <circle cx="0" cy="-34" r="6" fill="#2a2a2a"/>
+          <rect x="-4" y="-28" width="8" height="18" rx="3" fill="#3f7fbf"/>
+          <line x1="-4" y1="-24" x2="-10" y2="-14" stroke="#3f7fbf" stroke-width="3" stroke-linecap="round"/>
+          <line x1="4" y1="-24" x2="10" y2="-16" stroke="#3f7fbf" stroke-width="3" stroke-linecap="round"/>
+          <line class="leg-l" x1="-2" y1="-10" x2="-2" y2="4" stroke="#22344f" stroke-width="3.5" stroke-linecap="round"/>
+          <line class="leg-r" x1="2" y1="-10" x2="2" y2="4" stroke="#22344f" stroke-width="3.5" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <!-- নদীর পাড় -->
+      <rect x="0" y="318" width="900" height="28" fill="#7fc36a"/>
+
+      <!-- নদী -->
+      <rect x="0" y="346" width="900" height="74" fill="url(#riverGrad)"/>
+      <g clip-path="url(#riverClip)">
+        <g class="wave-group">
+          <path transform="translate(0,368)" d="M0,10 C25,0 75,20 100,10 C125,0 175,20 200,10 C225,0 275,20 300,10 C325,0 375,20 400,10 C425,0 475,20 500,10 C525,0 575,20 600,10 C625,0 675,20 700,10 C725,0 775,20 800,10 C825,0 875,20 900,10 C925,0 975,20 1000,10"
+                fill="none" stroke="#eaffff" stroke-width="2.5" opacity="0.4"/>
+        </g>
+        <g class="wave-group w-back">
+          <path transform="translate(0,392)" d="M0,10 C25,0 75,20 100,10 C125,0 175,20 200,10 C225,0 275,20 300,10 C325,0 375,20 400,10 C425,0 475,20 500,10 C525,0 575,20 600,10 C625,0 675,20 700,10 C725,0 775,20 800,10 C825,0 875,20 900,10 C925,0 975,20 1000,10"
+                fill="none" stroke="#eaffff" stroke-width="3" opacity="0.3"/>
+        </g>
+      </g>
+
+      <!-- নৌকা (২টি) -->
+      <g class="boat bo1">
+        <g transform="translate(220,388)">
+          <path d="M-30,0 Q0,18 30,0 L24,-4 Q0,6 -24,-4 Z" fill="#8a5a34"/>
+          <rect x="-2" y="-40" width="4" height="40" fill="#5b3a20"/>
+          <polygon points="2,-40 2,-8 26,-24" fill="#fefaf0"/>
+        </g>
+      </g>
+      <g class="boat bo2">
+        <g transform="translate(680,402)">
+          <path d="M-26,0 Q0,15 26,0 L21,-3 Q0,5 -21,-3 Z" fill="#a5673c"/>
+          <rect x="-2" y="-34" width="4" height="34" fill="#4a2f1a"/>
+          <polygon points="-2,-34 -2,-6 -22,-20" fill="#fefaf0"/>
+        </g>
+      </g>
+
+      <!-- পাখি (৫টি, উড়ছে) -->
+      <g class="bird b1"><g transform="translate(0,50)"><path d="M-8,0 Q-4,-7 0,0 Q4,-7 8,0" fill="none" stroke="#33363f" stroke-width="2.2" stroke-linecap="round"/></g></g>
+      <g class="bird b2"><g transform="translate(0,35)"><path d="M-8,0 Q-4,-7 0,0 Q4,-7 8,0" fill="none" stroke="#33363f" stroke-width="2.2" stroke-linecap="round"/></g></g>
+      <g class="bird b3"><g transform="translate(0,78)"><path d="M-8,0 Q-4,-7 0,0 Q4,-7 8,0" fill="none" stroke="#33363f" stroke-width="2.2" stroke-linecap="round"/></g></g>
+      <g class="bird b4"><g transform="translate(0,45)"><path d="M-8,0 Q-4,-7 0,0 Q4,-7 8,0" fill="none" stroke="#33363f" stroke-width="2.2" stroke-linecap="round"/></g></g>
+      <g class="bird b5"><g transform="translate(0,65)"><path d="M-8,0 Q-4,-7 0,0 Q4,-7 8,0" fill="none" stroke="#33363f" stroke-width="2.2" stroke-linecap="round"/></g></g>
+    </svg>
+  </div>
+
+  <div class="scene-caption">
+    <div class="scene-title">Quality control room</div>
+    <div class="scene-credit">Maintain and develop and design by <b>KALYAN SARKAR</b></div>
+  </div>
+</section>
+
 </body>
 </html>
