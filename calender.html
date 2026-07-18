@@ -375,6 +375,10 @@
   .t2{animation-duration:4.2s; animation-delay:-1s;}
   .t3{animation-duration:3.2s; animation-delay:-2s;}
   .t4{animation-duration:4s; animation-delay:-.6s;}
+  .t5{animation-duration:3.8s; animation-delay:-1.6s;}
+  .t6{animation-duration:4.4s; animation-delay:-2.4s;}
+  .t7{animation-duration:3.4s; animation-delay:-.3s;}
+  .t8{animation-duration:4.1s; animation-delay:-3s;}
   @keyframes sway{0%,100%{transform:rotate(-2.2deg);}50%{transform:rotate(2.2deg);}}
 
   /* ঘরের ধোঁয়া */
@@ -390,8 +394,16 @@
   .walker{transform-box:fill-box;}
   .w1{animation:walk1 7s ease-in-out infinite;}
   .w2{animation:walk2 8s ease-in-out infinite;}
+  .w3{animation:walk3 6s ease-in-out infinite;}
+  .w4{animation:walk4 9s ease-in-out infinite;}
+  .w5{animation:walk5 7.5s ease-in-out infinite;}
+  .w6{animation:walk6 6.5s ease-in-out infinite;}
   @keyframes walk1{0%{transform:translateX(0);}48%{transform:translateX(600px) scaleX(1);}50%{transform:translateX(600px) scaleX(-1);}98%{transform:translateX(0px) scaleX(-1);}100%{transform:translateX(0) scaleX(1);}}
   @keyframes walk2{0%{transform:translateX(640px) scaleX(-1);}48%{transform:translateX(20px) scaleX(-1);}50%{transform:translateX(20px) scaleX(1);}98%{transform:translateX(640px) scaleX(1);}100%{transform:translateX(640px) scaleX(-1);}}
+  @keyframes walk3{0%{transform:translateX(0);}48%{transform:translateX(220px) scaleX(1);}50%{transform:translateX(220px) scaleX(-1);}98%{transform:translateX(0px) scaleX(-1);}100%{transform:translateX(0) scaleX(1);}}
+  @keyframes walk4{0%{transform:translateX(250px) scaleX(-1);}48%{transform:translateX(0px) scaleX(-1);}50%{transform:translateX(0px) scaleX(1);}98%{transform:translateX(250px) scaleX(1);}100%{transform:translateX(250px) scaleX(-1);}}
+  @keyframes walk5{0%{transform:translateX(0);}48%{transform:translateX(300px) scaleX(1);}50%{transform:translateX(300px) scaleX(-1);}98%{transform:translateX(0px) scaleX(-1);}100%{transform:translateX(0) scaleX(1);}}
+  @keyframes walk6{0%{transform:translateX(320px) scaleX(-1);}48%{transform:translateX(0px) scaleX(-1);}50%{transform:translateX(0px) scaleX(1);}98%{transform:translateX(320px) scaleX(1);}100%{transform:translateX(320px) scaleX(-1);}}
   .leg-l, .leg-r{transform-box:fill-box; transform-origin:top center; animation:legSwing .5s ease-in-out infinite alternate;}
   .leg-r{animation-delay:.25s;}
   @keyframes legSwing{0%{transform:rotate(-18deg);}100%{transform:rotate(18deg);}}
@@ -402,9 +414,21 @@
   @keyframes waveFlow{0%{transform:translateX(0);}100%{transform:translateX(-100px);}}
 
   /* নৌকা */
-  .boat{transform-box:fill-box; transform-origin:center; animation:bob 3.4s ease-in-out infinite;}
-  .bo2{animation-duration:4s; animation-delay:-1.5s;}
-  @keyframes bob{0%,100%{transform:translate(0,0) rotate(-1.5deg);}50%{transform:translate(6px,-5px) rotate(1.5deg);}}
+  .boat{transform-box:fill-box; transform-origin:center; animation:bob 4.4s ease-in-out infinite;}
+  .bo2{animation-duration:5.2s; animation-delay:-2s;}
+  @keyframes bob{
+    0%{transform:translate(0,0) rotate(-3deg);}
+    25%{transform:translate(14px,-10px) rotate(2deg);}
+    50%{transform:translate(24px,-2px) rotate(4deg);}
+    75%{transform:translate(10px,-11px) rotate(-1.5deg);}
+    100%{transform:translate(0,0) rotate(-3deg);}
+  }
+  .ripple{transform-box:fill-box; transform-origin:center; animation:rippleAnim 4.4s ease-in-out infinite;}
+  .bo2 .ripple{animation-duration:5.2s; animation-delay:-2s;}
+  @keyframes rippleAnim{
+    0%,100%{transform:scale(0.85); opacity:.15;}
+    50%{transform:scale(1.25); opacity:.4;}
+  }
 
   .scene-caption{margin-top:22px; text-align:center;}
   .scene-title{font-size:22px; font-weight:800; letter-spacing:.5px; color:var(--text);
@@ -2192,6 +2216,30 @@ window.onload = function() {
         <circle cx="-9" cy="1" r="10" fill="#3f8a45"/>
         <circle cx="9" cy="1" r="10" fill="#5aab5c"/>
       </g>
+      <g class="tree t5" transform="translate(140,252)">
+        <rect x="-4" y="0" width="8" height="22" fill="#6b4a2f"/>
+        <circle cx="0" cy="-9" r="15" fill="#4f9e52"/>
+        <circle cx="-9" cy="1" r="10" fill="#3f8a45"/>
+        <circle cx="9" cy="1" r="10" fill="#5aab5c"/>
+      </g>
+      <g class="tree t6" transform="translate(280,238)">
+        <rect x="-5" y="0" width="10" height="30" fill="#6b4a2f"/>
+        <circle cx="0" cy="-14" r="19" fill="#4f9e52"/>
+        <circle cx="-12" cy="-1" r="14" fill="#3f8a45"/>
+        <circle cx="12" cy="-1" r="14" fill="#5aab5c"/>
+      </g>
+      <g class="tree t7" transform="translate(440,230)">
+        <rect x="-5" y="0" width="10" height="32" fill="#6b4a2f"/>
+        <circle cx="0" cy="-15" r="20" fill="#4f9e52"/>
+        <circle cx="-13" cy="-2" r="15" fill="#3f8a45"/>
+        <circle cx="13" cy="-2" r="15" fill="#5aab5c"/>
+      </g>
+      <g class="tree t8" transform="translate(780,210)">
+        <rect x="-6" y="0" width="12" height="44" fill="#6b4a2f"/>
+        <circle cx="0" cy="-21" r="27" fill="#4f9e52"/>
+        <circle cx="-17" cy="-3" r="19" fill="#3f8a45"/>
+        <circle cx="17" cy="-3" r="19" fill="#5aab5c"/>
+      </g>
 
       <!-- ঘর (২টি) -->
       <g class="house h1">
@@ -2241,6 +2289,46 @@ window.onload = function() {
           <line class="leg-r" x1="2" y1="-10" x2="2" y2="4" stroke="#22344f" stroke-width="3.5" stroke-linecap="round"/>
         </g>
       </g>
+      <g class="walker w3">
+        <g transform="translate(150,290)">
+          <circle cx="0" cy="-34" r="6" fill="#4a3222"/>
+          <rect x="-4" y="-28" width="8" height="18" rx="3" fill="#e0a83f"/>
+          <line x1="-4" y1="-24" x2="-10" y2="-14" stroke="#e0a83f" stroke-width="3" stroke-linecap="round"/>
+          <line x1="4" y1="-24" x2="10" y2="-16" stroke="#e0a83f" stroke-width="3" stroke-linecap="round"/>
+          <line class="leg-l" x1="-2" y1="-10" x2="-2" y2="4" stroke="#3a2a1a" stroke-width="3.5" stroke-linecap="round"/>
+          <line class="leg-r" x1="2" y1="-10" x2="2" y2="4" stroke="#3a2a1a" stroke-width="3.5" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g class="walker w4">
+        <g transform="translate(350,290)">
+          <circle cx="0" cy="-34" r="6" fill="#2a2a2a"/>
+          <rect x="-4" y="-28" width="8" height="18" rx="3" fill="#4f9e52"/>
+          <line x1="-4" y1="-24" x2="-10" y2="-14" stroke="#4f9e52" stroke-width="3" stroke-linecap="round"/>
+          <line x1="4" y1="-24" x2="10" y2="-16" stroke="#4f9e52" stroke-width="3" stroke-linecap="round"/>
+          <line class="leg-l" x1="-2" y1="-10" x2="-2" y2="4" stroke="#22432a" stroke-width="3.5" stroke-linecap="round"/>
+          <line class="leg-r" x1="2" y1="-10" x2="2" y2="4" stroke="#22432a" stroke-width="3.5" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g class="walker w5">
+        <g transform="translate(450,290)">
+          <circle cx="0" cy="-34" r="6" fill="#4a3222"/>
+          <rect x="-4" y="-28" width="8" height="18" rx="3" fill="#b04fbf"/>
+          <line x1="-4" y1="-24" x2="-10" y2="-14" stroke="#b04fbf" stroke-width="3" stroke-linecap="round"/>
+          <line x1="4" y1="-24" x2="10" y2="-16" stroke="#b04fbf" stroke-width="3" stroke-linecap="round"/>
+          <line class="leg-l" x1="-2" y1="-10" x2="-2" y2="4" stroke="#3a1a3a" stroke-width="3.5" stroke-linecap="round"/>
+          <line class="leg-r" x1="2" y1="-10" x2="2" y2="4" stroke="#3a1a3a" stroke-width="3.5" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g class="walker w6">
+        <g transform="translate(550,290)">
+          <circle cx="0" cy="-34" r="6" fill="#3a2a20"/>
+          <rect x="-4" y="-28" width="8" height="18" rx="3" fill="#e05f5f"/>
+          <line x1="-4" y1="-24" x2="-10" y2="-14" stroke="#e05f5f" stroke-width="3" stroke-linecap="round"/>
+          <line x1="4" y1="-24" x2="10" y2="-16" stroke="#e05f5f" stroke-width="3" stroke-linecap="round"/>
+          <line class="leg-l" x1="-2" y1="-10" x2="-2" y2="4" stroke="#5a1e1e" stroke-width="3.5" stroke-linecap="round"/>
+          <line class="leg-r" x1="2" y1="-10" x2="2" y2="4" stroke="#5a1e1e" stroke-width="3.5" stroke-linecap="round"/>
+        </g>
+      </g>
 
       <!-- নদীর পাড় -->
       <rect x="0" y="318" width="900" height="28" fill="#7fc36a"/>
@@ -2261,6 +2349,7 @@ window.onload = function() {
       <!-- নৌকা (২টি) -->
       <g class="boat bo1">
         <g transform="translate(220,388)">
+          <ellipse class="ripple" cx="0" cy="6" rx="38" ry="7" fill="#ffffff"/>
           <path d="M-30,0 Q0,18 30,0 L24,-4 Q0,6 -24,-4 Z" fill="#8a5a34"/>
           <rect x="-2" y="-40" width="4" height="40" fill="#5b3a20"/>
           <polygon points="2,-40 2,-8 26,-24" fill="#fefaf0"/>
@@ -2268,6 +2357,7 @@ window.onload = function() {
       </g>
       <g class="boat bo2">
         <g transform="translate(680,402)">
+          <ellipse class="ripple" cx="0" cy="5" rx="34" ry="6" fill="#ffffff"/>
           <path d="M-26,0 Q0,15 26,0 L21,-3 Q0,5 -21,-3 Z" fill="#a5673c"/>
           <rect x="-2" y="-34" width="4" height="34" fill="#4a2f1a"/>
           <polygon points="-2,-34 -2,-6 -22,-20" fill="#fefaf0"/>
