@@ -1570,6 +1570,33 @@ aside.sidebar{
     text-shadow:0 0 10px rgba(89,209,255,0.55);
   }
 }
+/* ✨ Calendar এর ঠিক নিচে — "Currently Online" ছোট লিস্ট, সবসময় sidebar-এ দেখা যাবে */
+.sidebar-online-block{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--surface);
+}
+.sidebar-online-title{
+  display:flex; align-items:center; gap:6px;
+  font-size:12px; font-weight:700;
+  color:var(--text);
+  margin-bottom:8px;
+}
+.sidebar-online-list{
+  display:flex; flex-direction:column; gap:5px;
+  max-height:220px; overflow-y:auto;
+}
+.sidebar-online-list .online-agent-row{
+  padding:6px 8px;
+  font-size:12px;
+  border-radius:6px;
+}
+.sidebar-online-list .online-agent-name{ font-weight:600; }
+.sidebar-online-list .online-agents-anon{
+  font-size:10.5px;
+}
 main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 .panel{display:none;}
 .panel.active{display:block;}
@@ -3055,6 +3082,17 @@ transform:translateY(0);
     Calendar
 </div>
 
+<!-- Calendar এর ঠিক নিচে — কারা এখন অনলাইন আছে, তার ছোট লিস্ট (সবসময় দেখা যাবে) -->
+<div class="sidebar-online-block" id="sidebarOnlineBlock">
+    <div class="sidebar-online-title">
+        <span class="pulse-dot" style="display:inline-block;"></span>
+        Currently Online (<span id="sidebarOnlineCount">--</span>)
+    </div>
+    <div class="sidebar-online-list" id="sidebarOnlineList">
+        <div class="online-agents-loading">Loading…</div>
+    </div>
+</div>
+
     </aside>
     <main class="content">
       <!-- Data sheets panels -->
@@ -3614,6 +3652,69 @@ async function pingOnlinePresence(){
 }
 pingOnlinePresence();
 setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
+
+/* ===================== Sidebar-এ সবসময় দেখা "Currently Online" ছোট লিস্ট (Calendar-এর নিচে) ===================== */
+async function renderSidebarOnlineList(){
+  const listEl = document.getElementById('sidebarOnlineList');
+  const countEl = document.getElementById('sidebarOnlineCount');
+  if(!listEl) return;
+  try{
+    const now = Date.now();
+    let sessions = (await storageGet('onlineSessions')) || {};
+    Object.keys(sessions).forEach(id=>{
+      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
+    });
+    const entries = Object.values(sessions);
+    if(countEl) countEl.textContent = entries.length;
+
+    const seen = new Map();
+    let anonymousCount = 0;
+    entries.forEach(e=>{
+      const name = e && e.name;
+      if(!name){ anonymousCount++; return; }
+      const key = (e.id || name);
+      if(seen.has(key)) seen.set(key, seen.get(key) + 1);
+      else seen.set(key, 1);
+    });
+
+    if(seen.size === 0 && anonymousCount === 0){
+      listEl.innerHTML = '<div class="online-agents-empty">No one is currently online.</div>';
+      return;
+    }
+
+    const nameMap = new Map();
+    entries.forEach(e=>{
+      if(e && e.name){
+        const key = (e.id || e.name);
+        if(!nameMap.has(key)) nameMap.set(key, e.name);
+      }
+    });
+
+    let html = '';
+    Array.from(seen.keys())
+      .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
+      .forEach(key=>{
+        const displayName = nameMap.get(key) || 'Agent';
+        const tabCount = seen.get(key);
+        html += `<div class="online-agent-row">
+          <span class="pulse-dot" style="display:inline-block;"></span>
+          <span class="online-agent-name">${displayName}</span>
+          ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
+        </div>`;
+      });
+
+    if(anonymousCount > 0){
+      html += `<div class="online-agents-anon">+ ${anonymousCount} more session(s) online — name not available yet (that browser tab needs a refresh to show up by name)</div>`;
+    }
+
+    listEl.innerHTML = html || '<div class="online-agents-empty">No one is currently online.</div>';
+  }catch(e){
+    console.error('Failed to load sidebar online list', e);
+    listEl.innerHTML = '<div class="online-agents-empty">Could not load the online agent list.</div>';
+  }
+}
+renderSidebarOnlineList();
+setInterval(renderSidebarOnlineList, ONLINE_HEARTBEAT_MS);
 
 /* ===================== "কারা অনলাইন আছে" মোডাল ===================== */
 async function openOnlineAgentsModal(){
@@ -5687,6 +5788,29 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
   border:1px solid var(--border, #203859);
   border-radius:8px;
   font-size:13px;
+  animation: onlineRowGlow 2.6s ease-in-out infinite;
+}
+/* প্রতিটা agent row আলাদা আলাদা রঙে সাইকেল করবে (৬টা রঙ পালা করে) */
+.online-agent-row:nth-child(6n+1){ --row-color:#33C9B0; animation-delay:0s; }
+.online-agent-row:nth-child(6n+2){ --row-color:#E3A857; animation-delay:.3s; }
+.online-agent-row:nth-child(6n+3){ --row-color:#FF5E7E; animation-delay:.6s; }
+.online-agent-row:nth-child(6n+4){ --row-color:#59D1FF; animation-delay:.9s; }
+.online-agent-row:nth-child(6n+5){ --row-color:#7C83FD; animation-delay:1.2s; }
+.online-agent-row:nth-child(6n+6){ --row-color:#B166FF; animation-delay:1.5s; }
+.online-agent-row .pulse-dot{
+  background: var(--row-color, var(--agent));
+  box-shadow:0 0 0 0 var(--row-color, rgba(51,201,176,0.6));
+}
+.online-agent-row .online-agent-name{ color: var(--row-color, var(--text)); }
+@keyframes onlineRowGlow{
+  0%,100%{
+    box-shadow:0 0 3px var(--row-color, #33C9B0);
+    border-color:var(--border, #203859);
+  }
+  50%{
+    box-shadow:0 0 13px var(--row-color, #33C9B0);
+    border-color:var(--row-color, #33C9B0);
+  }
 }
 .online-agent-name{ font-weight:600; flex:1; }
 .online-agent-tabs{
