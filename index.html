@@ -658,6 +658,27 @@ header.topbar{
   0%{ background-position:0% center; }
   100%{ background-position:300% center; }
 }
+.login-popup-greeting{
+  position:relative;
+  z-index:1;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(18px,2.4vw,24px);
+  font-weight:800;
+  text-align:center;
+  background:linear-gradient(90deg,#33C9B0,#4A7FE0,#B94AE0,#E3A857,#FF6FD0,#33C9B0);
+  background-size:300% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  animation:loginPopupColor 4s linear infinite;
+}
+.login-popup-dashed{
+  position:relative;
+  z-index:1;
+  border-bottom:2px dashed rgba(255,255,255,.28);
+  margin:14px auto 18px;
+  width:88%;
+}
 .ticker{
     flex:1;
     position:relative;
@@ -2969,8 +2990,11 @@ transform:translateY(0);
   <div class="news-ticker-wrap" id="newsTickerWrap"></div>
   <div class="body-layout">
     <aside class="sidebar" id="sidebar">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" data-tab="HOME" onclick="switchTab('HOME')"><span class="dot"></span>🏠 Home</div>
+
       <div class="nav-label">Data Sheets</div>
-      <div class="nav-item active" data-tab="CATV" onclick="switchTab('CATV')"><span class="dot"></span>CATV Data</div>
+      <div class="nav-item" data-tab="CATV" onclick="switchTab('CATV')"><span class="dot"></span>CATV Data</div>
       <div class="nav-item" data-tab="BBTECH" onclick="switchTab('BBTECH')"><span class="dot"></span>BB Tech Support Data</div>
       <div class="nav-item" data-tab="BBRENEWAL" onclick="switchTab('BBRENEWAL')"><span class="dot"></span>BB Renewal Data</div>
 <div class="nav-item"
@@ -3095,8 +3119,10 @@ transform:translateY(0);
 
     </aside>
     <main class="content">
+      <!-- Home overview panel -->
+      <div class="panel active" id="panel-HOME"></div>
       <!-- Data sheets panels -->
-      <div class="panel active" id="panel-CATV" data-vertical="CATV"></div>
+      <div class="panel" id="panel-CATV" data-vertical="CATV"></div>
       <div class="panel" id="panel-BBTECH" data-vertical="BBTECH"></div>
       <div class="panel" id="panel-BBRENEWAL" data-vertical="BBRENEWAL"></div>
       <!-- Dedicated Dashboards panels -->
@@ -3449,7 +3475,7 @@ const RAW_SHEET_TABS = {
 let ans3secSubTab = 'CATV';
 let currentRole = null;
 let selectedRole = 'agent';
-let currentTab = 'CATV';
+let currentTab = 'HOME';
 let bannerTimer = null;
 let bannerIndex = 0;
 let newsTickerFlashTimer = null;
@@ -3932,7 +3958,7 @@ if(currentRole==="agent"){
   await loadTicker();
   await loadBanners();
   await loadNewsTicker();
-  switchTab('CATV');
+  switchTab('HOME');
   await loadUpdates();
   await loadLoginPopupAdmin();
 }
@@ -3974,9 +4000,28 @@ async function showLoginPopupIfNeeded(){
   const text = (data && data.text) ? data.text.trim() : '';
   const overlay = document.getElementById('loginPopupOverlay');
   const textEl = document.getElementById('loginPopupText');
+  const greetEl = document.getElementById('loginPopupGreeting');
   if(!text || !overlay || !textEl) return; // খালি থাকলে পপ-আপ দেখাবে না
+  if(greetEl){
+    const name = (empAgentName || localStorage.getItem('qa_emp_name') || '').toUpperCase();
+    greetEl.textContent = name ? `${currentGreetingText()} - ${name}` : currentGreetingText();
+  }
   textEl.textContent = text;
+  autoSizeLoginPopupText(textEl, text);
   overlay.classList.add('show');
+}
+/* লেখা বড় হলে ফন্ট ছোট হয়ে যাবে, লেখা ছোট হলে ফন্ট বড় হয়ে যাবে — automatic */
+function autoSizeLoginPopupText(el, text){
+  const len = (text || '').length;
+  let size;
+  if(len <= 30) size = 34;
+  else if(len <= 60) size = 30;
+  else if(len <= 100) size = 26;
+  else if(len <= 160) size = 22;
+  else if(len <= 240) size = 19;
+  else if(len <= 340) size = 16;
+  else size = 14;
+  el.style.fontSize = size + 'px';
 }
 function closeLoginPopup(){
   const overlay = document.getElementById('loginPopupOverlay');
@@ -4291,7 +4336,9 @@ function switchTab(tab){
   document.querySelectorAll('.panel').forEach(p=> p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
   
-  if(VERTICALS[tab]){
+  if (tab === 'HOME') {
+    renderHomePage();
+  } else if(VERTICALS[tab]){
     renderVerticalPanel(tab);
   } else if (tab.startsWith('DASH-')) {
     const vKey = Object.keys(VERTICALS).find(k => VERTICALS[k].dashId === tab);
@@ -4772,7 +4819,117 @@ async function renderDedicatedDashboard(vKey) {
     panel.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
   }
 }
-/* ===================== ANSWERED WITHIN 3 SECONDS (LIVE GOOGLE SHEET) ===================== */
+/* ===================== HOME — CATV / BB TECH / BB RENEWAL এর Average Score, চার্ট সহ ===================== */
+async function renderHomePage(){
+  const panel = document.getElementById('panel-HOME');
+  if(!panel) return;
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি vertical-এর overall average score, এক নজরে।</p></div>
+      <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
+    </div>
+    <div class="empty-state"><b>লাইভ ডাটা লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b></div>`;
+
+  const vKeys = Object.keys(VERTICALS); // CATV, BBTECH, BBRENEWAL
+
+  try{
+    const results = await Promise.all(vKeys.map(async (vKey) => {
+      const meta = VERTICALS[vKey];
+      try{
+        const response = await fetch(WEB_APP_URL + "?vertical=" + meta.dashSheet);
+        const data = await response.json();
+        if(!Array.isArray(data) || data.length === 0) return { vKey, meta, avg: null, agentCount: 0 };
+
+        const headers = data[0];
+        const rows = data.slice(1);
+        const monthHeaders = headers.slice(1);
+
+        let agentAverages = [];
+        rows.forEach(row => {
+          const agentName = String(row[0] || '').trim();
+          if(!agentName || agentName.toLowerCase() === 'grand total' || agentName.includes('Total')) return;
+
+          let totalScore = 0, validMonths = 0;
+          monthHeaders.forEach((month, idx) => {
+            const num = parseFloat(String(row[idx + 1] || '').trim());
+            if(!isNaN(num)){ totalScore += num; validMonths++; }
+          });
+          if(validMonths > 0) agentAverages.push(totalScore / validMonths);
+        });
+
+        if(!agentAverages.length) return { vKey, meta, avg: null, agentCount: 0 };
+        const overallAvg = Math.round((agentAverages.reduce((s,v)=>s+v,0) / agentAverages.length) * 10) / 10;
+        return { vKey, meta, avg: overallAvg, agentCount: agentAverages.length };
+      }catch(e){
+        console.error('Home page vertical fetch failed:', vKey, e);
+        return { vKey, meta, avg: null, agentCount: 0 };
+      }
+    }));
+
+    const statCardsHtml = results.map(r => {
+      const s = (r.avg !== null) ? statusFor(r.avg) : null;
+      return `<div class="stat-card">
+        <div class="label">${r.meta.label} — Average Score</div>
+        <div class="value gold" data-countup="${r.avg !== null ? r.avg : 0}" data-suffix="%">0%</div>
+        ${s ? `<span class="badge ${s.cls}" style="margin-top:6px;display:inline-block;">${s.label}</span>` : `<span class="badge need" style="margin-top:6px;display:inline-block;">🔴 ডাটা পাওয়া যায়নি</span>`}
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${r.agentCount} agent(s)-এর উপর ভিত্তি করে</div>
+      </div>`;
+    }).join('');
+
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি vertical-এর overall average score, এক নজরে।</p></div>
+        <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
+      </div>
+      <div class="stat-row">${statCardsHtml}</div>
+      <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
+        📊 Vertical-wise Average Score Comparison
+      </h3>
+      <div class="chart-box"><canvas id="homeAvgChart"></canvas></div>`;
+
+    runCountUps(panel);
+
+    setTimeout(() => {
+      const ctx = document.getElementById('homeAvgChart');
+      if(!ctx) return;
+      if(chartInstances['home-avg']) chartInstances['home-avg'].destroy();
+
+      chartInstances['home-avg'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: results.map(r => r.meta.label),
+          datasets: [{
+            label: 'Average Score (%)',
+            data: results.map(r => r.avg !== null ? r.avg : 0),
+            backgroundColor: results.map(r => {
+              if(r.avg === null) return 'rgba(224,82,74,0.4)';
+              const s = statusFor(r.avg);
+              return {excellent:'rgba(63,191,127,0.7)', good:'rgba(224,195,65,0.7)', average:'rgba(224,138,63,0.7)', need:'rgba(224,82,74,0.7)'}[s.cls] || 'rgba(51,201,176,0.7)';
+            }),
+            borderColor: 'var(--border)',
+            borderWidth: 1,
+            borderRadius: 6,
+            maxBarThickness: 70
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#8FA0B5', font: { size: 12 } }, grid: { display: false } },
+            y: { min: 0, max: 100, ticks: { color: '#8FA0B5' }, grid: { color: '#203859' } }
+          }
+        }
+      });
+    }, 60);
+
+  }catch(err){
+    console.error(err);
+    panel.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
+  }
+}
+
 function ans3secSubTabsHtml(activeSub){
   const cls = { CATV:'lob-catv', BBTECH:'lob-bbtech', BBRENEWAL:'lob-bbrenewal' };
   return `<div class="lob-tab-row">
@@ -5494,7 +5651,18 @@ setInterval(() => {
 <div class="login-popup-overlay" id="loginPopupOverlay" onclick="if(event.target===this) closeLoginPopup()">
   <div class="login-popup-box">
     <button class="login-popup-close" onclick="closeLoginPopup()" title="Close">✕</button>
+    <div class="login-popup-greeting" id="loginPopupGreeting"></div>
+    <div class="login-popup-dashed"></div>
     <div class="login-popup-text" id="loginPopupText"></div>
+  </div>
+</div>
+
+<!-- Logout korle ekta short "Logging out..." message dekhabe, tarpor login screen e ferot jabe -->
+<div class="logout-msg-overlay" id="logoutMessageOverlay">
+  <div class="logout-msg-box">
+    <div class="logout-msg-spinner"></div>
+    <div class="logout-msg-line1">Logging out<span class="logout-msg-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <div class="logout-msg-line2">Thank you for accessing the QA Portal.</div>
   </div>
 </div>
 
@@ -5776,7 +5944,22 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 
 /* "Currently Online" agents modal */
 .online-agents-box{ max-width:340px; }
-.online-agents-box h2{ font-size:18px; display:flex; align-items:center; }
+.online-agents-box h2{
+  font-size:18px; display:flex; align-items:center;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid transparent;
+  animation: onlineHeaderGlow 7s linear infinite;
+}
+@keyframes onlineHeaderGlow{
+  0%,  100%{ border-color:#33C9B0; box-shadow:0 0 10px rgba(51,201,176,0.55); }
+  14.3%{     border-color:#59D1FF; box-shadow:0 0 10px rgba(89,209,255,0.55); }
+  28.6%{     border-color:#7C83FD; box-shadow:0 0 10px rgba(124,131,253,0.55); }
+  42.9%{     border-color:#B166FF; box-shadow:0 0 10px rgba(177,102,255,0.55); }
+  57.1%{     border-color:#FF5E7E; box-shadow:0 0 10px rgba(255,94,126,0.55); }
+  71.4%{     border-color:#E3A857; box-shadow:0 0 10px rgba(227,168,87,0.55); }
+  85.7%{     border-color:#FFE066; box-shadow:0 0 10px rgba(255,224,102,0.55); }
+}
 .online-agents-list{
   margin-top:14px; max-height:320px; overflow-y:auto;
   display:flex; flex-direction:column; gap:6px;
@@ -5827,6 +6010,57 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 
 @media (max-width: 640px){
   #employeeWelcomeBar{ flex-direction:column; align-items:flex-start; gap:6px; }
+}
+
+/* "Logging out..." message overlay */
+.logout-msg-overlay{
+  position:fixed; inset:0; z-index:30000;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(3,8,14,0.72);
+  opacity:0; pointer-events:none;
+  transition:opacity .3s ease;
+}
+.logout-msg-overlay.show{ opacity:1; pointer-events:auto; }
+.logout-msg-box{
+  background: var(--surface, #0E1A2B);
+  border:1px solid var(--border, #203859);
+  border-radius:16px;
+  padding:34px 42px;
+  text-align:center;
+  box-shadow:0 20px 50px rgba(0,0,0,.5);
+  transform:scale(.92);
+  transition:transform .3s ease;
+}
+.logout-msg-overlay.show .logout-msg-box{ transform:scale(1); }
+.logout-msg-spinner{
+  width:34px; height:34px; margin:0 auto 16px;
+  border-radius:50%;
+  border:3px solid var(--border, #203859);
+  border-top-color: var(--agent, #33C9B0);
+  animation: logoutMsgSpin .8s linear infinite;
+}
+@keyframes logoutMsgSpin{ to{ transform:rotate(360deg); } }
+.logout-msg-line1{
+  font-family:'Inter', sans-serif;
+  font-size:18px; font-weight:700;
+  color: var(--text, #EAF0F6);
+}
+.logout-msg-dots span{
+  animation: logoutMsgDots 1.2s infinite;
+  opacity:0;
+}
+.logout-msg-dots span:nth-child(1){ animation-delay:0s; }
+.logout-msg-dots span:nth-child(2){ animation-delay:.2s; }
+.logout-msg-dots span:nth-child(3){ animation-delay:.4s; }
+@keyframes logoutMsgDots{
+  0%,80%,100%{ opacity:0; }
+  40%{ opacity:1; }
+}
+.logout-msg-line2{
+  margin-top:8px;
+  font-family:'Inter', sans-serif;
+  font-size:13px;
+  color: var(--text-muted, #8FA0B5);
 }
 </style>
 
@@ -6152,11 +6386,17 @@ async function employeeLogout(logoutType){
 /* Header "Logout" button (top-right) and the Employee welcome-bar "Logout" button must always
    do the exact same thing. If an employee session is active, route through the full
    employeeLogout cleanup; otherwise (plain Agent/Admin login) just doLogout(). */
-function handleLogoutClick(){
-  if(localStorage.getItem('qa_emp_session_id')){
-    employeeLogout('Manual');
-  }else{
-    doLogout();
+async function handleLogoutClick(){
+  const overlay = document.getElementById('logoutMessageOverlay');
+  if(overlay) overlay.classList.add('show');
+  try{
+    if(localStorage.getItem('qa_emp_session_id')){
+      await employeeLogout('Manual');
+    }else{
+      doLogout();
+    }
+  }finally{
+    if(overlay) overlay.classList.remove('show');
   }
 }
 
