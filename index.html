@@ -1698,8 +1698,8 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
   animation: homeCardRise .6s cubic-bezier(.22,1,.36,1) both;
 }
 #panel-HOME .stat-card:hover{
-  transform: translateY(-5px);
-  box-shadow: 0 14px 30px -14px rgba(0,0,0,0.5);
+  transform: translateY(-7px) scale(1.015);
+  box-shadow: 0 18px 34px -14px rgba(0,0,0,0.55), 0 0 0 1px var(--status-color, var(--border));
 }
 #panel-HOME .stat-row .stat-card:nth-child(1){ animation-delay:.05s; }
 #panel-HOME .stat-row .stat-card:nth-child(2){ animation-delay:.16s; }
@@ -1713,6 +1713,38 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
   position:absolute; left:0; top:0; bottom:0; width:4px;
   background:var(--status-color, var(--border));
   box-shadow: 0 0 10px var(--status-color, transparent);
+  animation: homeBorderPulse 2.6s ease-in-out infinite;
+  animation-delay:.7s;
+}
+@keyframes homeBorderPulse{
+  0%,100%{ box-shadow: 0 0 8px var(--status-color, transparent); opacity:.85; }
+  50%{ box-shadow: 0 0 18px 2px var(--status-color, transparent); opacity:1; }
+}
+/* ✨ কার্ডের উপর দিয়ে হালকা চকচকে shimmer একবার-পর-একবার পাস করে যাবে */
+#panel-HOME .stat-card::after{
+  content:'';
+  position:absolute; top:0; left:-60%; width:45%; height:100%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,0.10), transparent);
+  transform:skewX(-18deg);
+  animation: homeCardShimmer 5.5s ease-in-out infinite;
+  animation-delay:1.1s;
+  pointer-events:none;
+}
+#panel-HOME .stat-row .stat-card:nth-child(2)::after{ animation-delay:2.3s; }
+#panel-HOME .stat-row .stat-card:nth-child(3)::after{ animation-delay:3.5s; }
+@keyframes homeCardShimmer{
+  0%{ left:-60%; }
+  18%{ left:130%; }
+  100%{ left:130%; }
+}
+#panel-HOME .stat-card .card-meta-line{
+  animation: homeMetaFadeIn .5s cubic-bezier(.22,1,.36,1) both;
+}
+#panel-HOME .stat-card .card-meta-line.line-2{ animation-delay:.65s; }
+#panel-HOME .stat-card .card-meta-line.line-1{ animation-delay:.55s; }
+@keyframes homeMetaFadeIn{
+  from{ opacity:0; transform:translateY(6px); }
+  to{ opacity:1; transform:translateY(0); }
 }
 #panel-HOME .stat-card .score-bar-track{
   position:relative; height:6px; border-radius:4px; background:var(--surface-3); margin-top:14px; overflow:hidden;
@@ -1729,6 +1761,19 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 #panel-HOME .stat-card.status-good{ --status-color:var(--good); background:linear-gradient(160deg, rgba(224,195,65,0.12), var(--surface) 55%); border-color:rgba(224,195,65,0.4); }
 #panel-HOME .stat-card.status-average{ --status-color:var(--average); background:linear-gradient(160deg, rgba(224,138,63,0.12), var(--surface) 55%); border-color:rgba(224,138,63,0.4); }
 #panel-HOME .stat-card.status-need{ --status-color:var(--need); background:linear-gradient(160deg, rgba(224,82,74,0.12), var(--surface) 55%); border-color:rgba(224,82,74,0.4); }
+#panel-HOME .stat-card .label{
+  background: linear-gradient(90deg, var(--agent), var(--admin), #FF5E7E, #59D1FF, var(--agent));
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: homeLabelColorShift 6s linear infinite;
+}
+@keyframes homeLabelColorShift{
+  0%{ background-position: 0% 50%; }
+  100%{ background-position: 300% 50%; }
+}
 #panel-HOME .badge{ animation: homeBadgePop .5s cubic-bezier(.22,1,.36,1) both; animation-delay:.5s; }
 @keyframes homeBadgePop{ from{ opacity:0; transform:scale(.85); } to{ opacity:1; transform:scale(1); } }
 #panel-HOME .chart-box{ transition: box-shadow .35s ease, border-color .35s ease; }
@@ -3007,8 +3052,11 @@ transform:translateY(0);
         </span>
       </div>
       <div class="emp-welcome-right">
-        <button class="emp-mini-btn" onclick="openChangePasswordModal()">Change Pass</button>
-        <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
+        <div class="emp-welcome-btn-row">
+          <button class="emp-mini-btn" onclick="openChangePasswordModal()">Change Pass</button>
+          <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
+        </div>
+        <div class="emp-autologout-countdown" id="empAutoLogoutCountdown">Auto-logout in 30:00</div>
       </div>
     </div>
     <!-- 1) Logo placeholder — GitHub-এ পাবলিশ করার পর এখানে আপনার logo.png রাখলেই এটি অটো লোড হবে -->
@@ -3807,6 +3855,72 @@ function getSessionTs(entry){
   return (entry && typeof entry === 'object') ? entry.ts : entry;
 }
 
+/* ===================== প্রতিদিনের মোট অনলাইন সময় (per agent, per day) =====================
+   প্রতিটা agent আজ সর্বমোট কতক্ষণ অনলাইন ছিল তার হিসাব — 'dailyOnlineTime' নামে একটি
+   generic key-value entry-তে জমা থাকে: { "YYYY-MM-DD": { agentKey: {name, totalSec} } }
+   totalSec সরাসরি সেই agent-এর নিজের browser-এ থাকা qa_emp_session_start / qa_emp_today_prior
+   থেকে হিসাব করে পাঠানো হয় — অর্থাৎ ঠিক সেই একই সংখ্যা, যেটা তার নিজের welcome bar-এর
+   "Today: HH:MM:SS"-এ দেখায়। এতে দুই জায়গার সময় সবসময় মিলে যায়। */
+function getTodayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function formatDailyDuration(totalSec){
+  return `${secToHMSClient(totalSec)} today`;
+}
+
+// প্রতি সেকেন্ডে "Currently Online" লিস্টের সময়টা লাইভ কাউন্ট-আপ হবে (শুধু ৩০ সেকেন্ড পরপর
+// রিফ্রেশের অপেক্ষা না করে)। প্রতিবার লিস্ট রেন্ডার হওয়ার সময় সার্ভার থেকে পাওয়া বেস সময়টা
+// এখানে জমা রাখা হয়, আর এই ticker সেই বেস থেকে প্রতি সেকেন্ডে গুনে গুনে UI আপডেট করে।
+window.__dailyTimeBase = window.__dailyTimeBase || {};
+function tickOnlineDailyTimes(){
+  const now = Date.now();
+  document.querySelectorAll('.online-agent-daily-time[data-agent-key]').forEach(el=>{
+    const key = el.getAttribute('data-agent-key');
+    const base = window.__dailyTimeBase[key];
+    if(!base) return;
+    const liveSec = base.sec + (now - base.ts) / 1000;
+    el.textContent = formatDailyDuration(liveSec);
+  });
+}
+if(!window.__dailyTimeTickerStarted){
+  window.__dailyTimeTickerStarted = true;
+  setInterval(tickOnlineDailyTimes, 1000);
+}
+
+/* এই ফাংশনটা "Currently Online" লিস্টে দেখানো আজকের মোট সময়টাকে ঠিক সেই একই সোর্স থেকে বসায়
+   যেটা দিয়ে ইউজারের নিজের welcome bar-এর "Today: HH:MM:SS" হিসাব হয় (qa_emp_session_start +
+   qa_emp_today_prior, EMP ব্যাকএন্ড থেকে আসা) — ফলে দুই জায়গার সংখ্যা সবসময় মিলে যাবে,
+   আলাদা করে হিসাব (accumulate) করার দরকার নেই। */
+async function publishDailyOnlineTime(agentKey, displayName, now){
+  if(!agentKey) return;
+  try{
+    const sessionStart = Number(localStorage.getItem('qa_emp_session_start')) || null;
+    const todayPrior = Number(localStorage.getItem('qa_emp_today_prior')) || 0;
+    if(!sessionStart) return; // এখনো employee session শুরু হয়নি
+    const totalSec = todayPrior + Math.max(0, (now - sessionStart) / 1000);
+
+    const day = getTodayKey();
+    let dailyData = (await storageGet('dailyOnlineTime')) || {};
+    if(!dailyData[day]) dailyData[day] = {};
+    dailyData[day][agentKey] = { name: displayName, totalSec };
+    await storageSet('dailyOnlineTime', dailyData);
+  }catch(e){
+    console.error('Daily online time update failed', e);
+  }
+}
+
+async function getDailyOnlineMap(){
+  try{
+    const dailyData = (await storageGet('dailyOnlineTime')) || {};
+    return dailyData[getTodayKey()] || {};
+  }catch(e){
+    console.error('Failed to load daily online time', e);
+    return {};
+  }
+}
+
 async function pingOnlinePresence(){
   try{
     const mySessionId = getMySessionId();
@@ -3822,6 +3936,9 @@ async function pingOnlinePresence(){
     sessions[mySessionId] = { ts: now, name: myName, id: myEmpId };
     await storageSet('onlineSessions', sessions);
     renderOnlineCount(Object.keys(sessions).length);
+    // লগইন করা থাকলে আজকের মোট অনলাইন সময়টা (Today stat-এর সাথে মিলিয়ে) পাবলিশ করা হচ্ছে
+    const myAgentKey = myEmpId || myName;
+    if(myAgentKey) await publishDailyOnlineTime(myAgentKey, myName, now);
   }catch(e){
     console.error('Online presence update failed', e);
   }
@@ -3866,15 +3983,23 @@ async function renderSidebarOnlineList(){
       }
     });
 
+    const dailyMap = await getDailyOnlineMap();
+    const fetchTs = Date.now();
+
     let html = '';
     Array.from(seen.keys())
       .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
       .forEach(key=>{
         const displayName = nameMap.get(key) || 'Agent';
         const tabCount = seen.get(key);
+        const todaySec = dailyMap[key] ? dailyMap[key].totalSec : 0;
+        window.__dailyTimeBase[key] = { sec: todaySec, ts: fetchTs };
         html += `<div class="online-agent-row">
           <span class="pulse-dot" style="display:inline-block;"></span>
-          <span class="online-agent-name">${displayName}</span>
+          <span class="online-agent-name-wrap">
+            <span class="online-agent-name">${displayName}</span>
+            <span class="online-agent-daily-time" data-agent-key="${key}">${formatDailyDuration(todaySec)}</span>
+          </span>
           ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
         </div>`;
       });
@@ -3933,15 +4058,23 @@ async function openOnlineAgentsModal(){
       }
     });
 
+    const dailyMap = await getDailyOnlineMap();
+    const fetchTs = Date.now();
+
     let html = '';
     Array.from(seen.keys())
       .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
       .forEach(key=>{
         const displayName = nameMap.get(key) || 'Agent';
         const tabCount = seen.get(key);
+        const todaySec = dailyMap[key] ? dailyMap[key].totalSec : 0;
+        window.__dailyTimeBase[key] = { sec: todaySec, ts: fetchTs };
         html += `<div class="online-agent-row">
           <span class="pulse-dot" style="display:inline-block;"></span>
-          <span class="online-agent-name">${displayName}</span>
+          <span class="online-agent-name-wrap">
+            <span class="online-agent-name">${displayName}</span>
+            <span class="online-agent-daily-time" data-agent-key="${key}">${formatDailyDuration(todaySec)}</span>
+          </span>
           ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
         </div>`;
       });
@@ -4976,7 +5109,7 @@ async function renderHomePage(){
 
   panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি LOB-এর overall average score, এক নজরে।</p></div>
+      <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
       <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
     </div>
     <div class="empty-state"><b>লাইভ ডাটা লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b></div>`;
@@ -5018,7 +5151,8 @@ async function renderHomePage(){
         <div class="value gold" data-countup="${r.avg !== null ? r.avg : 0}" data-suffix="%">0%</div>
         ${s ? `<span class="badge ${s.cls}" style="margin-top:6px;display:inline-block;">${s.label}</span>` : `<span class="badge need" style="margin-top:6px;display:inline-block;">🔴 ডাটা পাওয়া যায়নি</span>`}
         <div class="score-bar-track"><div class="score-bar-fill" style="--fill-w:${fillPct}%"></div></div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">${r.agentCount} agent(s)-এর উপর ভিত্তি করে</div>
+        <div class="card-meta-line line-1" style="font-size:11px;color:var(--text-muted);margin-top:8px;">Based on ${r.agentCount} agent(s)</div>
+        <div class="card-meta-line line-2" style="font-size:11px;color:var(--text-muted);margin-top:2px;"><b style="color:var(--text);">${r.totalAudits}</b> calls audited so far</div>
       </div>`;
     }).join('');
 
@@ -5066,7 +5200,7 @@ async function renderHomePage(){
 
     panel.innerHTML = `
       <div class="panel-header">
-        <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি LOB-এর overall average score, এক নজরে।</p></div>
+        <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
         <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
       </div>
       <div class="stat-row">${statCardsHtml}</div>
@@ -6142,7 +6276,27 @@ setInterval(() => {
   padding:4px 10px;
   font-size:11px;
 }
-.emp-welcome-right{ display:flex; gap:8px; }
+.emp-welcome-right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.emp-welcome-right .emp-welcome-btn-row{ display:flex; gap:8px; }
+.emp-autologout-countdown{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  color: var(--text-muted, #8FA0B5);
+  border:1px solid var(--border, #203859);
+  background: var(--surface-2, #14253D);
+  padding:3px 10px;
+  border-radius:6px;
+  white-space:nowrap;
+}
+.emp-autologout-countdown.warn{
+  color: var(--need, #E0524A);
+  border-color: var(--need, #E0524A);
+  animation: empCountdownWarnPulse 1s ease-in-out infinite;
+}
+@keyframes empCountdownWarnPulse{
+  0%,100%{ box-shadow:0 0 0 rgba(224,82,74,0); }
+  50%{ box-shadow:0 0 8px rgba(224,82,74,0.55); }
+}
 .emp-mini-btn{
   background: var(--surface-3, #1B3150);
   border:1px solid var(--border, #203859);
@@ -6278,6 +6432,17 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
   }
 }
 .online-agent-name{ font-weight:600; flex:1; }
+.online-agent-name-wrap{
+  display:flex; flex-direction:column; gap:1px; flex:1; min-width:0;
+}
+.online-agent-name-wrap .online-agent-name{ flex:none; }
+.online-agent-daily-time{
+  font-size:10px;
+  font-family:'IBM Plex Mono',monospace;
+  color: var(--text-muted, #8FA0B5);
+  font-weight:500;
+  letter-spacing:.2px;
+}
 .online-agent-tabs{
   font-size:10.5px; color: var(--text-muted, #8FA0B5);
   background: var(--surface-3, #1B3150);
@@ -6362,7 +6527,7 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 const EMP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwktIZBumwKZM7z9rUZsT6vDoj1PBsMgcZL6VyH8HejBnBsx879O3Jy1dSLaGAiOLjr/exec";
 
 const EMP_HEARTBEAT_MS = 60 * 1000;         // Activity_Log আপডেট প্রতি ৬০ সেকেন্ডে
-const EMP_AUTO_LOGOUT_MS = 30 * 60 * 1000;  // ৩০ মিনিট নিষ্ক্রিয় থাকলে অটো লগ-আউট
+const EMP_AUTO_LOGOUT_MS = 30 * 60 * 1000;  // লগইনের ঠিক ৩০ মিনিট পর ফিক্সড অটো লগ-আউট (activity-তে রিসেট হয় না)
 
 let empSessionId = null;
 let empEmployeeId = null;
@@ -6598,6 +6763,7 @@ function startEmployeeSessionTracking(){
     const elapsed = Math.round((Date.now() - Number(empSessionStartEpoch)) / 1000);
     document.getElementById('empStatSession').textContent = secToHMSClient(elapsed);
     document.getElementById('empStatTodayTotal').textContent = secToHMSClient(empTodayPriorSeconds + elapsed);
+    tickAutoLogoutCountdown();
   }, 1000);
 
   empHeartbeatInterval = setInterval(sendEmpHeartbeat, EMP_HEARTBEAT_MS);
@@ -6619,10 +6785,7 @@ async function sendEmpHeartbeat(){
 
 /* ---------- Inactivity + auto logout (30 min / tab close) ---------- */
 function setupInactivityWatch(){
-  ['mousemove','keydown','click','scroll','touchstart'].forEach(evt=>{
-    window.addEventListener(evt, resetInactivityTimer, { passive: true });
-  });
-  resetInactivityTimer();
+  scheduleFixedAutoLogout();
 
   window.addEventListener('beforeunload', ()=>{
     if(!empSessionId) return;
@@ -6630,10 +6793,27 @@ function setupInactivityWatch(){
     navigator.sendBeacon && navigator.sendBeacon(`${EMP_WEB_APP_URL}?action=employeeLogout`, new Blob([payload], {type:'text/plain'}));
   });
 }
-function resetInactivityTimer(){
-  localStorage.setItem('qa_emp_last_activity', Date.now());
+
+/* ফিক্সড ৩০ মিনিটের সেশন — লগইনের ঠিক ৩০ মিনিট পর অটো লগ-আউট হয়ে যাবে,
+   এই সময়ের মধ্যে যত activity (mouse/keyboard/click/scroll) হোক না কেন, টাইমার রিসেট হবে না। */
+function scheduleFixedAutoLogout(){
   if(empInactivityTimeout) clearTimeout(empInactivityTimeout);
-  empInactivityTimeout = setTimeout(()=> employeeLogout('Auto'), EMP_AUTO_LOGOUT_MS);
+  const remainingMs = Math.max(0, EMP_AUTO_LOGOUT_MS - (Date.now() - Number(empSessionStartEpoch)));
+  empInactivityTimeout = setTimeout(()=> employeeLogout('Auto'), remainingMs);
+  tickAutoLogoutCountdown();
+}
+
+/* প্রতি সেকেন্ডে "Auto-logout in MM:SS" আপডেট হয় — লগইনের সময় থেকে ঠিক ৩০ মিনিট পর্যন্ত
+   গোনা হয়; পোর্টালে activity থাকুক বা না থাকুক, এই কাউন্টডাউন একটানা কমতেই থাকবে। */
+function tickAutoLogoutCountdown(){
+  const el = document.getElementById('empAutoLogoutCountdown');
+  if(!el) return;
+  const remainingMs = Math.max(0, EMP_AUTO_LOGOUT_MS - (Date.now() - Number(empSessionStartEpoch)));
+  const remainingSec = Math.ceil(remainingMs / 1000);
+  const m = String(Math.floor(remainingSec / 60)).padStart(2,'0');
+  const s = String(remainingSec % 60).padStart(2,'0');
+  el.textContent = `Auto-logout in ${m}:${s}`;
+  el.classList.toggle('warn', remainingSec <= 60);
 }
 
 async function employeeLogout(logoutType){
@@ -6686,11 +6866,11 @@ async function handleLogoutClick(){
 function restoreEmployeeSessionIfAny(){
   const sid = localStorage.getItem('qa_emp_session_id');
   const eid = localStorage.getItem('qa_emp_id');
-  const lastActive = Number(localStorage.getItem('qa_emp_last_activity') || 0);
+  const sessionStart = Number(localStorage.getItem('qa_emp_session_start') || 0);
   if(!sid || !eid) return;
 
-  if(Date.now() - lastActive > EMP_AUTO_LOGOUT_MS){
-    // already timed out while tab was closed/inactive — clean up quietly
+  if(Date.now() - sessionStart > EMP_AUTO_LOGOUT_MS){
+    // ৩০ মিনিটের ফিক্সড সেশন উইন্ডো ট্যাব বন্ধ থাকা অবস্থাতেই পার হয়ে গেছে — চুপচাপ ক্লিন-আপ
     ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity']
       .forEach(k=>localStorage.removeItem(k));
     return;
@@ -6699,7 +6879,7 @@ function restoreEmployeeSessionIfAny(){
   empSessionId = sid;
   empEmployeeId = eid;
   empAgentName = localStorage.getItem('qa_emp_name');
-  empSessionStartEpoch = Number(localStorage.getItem('qa_emp_session_start'));
+  empSessionStartEpoch = sessionStart;
   empTodayPriorSeconds = Number(localStorage.getItem('qa_emp_today_prior') || 0);
 
   // currentRole/mainScreen restoration is already handled by existing checkLoginSession()
