@@ -3225,4 +3225,3465 @@ transform:translateY(0);
           <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius);">
             <h3 style="margin-bottom:12px;">➕ Create New Agent</h3>
             <input type="text" id="saNewEmpId" placeholder="Employee ID" style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:8px;">
-            <input type="text" id="saNewEmpName" placeholder="Agent Name" s
+            <input type="text" id="saNewEmpName" placeholder="Agent Name" style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:8px;">
+            <input type="text" id="saNewEmpTeam" placeholder="Team" style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:8px;">
+            <input type="text" id="saNewEmpProcess" placeholder="Process" style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:10px;">
+            <button class="btn primary small" onclick="saCreateAgent()">Create Agent</button>
+            <div class="login-error" id="saCreateError" style="margin-top:8px;"></div>
+          </div>
+
+          <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
+            <h3 style="margin-bottom:12px;">👥 All Agents</h3>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+              <button class="btn small" onclick="saLoadAgents()">🔄 Refresh</button>
+              <button class="btn small" onclick="saDownload('getLoginHistory','Login_Log')">⬇ Login Log</button>
+              <button class="btn small" onclick="saDownload('getActivityHistory','Activity_Log')">⬇ Activity Log</button>
+              <button class="btn small" onclick="saDownload('getAuditHistory','Audit_Log')">⬇ Audit Log</button>
+              <button class="btn small" onclick="saDownload('getDailySummary','Daily_Summary')">⬇ Daily Summary</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="score-table" id="saAgentTable">
+                <thead><tr><th>Employee ID</th><th>Name</th><th>Team</th><th>Process</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="saAgentTableBody"><tr><td colspan="7">Refresh চাপুন agent list দেখতে।</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <!-- ============ DECORATIVE ANIMATED SCENE (house, tree, sun, boat, birds, water) ============ -->
+  <div class="scene-strip" aria-hidden="true">
+    <svg class="scene-svg" viewBox="0 0 1000 200" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sceneSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0A1730"/>
+          <stop offset="100%" stop-color="#123056"/>
+        </linearGradient>
+        <linearGradient id="sceneWater" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0E5C86"/>
+          <stop offset="100%" stop-color="#083A57"/>
+        </linearGradient>
+        <radialGradient id="sceneSun" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#FFF6D8"/>
+          <stop offset="35%" stop-color="#FFD873"/>
+          <stop offset="70%" stop-color="#F0A93E"/>
+          <stop offset="100%" stop-color="#C77A1F"/>
+        </radialGradient>
+        <filter id="sceneSunGlowFilter" x="-150%" y="-150%" width="400%" height="400%">
+          <feGaussianBlur stdDeviation="7" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Sky -->
+      <rect x="0" y="0" width="1000" height="200" fill="url(#sceneSky)"/>
+
+      <!-- Sun -->
+      <g class="scene-sun">
+        <circle cx="860" cy="46" r="60" fill="#FFD873" opacity="0.16"/>
+        <circle cx="860" cy="46" r="42" fill="#FFD873" opacity="0.22"/>
+        <circle cx="860" cy="46" r="30" fill="url(#sceneSun)" filter="url(#sceneSunGlowFilter)"/>
+      </g>
+
+      <!-- Birds -->
+      <g class="scene-birds scene-birds-1" fill="none" stroke="#EAF4FF" stroke-width="2.4" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q6 -7 12 0 Q18 -7 24 0"/>
+      </g>
+      <g class="scene-birds scene-birds-2" fill="none" stroke="#EAF4FF" stroke-width="2.2" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q5 -6 10 0 Q15 -6 20 0"/>
+      </g>
+      <g class="scene-birds scene-birds-3" fill="none" stroke="#EAF4FF" stroke-width="2" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q5 -6 10 0 Q15 -6 20 0"/>
+      </g>
+      <g class="scene-birds scene-birds-4" fill="none" stroke="#EAF4FF" stroke-width="2.3" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q6 -7 12 0 Q18 -7 24 0"/>
+      </g>
+      <g class="scene-birds scene-birds-5" fill="none" stroke="#EAF4FF" stroke-width="1.9" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q4.5 -5.5 9 0 Q13.5 -5.5 18 0"/>
+      </g>
+      <g class="scene-birds scene-birds-6" fill="none" stroke="#EAF4FF" stroke-width="2.1" stroke-linecap="round">
+        <path class="scene-wing" d="M0 0 Q5 -6 10 0 Q15 -6 20 0"/>
+      </g>
+
+      <!-- Tree 1 : deep green -->
+      <g class="scene-tree scene-tree-1" transform="translate(55,178)">
+        <rect x="-5" y="-46" width="10" height="46" rx="2" fill="#5A3A22"/>
+        <circle cx="0" cy="-58" r="26" fill="#0F4C2E"/>
+        <circle cx="-18" cy="-46" r="18" fill="#145A32"/>
+        <circle cx="18" cy="-46" r="18" fill="#145A32"/>
+        <circle cx="0" cy="-40" r="20" fill="#1B6B3D"/>
+      </g>
+
+      <!-- Tree 2 : deep teal / emerald -->
+      <g class="scene-tree scene-tree-2" transform="translate(150,178)">
+        <rect x="-4" y="-38" width="8" height="38" rx="2" fill="#4A3320"/>
+        <circle cx="0" cy="-48" r="21" fill="#0B4D45"/>
+        <circle cx="-14" cy="-38" r="15" fill="#0E6B5C"/>
+        <circle cx="14" cy="-38" r="15" fill="#0E6B5C"/>
+        <circle cx="0" cy="-33" r="16" fill="#128C72"/>
+      </g>
+
+      <!-- Tree 3 : deep olive -->
+      <g class="scene-tree scene-tree-3" transform="translate(455,178)">
+        <rect x="-5" y="-42" width="9" height="42" rx="2" fill="#4E3A20"/>
+        <circle cx="0" cy="-53" r="23" fill="#3E4A14"/>
+        <circle cx="-16" cy="-42" r="16" fill="#556B1B"/>
+        <circle cx="16" cy="-42" r="16" fill="#556B1B"/>
+        <circle cx="0" cy="-36" r="18" fill="#6B7F22"/>
+      </g>
+
+      <!-- House 1 : main -->
+      <g class="scene-house" transform="translate(255,178)">
+        <rect x="-46" y="-52" width="92" height="52" fill="#7A4A28"/>
+        <polygon points="-56,-52 0,-92 56,-52" fill="#14532D"/>
+        <rect x="-6" y="-84" width="10" height="22" fill="#3E2A18"/>
+        <g class="scene-smoke">
+          <circle cx="-1" cy="-92" r="4" fill="#9FB3C4" opacity="0.55"/>
+          <circle cx="2" cy="-102" r="5" fill="#9FB3C4" opacity="0.4"/>
+          <circle cx="-2" cy="-114" r="6" fill="#9FB3C4" opacity="0.28"/>
+        </g>
+        <rect x="-14" y="-24" width="20" height="24" fill="#3E2A18"/>
+        <circle cx="0" cy="-12" r="1.6" fill="#E3A857"/>
+        <rect x="14" y="-38" width="16" height="16" fill="#CFE3F0" opacity="0.85"/>
+        <rect x="-34" y="-38" width="16" height="16" fill="#CFE3F0" opacity="0.85"/>
+      </g>
+
+      <!-- House 2 : smaller, next to the main house -->
+      <g class="scene-house scene-house-2" transform="translate(345,178) scale(0.6)">
+        <rect x="-46" y="-52" width="92" height="52" fill="#6E4A30"/>
+        <polygon points="-56,-52 0,-92 56,-52" fill="#0F4C2E"/>
+        <rect x="-6" y="-84" width="10" height="22" fill="#3E2A18"/>
+        <rect x="-14" y="-24" width="20" height="24" fill="#3E2A18"/>
+        <circle cx="0" cy="-12" r="1.6" fill="#E3A857"/>
+        <rect x="14" y="-38" width="16" height="16" fill="#CFE3F0" opacity="0.85"/>
+        <rect x="-34" y="-38" width="16" height="16" fill="#CFE3F0" opacity="0.85"/>
+      </g>
+
+      <!-- Water -->
+      <path class="scene-wave scene-wave-1" d="M-50 176 Q 0 171 50 176 T 150 176 T 250 176 T 350 176 T 450 176 T 550 176 T 650 176 T 750 176 T 850 176 T 950 176 T 1050 176 V200 H-50 Z" fill="url(#sceneWater)"/>
+      <path class="scene-wave scene-wave-2" d="M-50 183 Q 0 179 50 183 T 150 183 T 250 183 T 350 183 T 450 183 T 550 183 T 650 183 T 750 183 T 850 183 T 950 183 T 1050 183 V200 H-50 Z" fill="#0A4A70" opacity="0.75"/>
+
+      <!-- Boat : sails back and forth across the water -->
+      <g class="scene-boat-move">
+        <g class="scene-boat-bob">
+          <path d="M-24 0 Q0 12 24 0 L18 -4 L-18 -4 Z" fill="#7A4A28"/>
+          <rect x="-2" y="-26" width="3" height="24" fill="#3E2A18"/>
+          <polygon points="1,-24 1,-6 20,-8" fill="#E3A857"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <!-- ============ PAGE FOOTER (সাইডবারে নয়, একদম পাতার শেষে, fixed নয়, normal flow-এ scroll হবে) ============ -->
+  <footer class="page-footer">
+    <div class="page-footer-brand">
+      <h3>GTPL KCBPL · Call Quality Audit System</h3>
+      <div class="subtitle">Enterprise Quality Monitoring Platform</div>
+    </div>
+    <div class="page-footer-cards">
+      <div class="info-card support">
+        <div class="icon">✉</div>
+        <div>
+          <b>Mail me</b>
+          <small>kalyan.sarkar@gtplkcbpl.com</small>
+        </div>
+      </div>
+      <div class="info-card help">
+        <div class="icon">☎</div>
+        <div>
+          <b>Mobile/Whatsapp</b>
+          <small>+91 9733588266</small>
+        </div>
+      </div>
+      <div class="info-card browser">
+        <div class="icon">🌐</div>
+        <div>
+          <b>browser recommendation</b>
+          <small>Google Chrome</small>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer-meta">
+      <div class="page-footer-dev">© 2026 Developed &amp; Maintained by <span>Kalyan Sarkar</span></div>
+      <div class="page-footer-version">👤 Quality Analyst | Version 1.0 <span>(Live)</span></div>
+    </div>
+  </footer>
+</div>
+<!-- Floating Custom Recording Player Bar -->
+<div class="floating-player" id="globalAudioPlayerBar">
+  <div class="player-details">
+    <p id="playerAgentName">Agent Name</p>
+    <span id="playerCallDetails">Call Date & Time</span>
+  </div>
+  <div class="audio-controls-wrap">
+    <audio id="globalAudioElement" controls controlsList="nodownload"></audio>
+  </div>
+  <div class="player-actions">
+    <a class="btn primary small" id="playerDownloadBtn" href="#" download>📥 Download</a>
+    <button class="btn small danger" onclick="closePlayerBar()">✕ Close</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="floating-scroll-logo" id="floatingScrollLogo">
+  <img src="logo2.png" alt="Logo" onerror="this.parentElement.style.display='none';">
+</div>
+<script>
+/* ===================== GOOGLE API CONFIG ===================== */
+// 
+
+// ⚠️ এখানে 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbCrtIR8ww9F8eJBKZl92Ml-L7TwDq_hZBu3VHK8D8H-EYz2FM5nw/exec";
+
+/* ✅ CATV / BB TECH SUPPORT / BB RENEWAL — Agent Summary (Audit Count, Avg Score) এই নতুন
+   CALL QUALITY DASHBOARD ব্যাকএন্ড (Apps Script) থেকে আসবে। Call-Level Logs Detail
+   আগের মতোই WEB_APP_URL থেকে অটোমেটিক আসতে থাকবে — কোনো পরিবর্তন হয়নি। */
+const NEW_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwynUu1nChgzn5oJYILitU_O1ce4uIZ_Nnr899xdXlWWMFCRe7UDa74CLg5HFCS551Xug/exec";
+const NEW_BACKEND_PROCESS_KEY = {
+  CATV: 'CATV',
+  BBTECH: 'BB TECH SUPPORT',
+  BBRENEWAL: 'BB RENEWAL'
+};
+
+const VERTICALS = {
+  CATV: { label: 'CATV', key: 'scores:CATV', rawKey: 'raw:CATV', dashId: 'DASH-CATV', dashSheet: 'CATV_DASHBOARD' },
+  BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH', dashId: 'DASH-BBTECH', dashSheet: 'BBTECH_DASHBOARD' },
+  BBRENEWAL: { label: 'BB Renewal', key: 'scores:BBRENEWAL', rawKey: 'raw:BBRENEWAL', dashId: 'DASH-BBRENEWAL', dashSheet: 'BBRENEWAL_DASHBOARD' }
+};
+/* গুগল শিটের যে ট্যাব থেকে "Answered Within 3 Seconds" ডাটা আসবে, সেই ট্যাবের নামগুলো এখানে দিন */
+const ANS3SEC_SHEETS = {
+  CATV: 'CATV_ANSWERED_3SEC',
+  BBTECH: 'BBTECH_ANSWERED_3SEC',
+  BBRENEWAL: 'BBRENEWAL_ANSWERED_3SEC'
+};
+/* System সেকশনের ট্যাবগুলো — এগুলো একটি নতুন/আলাদা গুগল শিট থেকে ডাটা আনে, তাই এর জন্য
+   আলাদা একটি Google Apps Script Web App ডিপ্লয় করে তার /exec URL নিচের
+   RAW_SHEET_WEB_APP_URL ভ্যারিয়েবলে বসিয়ে দিতে হবে (নিচে নোট দেখুন)। */
+const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweHhwH_NAuH-fRKtLUdJC9d6t5GxKKN3Th0_0HHVoV4lIf7vbfaGt1VY8dgz0zlRSm/exec";
+const RAW_SHEET_TABS = {
+  AUDITNEW:        { label: 'Audit Sheet (NEW)',              sheetName: 'Audit sheet(NEW)',        icon: '🗂️' },
+  CATVDISPO:       { label: 'CATV DISPO',                     sheetName: 'CATV DISPO',               icon: '📋' },
+  BBTECHDISPO:     { label: 'BB TECH DISPO',                  sheetName: 'BB TECH DISPO',            icon: '🛠️' },
+  BBRENEWALDISPO:  { label: 'BB RENEWAL DISPO',               sheetName: 'BB RENEWAL DISPO',         icon: '🔄' },
+  LIVEAUDITSCORES: { label: 'Live Call Audit Scores Dashboard', sheetName: 'Live Audit Scores',      icon: '📈' },
+  CALLSCRIPTHINDI: { label: 'Call Script in Hindi',           sheetName: 'Call script in hindi',     icon: '📜' },
+  AUDITPARAMETER:  { label: 'Audit Parameter',                sheetName: 'Audit parameter',          icon: '📐' },
+  DASHBOARDAPRMAR: { label: "Dashboard Apr'25-Mar'26",        sheetName: "Dashbord Apr'25-Mar'26",   icon: '📊' }
+};
+let ans3secSubTab = 'CATV';
+let currentRole = null;
+let selectedRole = 'agent';
+let currentTab = 'HOME';
+let bannerTimer = null;
+let bannerIndex = 0;
+let newsTickerFlashTimer = null;
+let newsTickerAnimFrame = null;
+let newsTickerTimeoutId = null;
+let topTickerAnimFrame = null;
+let topTickerTimeoutId = null;
+let chartInstances = {};
+const rawDataCache = {};
+/* ===================== LIVE SYSTEM CLOCK (now inside the logo area) ===================== */
+function startLiveClock() {
+  setInterval(() => {
+    const now = new Date();
+    const dateOptions = { day: '2-digit', month: 'short', year: 'numeric' };
+    const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+    const dateEl = document.getElementById("logoClockDate");
+    const timeEl = document.getElementById("logoClockTime");
+    if (dateEl) dateEl.textContent = now.toLocaleDateString("en-IN", dateOptions);
+    if (timeEl) {
+      timeEl.innerHTML = '<span class="dot"></span>' + now.toLocaleTimeString("en-IN", timeOptions);
+    }
+  }, 1000);
+}
+startLiveClock();
+/* লোগো এরিয়ায় */
+function startLogoRotator() {
+  const brand = document.getElementById('logoRotatorBrand');
+  const clock = document.getElementById('logoRotatorClock');
+  if (!brand || !clock) return;
+  let showingBrand = true;
+  setInterval(() => {
+    showingBrand = !showingBrand;
+    brand.classList.toggle('active', showingBrand);
+    clock.classList.toggle('active', !showingBrand);
+  }, 5000);
+}
+startLogoRotator();
+/* ===================== FLOATING LOGO ON SCROLL ===================== */
+(function(){
+  const el = document.getElementById('floatingScrollLogo');
+  if(!el) return;
+  let ticking = false;
+  window.addEventListener('scroll', ()=>{
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(()=>{
+      if(window.scrollY > 120){
+        el.classList.add('show');
+      } else {
+        el.classList.remove('show');
+      }
+      ticking = false;
+    });
+  }, {passive:true});
+})();
+function checkLoginSession(){
+
+    const role = localStorage.getItem("qa_role");
+    const loginTime = localStorage.getItem("qa_login_time");
+
+    if(!role || !loginTime) return;
+
+    const oneHour = 60 * 60 * 1000;
+
+    if(Date.now() - Number(loginTime) < oneHour){
+
+        currentRole = role;
+
+        enterApp();
+
+    }else{
+
+        localStorage.removeItem("qa_role");
+        localStorage.removeItem("qa_login_time");
+
+    }
+
+}
+/* ===================== DARK / LIGHT MODE ===================== */
+function initTheme(){
+  const saved = localStorage.getItem('qa_theme') || 'dark';
+  document.body.classList.toggle('light-theme', saved === 'light');
+  const sw = document.getElementById('themeSwitch');
+  if(sw) sw.checked = (saved === 'light');
+}
+function toggleTheme(){
+  const sw = document.getElementById('themeSwitch');
+  const isLight = sw ? sw.checked : false;
+  document.body.classList.toggle('light-theme', isLight);
+  localStorage.setItem('qa_theme', isLight ? 'light' : 'dark');
+}
+initTheme();
+checkLoginSession();
+/* ===================== FORMATTING HELPERS ===================== */
+function autoFormatCellValue(val, columnName) {
+  if (val === undefined || val === null || val === '') return '';
+  const colLower = columnName.toLowerCase();
+  
+  if (colLower.includes('date') || colLower.includes('তারিখ')) {
+    if (!isNaN(val) && Number(val) > 30000) {
+      const date = new Date((Number(val) - 25569) * 86400 * 1000);
+      return date.toLocaleDateString('en-GB');
+    }
+    return val;
+  }
+  
+  if (colLower.includes('time') || colLower.includes('সময়')) {
+    if (!isNaN(val) && Number(val) < 1 && Number(val) >= 0) {
+      let totalSeconds = Math.round(Number(val) * 86400);
+      let hours = Math.floor(totalSeconds / 3600);
+      totalSeconds %= 3600;
+      let minutes = Math.floor(totalSeconds / 60);
+      let seconds = totalSeconds % 60;
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+    return val;
+  }
+  if (colLower.includes('duration')) {
+    if (!isNaN(val)) {
+      let sec = Math.round(Number(val));
+      if (Number(val) < 1 && Number(val) > 0) sec = Math.round(Number(val) * 86400);
+      let m = Math.floor(sec / 60);
+      let s = sec % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+    return val;
+  }
+  return val;
+}
+/* ===================== STORAGE & TOAST LOGIC (LIVE GOOGLE SHEETS) ===================== */
+async function storageGet(key){
+  try{
+    const res = await fetch(`${WEB_APP_URL}?action=getSettings&key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    return data && data.value ? JSON.parse(data.value) : null;
+  }catch(e){ 
+    console.error('Storage read system issue, using fallback', e); 
+    return null; 
+  }
+}
+async function storageSet(key, value){
+  try{
+    const res = await fetch(`${WEB_APP_URL}?action=saveSettings`, {
+      method: 'POST',
+      body: JSON.stringify({ key: key, value: JSON.stringify(value) })
+    });
+    return true;
+  }catch(e){ 
+    console.error('Storage write system issue', e); 
+    return false; 
+  }
+}
+/* ===================== LIVE "ONLINE NOW" PRESENCE TRACKER =====================
+   কারা এই মুহূর্তে পোর্টাল খুলে রেখেছে তার লাইভ কাউন্ট।
+   কোনো নতুন Apps Script action লাগে না — এটি existing getSettings/saveSettings
+   generic key-value store-ই ব্যবহার করে ('onlineSessions' নামে একটি key)।
+*/
+const ONLINE_HEARTBEAT_MS = 30 * 1000;   // প্রতি ৩০ সেকেন্ডে একবার নিজের presence আপডেট
+const ONLINE_TIMEOUT_MS   = 90 * 1000;   // ৯০ সেকেন্ড কোনো heartbeat না এলে সেই সেশন "offline" ধরা হবে
+
+function getMySessionId(){
+  let id = sessionStorage.getItem('qa_session_id');
+  if(!id){
+    id = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    sessionStorage.setItem('qa_session_id', id);
+  }
+  return id;
+}
+
+function renderOnlineCount(count){
+  const a = document.getElementById('loginStatOnline');
+  if(a) a.innerHTML = `<span class="pulse-dot" style="display:inline-block;margin-right:4px;"></span>${count}`;
+  const b = document.getElementById('onlineCountBadge');
+  if(b) b.textContent = count;
+}
+
+// পুরনো ফরম্যাট (শুধু নাম্বার timestamp) এবং নতুন ফরম্যাট ({ts,name,id}) — দুটোই নিরাপদে হ্যান্ডল করার জন্য
+function getSessionTs(entry){
+  return (entry && typeof entry === 'object') ? entry.ts : entry;
+}
+
+async function pingOnlinePresence(){
+  try{
+    const mySessionId = getMySessionId();
+    const now = Date.now();
+    let sessions = (await storageGet('onlineSessions')) || {};
+    // পুরনো/মৃত সেশনগুলো বাদ দেওয়া হচ্ছে
+    Object.keys(sessions).forEach(id=>{
+      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
+    });
+    // নিজের নাম/আইডি (লগইন করা থাকলে) — না থাকলে null (যেমন লগইন স্ক্রিনে থাকা অবস্থায়)
+    const myName = localStorage.getItem('qa_emp_name') || null;
+    const myEmpId = localStorage.getItem('qa_emp_id') || null;
+    sessions[mySessionId] = { ts: now, name: myName, id: myEmpId };
+    await storageSet('onlineSessions', sessions);
+    renderOnlineCount(Object.keys(sessions).length);
+  }catch(e){
+    console.error('Online presence update failed', e);
+  }
+}
+pingOnlinePresence();
+setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
+
+/* ===================== Sidebar-এ সবসময় দেখা "Currently Online" ছোট লিস্ট (Calendar-এর নিচে) ===================== */
+async function renderSidebarOnlineList(){
+  const listEl = document.getElementById('sidebarOnlineList');
+  const countEl = document.getElementById('sidebarOnlineCount');
+  if(!listEl) return;
+  try{
+    const now = Date.now();
+    let sessions = (await storageGet('onlineSessions')) || {};
+    Object.keys(sessions).forEach(id=>{
+      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
+    });
+    const entries = Object.values(sessions);
+    if(countEl) countEl.textContent = entries.length;
+
+    const seen = new Map();
+    let anonymousCount = 0;
+    entries.forEach(e=>{
+      const name = e && e.name;
+      if(!name){ anonymousCount++; return; }
+      const key = (e.id || name);
+      if(seen.has(key)) seen.set(key, seen.get(key) + 1);
+      else seen.set(key, 1);
+    });
+
+    if(seen.size === 0 && anonymousCount === 0){
+      listEl.innerHTML = '<div class="online-agents-empty">No one is currently online.</div>';
+      return;
+    }
+
+    const nameMap = new Map();
+    entries.forEach(e=>{
+      if(e && e.name){
+        const key = (e.id || e.name);
+        if(!nameMap.has(key)) nameMap.set(key, e.name);
+      }
+    });
+
+    let html = '';
+    Array.from(seen.keys())
+      .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
+      .forEach(key=>{
+        const displayName = nameMap.get(key) || 'Agent';
+        const tabCount = seen.get(key);
+        html += `<div class="online-agent-row">
+          <span class="pulse-dot" style="display:inline-block;"></span>
+          <span class="online-agent-name">${displayName}</span>
+          ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
+        </div>`;
+      });
+
+    if(anonymousCount > 0){
+      html += `<div class="online-agents-anon">+ ${anonymousCount} more session(s) online — name not available yet (that browser tab needs a refresh to show up by name)</div>`;
+    }
+
+    listEl.innerHTML = html || '<div class="online-agents-empty">No one is currently online.</div>';
+  }catch(e){
+    console.error('Failed to load sidebar online list', e);
+    listEl.innerHTML = '<div class="online-agents-empty">Could not load the online agent list.</div>';
+  }
+}
+renderSidebarOnlineList();
+setInterval(renderSidebarOnlineList, ONLINE_HEARTBEAT_MS);
+
+/* ===================== "কারা অনলাইন আছে" মোডাল ===================== */
+async function openOnlineAgentsModal(){
+  const modal = document.getElementById('onlineAgentsModal');
+  const listEl = document.getElementById('onlineAgentsList');
+  const countEl = document.getElementById('onlineAgentsModalCount');
+  if(!modal || !listEl) return;
+  modal.style.display = 'flex';
+  listEl.innerHTML = '<div class="online-agents-loading">Loading…</div>';
+  try{
+    const now = Date.now();
+    let sessions = (await storageGet('onlineSessions')) || {};
+    Object.keys(sessions).forEach(id=>{
+      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
+    });
+    const entries = Object.values(sessions);
+    if(countEl) countEl.textContent = entries.length;
+
+    // নাম অনুযায়ী unique agents বের করা হচ্ছে (একই এজেন্ট একাধিক ট্যাব খুললে একবারই দেখানো হবে)
+    const seen = new Map();
+    let anonymousCount = 0;
+    entries.forEach(e=>{
+      const name = e && e.name;
+      if(!name){ anonymousCount++; return; }
+      const key = (e.id || name);
+      if(seen.has(key)) seen.set(key, seen.get(key) + 1);
+      else seen.set(key, 1);
+    });
+
+    if(seen.size === 0 && anonymousCount === 0){
+      listEl.innerHTML = '<div class="online-agents-empty">No one is currently online.</div>';
+      return;
+    }
+
+    const nameMap = new Map();
+    entries.forEach(e=>{
+      if(e && e.name){
+        const key = (e.id || e.name);
+        if(!nameMap.has(key)) nameMap.set(key, e.name);
+      }
+    });
+
+    let html = '';
+    Array.from(seen.keys())
+      .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
+      .forEach(key=>{
+        const displayName = nameMap.get(key) || 'Agent';
+        const tabCount = seen.get(key);
+        html += `<div class="online-agent-row">
+          <span class="pulse-dot" style="display:inline-block;"></span>
+          <span class="online-agent-name">${displayName}</span>
+          ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
+        </div>`;
+      });
+
+    if(anonymousCount > 0){
+      html += `<div class="online-agents-anon">+ ${anonymousCount} more session(s) online — name not available yet (that browser tab needs a refresh to show up by name)</div>`;
+    }
+
+    listEl.innerHTML = html || '<div class="online-agents-empty">No one is currently online.</div>';
+  }catch(e){
+    console.error('Failed to load online agents', e);
+    listEl.innerHTML = '<div class="online-agents-empty">Could not load the online agent list. Please try again.</div>';
+  }
+}
+function closeOnlineAgentsModal(){
+  const modal = document.getElementById('onlineAgentsModal');
+  if(modal) modal.style.display = 'none';
+}
+window.addEventListener('beforeunload', ()=>{
+  // ট্যাব বন্ধ হওয়ার সময় নিজের সেশনটি সরিয়ে ফেলার একটি best-effort চেষ্টা
+  navigator.sendBeacon && storageGet('onlineSessions').then(sessions=>{
+    if(!sessions) return;
+    delete sessions[getMySessionId()];
+    const blob = new Blob([JSON.stringify({ key:'onlineSessions', value: JSON.stringify(sessions) })], {type:'application/json'});
+    navigator.sendBeacon(`${WEB_APP_URL}?action=saveSettings`, blob);
+  });
+});
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.style.display='none', 2600);
+}
+/* ===================== LOGIN SYSTEMS ===================== */
+function selectRole(role){
+  selectedRole = role;
+  document.querySelectorAll('.staff-role-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.role===role));
+  const btn = document.getElementById('loginBtn');
+  btn.dataset.role = role;
+  btn.className = 'login-btn';
+  btn.setAttribute('data-role', role);
+  const saIdField = document.getElementById('saIdField');
+  if(role === 'superadmin'){
+    saIdField.style.display = 'block';
+    btn.textContent = 'Login as Super Admin';
+  }else{
+    saIdField.style.display = 'none';
+    btn.textContent = role === 'admin' ? 'Enter as Admin' : 'Enter as QA';
+  }
+  document.getElementById('loginError').textContent = '';
+}
+function submitStaffLogin(){
+  if(selectedRole === 'superadmin'){
+    superAdminLogin();
+  }else{
+    doLogin();
+  }
+}
+async function doLogin(){
+  const pass = document.getElementById('loginPassword').value.trim();
+  const errBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  if(!pass){ errBox.textContent = 'Password দিন।'; return; }
+
+  errBox.textContent = '';
+  const originalBtnText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Signing in...';
+
+  try{
+    const url = `${WEB_APP_URL}?action=checkLogin&role=${encodeURIComponent(selectedRole)}&password=${encodeURIComponent(pass)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(!data || data.ok !== true){
+      errBox.textContent = 'Incorrect password. Please try again.';
+      btn.disabled = false;
+      btn.textContent = originalBtnText;
+      return;
+    }
+
+    currentRole = selectedRole;
+
+    // ১ ঘণ্টার জন্য Login Session Save
+    localStorage.setItem("qa_role", currentRole);
+    localStorage.setItem("qa_login_time", Date.now());
+
+    btn.disabled = false;
+    btn.textContent = originalBtnText;
+    enterApp();
+    if(currentRole === 'agent'){
+      showLoginPopupIfNeeded();
+    }
+  }catch(e){
+    console.error('Login check failed', e);
+    errBox.textContent = 'Server is temporarily unavailable. Please try again in 2 minutes.';
+    btn.disabled = false;
+    btn.textContent = originalBtnText;
+  }
+}
+function doLogout(){
+localStorage.removeItem("qa_role");
+    localStorage.removeItem("qa_login_time");
+  currentRole = null;
+  document.getElementById('mainScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  const empPassEl = document.getElementById('empPassword');
+  if(empPassEl) empPassEl.value = '';
+  if(bannerTimer) clearInterval(bannerTimer);
+  closePlayerBar();
+}
+/* If this page was opened with ?return=someFile.html (sent here by the
+   Parameter Wise page's login gate because that page wasn't logged in),
+   figure out a safe local filename to bounce back to after a successful
+   login. Only a bare "name.html" is accepted — no protocols, no "//", no
+   ".." — so this can never be turned into an open redirect. */
+function getSafeReturnTarget(){
+  try{
+    const ret = new URLSearchParams(window.location.search).get('return');
+    if(ret && /^[a-zA-Z0-9_\-]+\.html(\?[^\s]*)?$/.test(ret)) return ret;
+  }catch(e){}
+  return null;
+}
+async function enterApp(){
+  // Forceful login-gate hookup: if we got here (fresh login OR restored
+  // session) because a gated page sent us here, go straight back to it
+  // instead of opening the main dashboard.
+  const returnTarget = getSafeReturnTarget();
+  if(returnTarget){
+    window.location.replace(returnTarget);
+    return;
+  }
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = 'flex';
+  const pill = document.getElementById('rolePill');
+  pill.textContent = currentRole.toUpperCase();
+  pill.className = 'role-pill ' + currentRole;
+  if(currentRole==="admin"){
+
+    document
+        .querySelectorAll(".admin-only")
+        .forEach(el=>el.style.display="");
+
+    document
+        .querySelectorAll(".agent-only")
+        .forEach(el=>el.style.display="none");
+
+}
+
+if(currentRole==="agent"){
+
+    document
+        .querySelectorAll(".admin-only")
+        .forEach(el=>el.style.display="none");
+
+    document
+        .querySelectorAll(".agent-only")
+        .forEach(el=>el.style.display="");
+
+}
+  
+  showToast('লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।...');
+  await loadTicker();
+  await loadBanners();
+  await loadNewsTicker();
+  switchTab('HOME');
+  await loadUpdates();
+  await loadLoginPopupAdmin();
+}
+/* ===================== TICKER SYSTEMS ===================== */
+async function loadTicker(){
+  const data = await storageGet('ticker');
+  const text = (data && data.text) ? data.text : 'CATV, BB Tech Support ও BB Renewal-এর লাইভ কোয়ালিটি কন্ট্রোল রুম ও রিয়েল-টাইম ড্যাশবোর্ড ট্র্যাকিং সিস্টেমে স্বাগতম।';
+  renderTopTicker(text);
+  document.getElementById('tickerInput').value = text;
+}
+async function saveTicker(){
+  const text = document.getElementById('tickerInput').value.trim();
+  if(!text) return;
+  showToast('Saving to WEBPAGEDATA...');
+  const success = await storageSet('ticker', { text });
+  if(success) {
+    renderTopTicker(text);
+    showToast('Ticker saved dynamically to Google Sheets!');
+  }
+}
+/* ===================== AGENT LOGIN WELCOME POPUP ===================== */
+async function loadLoginPopupAdmin(){
+  const data = await storageGet('loginPopup');
+  const text = (data && data.text) ? data.text : '';
+  const el = document.getElementById('loginPopupInput');
+  if(el) el.value = text;
+}
+async function saveLoginPopup(){
+  const el = document.getElementById('loginPopupInput');
+  const text = el ? el.value.trim() : '';
+  showToast('Saving to WEBPAGEDATA...');
+  const success = await storageSet('loginPopup', { text });
+  if(success){
+    showToast(text ? 'Popup message saved!' : 'Popup message cleared — popup আর দেখাবে না।');
+  }
+}
+async function showLoginPopupIfNeeded(){
+  const data = await storageGet('loginPopup');
+  const text = (data && data.text) ? data.text.trim() : '';
+  const overlay = document.getElementById('loginPopupOverlay');
+  const textEl = document.getElementById('loginPopupText');
+  const greetEl = document.getElementById('loginPopupGreeting');
+  if(!text || !overlay || !textEl) return; // খালি থাকলে পপ-আপ দেখাবে না
+  if(greetEl){
+    const name = (empAgentName || localStorage.getItem('qa_emp_name') || '').toUpperCase();
+    greetEl.textContent = name ? `${currentGreetingText()} - ${name}` : currentGreetingText();
+  }
+  textEl.textContent = text;
+  autoSizeLoginPopupText(textEl, text);
+  overlay.classList.add('show');
+}
+/* লেখা বড় হলে ফন্ট ছোট হয়ে যাবে, লেখা ছোট হলে ফন্ট বড় হয়ে যাবে — automatic */
+function autoSizeLoginPopupText(el, text){
+  const len = (text || '').length;
+  let size;
+  if(len <= 30) size = 34;
+  else if(len <= 60) size = 30;
+  else if(len <= 100) size = 26;
+  else if(len <= 160) size = 22;
+  else if(len <= 240) size = 19;
+  else if(len <= 340) size = 16;
+  else size = 14;
+  el.style.fontSize = size + 'px';
+}
+function closeLoginPopup(){
+  const overlay = document.getElementById('loginPopupOverlay');
+  if(overlay) overlay.classList.remove('show');
+}
+/* একবার পুরো টেক্সট স্ক্রল হয়ে গেলে "UPDATE" ছোট জুম-ইন এফেক্টে ৩ সেকেন্ড ফ্ল্যাশ করবে,
+   তারপর স্ক্রলিং আবার ডান দিক থেকে শুরু হবে — এভাবে চক্রটি চলতেই থাকবে */
+function renderTopTicker(text){
+  const tickerEl = document.querySelector('.ticker');
+  const track = document.getElementById('tickerTrack');
+  const flash = document.getElementById('tickerFlash');
+  if(!tickerEl || !track || !flash) return;
+
+  if(topTickerAnimFrame){ cancelAnimationFrame(topTickerAnimFrame); topTickerAnimFrame = null; }
+  if(topTickerTimeoutId){ clearTimeout(topTickerTimeoutId); topTickerTimeoutId = null; }
+  flash.classList.remove('show');
+
+  track.innerHTML = text;
+
+  const containerW = tickerEl.clientWidth || 0;
+  const contentW = track.scrollWidth || 0;
+  const pxPerSec = 55; // ফিক্সড, একটু ধীর গতি — লেখা যত বড়ই হোক, গতি একই থাকবে
+
+  let posX = containerW; // ডান দিক থেকে শুরু
+  let lastFrameTime = null;
+  let running = true;
+
+  function applyTransform(){ track.style.transform = `translateX(${posX}px)`; }
+  applyTransform();
+
+  function tick(now){
+    if(!running){ topTickerAnimFrame = requestAnimationFrame(tick); return; }
+    if(lastFrameTime === null) lastFrameTime = now;
+    const dt = now - lastFrameTime;
+    lastFrameTime = now;
+
+    posX -= pxPerSec * (dt/1000);
+
+    if(posX <= -contentW){
+      /* একটা পুরো প্যাস শেষ — থেমে "UPDATE" ফ্ল্যাশ, তারপর আবার ডান দিক থেকে শুরু */
+      running = false;
+      flash.classList.add('show');
+      topTickerTimeoutId = setTimeout(()=>{
+        flash.classList.remove('show');
+        posX = containerW;
+        applyTransform();
+        lastFrameTime = null;
+        running = true;
+        topTickerAnimFrame = requestAnimationFrame(tick);
+      }, 6600);
+      return;
+    }
+
+    applyTransform();
+    topTickerAnimFrame = requestAnimationFrame(tick);
+  }
+
+  topTickerAnimFrame = requestAnimationFrame(tick);
+}
+/* ===================== BANNER CORNER ===================== */
+function defaultBanners(){
+  const arr = [];
+  for(let i=1;i<=10;i++){
+    arr.push({ title: 'System Slide Slot ' + i, subtitle: 'Admin Panel থেকে প্রয়োজন অনুযায়ী ব্যানার নোটিশ সাজাতে পারেন।', image: '' });
+  }
+  return arr;
+}
+async function loadBanners(){
+  let data = await storageGet('banners');
+  if(!data || !Array.isArray(data) || data.length===0) data = defaultBanners();
+  renderBanners(data);
+  renderBannerEditor(data);
+}
+function renderBanners(banners){
+  const wrap = document.getElementById('bannerWrap');
+  wrap.innerHTML = '';
+  banners.forEach((b, i)=>{
+    const slide = document.createElement('div');
+    slide.className = 'banner-slide' + (i===0 ? ' active' : '');
+    slide.innerHTML = `${b.image ? `<img class="banner-slide-img" src="${escapeAttr(b.image)}" alt="">` : ''}
+      <div class="banner-title">${escapeHtml(b.title||'')}</div>
+      <div class="banner-sub">${escapeHtml(b.subtitle||'')}</div>`;
+    wrap.appendChild(slide);
+  });
+  const dots = document.createElement('div');
+  dots.className = 'banner-dots';
+  banners.forEach((b,i)=>{
+    const d = document.createElement('span');
+    if(i===0) d.classList.add('active');
+    d.onclick = ()=> setBannerSlide(i);
+    dots.appendChild(d);
+  });
+  wrap.appendChild(dots);
+  bannerIndex = 0;
+  if(bannerTimer) clearInterval(bannerTimer);
+  /* 6) Banner slide auto-change every 10 seconds */
+  bannerTimer = setInterval(()=> setBannerSlide((bannerIndex+1) % banners.length), 10000);
+}
+function setBannerSlide(i){
+  const slides = document.querySelectorAll('.banner-slide');
+  const dots = document.querySelectorAll('.banner-dots span');
+  if(slides.length && dots.length){
+    slides.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+    dots.forEach((d,idx)=> d.classList.toggle('active', idx===i));
+    bannerIndex = i;
+  }
+}
+function renderBannerEditor(banners){
+  const box = document.getElementById('bannerEditor');
+  box.innerHTML = '';
+  banners.forEach((b,i)=>{
+    const row = document.createElement('div');
+    row.style.display = 'flex'; row.style.gap = '6px'; row.style.marginBottom = '6px';
+    row.innerHTML = `<span style="color:var(--text-muted); min-width:20px;">${i+1}</span>
+      <input type="text" placeholder="Title" value="${escapeAttr(b.title||'')}" data-idx="${i}" data-field="title" style="flex:1; padding:6px; background:var(--surface-2); border:1px solid var(--border); color:#fff; border-radius:4px;">
+      <input type="text" placeholder="Subtitle" value="${escapeAttr(b.subtitle||'')}" data-idx="${i}" data-field="subtitle" style="flex:1; padding:6px; background:var(--surface-2); border:1px solid var(--border); color:#fff; border-radius:4px;">
+      <input type="text" placeholder="Image URL (optional)" value="${escapeAttr(b.image||'')}" data-idx="${i}" data-field="image" style="flex:1; padding:6px; background:var(--surface-2); border:1px solid var(--border); color:#fff; border-radius:4px;">`;
+    box.appendChild(row);
+  });
+}
+async function saveBanners(){
+  const inputs = document.querySelectorAll('#bannerEditor input');
+  const banners = defaultBanners();
+  inputs.forEach(inp=>{
+    const idx = parseInt(inp.dataset.idx,10);
+    banners[idx][inp.dataset.field] = inp.value;
+  });
+  showToast('Updating Banners in WEBPAGEDATA...');
+  const success = await storageSet('banners', banners);
+  if(success) {
+    renderBanners(banners);
+    showToast('Banners matching completely saved to Sheet!');
+  }
+}
+/* ===================== NEWS-CHANNEL STYLE TEXT TICKER CORNER (ছবির ব্যানারের বদলে টেক্সট নিউজ ব্যানার) ===================== */
+function defaultNewsTicker(){
+  return [];
+}
+async function loadNewsTicker(){
+  let items = await storageGet('newsTickerItems');
+  if(!Array.isArray(items)) items = [];
+  renderNewsTicker(items);
+  renderNewsTickerEditor(items.length ? items : ['']);
+}
+function renderNewsTicker(items){
+  const wrap = document.getElementById('newsTickerWrap');
+  if(!wrap) return;
+  /* আগের কোনো চলমান অ্যানিমেশন/টাইমার থাকলে বন্ধ করে দেওয়া হয় (Admin Panel থেকে টেক্সট বদলালে পুরো সাইকেল নতুন করে শুরু হবে) */
+  if(newsTickerFlashTimer){ clearInterval(newsTickerFlashTimer); newsTickerFlashTimer = null; }
+  if(newsTickerAnimFrame){ cancelAnimationFrame(newsTickerAnimFrame); newsTickerAnimFrame = null; }
+  if(newsTickerTimeoutId){ clearTimeout(newsTickerTimeoutId); newsTickerTimeoutId = null; }
+
+  wrap.innerHTML = '';
+  const clean = (items||[]).map(t=> (t||'').trim()).filter(Boolean);
+  const tag = document.createElement('div');
+  tag.className = 'news-ticker-tag';
+  tag.innerHTML = `<span class="news-ticker-dot"></span> NOTICE`;
+  if(!clean.length){
+    /* কোনো নিউজ টেক্সট এখনো সেভ করা না থাকলেও NOTICE ট্যাগটা দেখা যাবে, শুধু পাশে একটা প্লেসহোল্ডার মেসেজ থাকবে */
+    const track = document.createElement('div');
+    track.className = 'news-ticker-track';
+    track.innerHTML = `<div class="news-ticker-empty">এখনো কোনো নিউজ যোগ করা হয়নি — Admin Panel থেকে যোগ করুন।</div>`;
+    wrap.appendChild(tag);
+    wrap.appendChild(track);
+    return;
+  }
+  const track = document.createElement('div');
+  track.className = 'news-ticker-track';
+  const scroll = document.createElement('div');
+  scroll.className = 'news-ticker-scroll';
+  /* সিমলেস লুপের জন্য লিস্টটা দুইবার বসানো হয় */
+  const doubled = clean.concat(clean);
+  scroll.innerHTML = doubled.map(t=> `<span class="item">${escapeHtml(t)}</span>`).join('');
+  track.appendChild(scroll);
+
+  const flash = document.createElement('div');
+  flash.className = 'news-ticker-flash';
+  flash.innerHTML = `<span class="flash-icon">⚡</span><span class="flash-text">Latest Update</span><span class="flash-icon">⚡</span>`;
+
+  wrap.appendChild(tag);
+  wrap.appendChild(track);
+  wrap.appendChild(flash);
+
+  /* ============================================================
+     নতুন স্ক্রলিং সিকোয়েন্স (Admin Panel-এর টেক্সট অনুযায়ী কাজ করবে):
+     ১) প্রথমে "Latest Update" ফ্ল্যাশ দেখাবে
+     ২) তারপর স্ক্রলিং শুরু হবে — একদম প্রথমবার ডান দিক থেকে শুরু হয়ে পুরো একটা
+        সম্পূর্ণ প্যাস (loop) শেষ করবে
+     ৩) পুরো প্যাস শেষ হলে স্ক্রলিং থেমে যাবে এবং "Latest Update" ৪ সেকেন্ডের জন্য দেখাবে
+        (এই সময় নিচে স্ক্রলিং থেমে থাকবে)
+     ৪) তারপর আবার স্ক্রলিং শুরু হবে — এভাবে চক্রটি চলতেই থাকবে
+     ৫) এছাড়া স্ক্রলিং চলাকালীন প্রতি ৩০ সেকেন্ড পরপর, ৩ সেকেন্ডের জন্য "Latest Update"
+        ফ্ল্যাশ হবে (স্ক্রলিং সাময়িক থেমে থাকবে, তারপর ঠিক যেখানে ছিল সেখান থেকেই আবার চলবে)
+     ============================================================ */
+  const END_FLASH_MS = 4000;      // পুরো প্যাস শেষে ফ্ল্যাশ
+  const INTERRUPT_FLASH_MS = 3000; // মাঝপথে প্রতি ৩০ সেকেন্ডে ফ্ল্যাশ
+  const INTERRUPT_EVERY_MS = 30000;
+
+  const containerW = track.clientWidth || wrap.clientWidth || 0;
+  const singleSetWidth = scroll.scrollWidth / 2;
+  /* লেখার পরিমাণ অনুযায়ী স্বাভাবিক গতি ঠিক করা হয় */
+  const speedSeconds = Math.max(10, clean.join(' ').length * 0.18);
+  const pxPerSec = singleSetWidth / speedSeconds;
+
+  let posX = containerW; // প্রথমবার ডান দিক থেকে (কনটেইনারের বাইরে) শুরু হবে
+  let scrollingElapsed = 0;
+  let lastFrameTime = null;
+  let running = false;
+
+  function applyTransform(){
+    scroll.style.transform = `translateX(${posX}px)`;
+  }
+  applyTransform();
+
+  function showFlash(){ flash.classList.add('show'); }
+  function hideFlash(){ flash.classList.remove('show'); }
+
+  function tick(now){
+    if(!running){ newsTickerAnimFrame = requestAnimationFrame(tick); return; }
+    if(lastFrameTime === null) lastFrameTime = now;
+    const dt = now - lastFrameTime;
+    lastFrameTime = now;
+
+    posX -= pxPerSec * (dt/1000);
+    scrollingElapsed += dt;
+
+    if(posX <= -singleSetWidth){
+      /* একটা পুরো প্যাস শেষ — সিমলেস রিসেট, তারপর ৪ সেকেন্ডের ফ্ল্যাশ */
+      posX = 0;
+      applyTransform();
+      pauseForFlash(END_FLASH_MS);
+      return;
+    }
+    if(scrollingElapsed >= INTERRUPT_EVERY_MS){
+      /* মাঝপথে ৩০ সেকেন্ড পার হলে ৩ সেকেন্ডের ছোট ফ্ল্যাশ, স্ক্রলিং একই জায়গা থেকে আবার চলবে */
+      pauseForFlash(INTERRUPT_FLASH_MS);
+      return;
+    }
+
+    applyTransform();
+    newsTickerAnimFrame = requestAnimationFrame(tick);
+  }
+
+  function pauseForFlash(durationMs){
+    running = false;
+    showFlash();
+    newsTickerTimeoutId = setTimeout(()=>{
+      hideFlash();
+      scrollingElapsed = 0;
+      lastFrameTime = null;
+      running = true;
+      newsTickerAnimFrame = requestAnimationFrame(tick);
+    }, durationMs);
+  }
+
+  /* সাইকেলের শুরুতে প্রথমে "Latest Update" ফ্ল্যাশ, তারপর স্ক্রলিং শুরু (ডান দিক থেকে) */
+  showFlash();
+  newsTickerTimeoutId = setTimeout(()=>{
+    hideFlash();
+    running = true;
+    newsTickerAnimFrame = requestAnimationFrame(tick);
+  }, END_FLASH_MS);
+}
+function renderNewsTickerEditor(items){
+  const box = document.getElementById('newsTickerEditor');
+  if(!box) return;
+  box.innerHTML = '';
+  const list = items.length ? items : [''];
+  list.forEach((t,i)=>{
+    const row = document.createElement('div');
+    row.className = 'news-ticker-editor-row';
+    row.innerHTML = `<span class="idx">${i+1}</span>
+      <input type="text" placeholder="নিউজ টেক্সট লিখুন..." value="${escapeAttr(t||'')}" data-idx="${i}">
+      <button class="btn small danger" type="button" onclick="removeNewsTickerRow(${i})">Remove</button>`;
+    box.appendChild(row);
+  });
+}
+function addNewsTickerRow(){
+  const inputs = document.querySelectorAll('#newsTickerEditor input');
+  const items = Array.from(inputs).map(inp=> inp.value);
+  items.push('');
+  renderNewsTickerEditor(items);
+}
+function removeNewsTickerRow(idx){
+  const inputs = document.querySelectorAll('#newsTickerEditor input');
+  const items = Array.from(inputs).map(inp=> inp.value);
+  items.splice(idx,1);
+  renderNewsTickerEditor(items.length ? items : ['']);
+}
+async function saveNewsTicker(){
+  const inputs = document.querySelectorAll('#newsTickerEditor input');
+  const items = Array.from(inputs).map(inp=> inp.value.trim()).filter(Boolean);
+  showToast('Updating News Ticker in WEBPAGEDATA...');
+  try{
+    const success = await storageSet('newsTickerItems', items);
+    if(success){
+      renderNewsTicker(items);
+      renderNewsTickerEditor(items.length ? items : ['']);
+      showToast('News ticker saved successfully!');
+    } else {
+      showToast('Save করতে সমস্যা হয়েছে, আবার চেষ্টা করুন।');
+    }
+  }catch(err){
+    console.error(err);
+    showToast('Save করতে সমস্যা হয়েছে, আবার চেষ্টা করুন।');
+  }
+}
+/* ===================== NAVIGATION & TABS ===================== */
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.tab===tab));
+  document.querySelectorAll('.panel').forEach(p=> p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  
+  if (tab === 'HOME') {
+    renderHomePage();
+  } else if(VERTICALS[tab]){
+    renderVerticalPanel(tab);
+  } else if (tab.startsWith('DASH-')) {
+    const vKey = Object.keys(VERTICALS).find(k => VERTICALS[k].dashId === tab);
+    renderDedicatedDashboard(vKey);
+  } else if (tab === 'ANS3SEC') {
+    renderAnswered3SecPanel(ans3secSubTab);
+  } else if (RAW_SHEET_TABS[tab]) {
+    renderRawSheetTabPanel(tab);
+  } else if (tab === 'HELP') {
+    renderHelpPanel();
+  } else if (tab === 'QUICKLINK') {
+    renderQuickLinkPanel();
+  }
+}
+function statusFor(score){
+  if(score>=99) return {cls:'top', label:'🏆 TOP PERFORMER'};
+  if(score>=95) return {cls:'excellent', label:'🟢 EXCELLENT'};
+  if(score>=90) return {cls:'good', label:'🟡 GOOD'};
+  if(score>=85) return {cls:'average', label:'🟠 AVERAGE'};
+  return {cls:'need', label:'🔴 NEED IMPROVEMENT'};
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+/* ===================== RENDER SHEETS WITH GOOGLE SHEET API ===================== */
+async function renderVerticalPanel(tab){
+  const meta = VERTICALS[tab];
+  const panel = document.getElementById('panel-'+tab);
+  const isAdmin = currentRole === 'admin';
+  
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>${meta.label} Sheet Logs</h1><p>অনুগ্রহ করে অপেক্ষা করুন... লাইভ ডাটা লোড হচ্ছে।...</p></div>
+    </div>
+    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+  
+  let json = [];
+  let rows = [];
+  const newBackendKey = NEW_BACKEND_PROCESS_KEY[tab];
+
+  if (newBackendKey) {
+    // ✅ CATV / BB TECH SUPPORT / BB RENEWAL — Agent Summary + Call-Level raw ডাটা,
+    // দুটোই এখন একই নতুন CALL QUALITY DASHBOARD ব্যাকএন্ড থেকে আসছে
+    try {
+      const res2 = await fetch(NEW_WEB_APP_URL);
+      const summary = await res2.json();
+      const proc = (summary && summary.ok && summary.processes) ? summary.processes[newBackendKey] : null;
+      if (proc) {
+        if (Array.isArray(proc.agents)) {
+          rows = proc.agents.map(a => ({
+            agent: a.name,
+            auditCount: a.auditCount,
+            avgScore: (a.avgScore !== null && a.avgScore !== undefined) ? a.avgScore : 0,
+            fails: a.fails || {}
+          }));
+        }
+        if (Array.isArray(proc.rows)) {
+          json = proc.rows; // Call-Level Logs Detail এর জন্য raw, শিটের কলাম-অর্ডারেই
+        }
+      }
+    } catch (err) {
+      console.error("New backend (Call Quality Dashboard) fetch failed:", err);
+    }
+  } else {
+    // অন্য কোনো ভার্টিক্যাল থাকলে (নতুন ব্যাকএন্ডে ম্যাপ করা নেই), আগের পুরনো সোর্স থেকেই আসবে
+    try {
+      const response = await fetch(WEB_APP_URL + "?vertical=" + tab);
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const headers = data[0];
+        json = data.slice(1).map(row => {
+          const obj = {};
+          headers.forEach((h, i) => {
+            obj[h] = row[i] !== undefined ? row[i] : '';
+          });
+          return obj;
+        });
+      }
+    } catch (err) {
+      console.error("Google Sheets fetch failed:", err);
+    }
+    rows = parseScoreRows(json);
+  }
+
+  rawDataCache[tab] = json;
+  updateLoginAgentCount();
+  
+  let html = `
+    <div class="panel-header">
+      <div><h1>${meta.label} Sheet Logs</h1><p>এজেন্ট পারফরম্যান্স ও কোয়ালিটি লগ রিপোর্ট</p></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn" onclick="renderVerticalPanel('${tab}')">↻ Refresh Live Data</button>
+      </div>
+    </div>`;
+    
+  if(isAdmin){
+    html += `
+    <div class="upload-box">
+      <div class="txt">
+        <b>Excel ফাইল আপলোড করুন (${meta.label})</b>
+        <span>কল লেভেল র-ডাটা শিট (Associate Name, Call Link, Date, Time, Duration এবং প্যারামিটার যুক্ত কলাম) আপলোড করুন। এটি সরাসরি আপনার মূল গুগল শিটে ওভাররাইট হয়ে যাবে।</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <label class="btn gold" for="file-${tab}">📂 Upload Excel</label>
+        <input type="file" id="file-${tab}" accept=".xlsx,.xls,.csv" onchange="handleUpload(event,'${tab}')">
+        ${rows.length ? `<button class="btn danger" onclick="clearVertical('${tab}')">🗑️ Clear Grid</button>` : ''}
+      </div>
+    </div>`;
+  }
+  if(!rows.length){
+    html += `<div class="empty-state"><b>কোনো ডাটা রেকর্ড খুঁজে পাওয়া যায়নি</b><br>${isAdmin ? 'ড্যাশবোর্ড সচল করতে দয়া করে এক্সেল শিট আপলোড করুন।' : ' এখনো কোনো ডাটা উপলব্ধ নেই।'}</div>`;
+    panel.innerHTML = html;
+    return;
+  }
+  
+  const totalAudits = rows.reduce((s,r)=> s + (Number(r.auditCount)||0), 0);
+  const avgScore = (rows.reduce((s,r)=> s + (Number(r.avgScore)||0), 0) / rows.length).toFixed(1);
+  const top = rows.slice().sort((a,b)=> b.avgScore - a.avgScore)[0];
+  const needCount = rows.filter(r=> r.avgScore < 85).length;
+  
+  html += `
+    <div class="stat-row">
+      <div class="stat-card"><div class="label">Total Agents</div><div class="value" data-countup="${rows.length}">0</div></div>
+      <div class="stat-card"><div class="label">Total Audited Calls</div><div class="value teal" data-countup="${totalAudits}">0</div></div>
+      <div class="stat-card"><div class="label">Vertical Avg Score</div><div class="value gold" data-countup="${avgScore}" data-suffix="%">0%</div></div>
+      <div class="stat-card best-achiever-card"><div class="label">Best Achiever</div><div class="value best-achiever-value" style="font-size:15px; color:var(--agent);">${escapeHtml(top.agent)}</div></div>
+      <div class="stat-card"><div class="label">Under Performance</div><div class="value" data-countup="${needCount}" data-suffix=" Agents" style="color:var(--need);">0 Agents</div></div>
+    </div>
+    <div class="chart-box"><canvas id="chart-${tab}"></canvas></div>
+    
+    <h3 style="margin: 24px 0 12px 0; font-family:'Space Grotesk',sans-serif;">Agent Performance Overview</h3>
+    <div class="table-search-wrap">
+      <span class="table-search-icon">🔎</span>
+      <input type="text" class="table-search-input" placeholder="এজেন্টের নাম দিয়ে খুঁজুন..." oninput="filterAgentTable(this,'agentTable-${tab}')">
+    </div>
+    <div class="table-wrapper">
+      <table class="score-table" id="agentTable-${tab}">
+        <thead><tr><th>Agent Name</th><th>Audit Count</th><th>Average Score</th><th>Status Tier</th>${isAdmin?'<th>Action</th>':''}</tr></thead>
+        <tbody>
+          ${rows.slice().sort((a,b)=> String(a.agent).localeCompare(String(b.agent), 'bn')).map(r=>{
+            const st = statusFor(Number(r.avgScore));
+            return `<tr data-agent-name="${escapeAttr(String(r.agent).toLowerCase())}">
+              <td style="font-weight:600;">${escapeHtml(r.agent)}</td>
+              <td class="mono">${escapeHtml(r.auditCount)}</td>
+              <td class="mono" style="font-weight:700; color:var(--agent);">${escapeHtml(r.avgScore)}%</td>
+              <td><span class="badge ${st.cls}">${st.label}</span></td>
+              ${isAdmin ? `<td><button class="btn small danger" onclick="removeAgentRow('${tab}','${encodeURIComponent(r.agent)}')">Remove</button></td>` : ''}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <div class="table-no-match" style="display:none;">😕 কোনো এজেন্ট পাওয়া যায়নি।</div>
+    </div>
+
+    <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif;">📊 Additional Performance Analysis</h3>
+    <div class="analysis-grid">
+      <div class="chart-box small">
+        <div class="chart-box-title">Team Score Distribution</div>
+        <canvas id="distChart-${tab}"></canvas>
+      </div>
+      <div class="chart-box small">
+        <div class="chart-box-title">'Top 5' vs 'Bottom 5' Agents</div>
+        <canvas id="topBottomChart-${tab}"></canvas>
+      </div>
+    </div>`;
+    
+  panel.innerHTML = html;
+  drawChart(tab, rows);
+  renderRawSection(tab);
+  runCountUps(panel);
+  drawDistributionChart(tab, rows);
+  drawTopBottomChart(tab, rows);
+}
+function filterAgentTable(input, tableId){
+  const q = input.value.trim().toLowerCase();
+  const table = document.getElementById(tableId);
+  if(!table) return;
+  const rows = table.querySelectorAll('tbody tr');
+  let anyVisible = false;
+  rows.forEach(tr=>{
+    const name = tr.getAttribute('data-agent-name') || '';
+    const match = !q || name.indexOf(q) !== -1;
+    tr.style.display = match ? '' : 'none';
+    if(match) anyVisible = true;
+  });
+  const noMatch = table.parentElement.querySelector('.table-no-match');
+  if(noMatch) noMatch.style.display = anyVisible ? 'none' : 'block';
+}
+function runCountUps(scope){
+  const els = (scope || document).querySelectorAll('[data-countup]');
+  els.forEach(el=>{
+    const target = parseFloat(el.getAttribute('data-countup')) || 0;
+    const suffix = el.getAttribute('data-suffix') || '';
+    const isDecimal = String(el.getAttribute('data-countup')).indexOf('.') !== -1;
+    const duration = 800;
+    const start = performance.now();
+    function tick(now){
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const current = target * eased;
+      el.textContent = (isDecimal ? current.toFixed(1) : Math.round(current)) + suffix;
+      if(p < 1) requestAnimationFrame(tick);
+      else el.textContent = (isDecimal ? target.toFixed(1) : Math.round(target)) + suffix;
+    }
+    requestAnimationFrame(tick);
+  });
+}
+/* ===================== CALL-LEVEL LOGS DETAIL ===================== */
+async function renderRawSection(tab){
+  const raw = rawDataCache[tab] || [];
+  const holder = document.createElement('div');
+  holder.id = 'rawSection-' + tab;
+  holder.innerHTML = buildRawSectionHtml(tab, raw, '');
+  document.getElementById('panel-' + tab).appendChild(holder);
+}
+function buildRawSectionHtml(tab, raw, filterValue){
+  if(!raw.length) return '';
+  // এই কলামগুলো Call-Level Logs Detail টেবিল থেকে বাদ যাবে
+  const EXCLUDED_RAW_COLUMNS = [
+    /^\s*timestamp\s*$/i,
+    /^\s*associate\s*emp(loyee)?\s*id\s*$/i,
+    /^\s*call\s*date\s*$/i,
+    /^\s*call\s*time\s*$/i,
+    /^\s*tl\s*name\s*$/i,
+    /^\s*call\s*duration\s*$/i
+  ];
+  let keys = Object.keys(raw[0]).filter(k => !EXCLUDED_RAW_COLUMNS.some(rx => rx.test(k)));
+
+  // Scores কলামটা Call Link এর ঠিক আগে বসানো হচ্ছে
+  const scoreIdx = keys.findIndex(k => /^\s*scores?\s*$/i.test(k));
+  const linkIdx = keys.findIndex(k => /call\s*link|recording|audio/i.test(k));
+  if(scoreIdx !== -1 && linkIdx !== -1 && scoreIdx !== linkIdx){
+    const [scoreKeyName] = keys.splice(scoreIdx, 1);
+    const newLinkIdx = keys.findIndex(k => /call\s*link|recording|audio/i.test(k));
+    keys.splice(newLinkIdx, 0, scoreKeyName);
+  }
+
+  const { nameKey } = detectColumnKeys(keys);
+  const agentNames = nameKey ? Array.from(new Set(raw.map(r=> String(r[nameKey]).trim()).filter(Boolean))).sort() : [];
+  let filtered = (filterValue && nameKey)
+  ? raw.filter(r => String(r[nameKey]).trim() === filterValue)
+  : [...raw];
+
+if (nameKey) {
+  filtered.sort((a, b) =>
+    String(a[nameKey] || "").localeCompare(
+      String(b[nameKey] || ""),
+      undefined,
+      { sensitivity: "base" }
+    )
+  );
+}
+  const linkKey = keys.find(k=> /call\s*link|recording|audio/i.test(k));
+  const dateKey = keys.find(k=> /date|তারিখ/i.test(k));
+  const timeKey = keys.find(k=> /time|সময়/i.test(k));
+  const scoreKey = keys.find(k=> /score|স্কোর/i.test(k));
+  
+  return `
+    <div class="panel-header" style="margin-top:32px;">
+      <div><h1>Call-Level Logs Detail (Full Sheet View)</h1><p>প্রতিটি এজেন্টের নামের পাশে অডিও প্লে-ব্যাক প্লেয়ার সংযুক্ত রয়েছে এবং প্রতিটি কলের Parameter-wise বিস্তারিত তথ্যও প্রদর্শিত হয়েছে। এখান থেকে Agent-wise ফিল্টার প্রয়োগ করে সংশ্লিষ্ট এজেন্টের স্কোর, অডিট ফলাফল এবং মূল্যায়নের বিস্তারিত তথ্য সহজেই দেখা যাবে।</p></div>
+      <div>
+        <select id="rawFilter-${tab}" onchange="applyRawFilter('${tab}')" style="padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12.5px; outline:none;">
+          <option value="">🔍 Filter By Agent (All)</option>
+          ${agentNames.map(n=> `<option value="${escapeAttr(n)}" ${n===filterValue?'selected':''}>${escapeHtml(n)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="table-wrapper" style="overflow:auto; max-height:500px;">
+      <table class="score-table">
+        <thead><tr>${keys.map(c=> `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${filtered.map((r, rIdx)=> `<tr>${keys.map(c=>{
+            let originalVal = r[c];
+            let val = autoFormatCellValue(originalVal, c);
+            
+            if(c===linkKey && originalVal){
+              let agentName = nameKey ? r[nameKey] : 'Unknown';
+              let callDate = dateKey ? autoFormatCellValue(r[dateKey], 'date') : '';
+              let callTime = timeKey ? autoFormatCellValue(r[timeKey], 'time') : '';
+              let desc = `${callDate} | ${callTime}`.replace(/^[ |]+|[ |]+$/g, '');
+              
+              return `<td>
+                <button class="btn primary small" onclick="openAudioPlayerBar('${escapeAttr(originalVal)}', '${escapeAttr(agentName)}', '${escapeAttr(desc)}')">
+                  ▶ Play Audio
+                </button>
+              </td>`;
+            }
+            
+            if(c===dateKey && val) {
+              return `<td style="color: var(--agent); font-weight: 600;"><span style="background: rgba(51,201,176,0.1); padding: 4px 8px; border-radius: 6px;">📅 ${escapeHtml(val)}</span></td>`;
+            }
+            if(c===timeKey && val) {
+              return `<td style="color: var(--admin); font-weight: 600;"><span style="background: rgba(227,168,87,0.1); padding: 4px 8px; border-radius: 6px;">⏰ ${escapeHtml(val)}</span></td>`;
+            }
+            if(c===scoreKey && val !== '') {
+              let num = parseFloat(val);
+              let clr = !isNaN(num) ? (num >= 95 ? 'var(--excellent)' : (num >= 85 ? 'var(--good)' : 'var(--need)')) : 'var(--text)';
+              return `<td style="color: ${clr}; font-weight: 700; font-family:'IBM Plex Mono', monospace;">${escapeHtml(val)}%</td>`;
+            }
+            
+            return `<td>${escapeHtml(val===null||val===undefined? '' : val)}</td>`;
+          }).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+function applyRawFilter(tab){
+  const select = document.getElementById('rawFilter-' + tab);
+  const val = select ? select.value : '';
+  const raw = rawDataCache[tab] || [];
+  document.getElementById('rawSection-' + tab).innerHTML = buildRawSectionHtml(tab, raw, val);
+}
+/* ===================== FLOATING AUDIO PLAYER ===================== */
+function openAudioPlayerBar(link, agent, details) {
+  document.getElementById('playerAgentName').textContent = "Agent Name: " + agent;
+  document.getElementById('playerCallDetails').textContent = "Call details: " + (details || "N/A");
+  
+  const audio = document.getElementById('globalAudioElement');
+  audio.src = link;
+  audio.load();
+  audio.play().catch(e => console.log("Audio autoplay bypass"));
+  document.getElementById('playerDownloadBtn').href = link;
+  
+  document.getElementById('globalAudioPlayerBar').classList.add('active');
+  showToast("Playing call recording in-page...");
+}
+function closePlayerBar() {
+  const audio = document.getElementById('globalAudioElement');
+  audio.pause();
+  audio.src = "";
+  document.getElementById('globalAudioPlayerBar').classList.remove('active');
+}
+/* ===================== LIVE DASHBOARDS (AUTO SYNC - MONTH WISE MATRIX) ===================== */
+async function renderDedicatedDashboard(vKey) {
+  const meta = VERTICALS[vKey];
+  const panel = document.getElementById('panel-' + meta.dashId);
+  
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>📊 ${meta.label} Live Analytics Dashboard</h1><p>System (${meta.dashSheet}) থেকে লাইভ ডাটা জেনারেট হচ্ছে...</p></div>
+    </div>
+    <div class="empty-state"><b>রিয়েল-টাইম ডাটা সিঙ্ক হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b></div>`;
+    
+  try {
+    // সরাসরি ড্যাশবোর্ড ট্যাব (যেমন: CATV_DASHBOARD) থেকে ডাটা ফেচ করা হচ্ছে
+    const response = await fetch(WEB_APP_URL + "?vertical=" + meta.dashSheet);
+    const data = await response.json();
+    
+    if(!Array.isArray(data) || data.length === 0) {
+      panel.innerHTML = `<div class="empty-state"><b>কোনো ড্যাশবোর্ড ডাটা পাওয়া যায়নি</b><br>আপনার সিস্টেমের "${meta.dashSheet}" ট্যাবটি চেক করুন।</div>`;
+      return;
+    }
+    
+    const headers = data[0]; // Agent name, April'26, May'26, etc.
+    const rows = data.slice(1);
+    const monthHeaders = headers.slice(1); // মাসের কলামগুলো আলাদা করা হলো
+    
+    let calculatedAgents = [];
+    
+    rows.forEach(row => {
+      const agentName = String(row[0] || '').trim();
+      // Grand Total রো বাদ দেওয়া হচ্ছে
+      if(!agentName || agentName.toLowerCase() === 'grand total' || agentName.includes('Total')) return;
+      
+      let totalScore = 0;
+      let validMonths = 0;
+      let monthlyScores = {};
+      
+      monthHeaders.forEach((month, idx) => {
+        let cellVal = String(row[idx + 1] || '').trim();
+        monthlyScores[month] = cellVal;
+        
+        let num = parseFloat(cellVal);
+        if(!isNaN(num)) {
+          totalScore += num;
+          validMonths++;
+        }
+      });
+      
+      // ডাইনামিক এভারেজ স্কোর ক্যালকুলেশন
+      let avgScore = validMonths > 0 ? Math.round((totalScore / validMonths) * 10) / 10 : 0;
+      
+      calculatedAgents.push({
+        agent: agentName,
+        scores: monthlyScores,
+        avgScore: avgScore
+      });
+    });
+    
+    if(!calculatedAgents.length) {
+      panel.innerHTML = `<div class="empty-state"><b>কোনো বৈধ এজেন্ট ডাটা খুঁজে পাওয়া যায়নি।</b></div>`;
+      return;
+    }
+    
+    // HTML স্ট্রাকচার রেন্ডারিং
+    let tableHeadersHtml = `<th>Agent Name</th>` + monthHeaders.map(m => `<th>${m}</th>`).join('') + `<th>Calculated Avg</th><th>Status Tier</th>`;
+    
+    let tableRowsHtml = calculatedAgents.map(a => {
+      let monthCells = monthHeaders.map(m => {
+        let val = a.scores[m] || '-';
+        let style = '';
+        let num = parseFloat(val);
+        if(!isNaN(num)) {
+          style = num >= 95 ? 'color: var(--excellent); font-weight:600;' : (num >= 85 ? 'color: var(--good);' : 'color: var(--need);');
+        }
+        return `<td style="${style}">${val}</td>`;
+      }).join('');
+      
+      const st = statusFor(a.avgScore);
+      
+      return `<tr>
+        <td style="font-weight:600; color: var(--text);">${escapeHtml(a.agent)}</td>
+        ${monthCells}
+        <td class="mono" style="font-weight:700; color:var(--admin); background: rgba(227,168,87,0.05);">${a.avgScore}%</td>
+        <td><span class="badge ${st.cls}">${st.label}</span></td>
+      </tr>`;
+    }).join('');
+    
+    let html = `
+      <div class="panel-header">
+        <div>
+          <h1>📊 ${meta.label} Month-wise Dashboard</h1>
+          <p>ট্যাব: <b>${meta.dashSheet}</b> থেকে সরাসরি জেনারেট হওয়া লাইভ রিপোর্ট।</p>
+        </div>
+        <button class="btn primary" onclick="switchTab('${meta.dashId}')">↻ Refresh Live Matrix</button>
+      </div>
+      
+      <!-- এজেন্টের অটো-ক্যালকুলেটেড এভারেজ চার্ট -->
+      <div class="chart-box"><canvas id="dashChart-${vKey}"></canvas></div>
+      
+      <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
+        📋 Month-wise Agent Performance Matrix
+      </h3>
+      <div class="table-wrapper" style="overflow-x: auto;">
+        <table class="score-table">
+          <thead><tr>${tableHeadersHtml}</tr></thead>
+          <tbody>${tableRowsHtml}</tbody>
+        </table>
+      </div>`;
+      
+    panel.innerHTML = html;
+    
+    // Chart.js দিয়ে গ্রাফ লোড করা
+    setTimeout(() => {
+      const ctx = document.getElementById(`dashChart-${vKey}`);
+      if(!ctx) return;
+      if(chartInstances[`dash-${vKey}`]) chartInstances[`dash-${vKey}`].destroy();
+      
+      chartInstances[`dash-${vKey}`] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: calculatedAgents.map(a => a.agent),
+          datasets: [{
+            label: 'Calculated Average Score (%)',
+            data: calculatedAgents.map(a => a.avgScore),
+            backgroundColor: calculatedAgents.map(a => {
+              const s = statusFor(a.avgScore);
+              return {excellent:'rgba(63,191,127,0.7)', good:'rgba(224,195,65,0.7)', average:'rgba(224,138,63,0.7)', need:'rgba(224,82,74,0.7)'}[s.cls] || 'rgba(51,201,176,0.7)';
+            }),
+            borderColor: 'var(--border)',
+            borderWidth: 1,
+            borderRadius: 5,
+            maxBarThickness: 30
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#8FA0B5', font: { size: 11 } }, grid: { display: false } },
+            y: { min: 0, max: 100, ticks: { color: '#8FA0B5' }, grid: { color: '#203859' } }
+          }
+        }
+      });
+    }, 60);
+
+  } catch (err) {
+    console.error(err);
+    panel.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
+  }
+}
+/* ===================== HOME — CATV / BB TECH / BB RENEWAL এর Average Score, চার্ট সহ ===================== */
+async function renderHomePage(){
+  const panel = document.getElementById('panel-HOME');
+  if(!panel) return;
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি vertical-এর overall average score, এক নজরে।</p></div>
+      <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
+    </div>
+    <div class="empty-state"><b>লাইভ ডাটা লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b></div>`;
+
+  const vKeys = Object.keys(VERTICALS); // CATV, BBTECH, BBRENEWAL
+
+  try{
+    // ঠিক একই ব্যাকএন্ড ব্যবহার করা হচ্ছে যেটা CATV Data / BB Tech Support Data /
+    // BB Renewal Data ট্যাবগুলো ব্যবহার করে, যাতে average score-টা সবখানে same থাকে।
+    const res2 = await fetch(NEW_WEB_APP_URL);
+    const summary = await res2.json();
+
+    const results = vKeys.map((vKey) => {
+      const meta = VERTICALS[vKey];
+      const newBackendKey = NEW_BACKEND_PROCESS_KEY[vKey];
+      const proc = (summary && summary.ok && summary.processes) ? summary.processes[newBackendKey] : null;
+
+      if(!proc || !Array.isArray(proc.agents) || !proc.agents.length){
+        return { vKey, meta, avg: null, agentCount: 0 };
+      }
+
+      const rows = proc.agents.map(a => ({
+        avgScore: (a.avgScore !== null && a.avgScore !== undefined) ? Number(a.avgScore) : 0
+      }));
+      const overallAvg = (rows.reduce((s,r)=> s + (Number(r.avgScore)||0), 0) / rows.length);
+      return { vKey, meta, avg: Math.round(overallAvg * 10) / 10, agentCount: rows.length };
+    });
+
+    const statCardsHtml = results.map(r => {
+      const s = (r.avg !== null) ? statusFor(r.avg) : null;
+      return `<div class="stat-card">
+        <div class="label">${r.meta.label} — Average Score</div>
+        <div class="value gold" data-countup="${r.avg !== null ? r.avg : 0}" data-suffix="%">0%</div>
+        ${s ? `<span class="badge ${s.cls}" style="margin-top:6px;display:inline-block;">${s.label}</span>` : `<span class="badge need" style="margin-top:6px;display:inline-block;">🔴 ডাটা পাওয়া যায়নি</span>`}
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${r.agentCount} agent(s)-এর উপর ভিত্তি করে</div>
+      </div>`;
+    }).join('');
+
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি vertical-এর overall average score, এক নজরে।</p></div>
+        <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
+      </div>
+      <div class="stat-row">${statCardsHtml}</div>
+      <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
+        📊 Vertical-wise Average Score Comparison
+      </h3>
+      <div class="chart-box"><canvas id="homeAvgChart"></canvas></div>`;
+
+    runCountUps(panel);
+
+    setTimeout(() => {
+      const ctx = document.getElementById('homeAvgChart');
+      if(!ctx) return;
+      if(chartInstances['home-avg']) chartInstances['home-avg'].destroy();
+
+      chartInstances['home-avg'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: results.map(r => r.meta.label),
+          datasets: [{
+            label: 'Average Score (%)',
+            data: results.map(r => r.avg !== null ? r.avg : 0),
+            backgroundColor: results.map(r => {
+              if(r.avg === null) return 'rgba(224,82,74,0.4)';
+              const s = statusFor(r.avg);
+              return {excellent:'rgba(63,191,127,0.7)', good:'rgba(224,195,65,0.7)', average:'rgba(224,138,63,0.7)', need:'rgba(224,82,74,0.7)'}[s.cls] || 'rgba(51,201,176,0.7)';
+            }),
+            borderColor: 'var(--border)',
+            borderWidth: 1,
+            borderRadius: 6,
+            maxBarThickness: 70
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#8FA0B5', font: { size: 12 } }, grid: { display: false } },
+            y: { min: 0, max: 100, ticks: { color: '#8FA0B5' }, grid: { color: '#203859' } }
+          }
+        }
+      });
+    }, 60);
+
+  }catch(err){
+    console.error(err);
+    panel.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
+  }
+}
+
+function ans3secSubTabsHtml(activeSub){
+  const cls = { CATV:'lob-catv', BBTECH:'lob-bbtech', BBRENEWAL:'lob-bbrenewal' };
+  return `<div class="lob-tab-row">
+    ${Object.keys(ANS3SEC_SHEETS).map(k=>
+      `<button class="lob-tab ${cls[k]||''} ${k===activeSub?'active':''}" onclick="renderAnswered3SecPanel('${k}')">${VERTICALS[k].label}</button>`
+    ).join('')}
+  </div>`;
+}
+function statusClassFor3Sec(val){
+  if(val === '-' || val === '') return 'na';
+  const num = parseFloat(val);
+  if(isNaN(num)) return 'na';
+  if(num >= 95) return 'excellent';
+  if(num >= 85) return 'good';
+  return 'need';
+}
+function buildAns3SecTableHtml(monthHeaders, rows, label){
+  const bodyRows = rows.map(row=>{
+    const agent = String(row[0] || '').trim();
+    if(!agent) return '';
+    const isTotal = /grand\s*total/i.test(agent);
+
+    const cells = monthHeaders.map((m, idx)=>{
+      const rawVal = row[idx+1];
+      const val = (rawVal === undefined || rawVal === null || rawVal === '') ? '-' : String(rawVal).trim();
+      const cls = isTotal ? 'grand-total' : statusClassFor3Sec(val);
+      return `<td><div class="ans3sec-cell ${cls}">${escapeHtml(val)}</div></td>`;
+    }).join('');
+
+    return `<tr${isTotal ? ' class="ans3sec-row-total"' : ''}>
+      <td><div class="ans3sec-cell agent-name">${escapeHtml(agent)}</div></td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="ans3sec-table-wrap">
+      <table class="ans3sec-table">
+        <thead><tr><th>Agent Name (${label})</th>${monthHeaders.map(m=>`<th>${escapeHtml(m)}</th>`).join('')}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>`;
+}
+async function renderAnswered3SecPanel(sub){
+  sub = sub || ans3secSubTab || 'CATV';
+  ans3secSubTab = sub;
+  const panel = document.getElementById('panel-ANS3SEC');
+  const sheetName = ANS3SEC_SHEETS[sub];
+  const label = VERTICALS[sub].label;
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>☎️ Percentage of Calls Answered within 3 Seconds</h1><p>সিস্টেম (${sheetName}) থেকে লাইভ ডাটা সিঙ্ক হচ্ছে...</p></div>
+    </div>
+    ${ans3secSubTabsHtml(sub)}
+    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+
+  try{
+    const response = await fetch(WEB_APP_URL + "?vertical=" + sheetName);
+    const data = await response.json();
+
+    if(!Array.isArray(data) || data.length === 0){
+      panel.innerHTML = `
+        <div class="panel-header">
+          <div><h1>☎️ Percentage of Calls Answered within 3 Seconds</h1><p>${label} — লাইভ সিস্টেম ট্র্যাকিং</p></div>
+        </div>
+        ${ans3secSubTabsHtml(sub)}
+        <div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b><br>আপনার সিস্টেমের "${sheetName}" ট্যাবটি চেক করুন।</div>`;
+      return;
+    }
+
+    const headers = data[0];
+    const rows = data.slice(1);
+    const monthHeaders = headers.slice(1);
+
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div>
+          <h1>☎️ Percentage of Calls Answered within 3 Seconds</h1>
+          <p>${label} — ট্যাব: <b>${sheetName}</b> থেকে সরাসরি লাইভ সিঙ্ক হওয়া রিপোর্ট।</p>
+        </div>
+        <button class="btn primary" onclick="renderAnswered3SecPanel('${sub}')">↻ Refresh Live Data</button>
+      </div>
+      ${ans3secSubTabsHtml(sub)}
+      ${buildAns3SecTableHtml(monthHeaders, rows, label)}
+    `;
+  }catch(err){
+    console.error(err);
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div><h1>☎️ Percentage of Calls Answered within 3 Seconds</h1><p>${label} — লাইভ ট্র্যাকিং</p></div>
+      </div>
+      ${ans3secSubTabsHtml(sub)}
+      <div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
+  }
+}
+/* ===================== SYSTEM: LIVE RAW GOOGLE SHEET TABS (Audit / DISPO) ===================== */
+async function renderRawSheetTabPanel(tab){
+  const meta = RAW_SHEET_TABS[tab];
+  const panel = document.getElementById('panel-'+tab);
+  if(!panel || !meta) return;
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>${meta.icon} ${meta.label}</h1><p>লাইভ ডাটা লোড হচ্ছে...</p></div>
+    </div>
+    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+
+  try{
+    const response = await fetch(RAW_SHEET_WEB_APP_URL + "?vertical=" + encodeURIComponent(meta.sheetName));
+    const raw = await response.json();
+
+    // ব্যাকএন্ড দুই ধরনের রেসপন্স দিতে পারে: পুরনো ফরম্যাট (plain array-of-arrays)
+    // অথবা নতুন ফরম্যাট { values, merges } — merge cell তথ্যসহ। দুটোই সাপোর্ট করা হচ্ছে।
+    let values, merges;
+    if(Array.isArray(raw)){
+      values = raw; merges = [];
+    }else if(raw && Array.isArray(raw.values)){
+      values = raw.values; merges = Array.isArray(raw.merges) ? raw.merges : [];
+    }else{
+      values = []; merges = [];
+    }
+
+    if(!Array.isArray(values) || values.length === 0){
+      panel.innerHTML = `
+        <div class="panel-header">
+          <div><h1>${meta.icon} ${meta.label}</h1><p>লাইভ আপডেট</p></div>
+          <button class="btn" onclick="renderRawSheetTabPanel('${tab}')">↻ Refresh Live Data</button>
+        </div>
+        <div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b><br>এই মুহূর্তে কোনো রেকর্ড উপলব্ধ নেই, একটু পর আবার চেক করুন।</div>`;
+      return;
+    }
+
+    const recordCount = Math.max(0, values.length - 1);
+
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div>
+          <h1>${meta.icon} ${meta.label}</h1>
+          <p>সম্পূর্ণ লাইভ ডাটা এখানে দেখা যাচ্ছে। কোনো নতুন তথ্য যোগ হলে "Refresh Live Data" চাপলেই সর্বশেষ আপডেটেড ডাটা দেখতে পাবেন।</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span style="font-size:11px;color:var(--text-muted);">মোট রেকর্ড: <b style="color:var(--text);">${recordCount}</b></span>
+          <button class="btn primary" onclick="renderRawSheetTabPanel('${tab}')">↻ Refresh Live Data</button>
+        </div>
+      </div>
+      <div class="table-search-wrap">
+        <span class="table-search-icon">🔎</span>
+        <input type="text" class="table-search-input" id="rawSheetSearch-${tab}" placeholder="যেকোনো তথ্য দিয়ে খুঁজুন..." oninput="filterRawSheetTable(this,'rawSheetTable-${tab}')">
+      </div>
+      <div class="raw-sheet-wrap">
+        ${buildMergedSheetTableHtml(values, merges, tab)}
+        <div class="table-no-match" style="display:none;">😕 কোনো তথ্য পাওয়া যায়নি।</div>
+      </div>`;
+  }catch(err){
+    console.error("Raw sheet tab fetch failed:", err);
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div><h1>${meta.icon} ${meta.label}</h1><p>লাইভ ট্র্যাকিং</p></div>
+        <button class="btn" onclick="renderRawSheetTabPanel('${tab}')">↻ Refresh Live Data</button>
+      </div>
+      <div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
+  }
+}
+
+/* শিটে যেভাবে সেলগুলো merge করা আছে ঠিক সেভাবেই টেবিলে দেখানো হবে (rowspan/colspan দিয়ে),
+   একদম ফাঁকা কলামগুলো বাদ দেওয়া হবে, এবং প্রতিটা সারি সুন্দরভাবে অ্যানিমেট হয়ে আসবে। */
+/* গুগল শিটের Time/Date টাইপ সেল, Apps Script থেকে JSON হয়ে আসার সময়
+   "1899-12-30T06:52:50.000Z" এর মতো raw ISO স্ট্রিং হয়ে যায় (1899-12-30 মানে শুধু সময়,
+   কোনো তারিখ নেই)। এই ফাংশনটা সেগুলোকে মানুষের পড়ার মতো সময়/তারিখে রূপান্তর করে। */
+function formatSheetCellValue(val){
+  if(val === null || val === undefined) return '';
+  const s = String(val);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/);
+  if(!m) return s;
+
+  const [, y, mo, d, h, mi, se] = m;
+  const year = +y, month = +mo, day = +d, hour = +h, min = +mi, sec = +se;
+
+  const hh = ((hour % 12) === 0) ? 12 : (hour % 12);
+  const ampm = hour < 12 ? 'AM' : 'PM';
+  const timeStr = `${String(hh).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')} ${ampm}`;
+
+  // ১৮৯৯-১২-৩০ হলো গুগল শিটের "শুধু সময়" (Time only) সেলের epoch তারিখ — এক্ষেত্রে শুধু সময় দেখানো হবে
+  if(year === 1899 && month === 12 && day === 30){
+    return timeStr;
+  }
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr = `${String(day).padStart(2,'0')}-${MONTHS[month-1]}-${year}`;
+
+  // সময়ের অংশ 00:00:00 হলে সেটা শুধু তারিখ (Date only) সেল, নাহলে তারিখ + সময় দুটোই দেখানো হবে
+  if(hour === 0 && min === 0 && sec === 0){
+    return dateStr;
+  }
+  return `${dateStr} ${timeStr}`;
+}
+function buildMergedSheetTableHtml(values, merges, tab){
+  const numRows = values.length;
+  const numCols = values.reduce((m, r) => Math.max(m, r.length), 0);
+
+  // পুরো গ্রিড সমান সাইজের করে নেওয়া হচ্ছে (কোনো row ছোট হলে ফাঁকা সেল বসিয়ে)
+  const grid = values.map(r => {
+    const row = r.slice(0, numCols);
+    while(row.length < numCols) row.push('');
+    return row;
+  });
+
+  // কোন কলাম সম্পূর্ণ ফাঁকা (হেডার + সব ডাটা মিলিয়ে) সেটা বের করা হচ্ছে
+  const isColBlank = [];
+  for(let c = 0; c < numCols; c++){
+    let blank = true;
+    for(let r = 0; r < numRows; r++){
+      if(String(grid[r][c] ?? '').trim() !== ''){ blank = false; break; }
+    }
+    isColBlank.push(blank);
+  }
+
+  // পুরনো কলাম ইনডেক্স -> নতুন (ফাঁকা কলাম বাদ দেওয়ার পর) কলাম ইনডেক্স ম্যাপিং
+  const newColIndex = [];
+  let running = 0;
+  for(let c = 0; c < numCols; c++){
+    newColIndex.push(isColBlank[c] ? -1 : running);
+    if(!isColBlank[c]) running++;
+  }
+  const newNumCols = running;
+
+  if(newNumCols === 0){
+    return `<div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b></div>`;
+  }
+
+  // নতুন গ্রিড তৈরি (ফাঁকা কলাম বাদ দিয়ে)
+  const newGrid = grid.map(row => row.filter((_, c) => !isColBlank[c]));
+
+  // merge রেঞ্জগুলোকে নতুন কলাম ইনডেক্সের সাথে মিলিয়ে অ্যাডজাস্ট করা হচ্ছে
+  const adjustedMerges = [];
+  (merges || []).forEach(m => {
+    const r0 = m.row, c0 = m.col, nr = m.numRows, nc = m.numCols;
+    if(r0 == null || c0 == null || !nr || !nc) return;
+    let firstNewCol = -1, lastNewCol = -1;
+    for(let c = c0; c < c0 + nc; c++){
+      if(c >= 0 && c < numCols && !isColBlank[c]){
+        const nci = newColIndex[c];
+        if(firstNewCol === -1) firstNewCol = nci;
+        lastNewCol = nci;
+      }
+    }
+    if(firstNewCol === -1) return; // পুরো merge টাই ফাঁকা কলামের মধ্যে ছিল
+    adjustedMerges.push({ row: r0, col: firstNewCol, numRows: nr, numCols: (lastNewCol - firstNewCol + 1) });
+  });
+
+  // কোন সেল অন্য একটা merge-এর ভেতরে ঢাকা পড়ে আছে (তাই আলাদা <td> বসবে না) সেটার ম্যাপ
+  const covered = Array.from({length: numRows}, () => new Array(newNumCols).fill(false));
+  const origin = Array.from({length: numRows}, () => new Array(newNumCols).fill(null));
+  adjustedMerges.forEach(m => {
+    for(let r = m.row; r < m.row + m.numRows && r < numRows; r++){
+      for(let c = m.col; c < m.col + m.numCols && c < newNumCols; c++){
+        if(r === m.row && c === m.col){
+          origin[r][c] = m;
+        }else{
+          covered[r][c] = true;
+        }
+      }
+    }
+  });
+
+  let rowsHtml = '';
+  for(let r = 0; r < numRows; r++){
+    const isHeaderRow = (r === 0);
+    const rowText = newGrid[r].map(v => isHeaderRow ? v : formatSheetCellValue(v)).join(' ').toLowerCase();
+    const rowClass = isHeaderRow ? 'rs-header-row' : '';
+    const delay = Math.min(r, 40) * 0.02;
+    let cellsHtml = '';
+    for(let c = 0; c < newNumCols; c++){
+      if(covered[r][c]) continue;
+      const m = origin[r][c];
+      const rowspan = m ? m.numRows : 1;
+      const colspan = m ? m.numCols : 1;
+      const val = newGrid[r][c];
+      const cellText = (val===null || val===undefined) ? '' : (isHeaderRow ? val : formatSheetCellValue(val));
+      const attrs = (rowspan>1?` rowspan="${rowspan}"`:'') + (colspan>1?` colspan="${colspan}"`:'');
+      const cls = isHeaderRow ? ' class="rs-head"' : '';
+      cellsHtml += `<td${cls}${attrs}>${escapeHtml(cellText)}</td>`;
+    }
+    rowsHtml += `<tr class="rs-anim-row ${rowClass}" style="animation-delay:${delay}s" ${isHeaderRow?'':`data-row-text="${escapeAttr(rowText)}"`}>${cellsHtml}</tr>`;
+  }
+
+  return `<table class="raw-sheet-table" id="rawSheetTable-${tab}"><tbody>${rowsHtml}</tbody></table>`;
+}
+
+function filterRawSheetTable(input, tableId){
+  const q = input.value.trim().toLowerCase();
+  const table = document.getElementById(tableId);
+  if(!table) return;
+  const rows = table.querySelectorAll('tr[data-row-text]');
+  let anyVisible = false;
+  rows.forEach(tr=>{
+    const text = tr.getAttribute('data-row-text') || '';
+    const match = !q || text.indexOf(q) !== -1;
+    tr.style.display = match ? '' : 'none';
+    if(match) anyVisible = true;
+  });
+  const noMatch = table.parentElement.querySelector('.table-no-match');
+  if(noMatch) noMatch.style.display = anyVisible ? 'none' : 'block';
+}
+/* ===================== HELP PANEL (New Update-এর মতোই — Admin post/delete করতে পারবে) ===================== */
+async function loadHelp(){
+  const list = (await storageGet('helpList')) || [];
+  renderHelpList(list);
+}
+async function renderHelpPanel(){
+  await loadHelp();
+}
+function renderHelpList(list){
+  const box = document.getElementById('helpList');
+  if(!box) return;
+  if(!list.length){
+    box.innerHTML = `<div class="empty-state"><b>কোনো Help নোটিশ নেই</b><br>সহায়তার জন্য সাইডবারের ফুটারে দেওয়া Mail / Mobile / Whatsapp কন্টাক্ট ব্যবহার করুন।</div>`;
+    return;
+  }
+  box.innerHTML = list.slice().sort((a,b)=> b.id - a.id).map(u=>`
+    <div class="update-card">
+      <div class="u-head">
+        <span class="u-title">${escapeHtml(u.title)}</span>
+        <span class="u-date mono">${escapeHtml(u.date)}</span>
+      </div>
+      <div class="u-body">${escapeHtml(u.body)}</div>
+      ${currentRole==='admin' ? `<div style="margin-top:10px;"><button class="btn small danger" onclick="deleteHelp(${u.id})">Delete</button></div>` : ''}
+    </div>`).join('');
+}
+async function addHelp(){
+  const title = document.getElementById('helpTitle').value.trim();
+  const body = document.getElementById('helpBody').value.trim();
+  if(!title || !body){ showToast('Title and Description are required.'); return; }
+
+  showToast('Saving help notice to WEBPAGEDATA...');
+  const list = (await storageGet('helpList')) || [];
+  list.push({ id: Date.now(), title, body, date: new Date().toLocaleDateString('en-GB') });
+
+  const success = await storageSet('helpList', list);
+  if(success){
+    document.getElementById('helpTitle').value = '';
+    document.getElementById('helpBody').value = '';
+    renderHelpList(list);
+    showToast('Help notice posted directly to Google Sheets!');
+  }
+}
+async function deleteHelp(id){
+  showToast('Processing delete from sheet...');
+  let list = (await storageGet('helpList')) || [];
+  list = list.filter(u=> u.id !== id);
+  const success = await storageSet('helpList', list);
+  if(success){
+    renderHelpList(list);
+    showToast('Help notice removed successfully.');
+  }
+}
+/* ===================== QUICK LINK PANEL ===================== */
+/* ⚠️ এখানে আপনার ওয়েবসাইটের লিংক বসিয়ে দিন — এটাই "Quick Link" ট্যাবে embed হয়ে দেখাবে */
+const QUICK_LINK_URL = "";
+function renderQuickLinkPanel(){
+  const box = document.getElementById('quickLinkView');
+  if(!box) return;
+  if(!QUICK_LINK_URL){
+    box.innerHTML = `<div class="empty-state"><b>কোনো Quick Link সেট করা নেই</b><br>কোডে <span class="mono">const QUICK_LINK_URL</span> ভ্যারিয়েবলে আপনার ওয়েবসাইটের লিংক বসিয়ে দিন — এই ট্যাবে সেটি সরাসরি লোড হয়ে যাবে।</div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+      <a class="btn primary small" href="${escapeAttr(QUICK_LINK_URL)}" target="_blank">↗ Open in New Tab</a>
+    </div>
+    <div class="table-wrapper" style="padding:0; overflow:hidden;">
+      <iframe src="${escapeAttr(QUICK_LINK_URL)}" style="width:100%; height:75vh; border:none; display:block;"></iframe>
+    </div>`;
+}
+function drawChart(tab, rows){
+  const ctx = document.getElementById('chart-'+tab);
+  if(!ctx) return;
+  if(chartInstances[tab]) chartInstances[tab].destroy();
+  const sorted = rows.slice().sort((a,b)=> b.avgScore - a.avgScore);
+  chartInstances[tab] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(r=>r.agent),
+      datasets: [{
+        label: 'Average Performance Score',
+        data: sorted.map(r=>Number(r.avgScore)),
+        backgroundColor: sorted.map(r=> {
+          const s = statusFor(Number(r.avgScore));
+          return {top:'#E3A857',excellent:'#3FBF7F',good:'#E0C341',average:'#E08A3F',need:'#E0524A'}[s.cls];
+        }),
+        borderRadius: 4,
+        maxBarThickness: 25
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ ticks:{ color:'#7C8CA3', font:{size:10}, maxRotation:45, minRotation:45 }, grid:{ display:false } },
+        y:{ min:0, max:100, ticks:{ color:'#7C8CA3' }, grid:{ color: '#203859' } }
+      }
+    }
+  });
+}
+/* ===================== ADDITIONAL ANALYSIS CHARTS ===================== */
+function drawDistributionChart(tab, rows){
+  const ctx = document.getElementById('distChart-'+tab);
+  if(!ctx) return;
+  const key = 'dist-'+tab;
+  if(chartInstances[key]) chartInstances[key].destroy();
+  animateChartBox(ctx);
+
+  const buckets = { 'TOP PERFORMER':0, 'EXCELLENT':0, 'GOOD':0, 'AVERAGE':0, 'NEED IMPROVEMENT':0 };
+  const colorMap = { 'TOP PERFORMER':'#E3A857', 'EXCELLENT':'#3FBF7F', 'GOOD':'#E0C341', 'AVERAGE':'#E08A3F', 'NEED IMPROVEMENT':'#E0524A' };
+  rows.forEach(r=>{
+    const s = statusFor(Number(r.avgScore));
+    const label = s.label.replace(/^[^A-Za-z]+/, '').trim();
+    if(buckets[label] !== undefined) buckets[label]++;
+  });
+  const labels = Object.keys(buckets).filter(k=> buckets[k] > 0);
+  const data = labels.map(k=> buckets[k]);
+
+  chartInstances[key] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: labels.map(l=> colorMap[l]),
+        borderColor: 'transparent',
+        borderWidth: 2,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      animation:{
+        animateRotate: true,
+        animateScale: true,
+        duration: 1100,
+        easing: 'easeOutElastic'
+      },
+      plugins:{
+        legend:{ position:'bottom', labels:{ color:'#7C8CA3', font:{size:10.5}, boxWidth:12, padding:10 } }
+      }
+    }
+  });
+}
+
+function drawTopBottomChart(tab, rows){
+  const ctx = document.getElementById('topBottomChart-'+tab);
+  if(!ctx) return;
+  const key = 'topbot-'+tab;
+  if(chartInstances[key]) chartInstances[key].destroy();
+  animateChartBox(ctx);
+
+  const sorted = rows.slice().sort((a,b)=> b.avgScore - a.avgScore);
+  const top5 = sorted.slice(0, 5);
+  const bottom5 = sorted.slice(-5).reverse();
+  // ছোট ডাটাসেটে (৫ জনের কম এজেন্ট) ওভারল্যাপ এড়ানো
+  const seen = new Set(top5.map(r=>r.agent));
+  const bottomFiltered = bottom5.filter(r=> !seen.has(r.agent));
+  const combined = top5.concat(bottomFiltered);
+
+  chartInstances[key] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: combined.map(r=>r.agent),
+      datasets: [{
+        label: 'Average Score',
+        data: combined.map(r=>Number(r.avgScore)),
+        backgroundColor: combined.map((r,i)=> i < top5.length ? '#3FBF7F' : '#E0524A'),
+        borderRadius: 4,
+        maxBarThickness: 22
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive:true, maintainAspectRatio:false,
+      animation:{
+        duration: 1000,
+        easing: 'easeOutBack',
+        delay: (ctxA)=> {
+          return ctxA.type === 'data' ? ctxA.dataIndex * 90 : 0;
+        }
+      },
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ min:0, max:100, ticks:{ color:'#7C8CA3' }, grid:{ color:'#203859' } },
+        y:{ ticks:{ color:'#7C8CA3', font:{size:10.5} }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+/* চার্ট কন্টেইনারে হালকা fade+scale-in এন্ট্রি অ্যানিমেশন */
+function animateChartBox(canvasEl){
+  const box = canvasEl.closest('.chart-box');
+  if(!box) return;
+  box.classList.remove('chart-anim-in');
+  void box.offsetWidth; // reflow to restart animation
+  box.classList.add('chart-anim-in');
+}
+
+/* ===================== EXCEL UPLOAD AND SEND TO GOOGLE SHEET ===================== */
+function handleUpload(evt, tab){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e)=>{
+    try{
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      
+      const json2D = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+      const jsonObjects = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      const rows = parseScoreRows(jsonObjects);
+      
+      if(!rows.length){
+        showToast('Valid কোনো ডাটা রো পাওয়া যায়নি। এক্সেল হেডার চেক করুন।');
+        return;
+      }
+      
+      showToast('গুগল শিটে ডাটা পাঠানো হচ্ছে, অনুগ্রহ করে একটু অপেক্ষা করুন...');
+      
+      const response = await fetch(WEB_APP_URL + "?vertical=" + tab, {
+        method: "POST",
+        body: JSON.stringify({ rows: json2D })
+      });
+      
+      showToast(`সফলভাবে ডাটা ওভাররাইট সম্পন্ন হয়েছে।`);
+      renderVerticalPanel(tab);
+    }catch(err){
+      console.error(err);
+      showToast('Error parsing or uploading file.');
+    }
+  };
+  reader.readAsBinaryString(file);
+  evt.target.value = '';
+}
+function detectColumnKeys(keys){
+  const nameKey = keys.find(k=> /^\s*(associate|agent)\s*name\s*$/i.test(k))
+    || keys.find(k=> /associate|agent/i.test(k) && /name/i.test(k))
+    || keys.find(k=> /name|নাম/i.test(k));
+  const countKey = keys.find(k=> /\baudit\b/i.test(k) && /\bcount\b/i.test(k))
+    || keys.find(k=> /^\s*(audit\s*)?count\s*$/i.test(k));
+  const scoreKey = keys.find(k=> /^\s*scores?\s*$/i.test(k))
+    || keys.find(k=> /score|স্কোর/i.test(k));
+  return { nameKey, countKey, scoreKey };
+}
+function parseScoreRows(json){
+  if(!json.length) return [];
+  const keys = Object.keys(json[0]);
+  const { nameKey, countKey, scoreKey } = detectColumnKeys(keys);
+  if(!nameKey || !scoreKey) return [];
+  const groups = {};
+  json.forEach(row=>{
+    const agentRaw = row[nameKey];
+    if(agentRaw === undefined || agentRaw === null) return;
+    const agent = String(agentRaw).trim();
+    if(!agent) return;
+    const scoreVal = parseFloat(row[scoreKey]);
+    if(isNaN(scoreVal)) return;
+    const countVal = countKey ? parseFloat(row[countKey]) : NaN;
+    if(!groups[agent]) groups[agent] = { scoreSum:0, scoreN:0, countSum:0, hasExplicitCount:false, rowN:0 };
+    const g = groups[agent];
+    g.scoreSum += scoreVal;
+    g.scoreN += 1;
+    g.rowN += 1;
+    if(!isNaN(countVal)){ g.countSum += countVal; g.hasExplicitCount = true; }
+  });
+  const rows = [];
+  Object.keys(groups).forEach(agent=>{
+    const g = groups[agent];
+    const avgScore = Math.round((g.scoreSum / g.scoreN) * 10) / 10;
+    const auditCount = g.hasExplicitCount ? g.countSum : g.rowN;
+    rows.push({ agent, auditCount, avgScore });
+  });
+  return rows;
+}
+async function removeAgentRow(tab, encodedName){
+  showToast('Removing agent updates is disabled for live integrity.');
+}
+async function clearVertical(tab){
+  showToast('Clear action restricted to protect master Google sheet.');
+}
+async function updateLoginAgentCount(){
+  let count = 0;
+  Object.keys(rawDataCache).forEach(k => {
+    if(rawDataCache[k]) count += rawDataCache[k].length;
+  });
+  const el = document.getElementById('loginStatAgents');
+  if(el && count) el.textContent = count;
+}
+/* ===================== UPDATE LOGS CORNER ===================== */
+async function loadUpdates(){
+  const list = (await storageGet('updates')) || [];
+  renderUpdates(list);
+}
+function renderUpdates(list){
+  const box = document.getElementById('updatesList');
+  if(!list.length){
+    box.innerHTML = `<div class="empty-state"><b>কোনো আপডেট নোটিশ নেই</b></div>`;
+    return;
+  }
+  box.innerHTML = list.slice().sort((a,b)=> b.id - a.id).map(u=>`
+    <div class="update-card">
+      <div class="u-head">
+        <span class="u-title">${escapeHtml(u.title)}</span>
+        <span class="u-date mono">${escapeHtml(u.date)}</span>
+      </div>
+      <div class="u-body">${escapeHtml(u.body)}</div>
+      ${currentRole==='admin' ? `<div style="margin-top:10px;"><button class="btn small danger" onclick="deleteUpdate(${u.id})">Delete</button></div>` : ''}
+    </div>`).join('');
+}
+async function addUpdate(){
+  const title = document.getElementById('updTitle').value.trim();
+  const body = document.getElementById('updBody').value.trim();
+  if(!title || !body){ showToast('Title and Description are required.'); return; }
+  
+  showToast('Saving announcement to WEBPAGEDATA...');
+  const list = (await storageGet('updates')) || [];
+  list.push({ id: Date.now(), title, body, date: new Date().toLocaleDateString('en-GB') });
+  
+  const success = await storageSet('updates', list);
+  if(success) {
+    document.getElementById('updTitle').value = '';
+    document.getElementById('updBody').value = '';
+    renderUpdates(list);
+    showToast('Notice posted directly to Google Sheets!');
+  }
+}
+async function deleteUpdate(id){
+  showToast('Processing delete from sheet...');
+  let list = (await storageGet('updates')) || [];
+  list = list.filter(u=> u.id !== id);
+  const success = await storageSet('updates', list);
+  if(success) {
+    renderUpdates(list);
+    showToast('Notice removed successfully.');
+  }
+}
+/* ===================== SYSTEM INITIALIZATION ===================== */
+updateLoginAgentCount();
+function updateWelcome(){
+
+    const now=new Date();
+
+    const h=now.getHours();
+
+    let greet="";
+    let icon="";
+
+    if(h>=5 && h<12){
+
+        greet="Good Morning";
+        icon="🌅";
+
+    }
+
+    else if(h>=12 && h<17){
+
+        greet="Good Afternoon";
+        icon="☀️";
+
+    }
+
+    else if(h>=17 && h<20){
+
+        greet="Good Evening";
+        icon="🌇";
+
+    }
+
+    else{
+
+        greet="Good Night";
+        icon="🌙";
+
+    }
+
+    document.getElementById("welcomeGreeting").innerHTML=greet;
+    document.getElementById("welcomeIcon").innerHTML=icon;
+
+    document.getElementById("welcomeDate").innerHTML=
+        now.toLocaleDateString("en-IN",{
+
+            weekday:"long",
+            day:"2-digit",
+            month:"long",
+            year:"numeric"
+
+        });
+
+    document.getElementById("welcomeTime").innerHTML=
+        now.toLocaleTimeString("en-IN",{
+
+            hour:"2-digit",
+            minute:"2-digit",
+            second:"2-digit",
+            hour12:true
+
+        });
+
+}
+
+updateWelcome();
+
+setInterval(updateWelcome,1000);
+/* ===============================
+   Auto Refresh Every 10 Minutes
+================================= */
+
+setInterval(() => {
+    location.reload();
+}, 10 * 60 * 1000); // 10 Minutes
+</script>
+<div class="login-popup-overlay" id="loginPopupOverlay" onclick="if(event.target===this) closeLoginPopup()">
+  <div class="login-popup-box">
+    <button class="login-popup-close" onclick="closeLoginPopup()" title="Close">✕</button>
+    <div class="login-popup-greeting" id="loginPopupGreeting"></div>
+    <div class="login-popup-dashed"></div>
+    <div class="login-popup-text" id="loginPopupText"></div>
+  </div>
+</div>
+
+<!-- Logout korle ekta short "Logging out..." message dekhabe, tarpor login screen e ferot jabe -->
+<div class="logout-msg-overlay" id="logoutMessageOverlay">
+  <div class="logout-msg-box">
+    <div class="logout-msg-spinner"></div>
+    <div class="logout-msg-line1">Logging out<span class="logout-msg-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <div class="logout-msg-line2">Thank you for accessing the QA Portal.</div>
+  </div>
+</div>
+
+<!-- ============ NEW MODALS (ADDITIVE) ============ -->
+
+<!-- Forced first-login / password-reset password change (cannot be closed until saved) -->
+<div class="emp-modal-overlay" id="forceChangeModal" style="display:none;">
+  <div class="emp-modal-box">
+    <h2>Set a New Password</h2>
+    <p class="hint">This is your first login (or your password was reset). Please set a new password to continue.</p>
+    <div class="field">
+      <label>New Password</label>
+      <input type="password" id="forceNewPassword" placeholder="••••••••">
+    </div>
+    <div class="field">
+      <label>Confirm New Password</label>
+      <input type="password" id="forceConfirmPassword" placeholder="••••••••">
+    </div>
+    <p class="emp-pw-rules">Any password is accepted — no minimum length, no uppercase/number/special-character requirement (e.g. simply "12345" works).</p>
+    <button class="login-btn" onclick="submitForceChangePassword()">Save &amp; Continue</button>
+    <div class="login-error" id="forceChangeError"></div>
+  </div>
+</div>
+
+<!-- Voluntary change password (from welcome bar, can be closed) -->
+<div class="emp-modal-overlay" id="changePasswordModal" style="display:none;" onclick="if(event.target===this) closeChangePasswordModal()">
+  <div class="emp-modal-box">
+    <button class="login-popup-close" onclick="closeChangePasswordModal()" title="Close">✕</button>
+    <h2>Change Password</h2>
+    <div class="field">
+      <label>Current Password</label>
+      <input type="password" id="cpCurrentPassword" placeholder="••••••••">
+    </div>
+    <div class="field">
+      <label>New Password</label>
+      <input type="password" id="cpNewPassword" placeholder="••••••••">
+    </div>
+    <div class="field">
+      <label>Confirm New Password</label>
+      <input type="password" id="cpConfirmPassword" placeholder="••••••••">
+    </div>
+    <p class="emp-pw-rules">Any password is accepted — no minimum length, no uppercase/number/special-character requirement (e.g. simply "12345" works).</p>
+    <button class="login-btn" onclick="submitChangePassword()">Save</button>
+    <div class="login-error" id="cpError"></div>
+  </div>
+</div>
+
+<!-- Forgot password info (only Super Admin can reset) -->
+<div class="emp-modal-overlay" id="forgotPasswordModal" style="display:none;" onclick="if(event.target===this) closeForgotPasswordInfo()">
+  <div class="emp-modal-box">
+    <button class="login-popup-close" onclick="closeForgotPasswordInfo()" title="Close">✕</button>
+    <h2>Forgot Password?</h2>
+    <p class="hint">Password reset is currently unavailable. Please contact the <b>Quality Team</b> to reset your password. After the reset, log in using the default password <b>GTPL@123</b> and create a new password.</p>
+    <button class="login-btn" onclick="closeForgotPasswordInfo()">OK, Got it</button>
+  </div>
+</div>
+
+<!-- Who's currently online (opens when clicking the "Total Agent(s) Currently Online" badge) -->
+<div class="emp-modal-overlay" id="onlineAgentsModal" style="display:none;" onclick="if(event.target===this) closeOnlineAgentsModal()">
+  <div class="emp-modal-box online-agents-box">
+    <button class="login-popup-close" onclick="closeOnlineAgentsModal()" title="Close">✕</button>
+    <h2><span class="pulse-dot" style="display:inline-block;margin-right:6px;"></span>Currently Online (<span id="onlineAgentsModalCount">--</span>)</h2>
+    <p class="hint">Agents who currently have the portal open.</p>
+    <div class="online-agents-list" id="onlineAgentsList">
+      <div class="online-agents-loading">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ============ NEW ADDITIVE STYLES — Employee Login / Super Admin / Session UI ============
+   এই স্টাইলগুলো শুধুমাত্র নতুন যোগ করা এলিমেন্টের জন্য।
+   বিদ্যমান কোনো ক্লাস/কালার/অ্যানিমেশন/লেআউট পরিবর্তন করা হয়নি। */
+
+.emp-switch-row{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-top:14px;
+}
+.emp-switch-link{
+  background:none; border:none; cursor:pointer;
+  color: var(--agent, #33C9B0);
+  font-size:12.5px; font-weight:600; padding:4px 2px;
+}
+.emp-switch-link:hover{ text-decoration:underline; }
+.emp-switch-sep{ color: var(--text-muted, #8FA0B5); }
+
+/* Employee Sign-in is now the primary card; Staff Access sits below it as its own box */
+/* Employee Sign-in is the primary, most important card — wrap it in a soft animated glow */
+.emp-highlight-box{
+  position:relative;
+  border-radius:calc(var(--radius, 12px) + 6px);
+  padding:26px 24px;
+  background:var(--surface, #0E1A2B);
+  border:1.5px solid rgba(51,201,176,0.55);
+  animation: empBoxGlow 10.5s ease infinite;
+}
+@keyframes empBoxGlow{
+  0%,100%{ box-shadow:0 0 34px rgba(51,201,176,0.55), 0 0 75px rgba(51,201,176,0.30); border-color:rgba(51,201,176,0.85); }
+  14%{  box-shadow:0 0 36px rgba(74,127,224,0.55), 0 0 75px rgba(74,127,224,0.30); border-color:rgba(74,127,224,0.85); }
+  29%{  box-shadow:0 0 36px rgba(185,74,224,0.55), 0 0 75px rgba(185,74,224,0.30); border-color:rgba(185,74,224,0.85); }
+  43%{  box-shadow:0 0 36px rgba(227,168,87,0.55), 0 0 75px rgba(227,168,87,0.30); border-color:rgba(227,168,87,0.85); }
+  57%{  box-shadow:0 0 36px rgba(255,107,107,0.55), 0 0 75px rgba(255,107,107,0.30); border-color:rgba(255,107,107,0.85); }
+  71%{  box-shadow:0 0 36px rgba(255,111,208,0.55), 0 0 75px rgba(255,111,208,0.30); border-color:rgba(255,111,208,0.85); }
+  86%{  box-shadow:0 0 36px rgba(0,255,157,0.55), 0 0 75px rgba(0,255,157,0.30); border-color:rgba(0,255,157,0.85); }
+}
+.emp-highlight-box h2{ font-size:24px; }
+.emp-highlight-box p.hint{ color:var(--text, #EAF0F6); opacity:0.85; }
+.emp-highlight-box .field label{ color:var(--text, #EAF0F6); opacity:0.85; }
+
+/* Quality Team / Admin / Super Admin — rarely used, tucked under the "Online Now" stat, kept tiny & low-key */
+.staff-login-card{
+  margin-top:22px;
+  max-width:190px;
+  background:var(--surface, #0E1A2B);
+  border:1px solid var(--border, #203859);
+  border-radius:9px;
+  padding:9px 10px;
+  opacity:0.55;
+  transition:opacity .2s ease;
+}
+.staff-login-card:hover, .staff-login-card:focus-within{ opacity:1; }
+.staff-login-card .agent-admin-heading h2{ font-size:9.5px; margin-bottom:1px; }
+.staff-login-card .agent-admin-heading p.hint{ font-size:8px; margin-bottom:6px; line-height:1.3; }
+.staff-login-card .role-toggle{ padding:2px; margin-bottom:6px; border-radius:6px; }
+.staff-login-card .staff-role-toggle button{ font-size:8px; padding:5px 1px; border-radius:4px; line-height:1.2; }
+.staff-login-card .field{ margin-bottom:6px; }
+.staff-login-card .field label{ font-size:7.5px; margin-bottom:2px; }
+/* Small, multi-colored contact/support note under the Staff Access card on the login screen */
+.login-support-note{
+  margin-top:14px;
+  max-width:220px;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10.5px;
+  line-height:1.5;
+}
+.login-support-note span{
+  display:inline-block;
+  width:max-content;
+  max-width:100%;
+  background-size:300% 100%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation: loginSupportFlow 6s linear infinite;
+}
+@keyframes loginSupportFlow{
+  0%{ background-position:0% 50%; }
+  100%{ background-position:300% 50%; }
+}
+.login-support-note .lsn-a{ background-image:linear-gradient(90deg,#8FA0B5,#33C9B0,#4A7FE0,#8FA0B5,#33C9B0,#4A7FE0); font-weight:600; }
+.login-support-note .lsn-b{ background-image:linear-gradient(90deg,#E3A857,#FF6B6B,#B94AE0,#E3A857,#FF6B6B,#B94AE0); font-weight:700; animation-duration:4.5s; }
+.login-support-note .lsn-c{ background-image:linear-gradient(90deg,#33C9B0,#00FF9D,#4A7FE0,#33C9B0,#00FF9D,#4A7FE0); font-weight:600; animation-duration:5.5s; }
+.staff-login-card .field input{ padding:5px 7px; font-size:10px; border-radius:6px; }
+.staff-login-card .login-btn{ padding:6px; font-size:9.5px; border-radius:6px; margin-top:2px; }
+.staff-login-card .login-error{ font-size:8.5px; margin-top:4px; min-height:0; }
+
+.emp-login-footer-row{
+  display:flex; justify-content:center; align-items:center; margin-top:8px;
+}
+
+/* Fixed Employee Welcome Bar */
+#employeeWelcomeBar{
+  position:fixed; top:0; left:0; right:0; z-index:10000;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:6px 18px;
+  background: var(--surface-2, #14253D);
+  border-bottom:1px solid var(--border, #203859);
+  color: var(--text, #EAF0F6);
+  font-family:'Inter', sans-serif;
+  font-size:12.5px;
+}
+.emp-welcome-left{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.emp-welcome-greeting{
+  font-weight:600;
+  background:linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0, #33C9B0);
+  background-size:300% 100%;
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  animation: empGreetingColorShift 6s linear infinite;
+}
+@keyframes empGreetingColorShift{
+  0%{ background-position:0% 50%; }
+  100%{ background-position:300% 50%; }
+}
+.emp-online-chip{
+  display:inline-flex; align-items:center; gap:6px;
+  color: var(--agent, #33C9B0); font-weight:600; font-size:12px;
+}
+/* Online-on-portal badge now sits inline right next to "Currently Online"
+   instead of floating as a fixed pill in the corner of the screen. */
+#employeeWelcomeBar .brand-strip-online-badge{
+  position:static;
+  padding:4px 10px;
+  font-size:11px;
+}
+.emp-welcome-right{ display:flex; gap:8px; }
+.emp-mini-btn{
+  background: var(--surface-3, #1B3150);
+  border:1px solid var(--border, #203859);
+  color: var(--text, #EAF0F6);
+  border-radius:7px; padding:6px 14px; font-size:11px; cursor:pointer;
+  min-width:100px;
+}
+.emp-mini-btn:hover{ opacity:0.85; }
+.emp-mini-btn.danger{
+  background:linear-gradient(135deg,#ff2fb0,#c2007a);
+  border-color:#ff6fd0;
+  color:#fff;
+  font-weight:700;
+  box-shadow:0 0 10px rgba(255,32,180,.45);
+  animation:logoutPulse 2s infinite;
+}
+.emp-mini-btn.danger:hover{
+  background:linear-gradient(135deg,#ff4dc4,#a5006a);
+  box-shadow:0 0 18px rgba(255,32,180,.75), 0 0 35px rgba(255,32,180,.50);
+}
+
+/* Small inline session stats, shown right next to "Currently Online" in the welcome bar */
+.emp-inline-stats{
+  display:flex; gap:10px; flex-wrap:wrap;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px;
+  padding:3px 12px;
+  border-radius:7px;
+  border:1px solid rgba(51,201,176,0.22);
+  animation: empStatsGlow 5s ease-in-out infinite;
+}
+@keyframes empStatsGlow{
+  0%,100%{ box-shadow:0 0 0 rgba(51,201,176,0); border-color:rgba(51,201,176,0.22); }
+  50%{     box-shadow:0 0 12px rgba(51,201,176,0.28); border-color:rgba(51,201,176,0.55); }
+}
+.emp-inline-stat{ color: var(--text-muted, #8FA0B5); white-space:nowrap; }
+.emp-inline-stat b{ color: var(--text, #EAF0F6); font-size:11.5px; font-weight:600; }
+
+/* When the employee bar is visible, push the rest of the app down so nothing overlaps.
+   The bar now wraps its own content (name, greeting, online chip, inline stats) rather
+   than needing a second stacked bar, so a smaller offset is enough — but it can still
+   wrap onto 2 lines on narrow screens, hence the taller mobile value below. */
+body.has-emp-bar #mainScreen{ padding-top:var(--emp-bar-h, 54px); }
+/* The Welcome/Greeting bar is position:fixed at the very top so it never scrolls away.
+   The app's own sticky header (logo strip + topbar) must stick BELOW it, not at top:0,
+   or it would slide up and overlap/hide the fixed employee bar while scrolling.
+   --emp-bar-h is measured live in JS (see syncEmpBarOffset) because the bar's real
+   height changes when its content wraps onto 2 lines, and a hardcoded px value here
+   caused the ticker bar to get tucked under it while scrolling. */
+body.has-emp-bar .app-header-fixed{ top:var(--emp-bar-h, 54px); }
+/* Employee sessions already show their own Logout button in the welcome bar above —
+   hide the header's Logout button in that mode so only ONE Logout button is ever visible. */
+body.has-emp-bar header .user-block .logout-btn{ display:none; }
+
+/* Modals */
+.emp-modal-overlay{
+  position:fixed; inset:0; z-index:20000;
+  background:rgba(3,8,14,0.72);
+  display:flex; align-items:center; justify-content:center;
+  padding:16px;
+}
+.emp-modal-box{
+  position:relative;
+  background: var(--surface, #0E1A2B);
+  border:1px solid var(--border, #203859);
+  border-radius:var(--radius, 12px);
+  padding:24px; width:100%; max-width:380px;
+  color: var(--text, #EAF0F6);
+  font-family:'Inter', sans-serif;
+}
+.emp-modal-box h2{ margin-bottom:8px; }
+.emp-modal-box .field{ margin-top:12px; }
+.emp-modal-box .field label{ font-size:12px; color: var(--text-muted, #8FA0B5); display:block; margin-bottom:4px; }
+.emp-modal-box .field input{
+  width:100%; padding:10px 12px; background: var(--surface-2, #14253D);
+  border:1px solid var(--border, #203859); border-radius:8px; color:var(--text, #EAF0F6); font-size:13px;
+}
+.emp-pw-rules{ font-size:11.5px; color: var(--text-muted, #8FA0B5); margin-top:8px; }
+.emp-modal-box .login-btn{ width:100%; margin-top:16px; }
+.emp-modal-box .login-error{ margin-top:8px; }
+
+/* "Currently Online" agents modal */
+.online-agents-box{ max-width:340px; }
+.online-agents-box h2{
+  font-size:18px; display:flex; align-items:center;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid transparent;
+  animation: onlineHeaderGlow 7s linear infinite;
+}
+@keyframes onlineHeaderGlow{
+  0%,  100%{ border-color:#33C9B0; box-shadow:0 0 10px rgba(51,201,176,0.55); }
+  14.3%{     border-color:#59D1FF; box-shadow:0 0 10px rgba(89,209,255,0.55); }
+  28.6%{     border-color:#7C83FD; box-shadow:0 0 10px rgba(124,131,253,0.55); }
+  42.9%{     border-color:#B166FF; box-shadow:0 0 10px rgba(177,102,255,0.55); }
+  57.1%{     border-color:#FF5E7E; box-shadow:0 0 10px rgba(255,94,126,0.55); }
+  71.4%{     border-color:#E3A857; box-shadow:0 0 10px rgba(227,168,87,0.55); }
+  85.7%{     border-color:#FFE066; box-shadow:0 0 10px rgba(255,224,102,0.55); }
+}
+.online-agents-list{
+  margin-top:14px; max-height:320px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:6px;
+}
+.online-agent-row{
+  display:flex; align-items:center; gap:8px;
+  padding:9px 10px;
+  background: var(--surface-2, #14253D);
+  border:1px solid var(--border, #203859);
+  border-radius:8px;
+  font-size:13px;
+  animation: onlineRowGlow 2.6s ease-in-out infinite;
+}
+/* প্রতিটা agent row আলাদা আলাদা রঙে সাইকেল করবে (৬টা রঙ পালা করে) */
+.online-agent-row:nth-child(6n+1){ --row-color:#33C9B0; animation-delay:0s; }
+.online-agent-row:nth-child(6n+2){ --row-color:#E3A857; animation-delay:.3s; }
+.online-agent-row:nth-child(6n+3){ --row-color:#FF5E7E; animation-delay:.6s; }
+.online-agent-row:nth-child(6n+4){ --row-color:#59D1FF; animation-delay:.9s; }
+.online-agent-row:nth-child(6n+5){ --row-color:#7C83FD; animation-delay:1.2s; }
+.online-agent-row:nth-child(6n+6){ --row-color:#B166FF; animation-delay:1.5s; }
+.online-agent-row .pulse-dot{
+  background: var(--row-color, var(--agent));
+  box-shadow:0 0 0 0 var(--row-color, rgba(51,201,176,0.6));
+}
+.online-agent-row .online-agent-name{ color: var(--row-color, var(--text)); }
+@keyframes onlineRowGlow{
+  0%,100%{
+    box-shadow:0 0 3px var(--row-color, #33C9B0);
+    border-color:var(--border, #203859);
+  }
+  50%{
+    box-shadow:0 0 13px var(--row-color, #33C9B0);
+    border-color:var(--row-color, #33C9B0);
+  }
+}
+.online-agent-name{ font-weight:600; flex:1; }
+.online-agent-tabs{
+  font-size:10.5px; color: var(--text-muted, #8FA0B5);
+  background: var(--surface-3, #1B3150);
+  padding:2px 6px; border-radius:6px;
+}
+.online-agents-loading, .online-agents-empty{
+  color: var(--text-muted, #8FA0B5); font-size:13px; padding:10px 2px;
+}
+.online-agents-anon{
+  color: var(--text-muted, #8FA0B5); font-size:11.5px; padding:6px 2px 2px; font-style:italic;
+}
+
+@media (max-width: 640px){
+  #employeeWelcomeBar{ flex-direction:column; align-items:flex-start; gap:6px; }
+}
+
+/* "Logging out..." message overlay */
+.logout-msg-overlay{
+  position:fixed; inset:0; z-index:30000;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(3,8,14,0.72);
+  opacity:0; pointer-events:none;
+  transition:opacity .3s ease;
+}
+.logout-msg-overlay.show{ opacity:1; pointer-events:auto; }
+.logout-msg-box{
+  background: var(--surface, #0E1A2B);
+  border:1px solid var(--border, #203859);
+  border-radius:16px;
+  padding:34px 42px;
+  text-align:center;
+  box-shadow:0 20px 50px rgba(0,0,0,.5);
+  transform:scale(.92);
+  transition:transform .3s ease;
+}
+.logout-msg-overlay.show .logout-msg-box{ transform:scale(1); }
+.logout-msg-spinner{
+  width:34px; height:34px; margin:0 auto 16px;
+  border-radius:50%;
+  border:3px solid var(--border, #203859);
+  border-top-color: var(--agent, #33C9B0);
+  animation: logoutMsgSpin .8s linear infinite;
+}
+@keyframes logoutMsgSpin{ to{ transform:rotate(360deg); } }
+.logout-msg-line1{
+  font-family:'Inter', sans-serif;
+  font-size:18px; font-weight:700;
+  color: var(--text, #EAF0F6);
+}
+.logout-msg-dots span{
+  animation: logoutMsgDots 1.2s infinite;
+  opacity:0;
+}
+.logout-msg-dots span:nth-child(1){ animation-delay:0s; }
+.logout-msg-dots span:nth-child(2){ animation-delay:.2s; }
+.logout-msg-dots span:nth-child(3){ animation-delay:.4s; }
+@keyframes logoutMsgDots{
+  0%,80%,100%{ opacity:0; }
+  40%{ opacity:1; }
+}
+.logout-msg-line2{
+  margin-top:8px;
+  font-family:'Inter', sans-serif;
+  font-size:13px;
+  color: var(--text-muted, #8FA0B5);
+}
+</style>
+
+<script>
+/* =====================================================================
+   NEW ADDITIVE SCRIPT — Employee Login System + Google Sheets Integration
+   এই ব্লকটি সম্পূর্ণ নতুন এবং আলাদা। এটি বিদ্যমান কোনো ফাংশন/ভ্যারিয়েবল
+   পরিবর্তন করে না।
+
+   ⚠️ এই সিস্টেমটি একটি আলাদা Google Sheet এবং আলাদা Apps Script প্রজেক্ট
+   ব্যবহার করে (Agent_Master, Login_Log, Activity_Log, Daily_Summary,
+   Audit_Log)। তাই এর জন্য নিচে সম্পূর্ণ আলাদা একটি Web App URL বসাতে হবে —
+   উপরের পুরনো WEB_APP_URL-এর সাথে এর কোনো সম্পর্ক নেই, সেটা স্পর্শ করা হয়নি।
+   ===================================================================== */
+
+/* 👉 এখানে শুধু আপনার Employee Login Apps Script প্রজেক্টের /exec URL বসান */
+const EMP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwktIZBumwKZM7z9rUZsT6vDoj1PBsMgcZL6VyH8HejBnBsx879O3Jy1dSLaGAiOLjr/exec";
+
+const EMP_HEARTBEAT_MS = 60 * 1000;         // Activity_Log আপডেট প্রতি ৬০ সেকেন্ডে
+const EMP_AUTO_LOGOUT_MS = 30 * 60 * 1000;  // ৩০ মিনিট নিষ্ক্রিয় থাকলে অটো লগ-আউট
+
+let empSessionId = null;
+let empEmployeeId = null;
+let empAgentName = null;
+let empSessionStartEpoch = null;
+let empTodayPriorSeconds = 0;
+let empSessionTimerInterval = null;
+let empHeartbeatInterval = null;
+let empGreetingInterval = null;
+let empInactivityTimeout = null;
+let superAdminToken = null;
+
+/* ---------- small helpers ---------- */
+function getBrowserName(){
+  const ua = navigator.userAgent;
+  if(ua.includes('Edg/')) return 'Edge';
+  if(ua.includes('Chrome/') && !ua.includes('OPR')) return 'Chrome';
+  if(ua.includes('Firefox/')) return 'Firefox';
+  if(ua.includes('Safari/') && !ua.includes('Chrome')) return 'Safari';
+  if(ua.includes('OPR')) return 'Opera';
+  return 'Unknown';
+}
+function getDeviceType(){
+  const ua = navigator.userAgent;
+  if(/Mobi|Android/i.test(ua)) return 'Mobile';
+  if(/Tablet|iPad/i.test(ua)) return 'Tablet';
+  return 'Desktop';
+}
+async function getClientIP(){
+  try{
+    const res = await fetch('https://api.ipify.org?format=json');
+    const d = await res.json();
+    return d.ip || '';
+  }catch(e){ return ''; }
+}
+function secToHMSClient(sec){
+  sec = Math.max(0, Math.round(sec));
+  const h = String(Math.floor(sec/3600)).padStart(2,'0');
+  const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
+  const s = String(sec%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+async function empApiPost(action, payload){
+  const res = await fetch(`${EMP_WEB_APP_URL}?action=${encodeURIComponent(action)}`, {
+    method: 'POST',
+    body: JSON.stringify(payload || {})
+  });
+  return res.json();
+}
+async function empApiGet(action, params){
+  const qs = new URLSearchParams(Object.assign({ action }, params || {})).toString();
+  const res = await fetch(`${EMP_WEB_APP_URL}?${qs}`);
+  return res.json();
+}
+
+/* ---------- login screen reset (Employee Sign-in + Staff Access are both always visible now) ---------- */
+function backToMainLogin(){
+  document.getElementById('empId').value = '';
+  document.getElementById('empPassword').value = '';
+  document.getElementById('empLoginError').textContent = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('saId').value = '';
+  selectRole('agent');
+}
+function openForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'flex'; }
+function closeForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'none'; }
+
+/* ---------- Show/Hide Password (Employee Sign in) ---------- */
+function toggleEmpPasswordVisibility(){
+  const pass = document.getElementById('empPassword');
+  const chk = document.getElementById('empShowPassword');
+  if(!pass || !chk) return;
+  pass.type = chk.checked ? 'text' : 'password';
+}
+/* ---------- Employee Login ---------- */
+async function employeeLogin(){
+  const empId = document.getElementById('empId').value.trim();
+  const pass = document.getElementById('empPassword').value;
+  const errBox = document.getElementById('empLoginError');
+  const btn = document.getElementById('empLoginBtn');
+  errBox.textContent = '';
+  if(!empId || !pass){ errBox.textContent = 'Employee ID ও Password দিন।'; return; }
+
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try{
+    const ip = await getClientIP();
+    const data = await empApiPost('employeeLogin', {
+      employeeId: empId, password: pass,
+      browser: getBrowserName(), device: getDeviceType(), ip
+    });
+    btn.disabled = false; btn.textContent = 'Enter as Employee/Agent';
+
+    if(!data || data.ok !== true){
+      errBox.textContent = (data && data.error) || 'Invalid Employee ID or Password';
+      return;
+    }
+
+    // Stash pending session info; finalize after forced password change (if any)
+    window._pendingEmpSession = data;
+
+    if(data.forceChangePassword){
+      document.getElementById('forceChangeModal').style.display = 'flex';
+    }else{
+      completeEmployeeLogin(data);
+    }
+  }catch(e){
+    console.error('Employee login failed', e);
+    btn.disabled = false; btn.textContent = 'Enter as Employee/Agent';
+    errBox.textContent = 'Server is temporarily unavailable. Please try again in 2 minutes.';
+  }
+}
+
+function completeEmployeeLogin(data){
+  empSessionId = data.sessionId;
+  empEmployeeId = data.employeeId;
+  empAgentName = data.agentName;
+  empSessionStartEpoch = Date.now();
+  empTodayPriorSeconds = Number(data.todayTotalSeconds) || 0;
+
+  localStorage.setItem('qa_emp_session_id', empSessionId);
+  localStorage.setItem('qa_emp_id', empEmployeeId);
+  localStorage.setItem('qa_emp_name', empAgentName);
+  localStorage.setItem('qa_emp_session_start', empSessionStartEpoch);
+  localStorage.setItem('qa_emp_today_prior', empTodayPriorSeconds);
+  localStorage.setItem('qa_emp_login_time_display', data.loginTime || '');
+  localStorage.setItem('qa_emp_prev_login', data.previousLogin || '--');
+  localStorage.setItem('qa_emp_last_activity', Date.now());
+
+  // Track a running login count for this employee on this device (not cleared on logout)
+  const loginCountKey = `qa_emp_login_count_${empEmployeeId}`;
+  localStorage.setItem(loginCountKey, (Number(localStorage.getItem(loginCountKey)) || 0) + 1);
+
+  // Employee Login opens the Agent Dashboard by default — unless Super Admin has
+  // promoted this employee to Admin (data.role === 'admin'), in which case they get
+  // Admin-only access too, same as a normal Admin login.
+  currentRole = (data.role && data.role.toLowerCase() === 'admin') ? 'admin' : 'agent';
+  localStorage.setItem('qa_role', currentRole);
+  localStorage.setItem('qa_login_time', Date.now());
+
+  enterApp();
+  showEmployeeWelcomeBar();
+  startEmployeeSessionTracking();
+  showLoginPopupIfNeeded();
+}
+
+/* Convert a raw "HH:MM:SS" (24-hour) string to a 12-hour "hh:mm:ss am/pm" string,
+   matching the am/pm style already used elsewhere on the login screen. */
+function to12Hour(timeStr){
+  if(!timeStr) return timeStr;
+  const m = String(timeStr).match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+  if(!m) return timeStr;
+  let h = Number(m[1]);
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12; if(h === 0) h = 12;
+  return `${String(h).padStart(2,'0')}:${m[2]}:${m[3]} ${ampm}`;
+}
+
+/* Sheet cells storing only a time-of-day (no real date) come back from Apps Script as a
+   full JS Date.toString(), whose date portion is the Google Sheets time-only epoch
+   ("Sat Dec 30 1899") plus a "GMT+xxxx (Time Zone Name)" suffix. Strip that noise out and
+   show the REAL weekday (computed from the DD-MM-YYYY date we do have) plus a clean time. */
+function formatPreviousLogin(raw){
+  if(!raw || raw === '--') return '--';
+
+  const dateMatch = raw.match(/^(\d{2})-(\d{2})-(\d{4})/);
+  const timeMatch = raw.match(/(\d{1,2}:\d{2}:\d{2})/);
+
+  if(!dateMatch) return raw.replace(/\s*GMT[^\n]*$/i, '').trim(); // fallback: just strip GMT/tz noise
+
+  const [, dd, mm, yyyy] = dateMatch;
+  const realDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+  const weekday = realDate.toLocaleDateString('en-US', { weekday: 'long' });
+  const datePart = `${dd}-${mm}-${yyyy}`;
+  const timePart = timeMatch ? to12Hour(timeMatch[1]) : '';
+
+  return timePart ? `${weekday}, ${datePart}, ${timePart}` : `${weekday}, ${datePart}`;
+}
+
+/* Same Good Morning/Afternoon/Evening/Night logic as the login-screen welcome area,
+   reused here so the post-login bar's greeting always matches the time of day. */
+function currentGreetingText(){
+  const h = new Date().getHours();
+  if(h>=5 && h<12) return 'Good Morning';
+  if(h>=12 && h<17) return 'Good Afternoon';
+  if(h>=17 && h<20) return 'Good Evening';
+  return 'Good Night';
+}
+function updateEmpWelcomeGreeting(){
+  const el = document.getElementById('empWelcomeGreeting');
+  if(el) el.textContent = currentGreetingText();
+}
+
+/* Measures the welcome bar's ACTUAL rendered height (it can wrap onto 2 lines on
+   medium-width screens) and stores it in --emp-bar-h so the sticky ticker header
+   below it (top:var(--emp-bar-h)) always sits right underneath instead of being
+   tucked/hidden under it while scrolling. */
+function syncEmpBarOffset(){
+  const bar = document.getElementById('employeeWelcomeBar');
+  if(!bar || bar.style.display === 'none') return;
+  const h = bar.offsetHeight;
+  if(h) document.documentElement.style.setProperty('--emp-bar-h', h + 'px');
+}
+
+function showEmployeeWelcomeBar(){
+  document.getElementById('employeeWelcomeBar').style.display = 'flex';
+  document.body.classList.add('has-emp-bar');
+  document.getElementById('empWelcomeName').textContent = (empAgentName || localStorage.getItem('qa_emp_name') || '').toUpperCase();
+  updateEmpWelcomeGreeting();
+  if(empGreetingInterval) clearInterval(empGreetingInterval);
+  empGreetingInterval = setInterval(updateEmpWelcomeGreeting, 60000); // refresh every minute so it stays fixed AND accurate
+  document.getElementById('empStatLoginTime').textContent = to12Hour(localStorage.getItem('qa_emp_login_time_display')) || '--:--:--';
+  document.getElementById('empStatPrevLogin').textContent = formatPreviousLogin(localStorage.getItem('qa_emp_prev_login'));
+  document.getElementById('empStatId').textContent = empEmployeeId || localStorage.getItem('qa_emp_id') || '--';
+  document.getElementById('empStatDevice').textContent = getDeviceType();
+  document.getElementById('empStatBrowser').textContent = getBrowserName();
+
+  const ipEl = document.getElementById('empStatCurrentIP');
+  ipEl.textContent = 'Loading...';
+  getClientIP().then(ip=>{ ipEl.textContent = ip || 'Unavailable'; syncEmpBarOffset(); });
+
+  requestAnimationFrame(syncEmpBarOffset);
+  if(!window.__empBarResizeBound){
+    window.addEventListener('resize', syncEmpBarOffset);
+    window.__empBarResizeBound = true;
+  }
+}
+
+function startEmployeeSessionTracking(){
+  if(empSessionTimerInterval) clearInterval(empSessionTimerInterval);
+  if(empHeartbeatInterval) clearInterval(empHeartbeatInterval);
+
+  empSessionTimerInterval = setInterval(()=>{
+    const elapsed = Math.round((Date.now() - Number(empSessionStartEpoch)) / 1000);
+    document.getElementById('empStatSession').textContent = secToHMSClient(elapsed);
+    document.getElementById('empStatTodayTotal').textContent = secToHMSClient(empTodayPriorSeconds + elapsed);
+  }, 1000);
+
+  empHeartbeatInterval = setInterval(sendEmpHeartbeat, EMP_HEARTBEAT_MS);
+  sendEmpHeartbeat();
+
+  setupInactivityWatch();
+}
+
+async function sendEmpHeartbeat(){
+  if(!empEmployeeId) return;
+  try{
+    await empApiPost('heartbeat', {
+      employeeId: empEmployeeId,
+      page: (document.querySelector('.nav-item.active') || {}).textContent || currentTab,
+      status: 'Active'
+    });
+  }catch(e){ console.error('Heartbeat failed', e); }
+}
+
+/* ---------- Inactivity + auto logout (30 min / tab close) ---------- */
+function setupInactivityWatch(){
+  ['mousemove','keydown','click','scroll','touchstart'].forEach(evt=>{
+    window.addEventListener(evt, resetInactivityTimer, { passive: true });
+  });
+  resetInactivityTimer();
+
+  window.addEventListener('beforeunload', ()=>{
+    if(!empSessionId) return;
+    const payload = JSON.stringify({ action:'employeeLogout', employeeId: empEmployeeId, sessionId: empSessionId, logoutType: 'Auto' });
+    navigator.sendBeacon && navigator.sendBeacon(`${EMP_WEB_APP_URL}?action=employeeLogout`, new Blob([payload], {type:'text/plain'}));
+  });
+}
+function resetInactivityTimer(){
+  localStorage.setItem('qa_emp_last_activity', Date.now());
+  if(empInactivityTimeout) clearTimeout(empInactivityTimeout);
+  empInactivityTimeout = setTimeout(()=> employeeLogout('Auto'), EMP_AUTO_LOGOUT_MS);
+}
+
+async function employeeLogout(logoutType){
+  try{
+    if(empEmployeeId && empSessionId){
+      await empApiPost('employeeLogout', { employeeId: empEmployeeId, sessionId: empSessionId, logoutType: logoutType || 'Manual' });
+    }
+  }catch(e){ console.error('Logout log failed', e); }
+
+  // Track a running logout count for this employee on this device (not cleared below)
+  if(empEmployeeId){
+    const logoutCountKey = `qa_emp_logout_count_${empEmployeeId}`;
+    localStorage.setItem(logoutCountKey, (Number(localStorage.getItem(logoutCountKey)) || 0) + 1);
+  }
+
+  ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity']
+    .forEach(k=>localStorage.removeItem(k));
+
+  empSessionId = null; empEmployeeId = null; empAgentName = null;
+  if(empSessionTimerInterval) clearInterval(empSessionTimerInterval);
+  if(empHeartbeatInterval) clearInterval(empHeartbeatInterval);
+  if(empGreetingInterval) clearInterval(empGreetingInterval);
+  if(empInactivityTimeout) clearTimeout(empInactivityTimeout);
+
+  document.getElementById('employeeWelcomeBar').style.display = 'none';
+  document.body.classList.remove('has-emp-bar');
+
+  doLogout(); // existing function — hides mainScreen, shows loginScreen
+  backToMainLogin();
+}
+
+/* Header "Logout" button (top-right) and the Employee welcome-bar "Logout" button must always
+   do the exact same thing. If an employee session is active, route through the full
+   employeeLogout cleanup; otherwise (plain Agent/Admin login) just doLogout(). */
+async function handleLogoutClick(){
+  const overlay = document.getElementById('logoutMessageOverlay');
+  if(overlay) overlay.classList.add('show');
+  try{
+    if(localStorage.getItem('qa_emp_session_id')){
+      await employeeLogout('Manual');
+    }else{
+      doLogout();
+    }
+  }finally{
+    if(overlay) overlay.classList.remove('show');
+  }
+}
+
+/* Restore an employee session after a page refresh (within the still-active session) */
+function restoreEmployeeSessionIfAny(){
+  const sid = localStorage.getItem('qa_emp_session_id');
+  const eid = localStorage.getItem('qa_emp_id');
+  const lastActive = Number(localStorage.getItem('qa_emp_last_activity') || 0);
+  if(!sid || !eid) return;
+
+  if(Date.now() - lastActive > EMP_AUTO_LOGOUT_MS){
+    // already timed out while tab was closed/inactive — clean up quietly
+    ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity']
+      .forEach(k=>localStorage.removeItem(k));
+    return;
+  }
+
+  empSessionId = sid;
+  empEmployeeId = eid;
+  empAgentName = localStorage.getItem('qa_emp_name');
+  empSessionStartEpoch = Number(localStorage.getItem('qa_emp_session_start'));
+  empTodayPriorSeconds = Number(localStorage.getItem('qa_emp_today_prior') || 0);
+
+  // currentRole/mainScreen restoration is already handled by existing checkLoginSession()
+  if(currentRole === 'agent'){
+    showEmployeeWelcomeBar();
+    startEmployeeSessionTracking();
+  }
+}
+window.addEventListener('load', ()=> setTimeout(restoreEmployeeSessionIfAny, 300));
+
+/* ---------- Force password change (first login / after Super Admin reset) ---------- */
+async function submitForceChangePassword(){
+  const errBox = document.getElementById('forceChangeError');
+  const newPass = document.getElementById('forceNewPassword').value;
+  const confirmPass = document.getElementById('forceConfirmPassword').value;
+  errBox.textContent = '';
+  if(newPass !== confirmPass){ errBox.textContent = 'New password ও Confirm password মিলছে না।'; return; }
+
+  const pending = window._pendingEmpSession;
+  if(!pending){ errBox.textContent = 'Session expired, please login again.'; return; }
+
+  try{
+    const data = await empApiPost('changePassword', {
+      employeeId: pending.employeeId,
+      currentPassword: 'GTPL@123',
+      newPassword: newPass,
+      confirmPassword: confirmPass
+    });
+    if(!data || data.ok !== true){
+      errBox.textContent = (data && data.error) || 'Password change failed.';
+      return;
+    }
+    document.getElementById('forceChangeModal').style.display = 'none';
+    document.getElementById('forceNewPassword').value = '';
+    document.getElementById('forceConfirmPassword').value = '';
+    completeEmployeeLogin(pending);
+  }catch(e){
+    console.error('Force password change failed', e);
+    errBox.textContent = 'Server is temporarily unavailable. Please try again in 2 minutes.';
+  }
+}
+
+/* ---------- Voluntary change password (from welcome bar) ---------- */
+function openChangePasswordModal(){ document.getElementById('changePasswordModal').style.display = 'flex'; }
+function closeChangePasswordModal(){
+  document.getElementById('changePasswordModal').style.display = 'none';
+  document.getElementById('cpCurrentPassword').value = '';
+  document.getElementById('cpNewPassword').value = '';
+  document.getElementById('cpConfirmPassword').value = '';
+  document.getElementById('cpError').textContent = '';
+}
+async function submitChangePassword(){
+  const errBox = document.getElementById('cpError');
+  const current = document.getElementById('cpCurrentPassword').value;
+  const next = document.getElementById('cpNewPassword').value;
+  const confirm = document.getElementById('cpConfirmPassword').value;
+  errBox.textContent = '';
+  if(next !== confirm){ errBox.textContent = 'New password ও Confirm password মিলছে না।'; return; }
+
+  try{
+    const data = await empApiPost('changePassword', {
+      employeeId: empEmployeeId, currentPassword: current, newPassword: next, confirmPassword: confirm
+    });
+    if(!data || data.ok !== true){
+      errBox.textContent = (data && data.error) || 'Password change failed.';
+      return;
+    }
+    showToast('Password পরিবর্তন সফল হয়েছে।');
+    closeChangePasswordModal();
+  }catch(e){
+    console.error('Change password failed', e);
+    errBox.textContent = 'Server is temporarily unavailable. Please try again in 2 minutes.';
+  }
+}
+
+/* =====================================================================
+   SUPER ADMIN — full agent management + history/log downloads
+   ===================================================================== */
+async function superAdminLogin(){
+  const id = document.getElementById('saId').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  const errBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  errBox.textContent = '';
+  if(!id || !pass){ errBox.textContent = 'Super Admin ID ও Password দিন।'; return; }
+
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try{
+    const data = await empApiPost('superAdminLogin', { saId: id, saPassword: pass });
+    btn.disabled = false; btn.textContent = 'Login as Super Admin';
+    if(!data || data.ok !== true){
+      errBox.textContent = (data && data.error) || 'Invalid Super Admin credentials.';
+      return;
+    }
+    superAdminToken = data.token;
+    localStorage.setItem('qa_sa_token', superAdminToken);
+
+    currentRole = 'admin'; // reuse existing admin-only visibility rules
+    localStorage.setItem('qa_role', 'admin');
+    localStorage.setItem('qa_login_time', Date.now());
+    localStorage.setItem('qa_is_superadmin', '1');
+
+    enterApp();
+    document.querySelectorAll('.superadmin-only').forEach(el=> el.style.display = '');
+    switchTab('SUPERADMIN');
+    saLoadAgents();
+  }catch(e){
+    console.error('Super admin login failed', e);
+    btn.disabled = false; btn.textContent = 'Login as Super Admin';
+    errBox.textContent = 'Server is temporarily unavailable. Please try again in 2 minutes.';
+  }
+}
+
+async function saLoadAgents(){
+  const tbody = document.getElementById('saAgentTableBody');
+  tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+  try{
+    const data = await empApiGet('listAgents', { token: superAdminToken });
+    if(!data || data.ok !== true){ tbody.innerHTML = `<tr><td colspan="7">${(data&&data.error)||'Failed to load.'}</td></tr>`; return; }
+    if(!data.agents.length){ tbody.innerHTML = '<tr><td colspan="7">কোনো agent নেই।</td></tr>'; return; }
+    tbody.innerHTML = data.agents.map(a => {
+      const role = (a.role || 'agent').toLowerCase();
+      const isAdmin = role === 'admin';
+      return `
+      <tr>
+        <td>${a.employeeId}</td>
+        <td>${a.agentName || ''}</td>
+        <td>${a.team || ''}</td>
+        <td>${a.process || ''}</td>
+        <td>${isAdmin ? '<b style="color:var(--admin);">Admin</b>' : 'Agent'}</td>
+        <td>${a.status || ''}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn small" onclick="saActivate('${a.employeeId}')">Activate</button>
+          <button class="btn small" onclick="saDeactivate('${a.employeeId}')">Deactivate</button>
+          <button class="btn small" onclick="saReset('${a.employeeId}')">Reset PW</button>
+          ${isAdmin
+            ? `<button class="btn small" onclick="saMakeAgent('${a.employeeId}')">Make Agent</button>`
+            : `<button class="btn small" onclick="saMakeAdmin('${a.employeeId}')">Make Admin</button>`}
+          <button class="btn small danger" onclick="saDelete('${a.employeeId}')">Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    console.error('Load agents failed', e);
+    tbody.innerHTML = '<tr><td colspan="7">Server error.</td></tr>';
+  }
+}
+
+/* Promote/demote an employee between Agent and Admin roles.
+   On next login, completeEmployeeLogin() reads data.role from the login response
+   and grants Admin-only UI access accordingly. */
+async function saMakeAdmin(id){
+  if(!confirm(`${id} কে Admin বানাতে চান? এরপর সে লগইন করলে Admin অ্যাক্সেস পাবে।`)) return;
+  const data = await empApiPost('setAgentRole', { token: superAdminToken, employeeId: id, role: 'admin' });
+  if(!data || data.ok !== true){ showToast((data && data.error) || 'Role update failed.'); return; }
+  showToast(`${id} এখন Admin।`);
+  saLoadAgents();
+}
+async function saMakeAgent(id){
+  if(!confirm(`${id} কে আবার সাধারণ Agent বানাতে চান?`)) return;
+  const data = await empApiPost('setAgentRole', { token: superAdminToken, employeeId: id, role: 'agent' });
+  if(!data || data.ok !== true){ showToast((data && data.error) || 'Role update failed.'); return; }
+  showToast(`${id} এখন Agent।`);
+  saLoadAgents();
+}
+
+/* Super Admin's own password change/reset */
+async function saChangeOwnPassword(){
+  const errBox = document.getElementById('saPasswordChangeError');
+  errBox.textContent = '';
+  const current = document.getElementById('saCurrentPassword').value;
+  const next = document.getElementById('saNewPassword').value;
+  const confirm_ = document.getElementById('saConfirmNewPassword').value;
+  if(!current || !next || !confirm_){ errBox.textContent = 'সবগুলো ফিল্ড পূরণ করুন।'; return; }
+  if(next !== confirm_){ errBox.textContent = 'New password ও Confirm password মিলছে না।'; return; }
+
+  const data = await empApiPost('superAdminChangePassword', {
+    token: superAdminToken, currentPassword: current, newPassword: next, confirmPassword: confirm_
+  });
+  if(!data || data.ok !== true){ errBox.textContent = (data && data.error) || 'Password change failed.'; return; }
+  document.getElementById('saCurrentPassword').value = '';
+  document.getElementById('saNewPassword').value = '';
+  document.getElementById('saConfirmNewPassword').value = '';
+  showToast('Super Admin password পরিবর্তন সফল হয়েছে।');
+}
+
+async function saCreateAgent(){
+  const errBox = document.getElementById('saCreateError');
+  errBox.textContent = '';
+  const employeeId = document.getElementById('saNewEmpId').value.trim();
+  const agentName = document.getElementById('saNewEmpName').value.trim();
+  const team = document.getElementById('saNewEmpTeam').value.trim();
+  const process_ = document.getElementById('saNewEmpProcess').value.trim();
+  if(!employeeId || !agentName){ errBox.textContent = 'Employee ID ও Agent Name আবশ্যক।'; return; }
+
+  const data = await empApiPost('createAgent', { token: superAdminToken, employeeId, agentName, team, process: process_ });
+  if(!data || data.ok !== true){ errBox.textContent = (data && data.error) || 'Create failed.'; return; }
+  document.getElementById('saNewEmpId').value = '';
+  document.getElementById('saNewEmpName').value = '';
+  document.getElementById('saNewEmpTeam').value = '';
+  document.getElementById('saNewEmpProcess').value = '';
+  showToast('নতুন agent তৈরি হয়েছে। ডিফল্ট পাসওয়ার্ড: GTPL@123');
+  saLoadAgents();
+}
+
+async function saActivate(id){
+  await empApiPost('activateAgent', { token: superAdminToken, employeeId: id });
+  saLoadAgents();
+}
+async function saDeactivate(id){
+  await empApiPost('deactivateAgent', { token: superAdminToken, employeeId: id });
+  saLoadAgents();
+}
+async function saReset(id){
+  if(!confirm(`${id} এর পাসওয়ার্ড রিসেট করে ডিফল্ট (GTPL@123) করে দিতে চান?`)) return;
+  await empApiPost('resetPassword', { token: superAdminToken, employeeId: id });
+  showToast('Password reset করা হয়েছে (default: GTPL@123)।');
+  saLoadAgents();
+}
+async function saDelete(id){
+  if(!confirm(`${id} কে স্থায়ীভাবে ডিলিট করতে চান?`)) return;
+  await empApiPost('deleteAgent', { token: superAdminToken, employeeId: id });
+  saLoadAgents();
+}
+
+/* Download any history sheet as .xlsx using the XLSX library already loaded on this page */
+async function saDownload(action, sheetLabel){
+  try{
+    const data = await empApiGet(action, { token: superAdminToken });
+    if(!data || data.ok !== true){ showToast((data && data.error) || 'Download failed.'); return; }
+    const rows = data.rows || [];
+    if(!rows.length){ showToast('কোনো ডাটা নেই।'); return; }
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetLabel);
+    XLSX.writeFile(wb, `${sheetLabel}_${Date.now()}.xlsx`);
+  }catch(e){
+    console.error('Download failed', e);
+    showToast('Download ব্যর্থ হয়েছে।');
+  }
+}
+
+/* Restore super admin token on refresh (mirrors existing checkLoginSession behaviour) */
+(function restoreSuperAdminIfAny(){
+  if(localStorage.getItem('qa_is_superadmin') === '1' && localStorage.getItem('qa_role') === 'admin'){
+    superAdminToken = localStorage.getItem('qa_sa_token');
+    setTimeout(()=>{
+      const el = document.querySelector('.superadmin-only');
+      if(el) document.querySelectorAll('.superadmin-only').forEach(x=> x.style.display = '');
+    }, 500);
+  }
+})();
+
+/* Clear super-admin flag on normal logout too (best-effort, non-destructive) */
+const _origDoLogout = doLogout;
+doLogout = function(){
+  localStorage.removeItem('qa_is_superadmin');
+  localStorage.removeItem('qa_sa_token');
+  superAdminToken = null;
+  _origDoLogout();
+};
+</script>
+<button id="backToTopBtn" title="Back to Top" aria-label="Back to Top" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+  <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+</button>
+<script>
+(function(){
+  var btn = document.getElementById('backToTopBtn');
+  function toggleBtn(){
+    if(window.scrollY > 250){
+      btn.classList.add('show');
+    }else{
+      btn.classList.remove('show');
+    }
+  }
+  window.addEventListener('scroll', toggleBtn, {passive:true});
+  toggleBtn();
+})();
+</script>
+</body>
+</html>
