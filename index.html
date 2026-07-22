@@ -1654,6 +1654,106 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 .stat-card .value{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;}
 .stat-card .value.gold{color:var(--admin);}
 .stat-card .value.teal{color:var(--agent);}
+/* ===== HOME PAGE — Score-wise Conditional Formatting + Animation (scoped to #panel-HOME only) ===== */
+#panel-HOME .stat-card{
+  position:relative;
+  overflow:hidden;
+  padding-left:22px;
+  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s ease;
+  animation: homeCardRise .6s cubic-bezier(.22,1,.36,1) both;
+}
+#panel-HOME .stat-card:hover{
+  transform: translateY(-5px);
+  box-shadow: 0 14px 30px -14px rgba(0,0,0,0.5);
+}
+#panel-HOME .stat-row .stat-card:nth-child(1){ animation-delay:.05s; }
+#panel-HOME .stat-row .stat-card:nth-child(2){ animation-delay:.16s; }
+#panel-HOME .stat-row .stat-card:nth-child(3){ animation-delay:.27s; }
+@keyframes homeCardRise{
+  from{ opacity:0; transform:translateY(16px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+#panel-HOME .stat-card::before{
+  content:'';
+  position:absolute; left:0; top:0; bottom:0; width:4px;
+  background:var(--status-color, var(--border));
+  box-shadow: 0 0 10px var(--status-color, transparent);
+}
+#panel-HOME .stat-card .score-bar-track{
+  position:relative; height:6px; border-radius:4px; background:var(--surface-3); margin-top:14px; overflow:hidden;
+}
+#panel-HOME .stat-card .score-bar-fill{
+  position:absolute; inset:0 auto 0 0; width:0%; border-radius:4px;
+  background:var(--status-color, var(--agent));
+  animation: homeScoreFillIn 1.15s cubic-bezier(.22,1,.36,1) forwards;
+  animation-delay:.35s;
+}
+@keyframes homeScoreFillIn{ to{ width: var(--fill-w, 0%); } }
+#panel-HOME .stat-card.status-top{ --status-color:var(--top); background:linear-gradient(160deg, rgba(227,168,87,0.12), var(--surface) 55%); border-color:rgba(227,168,87,0.4); }
+#panel-HOME .stat-card.status-excellent{ --status-color:var(--excellent); background:linear-gradient(160deg, rgba(63,191,127,0.12), var(--surface) 55%); border-color:rgba(63,191,127,0.4); }
+#panel-HOME .stat-card.status-good{ --status-color:var(--good); background:linear-gradient(160deg, rgba(224,195,65,0.12), var(--surface) 55%); border-color:rgba(224,195,65,0.4); }
+#panel-HOME .stat-card.status-average{ --status-color:var(--average); background:linear-gradient(160deg, rgba(224,138,63,0.12), var(--surface) 55%); border-color:rgba(224,138,63,0.4); }
+#panel-HOME .stat-card.status-need{ --status-color:var(--need); background:linear-gradient(160deg, rgba(224,82,74,0.12), var(--surface) 55%); border-color:rgba(224,82,74,0.4); }
+#panel-HOME .badge{ animation: homeBadgePop .5s cubic-bezier(.22,1,.36,1) both; animation-delay:.5s; }
+@keyframes homeBadgePop{ from{ opacity:0; transform:scale(.85); } to{ opacity:1; transform:scale(1); } }
+#panel-HOME .chart-box{ transition: box-shadow .35s ease, border-color .35s ease; }
+#panel-HOME .chart-box:hover{ border-color:var(--agent); box-shadow:0 0 0 1px rgba(51,201,176,0.15), 0 12px 26px -16px rgba(0,0,0,0.55); }
+/* ---- Home page: Call Quality Score report-style tables with glowing headers ---- */
+#panel-HOME .qcr-section{
+  margin-bottom:24px;
+  animation: homeCardRise .6s cubic-bezier(.22,1,.36,1) both;
+}
+#panel-HOME .qcr-header{
+  position:relative;
+  padding:13px 18px;
+  border-radius:var(--radius) var(--radius) 0 0;
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:14.5px;
+  color:#fff;
+  background-size:220% 220%;
+  animation: qcrHeaderSheen 6s ease infinite, qcrHeaderGlow 2.6s ease-in-out infinite;
+}
+#panel-HOME .qcr-header .qcr-title-text{
+  position:relative;
+  display:inline-block;
+  animation: qcrTextGlow 2.6s ease-in-out infinite;
+}
+#panel-HOME .qcr-header.qcr-catv{ --glow-color:rgba(31,169,143,.65); background-image:linear-gradient(115deg,#0E7C6B,#1FA98F,#0E7C6B); }
+#panel-HOME .qcr-header.qcr-bbtech{ --glow-color:rgba(62,138,224,.65); background-image:linear-gradient(115deg,#2563C9,#3E8AE0,#2563C9); }
+#panel-HOME .qcr-header.qcr-bbrenewal{ --glow-color:rgba(154,95,224,.65); background-image:linear-gradient(115deg,#6A3FC7,#9A5FE0,#6A3FC7); }
+@keyframes qcrHeaderSheen{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+@keyframes qcrHeaderGlow{
+  0%,100%{ box-shadow:0 0 12px var(--glow-color, rgba(255,255,255,.3)); }
+  50%{ box-shadow:0 0 26px var(--glow-color, rgba(255,255,255,.65)), 0 0 42px var(--glow-color, rgba(255,255,255,.25)); }
+}
+@keyframes qcrTextGlow{
+  0%,100%{ text-shadow:0 0 4px rgba(255,255,255,.25); }
+  50%{ text-shadow:0 0 12px rgba(255,255,255,.85); }
+}
+#panel-HOME .qcr-table-wrap{ margin-bottom:0; border-radius:0 0 var(--radius) var(--radius); border-top:none; }
+#panel-HOME .qcr-pill{
+  display:inline-block;
+  padding:4px 13px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:12px;
+  font-family:'IBM Plex Mono',monospace;
+}
+#panel-HOME .qcr-pill.excellent{ background:rgba(63,191,127,0.18); color:var(--excellent); border:1px solid rgba(63,191,127,0.4); }
+#panel-HOME .qcr-pill.good{ background:rgba(224,195,65,0.18); color:var(--good); border:1px solid rgba(224,195,65,0.4); }
+#panel-HOME .qcr-pill.average{ background:rgba(224,138,63,0.18); color:var(--average); border:1px solid rgba(224,138,63,0.4); }
+#panel-HOME .qcr-pill.need{ background:rgba(224,82,74,0.18); color:var(--need); border:1px solid rgba(224,82,74,0.4); }
+#panel-HOME tr.qcr-grand-total td{
+  background:var(--surface-2);
+  font-weight:800;
+  border-top:2px solid var(--border);
+  color:var(--text);
+}
 .best-achiever-value{
   animation: bestAchieverGlow 2.8s ease-in-out infinite;
 }
@@ -4845,23 +4945,72 @@ async function renderHomePage(){
       const proc = (summary && summary.ok && summary.processes) ? summary.processes[newBackendKey] : null;
 
       if(!proc || !Array.isArray(proc.agents) || !proc.agents.length){
-        return { vKey, meta, avg: null, agentCount: 0 };
+        return { vKey, meta, avg: null, agentCount: 0, agents: [], totalAudits: 0 };
       }
 
       const rows = proc.agents.map(a => ({
+        agent: a.name,
+        auditCount: Number(a.auditCount) || 0,
         avgScore: (a.avgScore !== null && a.avgScore !== undefined) ? Number(a.avgScore) : 0
       }));
       const overallAvg = (rows.reduce((s,r)=> s + (Number(r.avgScore)||0), 0) / rows.length);
-      return { vKey, meta, avg: Math.round(overallAvg * 10) / 10, agentCount: rows.length };
+      const totalAudits = rows.reduce((s,r)=> s + (Number(r.auditCount)||0), 0);
+      const agentsSorted = rows.slice().sort((a,b)=> b.avgScore - a.avgScore);
+      return { vKey, meta, avg: Math.round(overallAvg * 10) / 10, agentCount: rows.length, agents: agentsSorted, totalAudits };
     });
 
     const statCardsHtml = results.map(r => {
       const s = (r.avg !== null) ? statusFor(r.avg) : null;
-      return `<div class="stat-card">
+      const statusCls = s ? s.cls : 'need';
+      const fillPct = r.avg !== null ? Math.max(0, Math.min(100, r.avg)) : 0;
+      return `<div class="stat-card status-${statusCls}">
         <div class="label">${r.meta.label} — Average Score</div>
         <div class="value gold" data-countup="${r.avg !== null ? r.avg : 0}" data-suffix="%">0%</div>
         ${s ? `<span class="badge ${s.cls}" style="margin-top:6px;display:inline-block;">${s.label}</span>` : `<span class="badge need" style="margin-top:6px;display:inline-block;">🔴 ডাটা পাওয়া যায়নি</span>`}
-        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${r.agentCount} agent(s)-এর উপর ভিত্তি করে</div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="--fill-w:${fillPct}%"></div></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">${r.agentCount} agent(s)-এর উপর ভিত্তি করে</div>
+      </div>`;
+    }).join('');
+
+    const qcrHeaderCls = { CATV:'qcr-catv', BBTECH:'qcr-bbtech', BBRENEWAL:'qcr-bbrenewal' };
+    const qcrIcon = { CATV:'📡', BBTECH:'🛠️', BBRENEWAL:'🔄' };
+
+    function scorePillCls(score){
+      const s = statusFor(score);
+      if(s.cls === 'top' || s.cls === 'excellent') return 'excellent';
+      if(s.cls === 'good') return 'good';
+      if(s.cls === 'average') return 'average';
+      return 'need';
+    }
+
+    const qcrTablesHtml = results.map(r => {
+      if(!r.agents.length){
+        return `<div class="qcr-section">
+          <div class="qcr-header ${qcrHeaderCls[r.vKey]||''}"><span class="qcr-title-text">${qcrIcon[r.vKey]||'📋'} ${r.meta.label} — Call Quality Score</span></div>
+          <div class="table-wrapper qcr-table-wrap"><div class="empty-state" style="border:none;"><b>কোনো ডাটা পাওয়া যায়নি</b></div></div>
+        </div>`;
+      }
+      const bodyRows = r.agents.map(a => `
+        <tr>
+          <td style="font-weight:600;">${escapeHtml(a.agent)}</td>
+          <td class="mono">${escapeHtml(a.auditCount)}</td>
+          <td><span class="qcr-pill ${scorePillCls(a.avgScore)}">${a.avgScore.toFixed(2)}%</span></td>
+        </tr>`).join('');
+      return `<div class="qcr-section">
+        <div class="qcr-header ${qcrHeaderCls[r.vKey]||''}"><span class="qcr-title-text">${qcrIcon[r.vKey]||'📋'} ${r.meta.label} — Call Quality Score</span></div>
+        <div class="table-wrapper qcr-table-wrap">
+          <table class="score-table">
+            <thead><tr><th>Agent Name</th><th>Audit Count</th><th>Average of Scores</th></tr></thead>
+            <tbody>
+              ${bodyRows}
+              <tr class="qcr-grand-total">
+                <td>Grand Total</td>
+                <td class="mono">${r.totalAudits}</td>
+                <td><span class="qcr-pill ${scorePillCls(r.avg)}">${r.avg !== null ? r.avg.toFixed(2) : '0.00'}%</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>`;
     }).join('');
 
@@ -4874,7 +5023,21 @@ async function renderHomePage(){
       <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
         📊 Vertical-wise Average Score Comparison
       </h3>
-      <div class="chart-box"><canvas id="homeAvgChart"></canvas></div>`;
+      <div class="chart-box"><canvas id="homeAvgChart"></canvas></div>
+      <div class="analysis-grid">
+        <div class="chart-box small">
+          <div class="chart-box-title">🥧 Agent Distribution by Vertical</div>
+          <canvas id="homeAgentDonut"></canvas>
+        </div>
+        <div class="chart-box small">
+          <div class="chart-box-title">🎯 Achieved vs Gap to 100%</div>
+          <canvas id="homeGapChart"></canvas>
+        </div>
+      </div>
+      <h3 style="margin: 30px 0 14px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
+        📄 Detailed Call Quality Score — Vertical অনুযায়ী
+      </h3>
+      ${qcrTablesHtml}`;
 
     runCountUps(panel);
 
@@ -4910,7 +5073,88 @@ async function renderHomePage(){
           }
         }
       });
+      animateChartBox(ctx);
     }, 60);
+
+    /* ---- Extra chart 1: Agent Distribution by Vertical (Doughnut) ---- */
+    setTimeout(() => {
+      const ctx2 = document.getElementById('homeAgentDonut');
+      if(!ctx2) return;
+      if(chartInstances['home-agentdonut']) chartInstances['home-agentdonut'].destroy();
+      const vertColors = { CATV:'#33C9B0', BBTECH:'#E3A857', BBRENEWAL:'#FF5E7E' };
+
+      chartInstances['home-agentdonut'] = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: results.map(r => r.meta.label),
+          datasets: [{
+            data: results.map(r => r.agentCount),
+            backgroundColor: results.map(r => vertColors[r.vKey] || 'rgba(51,201,176,0.7)'),
+            borderColor: 'var(--surface)',
+            borderWidth: 2,
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          animation: { animateRotate: true, animateScale: true, duration: 900, easing: 'easeOutQuart' },
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#8FA0B5', boxWidth: 12, font: { size: 11 } } }
+          },
+          cutout: '62%'
+        }
+      });
+      animateChartBox(ctx2);
+    }, 140);
+
+    /* ---- Extra chart 2: Achieved vs Gap-to-100% (Stacked horizontal bar, colored by score status) ---- */
+    setTimeout(() => {
+      const ctx3 = document.getElementById('homeGapChart');
+      if(!ctx3) return;
+      if(chartInstances['home-gap']) chartInstances['home-gap'].destroy();
+
+      const achievedColors = results.map(r => {
+        if(r.avg === null) return 'rgba(224,82,74,0.75)';
+        const s = statusFor(r.avg);
+        return {top:'#E3A857', excellent:'#3FBF7F', good:'#E0C341', average:'#E08A3F', need:'#E0524A'}[s.cls] || '#33C9B0';
+      });
+
+      chartInstances['home-gap'] = new Chart(ctx3, {
+        type: 'bar',
+        data: {
+          labels: results.map(r => r.meta.label),
+          datasets: [
+            {
+              label: 'Achieved (%)',
+              data: results.map(r => r.avg !== null ? r.avg : 0),
+              backgroundColor: achievedColors,
+              borderRadius: 5,
+              stack: 'gap'
+            },
+            {
+              label: 'Gap to 100% (%)',
+              data: results.map(r => r.avg !== null ? Math.max(0, Math.round((100 - r.avg) * 10) / 10) : 100),
+              backgroundColor: 'rgba(143,160,181,0.15)',
+              borderRadius: 5,
+              stack: 'gap'
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true, maintainAspectRatio: false,
+          animation: { duration: 900, easing: 'easeOutQuart' },
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#8FA0B5', boxWidth: 12, font: { size: 11 } } }
+          },
+          scales: {
+            x: { min: 0, max: 100, stacked: true, ticks: { color: '#8FA0B5' }, grid: { color: '#203859' } },
+            y: { stacked: true, ticks: { color: '#8FA0B5', font: { size: 11 } }, grid: { display: false } }
+          }
+        }
+      });
+      animateChartBox(ctx3);
+    }, 220);
 
   }catch(err){
     console.error(err);
