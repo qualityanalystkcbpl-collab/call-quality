@@ -81,6 +81,42 @@ body::before{
   50%{background-position:100% 50%;}
   100%{background-position:0% 50%;}
 }
+/* ---------- Floating background circles (whole-app, decorative) ---------- */
+.bg-floating-circles{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  overflow:hidden;
+  pointer-events:none;
+}
+.bg-floating-circles span{
+  position:absolute;
+  bottom:-120px;
+  left:var(--left, 50%);
+  width:var(--size, 40px);
+  height:var(--size, 40px);
+  border-radius:50%;
+  background:var(--clr, #33C9B0);
+  opacity:0;
+  filter:blur(1px);
+  box-shadow:0 0 24px 6px var(--clr, #33C9B0);
+  animation: bgCircleFloat var(--dur, 20s) ease-in infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes bgCircleFloat{
+  0%{ transform:translate(0,0) scale(0.7); opacity:0; }
+  8%{ opacity:0.16; }
+  50%{ transform:translate(24px,-55vh) scale(1); opacity:0.22; }
+  92%{ opacity:0.1; }
+  100%{ transform:translate(-16px,-115vh) scale(0.85); opacity:0; }
+}
+body.light-theme .bg-floating-circles span{
+  opacity:0;
+  filter:blur(1px) brightness(1.05);
+}
+@media (prefers-reduced-motion: reduce){
+  .bg-floating-circles{ display:none; }
+}
 .mono{font-family:'IBM Plex Mono',monospace;}
 .display{font-family:'Space Grotesk',sans-serif;}
 /* ---------- LOGIN SCREEN ---------- */
@@ -2826,6 +2862,21 @@ transform:translateY(0);
 </style>
 </head>
 <body>
+<!-- ============ FLOATING BACKGROUND CIRCLES (decorative, whole app) ============ -->
+<div class="bg-floating-circles" aria-hidden="true">
+  <span style="--size:60px; --left:4%;  --dur:22s; --delay:0s;  --clr:#33C9B0;"></span>
+  <span style="--size:34px; --left:14%; --dur:16s; --delay:2s;  --clr:#E3A857;"></span>
+  <span style="--size:80px; --left:23%; --dur:27s; --delay:5s;  --clr:#4A7FE0;"></span>
+  <span style="--size:26px; --left:33%; --dur:14s; --delay:1s;  --clr:#E0524A;"></span>
+  <span style="--size:50px; --left:45%; --dur:20s; --delay:8s;  --clr:#3FBF7F;"></span>
+  <span style="--size:38px; --left:56%; --dur:18s; --delay:3s;  --clr:#B94AE0;"></span>
+  <span style="--size:70px; --left:66%; --dur:25s; --delay:6s;  --clr:#E0C341;"></span>
+  <span style="--size:30px; --left:76%; --dur:15s; --delay:10s; --clr:#33C9B0;"></span>
+  <span style="--size:56px; --left:85%; --dur:23s; --delay:4s;  --clr:#E3A857;"></span>
+  <span style="--size:42px; --left:92%; --dur:19s; --delay:7s;  --clr:#4A7FE0;"></span>
+  <span style="--size:24px; --left:9%;  --dur:13s; --delay:12s; --clr:#3FBF7F;"></span>
+  <span style="--size:64px; --left:39%; --dur:26s; --delay:14s; --clr:#B94AE0;"></span>
+</div>
 <!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
 <div class="login-top-glow"></div>
@@ -4502,7 +4553,7 @@ async function renderVerticalPanel(tab){
       console.error("New backend (Call Quality Dashboard) fetch failed:", err);
     }
   } else {
-    // অন্য কোনো ভার্টিক্যাল থাকলে (নতুন ব্যাকএন্ডে ম্যাপ করা নেই), আগের পুরনো সোর্স থেকেই আসবে
+    // অন্য কোনো LOB থাকলে (নতুন ব্যাকএন্ডে ম্যাপ করা নেই), আগের পুরনো সোর্স থেকেই আসবে
     try {
       const response = await fetch(WEB_APP_URL + "?vertical=" + tab);
       const data = await response.json();
@@ -4562,7 +4613,7 @@ async function renderVerticalPanel(tab){
     <div class="stat-row">
       <div class="stat-card"><div class="label">Total Agents</div><div class="value" data-countup="${rows.length}">0</div></div>
       <div class="stat-card"><div class="label">Total Audited Calls</div><div class="value teal" data-countup="${totalAudits}">0</div></div>
-      <div class="stat-card"><div class="label">Vertical Avg Score</div><div class="value gold" data-countup="${avgScore}" data-suffix="%">0%</div></div>
+      <div class="stat-card"><div class="label">LOB Avg Score</div><div class="value gold" data-countup="${avgScore}" data-suffix="%">0%</div></div>
       <div class="stat-card best-achiever-card"><div class="label">Best Achiever</div><div class="value best-achiever-value" style="font-size:15px; color:var(--agent);">${escapeHtml(top.agent)}</div></div>
       <div class="stat-card"><div class="label">Under Performance</div><div class="value" data-countup="${needCount}" data-suffix=" Agents" style="color:var(--need);">0 Agents</div></div>
     </div>
@@ -4926,7 +4977,7 @@ async function renderHomePage(){
 
   panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি vertical-এর overall average score, এক নজরে।</p></div>
+      <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি LOB-এর overall average score, এক নজরে।</p></div>
       <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
     </div>
     <div class="empty-state"><b>লাইভ ডাটা লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b></div>`;
@@ -5016,17 +5067,17 @@ async function renderHomePage(){
 
     panel.innerHTML = `
       <div class="panel-header">
-        <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি vertical-এর overall average score, এক নজরে।</p></div>
+        <div><h1>🏠 Home</h1><p>CATV, BB Tech Support ও BB Renewal — তিনটি LOB-এর overall average score, এক নজরে।</p></div>
         <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
       </div>
       <div class="stat-row">${statCardsHtml}</div>
       <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
-        📊 Vertical-wise Average Score Comparison
+        📊 LOB-wise Average Score Comparison
       </h3>
       <div class="chart-box"><canvas id="homeAvgChart"></canvas></div>
       <div class="analysis-grid">
         <div class="chart-box small">
-          <div class="chart-box-title">🥧 Agent Distribution by Vertical</div>
+          <div class="chart-box-title">🥧 Agent Distribution by LOB</div>
           <canvas id="homeAgentDonut"></canvas>
         </div>
         <div class="chart-box small">
@@ -5035,7 +5086,7 @@ async function renderHomePage(){
         </div>
       </div>
       <h3 style="margin: 30px 0 14px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
-        📄 Detailed Call Quality Score — Vertical অনুযায়ী
+        📄 Detailed Call Quality Score — LOB অনুযায়ী
       </h3>
       ${qcrTablesHtml}`;
 
@@ -5076,7 +5127,7 @@ async function renderHomePage(){
       animateChartBox(ctx);
     }, 60);
 
-    /* ---- Extra chart 1: Agent Distribution by Vertical (Doughnut) ---- */
+    /* ---- Extra chart 1: Agent Distribution by LOB (Doughnut) ---- */
     setTimeout(() => {
       const ctx2 = document.getElementById('homeAgentDonut');
       if(!ctx2) return;
