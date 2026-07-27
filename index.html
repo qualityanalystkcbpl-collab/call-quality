@@ -3033,12 +3033,16 @@ transform:translateY(0);
   display:flex; align-items:center; justify-content:center; gap:8px;
   white-space:nowrap;
   transition: transform .25s ease, box-shadow .25s ease;
-  animation: chatBubblePulse 2.4s ease-in-out infinite;
+  animation: chatBubblePulse 2.4s ease-in-out infinite, chatBubbleColorShift 6s linear infinite;
 }
 .chat-bubble-btn:hover{ transform:scale(1.04); box-shadow:0 10px 28px rgba(51,201,176,0.5); }
 @keyframes chatBubblePulse{
   0%,100%{ box-shadow:0 8px 22px rgba(0,0,0,.4), 0 0 0 rgba(51,201,176,0); }
   50%{ box-shadow:0 8px 22px rgba(0,0,0,.4), 0 0 14px rgba(51,201,176,0.55); }
+}
+@keyframes chatBubbleColorShift{
+  0%{ filter:hue-rotate(0deg); }
+  100%{ filter:hue-rotate(360deg); }
 }
 .chat-bubble-badge{
   position:absolute; top:-4px; right:-4px;
@@ -3048,6 +3052,14 @@ transform:translateY(0);
   animation: chatBadgeBlink 1s ease-in-out infinite;
 }
 @keyframes chatBadgeBlink{ 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+.chat-bubble-new-tag{
+  position:absolute; left:14px; top:-11px;
+  background:var(--need); color:#fff; font-size:10px; font-weight:800;
+  letter-spacing:.5px; padding:2px 8px; border-radius:8px;
+  box-shadow:0 3px 8px rgba(0,0,0,.35);
+  animation: chatNewTagPop 1.8s ease-in-out infinite;
+}
+@keyframes chatNewTagPop{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
 
 .emp-chat-panel{
   position:fixed; left:24px; bottom:96px; z-index:10060;
@@ -4358,6 +4370,26 @@ const CHAT_POLL_MS = 15 * 1000;
 let chatPollInterval = null;
 let chatOpenEmployeeId = null; // admin সাইডে কোন এজেন্টের থ্রেড খোলা আছে
 
+/* প্রতিবার চ্যাট বাবল খোলা হলে প্যানেলের থিম কালার পরের সেট-এ ঘুরে যাবে (cycle) */
+const EMP_CHAT_THEMES = [
+  { panel:'#1D1642', header:'#140F30', bubble:'#2C2460' }, // বেগুনি (default)
+  { panel:'#0F2B1E', header:'#0A1E15', bubble:'#1B4A32' }, // সবুজ
+  { panel:'#2B1420', header:'#1F0D16', bubble:'#4A1F30' }, // ম্যাজেন্টা
+  { panel:'#12253A', header:'#0C1A2A', bubble:'#1E3E5C' }, // নীল
+  { panel:'#332614', header:'#26190D', bubble:'#5A431F' }, // অ্যাম্বার
+  { panel:'#14312F', header:'#0D2321', bubble:'#1F544F' }, // টিল
+];
+let empChatThemeIndex = 0;
+function applyNextEmpChatTheme(){
+  const panel = document.getElementById('empChatPanel');
+  if(!panel) return;
+  empChatThemeIndex = (empChatThemeIndex + 1) % EMP_CHAT_THEMES.length;
+  const t = EMP_CHAT_THEMES[empChatThemeIndex];
+  panel.style.setProperty('--chat-panel-bg', t.panel);
+  panel.style.setProperty('--chat-panel-header-bg', t.header);
+  panel.style.setProperty('--chat-bubble-them-bg', t.bubble);
+}
+
 function chatUid(){
   return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 }
@@ -4462,7 +4494,11 @@ function toggleEmployeeChatPanel(){
   const willOpen = !panel.classList.contains('open');
   panel.classList.toggle('open', willOpen);
   if(willOpen){
+    applyNextEmpChatTheme();
     localStorage.setItem('qa_emp_chat_seen_ts', String(Date.now()));
+    localStorage.setItem('qa_emp_chat_new_seen', '1');
+    const newTag = document.getElementById('empChatNewTag');
+    if(newTag) newTag.style.display = 'none';
     refreshEmployeeChat();
     const badge = document.getElementById('empChatBadge');
     if(badge) badge.style.display = 'none';
@@ -4680,6 +4716,12 @@ localStorage.removeItem("qa_role");
   currentRole = null;
   document.getElementById('mainScreen').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
+  // Role-gated elements (chat bubble/panel, nav items etc.) must go back to hidden —
+  // otherwise they stay stuck visible on top of the login screen after logout.
+  document.querySelectorAll('.agent-only').forEach(el=> el.style.display = 'none');
+  document.querySelectorAll('.admin-only').forEach(el=> el.style.display = 'none');
+  const empChatPanelEl = document.getElementById('empChatPanel');
+  if(empChatPanelEl) empChatPanelEl.classList.remove('open');
   const empPassEl = document.getElementById('empPassword');
   if(empPassEl) empPassEl.value = '';
   if(bannerTimer) clearInterval(bannerTimer);
@@ -7693,6 +7735,7 @@ doLogout = function(){
 
 <!-- ============ EMPLOYEE ⇄ ADMIN CHAT WIDGET (শুধু Agent লগইনে দেখা যাবে) ============ -->
 <button class="chat-bubble-btn agent-only" id="empChatBubbleBtn" style="display:none;" onclick="toggleEmployeeChatPanel()" title="Chat with Quality Team">
+  <span class="chat-bubble-new-tag" id="empChatNewTag">NEW</span>
   💬 Chat with Quality Team
   <span class="chat-bubble-badge" id="empChatBadge" style="display:none;"></span>
 </button>
@@ -7719,6 +7762,10 @@ doLogout = function(){
   const show = currentRole === 'agent';
   if(btn) btn.style.display = show ? '' : 'none';
   if(panel) panel.style.display = show ? '' : 'none';
+  if(show && localStorage.getItem('qa_emp_chat_new_seen') === '1'){
+    const newTag = document.getElementById('empChatNewTag');
+    if(newTag) newTag.style.display = 'none';
+  }
 })();
 </script>
 <script>
