@@ -3076,10 +3076,14 @@ transform:translateY(0);
 }
 .emp-chat-panel.open{ transform:translateY(0) scale(1); opacity:1; pointer-events:auto; }
 .emp-chat-panel-header{
-  padding:12px 14px; background:var(--chat-panel-header-bg, #140F30);
+  padding:10px 14px 8px; background:var(--chat-panel-header-bg, #140F30);
   color:var(--text); font-weight:700; font-size:13px;
-  display:flex; align-items:center; justify-content:space-between;
+  display:flex; flex-direction:column; gap:2px;
   border-bottom:1px solid var(--border);
+}
+.emp-chat-panel-header-top{ display:flex; align-items:center; justify-content:space-between; }
+.emp-chat-panel-clock{
+  font-size:9px; font-weight:500; color:var(--text-muted); opacity:.75; letter-spacing:.2px;
 }
 .emp-chat-close-btn{
   background:none; border:none; color:var(--text-muted); font-size:15px; cursor:pointer; padding:2px 6px;
@@ -4394,7 +4398,13 @@ function chatUid(){
   return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 }
 function chatTimeLabel(ts){
-  return new Date(ts).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  return new Date(ts).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true });
+}
+function chatHeaderClockLabel(){
+  const now = new Date();
+  const datePart = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  const timePart = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  return `${datePart} • ${timePart}`;
 }
 async function getChatThreads(){
   try{ return (await storageGet('chatThreads')) || {}; }
@@ -4488,6 +4498,11 @@ async function refreshEmployeeChat(){
     badge.style.display = hasUnread ? 'flex' : 'none';
   }
 }
+let empChatClockInterval = null;
+function updateEmpChatHeaderClock(){
+  const el = document.getElementById('empChatHeaderClock');
+  if(el) el.textContent = chatHeaderClockLabel();
+}
 function toggleEmployeeChatPanel(){
   const panel = document.getElementById('empChatPanel');
   if(!panel) return;
@@ -4502,6 +4517,11 @@ function toggleEmployeeChatPanel(){
     refreshEmployeeChat();
     const badge = document.getElementById('empChatBadge');
     if(badge) badge.style.display = 'none';
+    updateEmpChatHeaderClock();
+    if(empChatClockInterval) clearInterval(empChatClockInterval);
+    empChatClockInterval = setInterval(updateEmpChatHeaderClock, 1000);
+  }else{
+    if(empChatClockInterval){ clearInterval(empChatClockInterval); empChatClockInterval = null; }
   }
 }
 
@@ -7741,8 +7761,11 @@ doLogout = function(){
 </button>
 <div class="emp-chat-panel agent-only" id="empChatPanel" style="display:none;">
   <div class="emp-chat-panel-header">
-    <span>💬 Chat with Quality Team</span>
-    <button class="emp-chat-close-btn" onclick="toggleEmployeeChatPanel()">✕</button>
+    <div class="emp-chat-panel-header-top">
+      <span>💬 Chat with Quality Team</span>
+      <button class="emp-chat-close-btn" onclick="toggleEmployeeChatPanel()">✕</button>
+    </div>
+    <div class="emp-chat-panel-clock" id="empChatHeaderClock"></div>
   </div>
   <div class="chat-messages-box" id="empChatMessages"></div>
   <div class="chat-input-row">
