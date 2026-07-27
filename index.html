@@ -3044,6 +3044,14 @@ transform:translateY(0);
   0%{ filter:hue-rotate(0deg); }
   100%{ filter:hue-rotate(360deg); }
 }
+.chat-bubble-btn-label{
+  display:inline-block;
+  animation: chatBubbleLabelPop 1.6s ease-in-out infinite;
+}
+@keyframes chatBubbleLabelPop{
+  0%,100%{ transform:translateY(0) scale(1); letter-spacing:0; }
+  50%{ transform:translateY(-2px) scale(1.06); letter-spacing:.4px; }
+}
 .chat-bubble-badge{
   position:absolute; top:-4px; right:-4px;
   width:16px; height:16px; border-radius:50%;
@@ -7756,7 +7764,7 @@ doLogout = function(){
 <!-- ============ EMPLOYEE ⇄ ADMIN CHAT WIDGET (শুধু Agent লগইনে দেখা যাবে) ============ -->
 <button class="chat-bubble-btn agent-only" id="empChatBubbleBtn" style="display:none;" onclick="toggleEmployeeChatPanel()" title="Ask Quality Team">
   <span class="chat-bubble-new-tag" id="empChatNewTag">NEW</span>
-  💬 Ask Quality Team
+  💬 <span class="chat-bubble-btn-label">Ask Quality Team</span>
   <span class="chat-bubble-badge" id="empChatBadge" style="display:none;"></span>
 </button>
 <div class="emp-chat-panel agent-only" id="empChatPanel" style="display:none;">
