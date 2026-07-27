@@ -3048,6 +3048,9 @@ transform:translateY(0);
   display:inline-block;
   animation: chatBubbleLabelPop 1.6s ease-in-out infinite;
 }
+.chat-bubble-btn-label.paused{
+  animation: none; transform:none; letter-spacing:0;
+}
 @keyframes chatBubbleLabelPop{
   0%,100%{ transform:translateY(0) scale(1); letter-spacing:0; }
   50%{ transform:translateY(-2px) scale(1.06); letter-spacing:.4px; }
@@ -4516,6 +4519,8 @@ function toggleEmployeeChatPanel(){
   if(!panel) return;
   const willOpen = !panel.classList.contains('open');
   panel.classList.toggle('open', willOpen);
+  const label = document.querySelector('#empChatBubbleBtn .chat-bubble-btn-label');
+  if(label) label.classList.toggle('paused', willOpen);
   if(willOpen){
     applyNextEmpChatTheme();
     localStorage.setItem('qa_emp_chat_seen_ts', String(Date.now()));
