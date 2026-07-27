@@ -1602,7 +1602,25 @@ aside.sidebar{
 .nav-item:hover::before,
 .nav-item.active::before{ transform:scaleY(1); }
 .nav-item .dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:background .25s ease, box-shadow .25s ease;}
-.nav-item:hover{background:var(--surface);color:var(--text);transform:translateX(4px);}
+.nav-item:hover{
+  background:var(--surface);
+  color:var(--text);
+  transform:translateX(4px);
+  border-color: var(--agent);
+  animation: navItemHoverGlow 1.4s ease-in-out infinite;
+}
+@keyframes navItemHoverGlow{
+  0%,100%{ box-shadow: 0 0 4px rgba(51,201,176,0.25); }
+  50%{ box-shadow: 0 0 12px rgba(51,201,176,0.6); }
+}
+.nav-item.dashboard-tab:hover{
+  border-color: var(--admin);
+  animation-name: navItemHoverGlowAdmin;
+}
+@keyframes navItemHoverGlowAdmin{
+  0%,100%{ box-shadow: 0 0 4px rgba(74,127,224,0.25); }
+  50%{ box-shadow: 0 0 12px rgba(74,127,224,0.6); }
+}
 .nav-item:hover .dot{ box-shadow:0 0 6px var(--agent); }
 .nav-item.dashboard-tab:hover .dot{ box-shadow:0 0 6px var(--admin); }
 .nav-item.active{
