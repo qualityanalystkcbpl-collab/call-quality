@@ -3084,6 +3084,7 @@ transform:translateY(0);
 .chat-bubble-row.me{ justify-content:flex-end; }
 .chat-bubble-row.them{ justify-content:flex-start; }
 .chat-bubble{
+  position:relative;
   max-width:78%; padding:8px 12px; border-radius:12px; font-size:13px; line-height:1.4;
   animation: chatBubbleIn .25s ease both;
 }
@@ -3092,6 +3093,16 @@ transform:translateY(0);
 .chat-bubble.them{ background:var(--chat-bubble-them-bg, #2C2460); color:var(--text); border-bottom-left-radius:3px; }
 .chat-bubble-sender{ font-size:10.5px; font-weight:700; opacity:.75; margin-bottom:2px; }
 .chat-bubble-time{ font-size:10px; opacity:.6; margin-top:3px; text-align:right; }
+.chat-bubble.deleted .chat-bubble-text{ font-style:italic; opacity:.75; }
+.chat-bubble-delete-btn{
+  position:absolute; top:-8px; right:-8px; width:20px; height:20px; border-radius:50%;
+  border:1px solid var(--border); background:var(--surface-2, #14253D); color:var(--text-muted);
+  font-size:10.5px; line-height:1; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; opacity:0; transform:scale(.8); pointer-events:none;
+  transition: opacity .15s ease, transform .15s ease, background .15s ease, color .15s ease;
+}
+.chat-bubble:hover .chat-bubble-delete-btn{ opacity:1; transform:scale(1); pointer-events:auto; }
+.chat-bubble-delete-btn:hover{ background:var(--need); color:#fff; border-color:var(--need); }
 
 .chat-input-row{
   display:flex; gap:8px; padding:10px; border-top:1px solid var(--border);
@@ -4396,15 +4407,38 @@ function renderEmployeeChatMessages(thread){
   const box = document.getElementById('empChatMessages');
   if(!box) return;
   const msgs = (thread && thread.messages) || [];
-  box.innerHTML = msgs.length ? msgs.map(m => `
-    <div class="chat-bubble-row ${m.from==='employee' ? 'me' : 'them'}">
-      <div class="chat-bubble ${m.from==='employee' ? 'me' : 'them'}">
-        ${m.from!=='employee' ? `<div class="chat-bubble-sender">${escapeHtml(m.senderName || 'Quality Team')}</div>` : ''}
-        <div class="chat-bubble-text">${escapeHtml(m.text)}</div>
+  box.innerHTML = msgs.length ? msgs.map(m => {
+    const isMe = m.from==='employee';
+    const isDeleted = !!m.deleted;
+    return `
+    <div class="chat-bubble-row ${isMe ? 'me' : 'them'}">
+      <div class="chat-bubble ${isMe ? 'me' : 'them'} ${isDeleted ? 'deleted' : ''}">
+        ${!isMe ? `<div class="chat-bubble-sender">${escapeHtml(m.senderName || 'Quality Team')}</div>` : ''}
+        <div class="chat-bubble-text">${isDeleted ? '🚫 এই মেসেজটি মুছে ফেলা হয়েছে' : escapeHtml(m.text)}</div>
         <div class="chat-bubble-time">${chatTimeLabel(m.ts)}</div>
+        ${isMe && !isDeleted ? `<button class="chat-bubble-delete-btn" title="মেসেজ মুছুন" onclick="deleteEmployeeChatMessage('${m.id}')">🗑</button>` : ''}
       </div>
-    </div>`).join('') : `<div class="chat-empty-hint">এখানে Quality Team-কে মেসেজ পাঠাতে পারেন। এখনো কোনো মেসেজ নেই।</div>`;
+    </div>`;
+  }).join('') : `<div class="chat-empty-hint">এখানে Quality Team-কে মেসেজ পাঠাতে পারেন। এখনো কোনো মেসেজ নেই।</div>`;
   box.scrollTop = box.scrollHeight;
+}
+async function deleteEmployeeChatMessage(msgId){
+  if(!empEmployeeId) return;
+  if(!confirm('মেসেজটি মুছে ফেলবেন? এটি মুছে ফেলা হয়েছে বলে দেখানো হবে।')) return;
+  try{
+    const threads = await getChatThreads();
+    const thread = threads[empEmployeeId];
+    if(!thread) return;
+    const msg = (thread.messages||[]).find(x=>x.id===msgId);
+    if(!msg || msg.from!=='employee') return;
+    msg.deleted = true;
+    msg.text = '';
+    await saveChatThreads(threads);
+    renderEmployeeChatMessages(thread);
+  }catch(e){
+    console.error(e);
+    showToast('মেসেজ মুছতে ব্যর্থ, আবার চেষ্টা করুন।');
+  }
 }
 async function refreshEmployeeChat(){
   if(!empEmployeeId) return;
@@ -4466,9 +4500,10 @@ async function refreshAdminChatList(){
   listEl.innerHTML = entries.map(t=>{
     const last = t.messages[t.messages.length-1];
     const unread = !!t.adminUnread;
+    const previewText = last.deleted ? '🚫 মেসেজ মুছে ফেলা হয়েছে' : escapeHtml(String(last.text||'').slice(0,42));
     return `<div class="admin-chat-thread-item ${chatOpenEmployeeId===t.employeeId?'active':''} ${unread?'unread':''}" onclick="openAdminChatThread('${escapeAttr(t.employeeId)}')">
       <div class="admin-chat-thread-name">${escapeHtml(t.employeeName||t.employeeId)} ${unread?'<span class="admin-chat-unread-dot"></span>':''}</div>
-      <div class="admin-chat-thread-preview">${last.from==='admin'?'You: ':''}${escapeHtml(String(last.text||'').slice(0,42))}</div>
+      <div class="admin-chat-thread-preview">${last.from==='admin'&&!last.deleted?'You: ':''}${previewText}</div>
     </div>`;
   }).join('');
 }
@@ -4495,15 +4530,36 @@ function renderAdminChatMessages(thread){
   const box = document.getElementById('adminChatMessages');
   if(!box || !thread) return;
   const msgs = thread.messages || [];
-  box.innerHTML = msgs.map(m => `
-    <div class="chat-bubble-row ${m.from==='admin' ? 'me' : 'them'}">
-      <div class="chat-bubble ${m.from==='admin' ? 'me' : 'them'}">
+  box.innerHTML = msgs.map(m => {
+    const isMe = m.from==='admin';
+    const isDeleted = !!m.deleted;
+    return `
+    <div class="chat-bubble-row ${isMe ? 'me' : 'them'}">
+      <div class="chat-bubble ${isMe ? 'me' : 'them'} ${isDeleted ? 'deleted' : ''}">
         ${m.from==='employee' ? `<div class="chat-bubble-sender">${escapeHtml(thread.employeeName||thread.employeeId)}</div>` : `<div class="chat-bubble-sender">${escapeHtml(m.senderName||'Quality Team')}</div>`}
-        <div class="chat-bubble-text">${escapeHtml(m.text)}</div>
+        <div class="chat-bubble-text">${isDeleted ? '🚫 এই মেসেজটি মুছে ফেলা হয়েছে' : escapeHtml(m.text)}</div>
         <div class="chat-bubble-time">${chatTimeLabel(m.ts)}</div>
+        <button class="chat-bubble-delete-btn" title="স্থায়ীভাবে মুছে ফেলুন" onclick="deleteAdminChatMessage('${m.id}')">🗑</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   box.scrollTop = box.scrollHeight;
+}
+async function deleteAdminChatMessage(msgId){
+  if(!chatOpenEmployeeId) return;
+  if(!confirm('মেসেজটি স্থায়ীভাবে মুছে ফেলা হবে, এর কোনো প্রমাণ আর থাকবে না। এগিয়ে যাবেন?')) return;
+  try{
+    const threads = await getChatThreads();
+    const thread = threads[chatOpenEmployeeId];
+    if(!thread) return;
+    thread.messages = (thread.messages||[]).filter(m=>m.id!==msgId);
+    await saveChatThreads(threads);
+    renderAdminChatMessages(thread);
+    await refreshAdminChatList();
+  }catch(e){
+    console.error(e);
+    showToast('মেসেজ মুছতে ব্যর্থ, আবার চেষ্টা করুন।');
+  }
 }
 async function sendAdminChatReply(){
   const input = document.getElementById('adminChatInput');
