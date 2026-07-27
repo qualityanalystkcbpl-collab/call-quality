@@ -357,6 +357,7 @@ body.light-theme .bg-floating-circles span{
   transform:translateX(20px);
   background:var(--admin);
 }
+.theme-switch-mini{ align-self:center; }
 /* ---------- MAIN APP ---------- */
 #mainScreen{display:none;min-height:100vh;flex-direction:column;}
 /* Fixed header wrapper: logo strip + QA Control Room bar + ticker + clock stay pinned while content scrolls */
@@ -726,6 +727,7 @@ header.topbar{
     box-sizing:border-box;
     display:flex;
     align-items:center;
+    margin-right:-20px;
 
     background:linear-gradient(90deg,#10233a,#162d48,#10233a);
 
@@ -1524,10 +1526,55 @@ aside.sidebar{
   padding:0 12px 40px 24px;
   display:flex;flex-direction:column;gap:4px;
 }
+/* মোবাইল/সরু স্ক্রিনে sidebar আর main content পাশাপাশি রাখলে দুটোই চেপে যায় (squeezed) —
+   এতদিন এই কারণেই মোবাইলে অনেক নেভিগেশন আইটেম খুঁজে পাওয়া কঠিন হচ্ছিল,
+   ইউজারকে "Desktop site" মোড অন করে দেখতে হচ্ছিল। এখন থেকে ছোট স্ক্রিনে sidebar পুরো
+   width নিয়ে content-এর উপরে বসবে, ফলে প্রতিটা নেভিগেশন আইটেম স্বাভাবিক সাইজে দেখা যাবে। */
+@media (max-width:900px){
+  .body-layout{ flex-direction:column; }
+  aside.sidebar{
+    width:100%;
+    padding:0 14px 20px 14px;
+    box-sizing:border-box;
+  }
+  main.content{
+    padding:0 14px 60px 14px !important;
+    box-sizing:border-box;
+  }
+}
+.nav-section{
+  border:1px solid var(--border, #203859);
+  border-radius:10px;
+  padding:8px 6px 10px;
+  margin:10px 0;
+  background: linear-gradient(160deg, rgba(51,201,176,0.04), transparent 60%);
+  animation: navSectionBorderGlow 5s ease-in-out infinite;
+}
+@keyframes navSectionBorderGlow{
+  0%,100%{ border-color: var(--border, #203859); box-shadow: 0 0 0 rgba(51,201,176,0); }
+  50%{ border-color: rgba(51,201,176,0.45); box-shadow: 0 0 10px rgba(51,201,176,0.18); }
+}
+.nav-section:nth-of-type(2){ animation-delay: .6s; }
+.nav-section:nth-of-type(3){ animation-delay: 1.2s; }
+.nav-section:nth-of-type(4){ animation-delay: 1.8s; }
+.nav-section:nth-of-type(5){ animation-delay: 2.4s; }
 .nav-label{
-  font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;
-  padding:12px 10px 4px;font-family:'IBM Plex Mono',monospace;
-  font-weight:600;
+  font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;
+  padding:4px 10px 6px;font-family:'IBM Plex Mono',monospace;
+  font-weight:800;
+  background: linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #33C9B0);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 0 6px rgba(51,201,176,0.55));
+  animation: navLabelGlowPulse 5s linear infinite;
+}
+@keyframes navLabelGlowPulse{
+  0%{ background-position: 0% 50%; filter: drop-shadow(0 0 5px rgba(51,201,176,0.4)); }
+  50%{ background-position: 150% 50%; filter: drop-shadow(0 0 11px rgba(74,127,224,0.65)); }
+  100%{ background-position: 300% 50%; filter: drop-shadow(0 0 5px rgba(51,201,176,0.4)); }
 }
 .nav-item{
   position:relative;
@@ -1695,18 +1742,37 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
   overflow:hidden;
   padding-left:22px;
   transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s ease;
-  animation: homeCardRise .6s cubic-bezier(.22,1,.36,1) both;
+  animation: homeCardRise .85s cubic-bezier(.22,1,.36,1) both;
+  perspective:600px;
 }
 #panel-HOME .stat-card:hover{
   transform: translateY(-7px) scale(1.015);
   box-shadow: 0 18px 34px -14px rgba(0,0,0,0.55), 0 0 0 1px var(--status-color, var(--border));
 }
 #panel-HOME .stat-row .stat-card:nth-child(1){ animation-delay:.05s; }
-#panel-HOME .stat-row .stat-card:nth-child(2){ animation-delay:.16s; }
-#panel-HOME .stat-row .stat-card:nth-child(3){ animation-delay:.27s; }
+#panel-HOME .stat-row .stat-card:nth-child(2){ animation-delay:.22s; }
+#panel-HOME .stat-row .stat-card:nth-child(3){ animation-delay:.39s; }
 @keyframes homeCardRise{
-  from{ opacity:0; transform:translateY(16px); }
-  to{ opacity:1; transform:translateY(0); }
+  0%{ opacity:0; transform:translateY(34px) scale(.88) rotateX(12deg); box-shadow:0 0 0 rgba(51,201,176,0); filter:blur(3px); }
+  55%{ opacity:1; transform:translateY(-4px) scale(1.03) rotateX(0deg); box-shadow:0 0 26px 2px var(--status-color, rgba(51,201,176,0.5)); filter:blur(0); }
+  100%{ opacity:1; transform:translateY(0) scale(1) rotateX(0deg); box-shadow:0 0 0 rgba(51,201,176,0); }
+}
+/* ✨ প্রথমবার আসার সময় কার্ডের উপর দিয়ে একটা উজ্জ্বল আলোর ঝলক (light burst) বয়ে যাবে */
+#panel-HOME .stat-card .card-entrance-flash{
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.55) 48%, transparent 66%);
+  transform:translateX(-120%);
+  animation: homeCardEntranceFlash .9s ease-out both;
+  pointer-events:none;
+  z-index:2;
+}
+#panel-HOME .stat-row .stat-card:nth-child(1) .card-entrance-flash{ animation-delay:.35s; }
+#panel-HOME .stat-row .stat-card:nth-child(2) .card-entrance-flash{ animation-delay:.52s; }
+#panel-HOME .stat-row .stat-card:nth-child(3) .card-entrance-flash{ animation-delay:.69s; }
+@keyframes homeCardEntranceFlash{
+  0%{ transform:translateX(-120%); }
+  100%{ transform:translateX(120%); }
 }
 #panel-HOME .stat-card::before{
   content:'';
@@ -1828,6 +1894,35 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 #panel-HOME .qcr-pill.good{ background:rgba(224,195,65,0.18); color:var(--good); border:1px solid rgba(224,195,65,0.4); }
 #panel-HOME .qcr-pill.average{ background:rgba(224,138,63,0.18); color:var(--average); border:1px solid rgba(224,138,63,0.4); }
 #panel-HOME .qcr-pill.need{ background:rgba(224,82,74,0.18); color:var(--need); border:1px solid rgba(224,82,74,0.4); }
+/* 0% স্কোর — সাধারণ "need" tier থেকেও আলাদা করে দেখানোর জন্য, urgent review দরকার */
+#panel-HOME .qcr-pill.zero-score{
+  background: repeating-linear-gradient(45deg, rgba(224,82,74,0.35), rgba(224,82,74,0.35) 6px, rgba(20,8,8,0.55) 6px, rgba(20,8,8,0.55) 12px);
+  color:#fff;
+  border:1px solid #E0524A;
+  animation: qcrZeroPillPulse 1.4s ease-in-out infinite;
+}
+@keyframes qcrZeroPillPulse{
+  0%,100%{ box-shadow: 0 0 0 rgba(224,82,74,0); }
+  50%{ box-shadow: 0 0 10px rgba(224,82,74,0.75); }
+}
+#panel-HOME tr.qcr-row-zero{
+  background: rgba(224,82,74,0.08);
+  animation: qcrZeroRowFlash 2s ease-in-out infinite;
+}
+@keyframes qcrZeroRowFlash{
+  0%,100%{ background: rgba(224,82,74,0.06); }
+  50%{ background: rgba(224,82,74,0.14); }
+}
+#panel-HOME .qcr-zero-flag{
+  display:inline-block;
+  animation: qcrZeroFlagShake 1.6s ease-in-out infinite;
+}
+@keyframes qcrZeroFlagShake{
+  0%,80%,100%{ transform:rotate(0deg); }
+  85%{ transform:rotate(-12deg); }
+  90%{ transform:rotate(12deg); }
+  95%{ transform:rotate(-8deg); }
+}
 #panel-HOME tr.qcr-grand-total td{
   background:var(--surface-2);
   font-weight:800;
@@ -3025,7 +3120,7 @@ transform:translateY(0);
   <div class="theme-toggle-wrap">
     <span>🌙 Dark</span>
     <label class="theme-switch">
-      <input type="checkbox" id="themeSwitch" onchange="toggleTheme()">
+      <input type="checkbox" class="theme-switch-input" onchange="toggleTheme(this)">
       <span class="slider"></span>
     </label>
     <span>☀️ Light</span>
@@ -3053,6 +3148,10 @@ transform:translateY(0);
       </div>
       <div class="emp-welcome-right">
         <div class="emp-welcome-btn-row">
+          <label class="theme-switch theme-switch-mini" title="Dark / Light mode">
+            <input type="checkbox" class="theme-switch-input" onchange="toggleTheme(this)">
+            <span class="slider"></span>
+          </label>
           <button class="emp-mini-btn" onclick="openChangePasswordModal()">Change Pass</button>
           <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
         </div>
@@ -3188,9 +3287,12 @@ transform:translateY(0);
   <div class="news-ticker-wrap" id="newsTickerWrap"></div>
   <div class="body-layout">
     <aside class="sidebar" id="sidebar">
+      <div class="nav-section">
       <div class="nav-label">Overview</div>
       <div class="nav-item active" data-tab="HOME" onclick="switchTab('HOME')"><span class="dot"></span>🏠 Home</div>
+      </div>
 
+      <div class="nav-section">
       <div class="nav-label">Data Sheets</div>
       <div class="nav-item" data-tab="CATV" onclick="switchTab('CATV')"><span class="dot"></span>CATV Data</div>
       <div class="nav-item" data-tab="BBTECH" onclick="switchTab('BBTECH')"><span class="dot"></span>BB Tech Support Data</div>
@@ -3208,12 +3310,16 @@ transform:translateY(0);
     <span class="dot"></span>
     OLD Google Sheet
 </div>
-      
+      </div>
+
+      <div class="nav-section">
       <div class="nav-label">All Dashboards</div>
       <div class="nav-item dashboard-tab" data-tab="DASH-CATV" onclick="switchTab('DASH-CATV')"><span class="dot"></span>CATV Dashboard</div>
       <div class="nav-item dashboard-tab" data-tab="DASH-BBTECH" onclick="switchTab('DASH-BBTECH')"><span class="dot"></span>BB Tech Dashboard</div>
       <div class="nav-item dashboard-tab" data-tab="DASH-BBRENEWAL" onclick="switchTab('DASH-BBRENEWAL')"><span class="dot"></span>BB Renewal Dashboard</div>
-      
+      </div>
+
+      <div class="nav-section">
       <div class="nav-label">📖 QA RESOURCE CENTER</div>
 
 <!-- সবাই (employee login) দেখবে — গুগল শিট থেকে সরাসরি লাইভ ডাটা -->
@@ -3267,7 +3373,9 @@ transform:translateY(0);
     Super Admin Panel
 
 </div>
+      </div>
 
+      <div class="nav-section">
 <div class="nav-label">Outbound</div>
 
 <!-- শুধু Agent দেখবে -->
@@ -3289,6 +3397,7 @@ transform:translateY(0);
     Business Dev BB
 
 </div>
+      </div>
 
 <!-- সবার সবচেয়ে নিচে থাকবে -->
 <div class="nav-item nav-quicklink-glow"
@@ -3756,14 +3865,18 @@ function checkLoginSession(){
 function initTheme(){
   const saved = localStorage.getItem('qa_theme') || 'dark';
   document.body.classList.toggle('light-theme', saved === 'light');
-  const sw = document.getElementById('themeSwitch');
-  if(sw) sw.checked = (saved === 'light');
+  document.querySelectorAll('.theme-switch-input').forEach(sw => { sw.checked = (saved === 'light'); });
 }
-function toggleTheme(){
-  const sw = document.getElementById('themeSwitch');
-  const isLight = sw ? sw.checked : false;
+function toggleTheme(sourceEl){
+  const isLight = sourceEl ? sourceEl.checked : false;
   document.body.classList.toggle('light-theme', isLight);
   localStorage.setItem('qa_theme', isLight ? 'light' : 'dark');
+  // দুই জায়গার টগলই (লগইন পেজ + মেইন অ্যাপ হেডার) একসাথে সিঙ্কে থাকবে
+  document.querySelectorAll('.theme-switch-input').forEach(sw => { sw.checked = isLight; });
+  // Home পেজের চার্টগুলোর রঙ (tick/grid) থিম বদলানোর সাথে সাথেই ঠিক হয়ে যাবে
+  if(typeof currentTab !== 'undefined' && currentTab === 'HOME' && typeof renderHomePage === 'function'){
+    renderHomePage();
+  }
 }
 initTheme();
 checkLoginSession();
@@ -3921,6 +4034,79 @@ async function getDailyOnlineMap(){
   }
 }
 
+/* সব জায়গায় (ব্যাজ, সাইডবার লিস্ট, মোডাল) একই sessions স্ন্যাপশট থেকে রেন্ডার হয় —
+   আগে প্রতিটা জায়গা আলাদা আলাদা করে storageGet('onlineSessions') কল করত, ফলে দুটো
+   প্রায়-একই-সময়ের fetch ভিন্ন ভিন্ন মুহূর্তের ডেটা পেয়ে যেত (অনেক এজেন্ট একসাথে
+   heartbeat পাঠালে সার্ভারের শেয়ার্ড ডেটাও পাল্টে যাচ্ছিল) — তাই ব্যাজ আর সাইডবারের
+   সংখ্যা না মেলার সমস্যা হতো। এখন একটামাত্র fetch থেকে সব জায়গা একসাথে আপডেট হয়। */
+function buildOnlineListHtml(sessions, dailyMap, fetchTs){
+  const entries = Object.values(sessions);
+  const seen = new Map();
+  const nameMap = new Map();
+  let anonymousCount = 0;
+  entries.forEach(e=>{
+    const name = e && e.name;
+    if(!name){ anonymousCount++; return; }
+    const key = (e.id || name);
+    if(seen.has(key)) seen.set(key, seen.get(key) + 1);
+    else seen.set(key, 1);
+    if(!nameMap.has(key)) nameMap.set(key, name);
+  });
+
+  if(seen.size === 0 && anonymousCount === 0){
+    return { count: 0, html: '<div class="online-agents-empty">No one is currently online.</div>' };
+  }
+
+  // distinct headcount: একই agent-এর একাধিক ট্যাব একজন হিসেবেই গোনা হচ্ছে (dedup),
+  // কিন্তু anonymous session (এখনো নাম জানা যায়নি) আলাদা করা যায় না বলে প্রতিটাকে
+  // আলাদা ভাবেই গোনা হচ্ছে
+  const distinctCount = seen.size + anonymousCount;
+
+  let html = '';
+  Array.from(seen.keys())
+    .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
+    .forEach(key=>{
+      const displayName = nameMap.get(key) || 'Agent';
+      const tabCount = seen.get(key);
+      const todaySec = dailyMap[key] ? dailyMap[key].totalSec : 0;
+      window.__dailyTimeBase[key] = { sec: todaySec, ts: fetchTs };
+      html += `<div class="online-agent-row">
+        <span class="pulse-dot" style="display:inline-block;"></span>
+        <span class="online-agent-name-wrap">
+          <span class="online-agent-name">${escapeHtml(displayName)}</span>
+          <span class="online-agent-daily-time" data-agent-key="${escapeAttr(key)}">${formatDailyDuration(todaySec)}</span>
+        </span>
+        ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
+      </div>`;
+    });
+
+  if(anonymousCount > 0){
+    html += `<div class="online-agents-anon">+ ${anonymousCount} more session(s) online — name not available yet (that browser tab needs a refresh to show up by name)</div>`;
+  }
+
+  return { count: distinctCount, html: html || '<div class="online-agents-empty">No one is currently online.</div>' };
+}
+
+async function renderPresenceUI(sessions){
+  try{
+    const dailyMap = await getDailyOnlineMap();
+    const fetchTs = Date.now();
+    const { count, html } = buildOnlineListHtml(sessions, dailyMap, fetchTs);
+
+    renderOnlineCount(count);
+
+    const sideList = document.getElementById('sidebarOnlineList');
+    const sideCount = document.getElementById('sidebarOnlineCount');
+    if(sideList){ sideList.innerHTML = html; if(sideCount) sideCount.textContent = count; }
+
+    const modalList = document.getElementById('onlineAgentsList');
+    const modalCount = document.getElementById('onlineAgentsModalCount');
+    if(modalList){ modalList.innerHTML = html; if(modalCount) modalCount.textContent = count; }
+  }catch(e){
+    console.error('Failed to render presence UI', e);
+  }
+}
+
 async function pingOnlinePresence(){
   try{
     const mySessionId = getMySessionId();
@@ -3935,7 +4121,7 @@ async function pingOnlinePresence(){
     const myEmpId = localStorage.getItem('qa_emp_id') || null;
     sessions[mySessionId] = { ts: now, name: myName, id: myEmpId };
     await storageSet('onlineSessions', sessions);
-    renderOnlineCount(Object.keys(sessions).length);
+    await renderPresenceUI(sessions);
     // লগইন করা থাকলে আজকের মোট অনলাইন সময়টা (Today stat-এর সাথে মিলিয়ে) পাবলিশ করা হচ্ছে
     const myAgentKey = myEmpId || myName;
     if(myAgentKey) await publishDailyOnlineTime(myAgentKey, myName, now);
@@ -3943,81 +4129,19 @@ async function pingOnlinePresence(){
     console.error('Online presence update failed', e);
   }
 }
-pingOnlinePresence();
-setInterval(pingOnlinePresence, ONLINE_HEARTBEAT_MS);
-
-/* ===================== Sidebar-এ সবসময় দেখা "Currently Online" ছোট লিস্ট (Calendar-এর নিচে) ===================== */
-async function renderSidebarOnlineList(){
-  const listEl = document.getElementById('sidebarOnlineList');
-  const countEl = document.getElementById('sidebarOnlineCount');
-  if(!listEl) return;
-  try{
-    const now = Date.now();
-    let sessions = (await storageGet('onlineSessions')) || {};
-    Object.keys(sessions).forEach(id=>{
-      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
-    });
-    const entries = Object.values(sessions);
-    if(countEl) countEl.textContent = entries.length;
-
-    const seen = new Map();
-    let anonymousCount = 0;
-    entries.forEach(e=>{
-      const name = e && e.name;
-      if(!name){ anonymousCount++; return; }
-      const key = (e.id || name);
-      if(seen.has(key)) seen.set(key, seen.get(key) + 1);
-      else seen.set(key, 1);
-    });
-
-    if(seen.size === 0 && anonymousCount === 0){
-      listEl.innerHTML = '<div class="online-agents-empty">No one is currently online.</div>';
-      return;
-    }
-
-    const nameMap = new Map();
-    entries.forEach(e=>{
-      if(e && e.name){
-        const key = (e.id || e.name);
-        if(!nameMap.has(key)) nameMap.set(key, e.name);
-      }
-    });
-
-    const dailyMap = await getDailyOnlineMap();
-    const fetchTs = Date.now();
-
-    let html = '';
-    Array.from(seen.keys())
-      .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
-      .forEach(key=>{
-        const displayName = nameMap.get(key) || 'Agent';
-        const tabCount = seen.get(key);
-        const todaySec = dailyMap[key] ? dailyMap[key].totalSec : 0;
-        window.__dailyTimeBase[key] = { sec: todaySec, ts: fetchTs };
-        html += `<div class="online-agent-row">
-          <span class="pulse-dot" style="display:inline-block;"></span>
-          <span class="online-agent-name-wrap">
-            <span class="online-agent-name">${displayName}</span>
-            <span class="online-agent-daily-time" data-agent-key="${key}">${formatDailyDuration(todaySec)}</span>
-          </span>
-          ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
-        </div>`;
-      });
-
-    if(anonymousCount > 0){
-      html += `<div class="online-agents-anon">+ ${anonymousCount} more session(s) online — name not available yet (that browser tab needs a refresh to show up by name)</div>`;
-    }
-
-    listEl.innerHTML = html || '<div class="online-agents-empty">No one is currently online.</div>';
-  }catch(e){
-    console.error('Failed to load sidebar online list', e);
-    listEl.innerHTML = '<div class="online-agents-empty">Could not load the online agent list.</div>';
-  }
+// প্রতিবার হার্টবিটে সামান্য random jitter (0-4 সেকেন্ড) যোগ করা হচ্ছে, যাতে অনেক এজেন্ট
+// একসাথে ঠিক একই মুহূর্তে লিখতে না যায় (শেয়ার্ড ডেটাতে লেখার সংঘর্ষ কমাতে সাহায্য করে)।
+function scheduleNextPresencePing(){
+  const jitter = Math.floor(Math.random() * 4000);
+  setTimeout(async ()=>{
+    await pingOnlinePresence();
+    scheduleNextPresencePing();
+  }, ONLINE_HEARTBEAT_MS + jitter);
 }
-renderSidebarOnlineList();
-setInterval(renderSidebarOnlineList, ONLINE_HEARTBEAT_MS);
+pingOnlinePresence();
+scheduleNextPresencePing();
 
-/* ===================== "কারা অনলাইন আছে" মোডাল ===================== */
+/* ===================== "কারা অনলাইন আছে" মোডাল (ম্যানুয়ালি ক্লিক করলে fresh fetch) ===================== */
 async function openOnlineAgentsModal(){
   const modal = document.getElementById('onlineAgentsModal');
   const listEl = document.getElementById('onlineAgentsList');
@@ -4031,59 +4155,11 @@ async function openOnlineAgentsModal(){
     Object.keys(sessions).forEach(id=>{
       if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
     });
-    const entries = Object.values(sessions);
-    if(countEl) countEl.textContent = entries.length;
-
-    // নাম অনুযায়ী unique agents বের করা হচ্ছে (একই এজেন্ট একাধিক ট্যাব খুললে একবারই দেখানো হবে)
-    const seen = new Map();
-    let anonymousCount = 0;
-    entries.forEach(e=>{
-      const name = e && e.name;
-      if(!name){ anonymousCount++; return; }
-      const key = (e.id || name);
-      if(seen.has(key)) seen.set(key, seen.get(key) + 1);
-      else seen.set(key, 1);
-    });
-
-    if(seen.size === 0 && anonymousCount === 0){
-      listEl.innerHTML = '<div class="online-agents-empty">No one is currently online.</div>';
-      return;
-    }
-
-    const nameMap = new Map();
-    entries.forEach(e=>{
-      if(e && e.name){
-        const key = (e.id || e.name);
-        if(!nameMap.has(key)) nameMap.set(key, e.name);
-      }
-    });
-
     const dailyMap = await getDailyOnlineMap();
     const fetchTs = Date.now();
-
-    let html = '';
-    Array.from(seen.keys())
-      .sort((a,b)=> (nameMap.get(a)||'').localeCompare(nameMap.get(b)||''))
-      .forEach(key=>{
-        const displayName = nameMap.get(key) || 'Agent';
-        const tabCount = seen.get(key);
-        const todaySec = dailyMap[key] ? dailyMap[key].totalSec : 0;
-        window.__dailyTimeBase[key] = { sec: todaySec, ts: fetchTs };
-        html += `<div class="online-agent-row">
-          <span class="pulse-dot" style="display:inline-block;"></span>
-          <span class="online-agent-name-wrap">
-            <span class="online-agent-name">${displayName}</span>
-            <span class="online-agent-daily-time" data-agent-key="${key}">${formatDailyDuration(todaySec)}</span>
-          </span>
-          ${tabCount > 1 ? `<span class="online-agent-tabs">${tabCount} sessions</span>` : ''}
-        </div>`;
-      });
-
-    if(anonymousCount > 0){
-      html += `<div class="online-agents-anon">+ ${anonymousCount} more session(s) online — name not available yet (that browser tab needs a refresh to show up by name)</div>`;
-    }
-
-    listEl.innerHTML = html || '<div class="online-agents-empty">No one is currently online.</div>';
+    const { count, html } = buildOnlineListHtml(sessions, dailyMap, fetchTs);
+    if(countEl) countEl.textContent = count;
+    listEl.innerHTML = html;
   }catch(e){
     console.error('Failed to load online agents', e);
     listEl.innerHTML = '<div class="online-agents-empty">Could not load the online agent list. Please try again.</div>';
@@ -5090,8 +5166,8 @@ async function renderDedicatedDashboard(vKey) {
           responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { ticks: { color: '#8FA0B5', font: { size: 11 } }, grid: { display: false } },
-            y: { min: 0, max: 100, ticks: { color: '#8FA0B5' }, grid: { color: '#203859' } }
+            x: { ticks: { color: chartTickColor(), font: { size: 11 } }, grid: { display: false } },
+            y: { min: 0, max: 100, ticks: { color: chartTickColor() }, grid: { color: chartGridColor() } }
           }
         }
       });
@@ -5103,6 +5179,14 @@ async function renderDedicatedDashboard(vKey) {
   }
 }
 /* ===================== HOME — CATV / BB TECH / BB RENEWAL এর Average Score, চার্ট সহ ===================== */
+/* লাইট মোডে চার্টের টেক্সট/গ্রিড যেন হালকা হয়ে অদৃশ্যের মতো না লাগে — থিম অনুযায়ী রঙ বদলে যাবে */
+function chartTickColor(){
+  return document.body.classList.contains('light-theme') ? '#3A4A61' : '#8FA0B5';
+}
+function chartGridColor(){
+  return document.body.classList.contains('light-theme') ? '#D9E1EA' : '#203859';
+}
+
 async function renderHomePage(){
   const panel = document.getElementById('panel-HOME');
   if(!panel) return;
@@ -5147,6 +5231,7 @@ async function renderHomePage(){
       const statusCls = s ? s.cls : 'need';
       const fillPct = r.avg !== null ? Math.max(0, Math.min(100, r.avg)) : 0;
       return `<div class="stat-card status-${statusCls}">
+        <div class="card-entrance-flash"></div>
         <div class="label">${r.meta.label} — Average Score</div>
         <div class="value gold" data-countup="${r.avg !== null ? r.avg : 0}" data-suffix="%">0%</div>
         ${s ? `<span class="badge ${s.cls}" style="margin-top:6px;display:inline-block;">${s.label}</span>` : `<span class="badge need" style="margin-top:6px;display:inline-block;">🔴 ডাটা পাওয়া যায়নি</span>`}
@@ -5160,6 +5245,7 @@ async function renderHomePage(){
     const qcrIcon = { CATV:'📡', BBTECH:'🛠️', BBRENEWAL:'🔄' };
 
     function scorePillCls(score){
+      if(score === 0) return 'zero-score';
       const s = statusFor(score);
       if(s.cls === 'top' || s.cls === 'excellent') return 'excellent';
       if(s.cls === 'good') return 'good';
@@ -5175,8 +5261,8 @@ async function renderHomePage(){
         </div>`;
       }
       const bodyRows = r.agents.map(a => `
-        <tr>
-          <td style="font-weight:600;">${escapeHtml(a.agent)}</td>
+        <tr${a.avgScore === 0 ? ' class="qcr-row-zero"' : ''}>
+          <td style="font-weight:600;">${a.avgScore === 0 ? '<span class="qcr-zero-flag" title="0% score — needs urgent review">⚠️</span> ' : ''}${escapeHtml(a.agent)}</td>
           <td class="mono">${escapeHtml(a.auditCount)}</td>
           <td><span class="qcr-pill ${scorePillCls(a.avgScore)}">${a.avgScore.toFixed(2)}%</span></td>
         </tr>`).join('');
@@ -5250,10 +5336,16 @@ async function renderHomePage(){
         },
         options: {
           responsive: true, maintainAspectRatio: false,
+          animation: {
+            duration: 1800,
+            easing: 'easeOutBounce',
+            delay: (context) => context.type === 'data' ? context.dataIndex * 220 : 0
+          },
+          transitions: { active: { animation: { duration: 350 } } },
           plugins: { legend: { display: false } },
           scales: {
-            x: { ticks: { color: '#8FA0B5', font: { size: 12 } }, grid: { display: false } },
-            y: { min: 0, max: 100, ticks: { color: '#8FA0B5' }, grid: { color: '#203859' } }
+            x: { ticks: { color: chartTickColor(), font: { size: 12 } }, grid: { display: false } },
+            y: { min: 0, max: 100, ticks: { color: chartTickColor() }, grid: { color: chartGridColor() } }
           }
         }
       });
@@ -5283,7 +5375,7 @@ async function renderHomePage(){
           responsive: true, maintainAspectRatio: false,
           animation: { animateRotate: true, animateScale: true, duration: 900, easing: 'easeOutQuart' },
           plugins: {
-            legend: { position: 'bottom', labels: { color: '#8FA0B5', boxWidth: 12, font: { size: 11 } } }
+            legend: { position: 'bottom', labels: { color: chartTickColor(), boxWidth: 12, font: { size: 11 } } }
           },
           cutout: '62%'
         }
@@ -5327,13 +5419,18 @@ async function renderHomePage(){
         options: {
           indexAxis: 'y',
           responsive: true, maintainAspectRatio: false,
-          animation: { duration: 900, easing: 'easeOutQuart' },
+          animation: {
+            duration: 1600,
+            easing: 'easeOutBounce',
+            delay: (context) => context.type === 'data' ? context.dataIndex * 200 : 0
+          },
+          transitions: { active: { animation: { duration: 350 } } },
           plugins: {
-            legend: { position: 'bottom', labels: { color: '#8FA0B5', boxWidth: 12, font: { size: 11 } } }
+            legend: { position: 'bottom', labels: { color: chartTickColor(), boxWidth: 12, font: { size: 11 } } }
           },
           scales: {
-            x: { min: 0, max: 100, stacked: true, ticks: { color: '#8FA0B5' }, grid: { color: '#203859' } },
-            y: { stacked: true, ticks: { color: '#8FA0B5', font: { size: 11 } }, grid: { display: false } }
+            x: { min: 0, max: 100, stacked: true, ticks: { color: chartTickColor() }, grid: { color: chartGridColor() } },
+            y: { stacked: true, ticks: { color: chartTickColor(), font: { size: 11 } }, grid: { display: false } }
           }
         }
       });
@@ -6731,6 +6828,26 @@ function syncEmpBarOffset(){
   if(h) document.documentElement.style.setProperty('--emp-bar-h', h + 'px');
 }
 
+/* মোবাইলে welcome bar-টা কয়েক লাইনে ভাগ হয়ে অনেক লম্বা হয়ে যায় (নাম/গ্রিটিং/অনলাইন
+   ব্যাজ/ID-IP-Session স্ট্যাট/বাটন/কাউন্টডাউন — সব আলাদা আলাদা লাইনে)। এর real height
+   টেক্সট wrap, ফন্ট লোড, IP লোড হওয়া ইত্যাদির কারণে বদলে যেতে পারে — তাই একবার মাপার
+   বদলে ResizeObserver দিয়ে সবসময় লাইভ সিঙ্কে রাখা হচ্ছে, নাহলে নিচের ticker/header
+   ভুল জায়গায় বসে ID/IP/Session স্ট্যাটের উপর দিয়ে ওভারল্যাপ করে ঢেকে দিতে পারে। */
+let __empBarResizeObserver = null;
+function startEmpBarHeightWatch(){
+  const bar = document.getElementById('employeeWelcomeBar');
+  if(!bar) return;
+  syncEmpBarOffset();
+  if(window.ResizeObserver){
+    if(__empBarResizeObserver) __empBarResizeObserver.disconnect();
+    __empBarResizeObserver = new ResizeObserver(()=> syncEmpBarOffset());
+    __empBarResizeObserver.observe(bar);
+  }else{
+    // পুরনো ব্রাউজারে ResizeObserver না থাকলে কয়েকবার দেরি করে আবার মেপে নেওয়া হচ্ছে
+    [150, 500, 1200].forEach(ms => setTimeout(syncEmpBarOffset, ms));
+  }
+}
+
 function showEmployeeWelcomeBar(){
   document.getElementById('employeeWelcomeBar').style.display = 'flex';
   document.body.classList.add('has-emp-bar');
@@ -6748,9 +6865,10 @@ function showEmployeeWelcomeBar(){
   ipEl.textContent = 'Loading...';
   getClientIP().then(ip=>{ ipEl.textContent = ip || 'Unavailable'; syncEmpBarOffset(); });
 
-  requestAnimationFrame(syncEmpBarOffset);
+  startEmpBarHeightWatch();
   if(!window.__empBarResizeBound){
     window.addEventListener('resize', syncEmpBarOffset);
+    window.addEventListener('orientationchange', ()=> setTimeout(syncEmpBarOffset, 200));
     window.__empBarResizeBound = true;
   }
 }
