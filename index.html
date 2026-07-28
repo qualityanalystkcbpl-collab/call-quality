@@ -3023,6 +3023,49 @@ transform:translateY(0);
   #backToTopBtn{ left:14px; bottom:100px; width:44px; height:44px; }
 }
 
+/* ===================== HOME BANNER CAROUSEL (Supabase) ===================== */
+.banner-carousel-wrap{
+  position:relative; width:calc(100% + 24px); height:340px; border-radius:14px; overflow:hidden;
+  margin:0 -24px 20px 0; background:var(--surface-2, #14253D);
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
+}
+.banner-carousel-track{ display:flex; height:100%; transition:transform .8s cubic-bezier(.4,0,.2,1); }
+.banner-carousel-slide{ min-width:100%; height:100%; position:relative; overflow:hidden; }
+.banner-carousel-slide-bg{
+  position:absolute; inset:0; background-size:cover; background-position:center;
+  filter:blur(20px) brightness(.5); transform:scale(1.15);
+}
+.banner-carousel-slide img{
+  position:relative; z-index:1; width:100%; height:100%; object-fit:contain; display:block;
+}
+.banner-carousel-arrow{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:5;
+  width:32px; height:32px; border-radius:50%; border:none; cursor:pointer;
+  background:rgba(0,0,0,.45); color:#fff; font-size:16px; display:flex; align-items:center; justify-content:center;
+}
+.banner-carousel-arrow:hover{ background:rgba(0,0,0,.7); }
+.banner-carousel-arrow.prev{ left:10px; }
+.banner-carousel-arrow.next{ right:10px; }
+.banner-carousel-dots{
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:5;
+}
+.banner-carousel-dot{ width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.4); cursor:pointer; border:none; padding:0; }
+.banner-carousel-dot.active{ background:#fff; }
+@media (max-width:900px){
+  .banner-carousel-wrap{ width:calc(100% + 28px); height:240px; margin:0 -14px 20px -14px; border-radius:0; }
+}
+@media (max-width:640px){
+  .banner-carousel-wrap{ height:190px; }
+}
+.banner-mgr-list{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+.banner-mgr-item{
+  display:flex; align-items:center; gap:14px; padding:10px; border-radius:12px;
+  background:var(--surface-2, #14253D); border:1px solid var(--border);
+}
+.banner-mgr-thumb{ width:110px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+.banner-mgr-meta{ flex:1; font-size:13px; }
+.banner-mgr-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+
 /* ===================== EMPLOYEE ⇄ ADMIN CHAT — WIDGET (Employee সাইড) ===================== */
 .chat-bubble-btn{
   position:fixed; left:24px; bottom:36px; z-index:10050;
@@ -3551,6 +3594,17 @@ transform:translateY(0);
 
 </div>
 
+<!-- Admin ও Super Admin দুজনেই দেখবে — Home পেজের উপরে যে ব্যানার ছবি ঘোরে সেটা এখান থেকে ম্যানেজ হয় -->
+<div class="nav-item admin-only"
+     data-tab="BANNERMGR"
+     onclick="switchTab('BANNERMGR')"
+     style="display:none;">
+
+    <span class="dot"></span>
+    🖼️ Banner Manager
+
+</div>
+
 <!-- শুধু Super Admin দেখবে (NEW - ADDITIVE) -->
 <div class="nav-item superadmin-only"
      data-tab="SUPERADMIN"
@@ -3614,6 +3668,8 @@ transform:translateY(0);
 
     </aside>
     <main class="content">
+      <!-- Home পেজে উপরে ঘোরা ব্যানার (শুধু HOME ট্যাবে দেখা যাবে) -->
+      <div id="bannerCarouselWrap" class="banner-carousel-wrap" style="display:none;"></div>
       <!-- Home overview panel -->
       <div class="panel active" id="panel-HOME"></div>
       <!-- Data sheets panels -->
@@ -3702,6 +3758,7 @@ transform:translateY(0);
 
       <!-- ============ EMPLOYEE ⇄ ADMIN CHAT PANEL (Admin/Super Admin) ============ -->
       <div class="panel" id="panel-EMPCHAT"></div>
+      <div class="panel" id="panel-BANNERMGR"></div>
 
       <!-- ============ SUPER ADMIN PANEL (NEW - ADDITIVE, DOES NOT TOUCH EXISTING ADMIN PANEL) ============ -->
       <div class="panel" id="panel-SUPERADMIN">
@@ -3934,6 +3991,11 @@ transform:translateY(0);
 
 // ⚠️ এখানে 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbCrtIR8ww9F8eJBKZl92Ml-L7TwDq_hZBu3VHK8D8H-EYz2FM5nw/exec";
+/* ===================== SUPABASE (শুধু Home Banner ফিচারের জন্য — বাকি সব ডাটা Google Sheet-এই থাকবে) ===================== */
+const SUPABASE_URL = "https://iqjmlkpkrtdrwhksmvai.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxam1sa3BrcnRkcndoa3NtdmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzIyMDIsImV4cCI6MjEwMDU0ODIwMn0.sXxh4eXLmDax2be9yYmKTT2oUF7NwgLOmaHTfdFO2pY";
+const BANNER_BUCKET = "banners";
+const BANNER_MAX_COUNT = 10;
 
 /* ✅ CATV / BB TECH SUPPORT / BB RENEWAL — Agent Summary (Audit Count, Avg Score) এই নতুন
    CALL QUALITY DASHBOARD ব্যাকএন্ড (Apps Script) থেকে আসবে। Call-Level Logs Detail
@@ -4129,6 +4191,227 @@ async function storageSet(key, value){
     console.error('Storage write system issue', e); 
     return false; 
   }
+}
+
+/* ===================== HOME BANNER CAROUSEL (Supabase-ব্যাকড) =====================
+   Admin/Super Admin "🖼️ Banner Manager" থেকে ছবি আপলোড করবে (সর্বোচ্চ ১০টা),
+   আর Home ট্যাবের উপরে সেই ছবিগুলো auto-rotate করে সবাই (Agent সহ) দেখতে পাবে। */
+let homeBannerList = [];
+let homeBannerIndex = 0;
+let homeBannerAutoTimer = null;
+
+async function loadHomeBannerCarousel(){
+  const wrap = document.getElementById('bannerCarouselWrap');
+  if(!wrap) return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}?select=*&is_active=eq.true&order=sort_order.asc`, {
+      headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    homeBannerList = await res.json();
+    if(!Array.isArray(homeBannerList)) homeBannerList = [];
+  }catch(e){
+    console.error('Banner load failed', e);
+    homeBannerList = [];
+  }
+  if(!homeBannerList.length){
+    wrap.style.display = 'none';
+    if(homeBannerAutoTimer){ clearInterval(homeBannerAutoTimer); homeBannerAutoTimer = null; }
+    return;
+  }
+  wrap.style.display = '';
+  homeBannerIndex = 0;
+  renderHomeBannerCarousel();
+  if(homeBannerAutoTimer) clearInterval(homeBannerAutoTimer);
+  homeBannerAutoTimer = setInterval(()=> goToHomeBanner(homeBannerIndex+1), 10000);
+}
+function renderHomeBannerCarousel(){
+  const wrap = document.getElementById('bannerCarouselWrap');
+  if(!wrap || !homeBannerList.length) return;
+  wrap.innerHTML = `
+    <div class="banner-carousel-track" id="homeBannerTrack">
+      ${homeBannerList.map(b=>`<div class="banner-carousel-slide"><div class="banner-carousel-slide-bg" style="background-image:url('${escapeAttr(b.image_url)}')"></div><img src="${escapeAttr(b.image_url)}" alt="banner"></div>`).join('')}
+    </div>
+    ${homeBannerList.length>1 ? `
+    <button class="banner-carousel-arrow prev" onclick="goToHomeBanner(homeBannerIndex-1)">‹</button>
+    <button class="banner-carousel-arrow next" onclick="goToHomeBanner(homeBannerIndex+1)">›</button>
+    <div class="banner-carousel-dots" id="homeBannerDots">
+      ${homeBannerList.map((b,i)=>`<span class="banner-carousel-dot" data-idx="${i}" onclick="goToHomeBanner(${i})"></span>`).join('')}
+    </div>` : ''}
+  `;
+  updateHomeBannerVisual();
+}
+function updateHomeBannerVisual(){
+  const track = document.getElementById('homeBannerTrack');
+  if(track) track.style.transform = `translateX(-${homeBannerIndex*100}%)`;
+  document.querySelectorAll('#homeBannerDots .banner-carousel-dot').forEach((d,i)=>{
+    d.classList.toggle('active', i===homeBannerIndex);
+  });
+}
+function goToHomeBanner(i){
+  if(!homeBannerList.length) return;
+  homeBannerIndex = (i + homeBannerList.length) % homeBannerList.length;
+  updateHomeBannerVisual();
+  if(homeBannerAutoTimer) clearInterval(homeBannerAutoTimer);
+  homeBannerAutoTimer = setInterval(()=> goToHomeBanner(homeBannerIndex+1), 10000);
+}
+
+/* ---------- Admin/Super Admin: Banner Manager প্যানেল ---------- */
+let bannerMgrItems = [];
+async function renderBannerManagerPanel(){
+  const panel = document.getElementById('panel-BANNERMGR');
+  if(!panel) return;
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>🖼️ Banner Manager</h1><p>Employee Home পেজের উপরে যেসব ব্যানার ছবি ঘুরতে থাকবে, সেগুলো এখান থেকে আপলোড/ম্যানেজ করুন (সর্বোচ্চ ${BANNER_MAX_COUNT}টা)।</p></div>
+      <div>
+        <input type="file" id="bannerFileInput" accept="image/*" style="display:none;" onchange="handleBannerUpload(this)">
+        <button class="btn primary" onclick="document.getElementById('bannerFileInput').click()">⬆️ নতুন ব্যানার আপলোড</button>
+      </div>
+    </div>
+    <div id="bannerMgrList" class="banner-mgr-list"><div class="empty-state"><b>লোড হচ্ছে...</b></div></div>
+  `;
+  await loadBannerMgrList();
+}
+async function loadBannerMgrList(){
+  const listEl = document.getElementById('bannerMgrList');
+  if(!listEl) return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}?select=*&order=sort_order.asc`, {
+      headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    bannerMgrItems = await res.json();
+    if(!Array.isArray(bannerMgrItems)) bannerMgrItems = [];
+  }catch(e){
+    console.error(e);
+    listEl.innerHTML = `<div class="empty-state"><b>ব্যানার লোড করা যায়নি। Supabase সেটআপ ঠিকভাবে হয়েছে কিনা চেক করুন।</b></div>`;
+    return;
+  }
+  if(!bannerMgrItems.length){
+    listEl.innerHTML = `<div class="empty-state"><b>এখনো কোনো ব্যানার আপলোড করা হয়নি।</b></div>`;
+    return;
+  }
+  listEl.innerHTML = bannerMgrItems.map((b,i)=>`
+    <div class="banner-mgr-item">
+      <img src="${escapeAttr(b.image_url)}" class="banner-mgr-thumb">
+      <div class="banner-mgr-meta">
+        <div>${b.is_active ? '🟢 Active (Home-এ দেখা যাচ্ছে)' : '⚪ Hidden'}</div>
+        <div style="font-size:11px;color:var(--text-muted);">Order: ${i+1}</div>
+      </div>
+      <div class="banner-mgr-actions">
+        <button class="btn" title="উপরে সরান" onclick="moveBanner('${b.id}', -1)" ${i===0?'disabled':''}>⬆️</button>
+        <button class="btn" title="নিচে সরান" onclick="moveBanner('${b.id}', 1)" ${i===bannerMgrItems.length-1?'disabled':''}>⬇️</button>
+        <button class="btn" onclick="toggleBannerActive('${b.id}', ${!b.is_active})">${b.is_active?'🚫 Hide':'✅ Show'}</button>
+        <button class="btn danger" onclick="deleteBanner('${b.id}','${escapeAttr(b.storage_path)}')">🗑️ Delete</button>
+      </div>
+    </div>`).join('');
+}
+async function handleBannerUpload(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  if(bannerMgrItems.length >= BANNER_MAX_COUNT){
+    showToast(`সর্বোচ্চ ${BANNER_MAX_COUNT}টা ব্যানার আপলোড করা যাবে। নতুন যোগ করতে আগে একটা ডিলিট করুন।`);
+    input.value = '';
+    return;
+  }
+  if(!file.type || !file.type.startsWith('image/')){
+    showToast('শুধু ছবি ফাইল (jpg/png/webp) আপলোড করা যাবে।');
+    input.value = '';
+    return;
+  }
+  showToast('আপলোড হচ্ছে, একটু অপেক্ষা করুন...');
+  try{
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `banner_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${BANNER_BUCKET}/${path}`, {
+      method:'POST',
+      headers:{
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': file.type
+      },
+      body: file
+    });
+    if(!uploadRes.ok){ throw new Error('Storage upload failed: ' + uploadRes.status); }
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}/${path}`;
+    const nextOrder = bannerMgrItems.length ? (Math.max(...bannerMgrItems.map(b=>Number(b.sort_order)||0)) + 1) : 0;
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}`, {
+      method:'POST',
+      headers:{
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type':'application/json',
+        Prefer:'return=minimal'
+      },
+      body: JSON.stringify({
+        image_url: publicUrl,
+        storage_path: path,
+        sort_order: nextOrder,
+        is_active: true,
+        uploaded_by: currentRole === 'admin' ? 'Admin' : 'Agent'
+      })
+    });
+    if(!insertRes.ok){ throw new Error('DB insert failed: ' + insertRes.status); }
+    showToast('ব্যানার আপলোড হয়েছে ✅');
+    input.value = '';
+    await loadBannerMgrList();
+  }catch(e){
+    console.error(e);
+    showToast('আপলোড ব্যর্থ হয়েছে। Supabase bucket/table ঠিকভাবে সেটআপ হয়েছে কিনা চেক করুন।');
+    input.value = '';
+  }
+}
+async function deleteBanner(id, storagePath){
+  if(!confirm('এই ব্যানারটা স্থায়ীভাবে ডিলিট করতে চান?')) return;
+  try{
+    await fetch(`${SUPABASE_URL}/storage/v1/object/${BANNER_BUCKET}/${storagePath}`, {
+      method:'DELETE',
+      headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    await fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}?id=eq.${id}`, {
+      method:'DELETE',
+      headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    showToast('ব্যানার ডিলিট হয়েছে।');
+    await loadBannerMgrList();
+  }catch(e){
+    console.error(e);
+    showToast('ডিলিট ব্যর্থ হয়েছে, আবার চেষ্টা করুন।');
+  }
+}
+async function toggleBannerActive(id, newActive){
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}?id=eq.${id}`, {
+      method:'PATCH',
+      headers:{
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type':'application/json',
+        Prefer:'return=minimal'
+      },
+      body: JSON.stringify({ is_active: newActive })
+    });
+    await loadBannerMgrList();
+  }catch(e){ console.error(e); showToast('আপডেট ব্যর্থ হয়েছে।'); }
+}
+async function moveBanner(id, direction){
+  const idx = bannerMgrItems.findIndex(b=>b.id===id);
+  if(idx<0) return;
+  const swapIdx = idx + direction;
+  if(swapIdx<0 || swapIdx>=bannerMgrItems.length) return;
+  const a = bannerMgrItems[idx], b = bannerMgrItems[swapIdx];
+  const patchHeaders = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    'Content-Type':'application/json',
+    Prefer:'return=minimal'
+  };
+  try{
+    await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}?id=eq.${a.id}`, { method:'PATCH', headers:patchHeaders, body: JSON.stringify({ sort_order: b.sort_order }) }),
+      fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}?id=eq.${b.id}`, { method:'PATCH', headers:patchHeaders, body: JSON.stringify({ sort_order: a.sort_order }) })
+    ]);
+    await loadBannerMgrList();
+  }catch(e){ console.error(e); showToast('অর্ডার পরিবর্তন ব্যর্থ হয়েছে।'); }
 }
 /* ===================== LIVE "ONLINE NOW" PRESENCE TRACKER =====================
    কারা এই মুহূর্তে পোর্টাল খুলে রেখেছে তার লাইভ কাউন্ট।
@@ -5191,7 +5474,12 @@ function switchTab(tab){
   document.querySelectorAll('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.tab===tab));
   document.querySelectorAll('.panel').forEach(p=> p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
-  
+  const bannerWrap = document.getElementById('bannerCarouselWrap');
+  if(bannerWrap){
+    if(tab === 'HOME'){ loadHomeBannerCarousel(); }
+    else{ bannerWrap.style.display = 'none'; if(homeBannerAutoTimer){ clearInterval(homeBannerAutoTimer); homeBannerAutoTimer=null; } }
+  }
+
   if (tab === 'HOME') {
     renderHomePage();
   } else if(VERTICALS[tab]){
@@ -5209,6 +5497,8 @@ function switchTab(tab){
     renderQuickLinkPanel();
   } else if (tab === 'EMPCHAT') {
     renderAdminChatList();
+  } else if (tab === 'BANNERMGR') {
+    renderBannerManagerPanel();
   }
 }
 function statusFor(score){
