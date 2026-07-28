@@ -5094,12 +5094,18 @@ if(currentRole==="agent"){
 }
   
   showToast('লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।...');
-  await loadTicker();
-  await loadBanners();
-  await loadNewsTicker();
-  switchTab('HOME');
-  await loadUpdates();
-  await loadLoginPopupAdmin();
+  /* আগে এই ৫টা কল একটার পর একটা (await ... await ... await) চলত, ফলে প্রতিটার
+     সময় যোগ হয়ে লগইনের পর ডাটা লোড হতে অনেক দেরি হতো। এই ৫টা call একে অপরের
+     উপর নির্ভরশীল না, তাই Promise.all দিয়ে একসাথে (parallel-এ) চালানো হলো —
+     এতে মোট সময় লাগবে সবচেয়ে ধীর কলটার সমান, সবগুলোর যোগফলের সমান না। */
+  switchTab('HOME'); // এটা নিজে থেকেই dashboard/banner ডাটা আলাদাভাবে fetch করে, তাই সবার আগে শুরু করে দেওয়া হলো
+  await Promise.all([
+    loadTicker(),
+    loadBanners(),
+    loadNewsTicker(),
+    loadUpdates(),
+    loadLoginPopupAdmin()
+  ]);
 }
 /* ===================== TICKER SYSTEMS ===================== */
 async function loadTicker(){
@@ -5224,7 +5230,7 @@ function renderTopTicker(text){
 function defaultBanners(){
   const arr = [];
   for(let i=1;i<=10;i++){
-    arr.push({ title: 'System Slide Slot ' + i, subtitle: 'Admin Panel থেকে প্রয়োজন অনুযায়ী ব্যানার নোটিশ সাজাতে পারেন।', image: '' });
+    arr.push({ title: 'Loading.......', subtitle: 'Loading.......', image: '' });
   }
   return arr;
 }
