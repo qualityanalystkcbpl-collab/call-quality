@@ -125,6 +125,68 @@ body.light-theme .bg-floating-circles span{
 }
 .mono{font-family:'IBM Plex Mono',monospace;}
 .display{font-family:'Space Grotesk',sans-serif;}
+/* ---------- PAGE LOAD INDICATOR (employeeWelcomeBar পুরো ঢেকে দেয়, scrolling টেক্সট) ---------- */
+#pageLoadOverlay{
+  position:fixed;
+  top:0; left:0; right:0;
+  z-index:10001; /* employeeWelcomeBar (z-index:10000) এর উপরে থাকবে, পুরোটা ঢেকে দেবে */
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:9px 18px;
+  background:var(--surface-2, #14253D);
+  border-bottom:1px solid var(--border, #203859);
+  overflow:hidden;
+  opacity:1;
+  transition:opacity .3s ease;
+}
+#pageLoadOverlay.hide{
+  opacity:0;
+  pointer-events:none;
+}
+.page-load-spinner{
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  border:2.5px solid var(--surface-3, #1B3150);
+  border-top-color:#33C9B0;
+  animation:pageLoadSpin .8s linear infinite;
+  flex-shrink:0;
+}
+@keyframes pageLoadSpin{
+  to{ transform:rotate(360deg); }
+}
+.page-load-marquee{
+  flex:1;
+  position:relative;
+  overflow:hidden;
+  height:18px;
+}
+.page-load-text{
+  position:absolute;
+  top:0; left:0;
+  white-space:nowrap;
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:600;
+  font-size:12.5px;
+  letter-spacing:0.4px;
+  transform:translateX(100%);
+  animation:
+    pageLoadMarquee 13s linear infinite,
+    empGreetingColorShift 6s linear infinite;
+  /* "Good Morning" গ্রিটিং-এ যেমন রঙ বদলানো gradient animation আছে, ঠিক সেই একই স্টাইল */
+  background:linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0, #33C9B0);
+  background-size:300% 100%;
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+@keyframes pageLoadMarquee{
+  from{ transform:translateX(100%); }
+  to{ transform:translateX(-100%); }
+}
+@media (prefers-reduced-motion: reduce){
+  .page-load-spinner{ animation-duration:1.6s; }
+  .page-load-text{ animation-duration:26s, 6s; }
+}
 /* ---------- LOGIN SCREEN ---------- */
 #loginScreen{
   display:flex;
@@ -3221,6 +3283,11 @@ transform:translateY(0);
 </style>
 </head>
 <body>
+<!-- ============ PAGE LOADING OVERLAY (ডাটা লোড হওয়া পর্যন্ত round spinner ঘুরতে থাকবে) ============ -->
+<div id="pageLoadOverlay">
+  <div class="page-load-spinner"></div>
+  <div class="page-load-marquee"><span class="page-load-text">লোড হচ্ছে... সম্পূর্ণ পেজ লোড হতে কিছুক্ষণ অপেক্ষা করুন, Audit Portal থেকে লাইভ ডাটা সিঙ্ক করা হচ্ছে...</span></div>
+</div>
 <!-- ============ FLOATING BACKGROUND CIRCLES (decorative, whole app) ============ -->
 <div class="bg-floating-circles" aria-hidden="true">
   <span style="--size:60px; --left:4%;  --dur:22s; --delay:0s;  --clr:#33C9B0;"></span>
@@ -4091,12 +4158,21 @@ startLogoRotator();
     });
   }, {passive:true});
 })();
+/* ---------- PAGE LOAD OVERLAY helpers ---------- */
+function showPageLoadOverlay(){
+  const el = document.getElementById('pageLoadOverlay');
+  if(el) el.classList.remove('hide');
+}
+function hidePageLoadOverlay(){
+  const el = document.getElementById('pageLoadOverlay');
+  if(el) el.classList.add('hide');
+}
 function checkLoginSession(){
 
     const role = localStorage.getItem("qa_role");
     const loginTime = localStorage.getItem("qa_login_time");
 
-    if(!role || !loginTime) return;
+    if(!role || !loginTime){ hidePageLoadOverlay(); return; }
 
     const oneHour = 60 * 60 * 1000;
 
@@ -4110,6 +4186,7 @@ function checkLoginSession(){
 
         localStorage.removeItem("qa_role");
         localStorage.removeItem("qa_login_time");
+        hidePageLoadOverlay();
 
     }
 
@@ -5056,6 +5133,7 @@ function getSafeReturnTarget(){
   return null;
 }
 async function enterApp(){
+  showPageLoadOverlay();
   // Forceful login-gate hookup: if we got here (fresh login OR restored
   // session) because a gated page sent us here, go straight back to it
   // instead of opening the main dashboard.
@@ -5106,6 +5184,7 @@ if(currentRole==="agent"){
     loadUpdates(),
     loadLoginPopupAdmin()
   ]);
+  hidePageLoadOverlay();
 }
 /* ===================== TICKER SYSTEMS ===================== */
 async function loadTicker(){
