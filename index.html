@@ -125,17 +125,17 @@ body.light-theme .bg-floating-circles span{
 }
 .mono{font-family:'IBM Plex Mono',monospace;}
 .display{font-family:'Space Grotesk',sans-serif;}
-/* ---------- PAGE LOAD INDICATOR (employeeWelcomeBar পুরো ঢেকে দেয়, scrolling টেক্সট) ---------- */
+
 #pageLoadOverlay{
   position:fixed;
   top:0; left:0; right:0;
-  z-index:10001; /* employeeWelcomeBar (z-index:10000) এর উপরে থাকবে, পুরোটা ঢেকে দেবে */
+  z-index:10001; 
   display:flex;
   align-items:center;
   gap:12px;
   padding:9px 18px;
-  background:var(--surface-2, #14253D);
-  border-bottom:1px solid var(--border, #203859);
+  background:#FFFFFF;
+  border-bottom:1px solid #E3E9F1;
   overflow:hidden;
   opacity:1;
   transition:opacity .3s ease;
@@ -148,8 +148,8 @@ body.light-theme .bg-floating-circles span{
   width:14px;
   height:14px;
   border-radius:50%;
-  border:2.5px solid var(--surface-3, #1B3150);
-  border-top-color:#33C9B0;
+  border:2.5px solid #D9E1EA;
+  border-top-color:#0E9C85;
   animation:pageLoadSpin .8s linear infinite;
   flex-shrink:0;
 }
@@ -160,22 +160,22 @@ body.light-theme .bg-floating-circles span{
   flex:1;
   position:relative;
   overflow:hidden;
-  height:18px;
+  height:20px;
 }
 .page-load-text{
   position:absolute;
   top:0; left:0;
   white-space:nowrap;
   font-family:'IBM Plex Mono',monospace;
-  font-weight:600;
-  font-size:12.5px;
+  font-weight:800;
+  font-size:13.5px;
   letter-spacing:0.4px;
   transform:translateX(100%);
   animation:
-    pageLoadMarquee 13s linear infinite,
+    pageLoadMarquee 26s linear infinite,
     empGreetingColorShift 6s linear infinite;
-  /* "Good Morning" গ্রিটিং-এ যেমন রঙ বদলানো gradient animation আছে, ঠিক সেই একই স্টাইল */
-  background:linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #FF6FD0, #33C9B0);
+  
+  background:linear-gradient(90deg, #0E9C85, #2A6FE0, #A730D6, #C6821E, #E0399A, #0E9C85);
   background-size:300% 100%;
   -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
 }
@@ -185,7 +185,7 @@ body.light-theme .bg-floating-circles span{
 }
 @media (prefers-reduced-motion: reduce){
   .page-load-spinner{ animation-duration:1.6s; }
-  .page-load-text{ animation-duration:26s, 6s; }
+  .page-load-text{ animation-duration:40s, 6s; }
 }
 /* ---------- LOGIN SCREEN ---------- */
 #loginScreen{
@@ -820,13 +820,10 @@ width:max-content;
 
     text-shadow:0 0 8px rgba(51,201,176,.5);
 
-    /* এখন CSS animation নয়, JS ফ্রেম-বাই-ফ্রেম ট্রান্সলেট কন্ট্রোল করে —
-       যাতে এক প্যাস শেষে থেমে "UPDATE" ফ্ল্যাশ দেখিয়ে আবার শুরু করা যায় */
+    
     will-change: transform;
 }
 
-/* একবার স্ক্রলিং সম্পূর্ণ শেষ হলে ABP News-স্টাইলের "BREAKING NEWS" ধাঁচের এই "UPDATE" ব্যানার
-   ছোট থেকে জুম-ইন হয়ে ৩ সেকেন্ডের জন্য দেখাবে, তারপর আবার স্ক্রলিং শুরু হবে */
 .ticker-flash{
     position:absolute;
     inset:0;
@@ -856,7 +853,7 @@ width:max-content;
     75%  { transform:scale(0.95); }
     100% { transform:scale(1); opacity:1; }
 }
-/* তীর্যক আলোর ঝলক (lens-flare sweep) — ব্যানারের উপর দিয়ে বারবার বয়ে যাবে */
+
 .ticker-flash::before{
     content:"";
     position:absolute;
@@ -871,8 +868,7 @@ width:max-content;
     0%   { left:-45%; }
     100% { left:120%; }
 }
-/* UPDATE টেক্সট + তীর একসাথে বাম দিক থেকে ডান দিকে স্লাইড করে যাবে — মোট ৩ সেকেন্ডে ২ বার,
-   ফ্ল্যাশ যতবার দেখাবে ততবারই এই অ্যানিমেশন নতুন করে শুরু হবে */
+
 .tf-content{
     position:absolute;
     top:50%;
@@ -915,7 +911,6 @@ width:max-content;
     text-shadow:0 2px 4px rgba(0,0,0,0.45);
     filter: drop-shadow(0 0 6px rgba(255,230,120,0.85));
 }
-
 
 /* ===========================
    Animated Bottom Color Bar
@@ -1166,24 +1161,22 @@ width:max-content;
   position: relative;
   border-radius: var(--radius);
   overflow: hidden;
-  border: 2px solid rgba(51, 201, 176, 0.6); /* নিয়ন বর্ডার ফ্রেম - আরও উজ্জ্বল */
-  height: 180px; /* বড় টেক্সটের জন্য বাড়তি জায়গা */
+  border: 2px solid rgba(51, 201, 176, 0.6); 
+  height: 180px; 
   
-  /* ডাইনামিক মুভিং ব্যাকগ্রাউন্ড গ্রেডিয়েন্ট (Dynamic Colorful Fluid Background) - উজ্জ্বল ভার্সন */
+  
   background: linear-gradient(-45deg, #0E4D6B, #145C4A, #6B3FA0, #B8562E, #1E5FA8);
   background-size: 400% 400%;
   animation: dynamicMeshBackground 15s ease infinite;
   box-shadow: 0 0 40px rgba(51, 201, 176, 0.35), inset 0 0 60px rgba(0, 0, 0, 0.45);
 }
 
-/* ব্যাকগ্রাউন্ডের রঙের মুভমেন্ট অ্যানিমেশন */
 @keyframes dynamicMeshBackground {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* 🚀 ব্যানারের উপর দিয়ে যে লাইভ লেজার অ্যানিমেশনটি যাবে (Futuristic Laser Scanner Overlay) */
 .banner-wrap::before {
   content: "";
   position: absolute;
@@ -1198,7 +1191,7 @@ width:max-content;
     transparent);
   transform: skewX(-30deg);
   animation: laserScannerSweep 4s ease-in-out infinite;
-  z-index: 5; /* লেখাগুলোর উপর দিয়ে চমৎকার গ্লো নিয়ে স্লাইড করবে */
+  z-index: 5; 
   pointer-events: none;
 }
 
@@ -1207,7 +1200,6 @@ width:max-content;
   100% { left: 130%; }
 }
 
-/* সাইবারপঙ্ক ডিজিটাল গ্রিড লাইন অ্যানিমেশন (নিচ থেকে উপরে উঠবে) */
 .banner-wrap::after {
   content: "";
   position: absolute;
@@ -1254,7 +1246,6 @@ width:max-content;
   z-index: 3;
 }
 
-/* টেক্সট এন্ট্রি অ্যানিমেশন: লেখাগুলো বাম দিক থেকে বাউন্স করে ডাইনামিকলি আসবে */
 .banner-slide .banner-eyebrow,
 .banner-slide .banner-title,
 .banner-slide .banner-sub {
@@ -1282,16 +1273,15 @@ width:max-content;
   transition-delay: 0.4s;
 }
 
-/* 🌟 ডাইনামিক কালারফুল টেক্সট স্টাইল */
 .banner-eyebrow {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
-  color: #FFFFFF; /* উজ্জ্বল সাদা - সর্বোচ্চ কনট্রাস্ট */
+  color: #FFFFFF; 
   background: rgba(255, 184, 77, 0.28);
   padding: 4px 12px;
   border-radius: 4px;
   border-left: 3px solid #FFD269;
-  align-self: flex-start; /* কন্টেন্ট অনুযায়ী পিল বক্স তৈরি হবে */
+  align-self: flex-start; 
   letter-spacing: 3px;
   text-transform: uppercase;
   margin-bottom: 12px;
@@ -1306,7 +1296,7 @@ width:max-content;
   margin-bottom: 10px;
   letter-spacing: -0.5px;
   
-  /* আল্ট্রা কালারফুল উজ্জ্বল গ্রেডিয়েন্ট (Neon Cyan থেকে Hot Pink এবং Gold) */
+  
   background: linear-gradient(90deg, #5EF5DC 0%, #FF7FA3 45%, #FFE08A 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1322,7 +1312,6 @@ width:max-content;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
 }
 
-/* কালারফুল ইন্ডিকেটর ডটস */
 .banner-dots {
   position: absolute;
   bottom: 18px;
@@ -1348,7 +1337,6 @@ width:max-content;
   background: rgba(255, 255, 255, 0.4);
 }
 
-/* একটিভ ইন্ডিকেটর নিয়ন পিল শেপ নেবে */
 .banner-dots span.active {
   width: 30px;
   border-radius: 6px;
@@ -1356,7 +1344,6 @@ width:max-content;
   box-shadow: 0 0 15px rgba(51, 201, 176, 0.6);
 }
 
-/* ==================== NEWS-CHANNEL STYLE TEXT TICKER (ছবির বদলে টেক্সট নিউজ ব্যানার) ==================== */
 .news-ticker-wrap {
   margin: 16px 24px 0 24px;
   position: relative;
@@ -1369,7 +1356,7 @@ width:max-content;
   border: 1px solid var(--border);
   box-shadow: 0 8px 26px rgba(0,0,0,0.35);
 }
-/* ==== হালকা আগুনের গ্লো — স্ক্রলিং বক্সের ঠিক নিচে অল্প ফ্লিকার করবে ==== */
+
 .news-ticker-wrap::before{
   content:"";
   position:absolute;
@@ -1467,8 +1454,7 @@ width:max-content;
   align-items: center;
   white-space: nowrap;
   will-change: transform;
-  /* স্ক্রলিং এখন CSS animation দিয়ে নয়, JS দিয়ে ফ্রেম-বাই-ফ্রেম কন্ট্রোল করা হয় —
-     যাতে পজ/রিজিউম, ৩০ সেকেন্ড ইন্টারাপ্ট ফ্ল্যাশ, এবং ফুল-প্যাস শেষে ৪ সেকেন্ড ফ্ল্যাশ সঠিকভাবে সিঙ্ক থাকে */
+  
 }
 .news-ticker-scroll span.item {
   display: inline-flex;
@@ -1480,7 +1466,7 @@ width:max-content;
   color: #33C9B0;
   animation: newsItemHueCycle 8s linear infinite;
 }
-/* প্রতিটা লাইনের রঙ ধীরে ধীরে পুরো কালার স্পেকট্রাম জুড়ে বদলাতে থাকবে (আগের gradient-sweep থেকে ভিন্ন ধরনের অ্যানিমেশন) */
+
 @keyframes newsItemHueCycle {
   0%   { filter: hue-rotate(0deg); }
   100% { filter: hue-rotate(360deg); }
@@ -1502,7 +1488,7 @@ width:max-content;
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
-/* একবার স্ক্রলিং সম্পূর্ণ চক্র শেষ করলে এই বড়, চোখে-লাগা ফ্ল্যাশটি দেখাবে, তারপর আবার স্ক্রলিং শুরু হবে */
+
 .news-ticker-flash {
   position: absolute;
   inset: 0;
@@ -1516,8 +1502,7 @@ width:max-content;
   background-size: 220% 100%;
   animation: newsFlashBg 1s linear infinite;
   box-shadow: 0 0 24px rgba(224,82,74,0.55) inset;
-  /* লুকানো অবস্থায় এটি NOTICE ট্যাগের দিকে (বাম পাশে) সরানো থাকে, দেখানোর সময় স্মুথভাবে
-     মাঝে এসে বসে, আবার লুকানোর সময় ঠিক একই পথে ফিরে যায় */
+  
   transform: translateX(-100%);
   opacity: 0;
   pointer-events: none;
@@ -1594,10 +1579,7 @@ aside.sidebar{
   padding:0 12px 40px 24px;
   display:flex;flex-direction:column;gap:4px;
 }
-/* মোবাইল/সরু স্ক্রিনে sidebar আর main content পাশাপাশি রাখলে দুটোই চেপে যায় (squeezed) —
-   এতদিন এই কারণেই মোবাইলে অনেক নেভিগেশন আইটেম খুঁজে পাওয়া কঠিন হচ্ছিল,
-   ইউজারকে "Desktop site" মোড অন করে দেখতে হচ্ছিল। এখন থেকে ছোট স্ক্রিনে sidebar পুরো
-   width নিয়ে content-এর উপরে বসবে, ফলে প্রতিটা নেভিগেশন আইটেম স্বাভাবিক সাইজে দেখা যাবে। */
+
 @media (max-width:900px){
   .body-layout{ flex-direction:column; }
   aside.sidebar{
@@ -1698,7 +1680,7 @@ aside.sidebar{
 }
 .nav-item.active .dot{background:var(--agent);}
 .nav-item.dashboard-tab.active .dot{background:var(--admin);}
-/* ✨ Quick Link — রঙিন গ্লো ইফেক্ট */
+
 .nav-item.nav-quicklink-glow{
   color:#fff;
   font-weight:700;
@@ -1729,7 +1711,7 @@ aside.sidebar{
     text-shadow:0 0 10px rgba(255,94,126,0.55);
   }
 }
-/* ✨ Calendar — রঙিন গ্লো ইফেক্ট (Quick Link এর ঠিক নিচে) */
+
 .nav-item.nav-calendar-glow{
   color:#fff;
   font-weight:700;
@@ -1760,7 +1742,7 @@ aside.sidebar{
     text-shadow:0 0 10px rgba(89,209,255,0.55);
   }
 }
-/* ✨ Calendar এর ঠিক নিচে — "Currently Online" ছোট লিস্ট, সবসময় sidebar-এ দেখা যাবে */
+
 .sidebar-online-block{
   margin-top:10px;
   padding:10px 12px;
@@ -1843,7 +1825,7 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
   55%{ opacity:1; transform:translateY(-4px) scale(1.03) rotateX(0deg); box-shadow:0 0 26px 2px var(--status-color, rgba(51,201,176,0.5)); filter:blur(0); }
   100%{ opacity:1; transform:translateY(0) scale(1) rotateX(0deg); box-shadow:0 0 0 rgba(51,201,176,0); }
 }
-/* ✨ প্রথমবার আসার সময় কার্ডের উপর দিয়ে একটা উজ্জ্বল আলোর ঝলক (light burst) বয়ে যাবে */
+
 #panel-HOME .stat-card .card-entrance-flash{
   content:'';
   position:absolute; inset:0;
@@ -1872,7 +1854,7 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
   0%,100%{ box-shadow: 0 0 8px var(--status-color, transparent); opacity:.85; }
   50%{ box-shadow: 0 0 18px 2px var(--status-color, transparent); opacity:1; }
 }
-/* ✨ কার্ডের উপর দিয়ে হালকা চকচকে shimmer একবার-পর-একবার পাস করে যাবে */
+
 #panel-HOME .stat-card::after{
   content:'';
   position:absolute; top:0; left:-60%; width:45%; height:100%;
@@ -1980,7 +1962,7 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 #panel-HOME .qcr-pill.good{ background:rgba(224,195,65,0.18); color:var(--good); border:1px solid rgba(224,195,65,0.4); }
 #panel-HOME .qcr-pill.average{ background:rgba(224,138,63,0.18); color:var(--average); border:1px solid rgba(224,138,63,0.4); }
 #panel-HOME .qcr-pill.need{ background:rgba(224,82,74,0.18); color:var(--need); border:1px solid rgba(224,82,74,0.4); }
-/* 0% স্কোর — সাধারণ "need" tier থেকেও আলাদা করে দেখানোর জন্য, urgent review দরকার */
+
 #panel-HOME .qcr-pill.zero-score{
   background: repeating-linear-gradient(45deg, rgba(224,82,74,0.35), rgba(224,82,74,0.35) 6px, rgba(20,8,8,0.55) 6px, rgba(20,8,8,0.55) 12px);
   color:#fff;
@@ -2188,7 +2170,7 @@ table.raw-sheet-table tr:not(.rs-header-row):hover td:not(.rs-head){
 table.raw-sheet-table tr:not(.rs-header-row) td:first-child{
   font-weight:600;
 }
-/* সারিগুলো একে একে হালকা করে ভেসে উঠবে */
+
 .rs-anim-row{
   opacity:0;
   animation:rsRowIn .45s ease forwards;
@@ -2382,9 +2364,6 @@ input[type=file]{display:none;}
   100%{ transform:scaleY(0.35); }
 }
 
-/* ==========================
-   Page Footer — সাইডবারে নয়, পাতার একদম নিচে, normal flow-এ (fixed নয়), lekha choto
-========================== */
 .page-footer{
     margin-top:auto;
     display:flex;
@@ -3092,6 +3071,10 @@ transform:translateY(0);
   box-shadow:0 8px 24px rgba(0,0,0,.3);
 }
 .banner-carousel-track{ display:flex; height:100%; transition:transform .8s cubic-bezier(.4,0,.2,1); }
+.banner-carousel-wrap{ cursor:grab; touch-action:pan-y; user-select:none; }
+.banner-carousel-wrap.dragging{ cursor:grabbing; }
+.banner-carousel-wrap.dragging .banner-carousel-track{ transition:none; }
+.banner-carousel-slide img, .banner-carousel-slide-bg{ -webkit-user-drag:none; user-drag:none; }
 .banner-carousel-slide{ min-width:100%; height:100%; position:relative; overflow:hidden; }
 .banner-carousel-slide-bg{
   position:absolute; inset:0; background-size:cover; background-position:center;
@@ -3128,7 +3111,6 @@ transform:translateY(0);
 .banner-mgr-meta{ flex:1; font-size:13px; }
 .banner-mgr-actions{ display:flex; gap:6px; flex-wrap:wrap; }
 
-/* ===================== EMPLOYEE ⇄ ADMIN CHAT — WIDGET (Employee সাইড) ===================== */
 .chat-bubble-btn{
   position:fixed; left:24px; bottom:36px; z-index:10050;
   height:48px; padding:0 18px; border-radius:24px;
@@ -3246,7 +3228,6 @@ transform:translateY(0);
 }
 .chat-input-row input:focus{ outline:none; border-color:var(--agent); }
 
-/* ===================== ADMIN সাইড — থ্রেড লিস্ট + চ্যাট ভিউ ===================== */
 .admin-chat-layout{
   display:flex; gap:14px; height:560px; max-height:70vh;
 }
@@ -3283,7 +3264,7 @@ transform:translateY(0);
 </style>
 </head>
 <body>
-<!-- ============ PAGE LOADING OVERLAY (ডাটা লোড হওয়া পর্যন্ত round spinner ঘুরতে থাকবে) ============ -->
+
 <div id="pageLoadOverlay">
   <div class="page-load-spinner"></div>
   <div class="page-load-marquee"><span class="page-load-text">লোড হচ্ছে... সম্পূর্ণ পেজ লোড হতে কিছুক্ষণ অপেক্ষা করুন, Audit Portal থেকে লাইভ ডাটা সিঙ্ক করা হচ্ছে...</span></div>
@@ -3445,7 +3426,7 @@ transform:translateY(0);
         <div class="emp-autologout-countdown" id="empAutoLogoutCountdown">Auto-logout in 30:00</div>
       </div>
     </div>
-    <!-- 1) Logo placeholder — GitHub-এ পাবলিশ করার পর এখানে আপনার logo.png রাখলেই এটি অটো লোড হবে -->
+    
     <div class="brand-strip" id="brandStrip">
       <div class="brand-globe brand-globe-left" aria-hidden="true">
         <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
@@ -3609,7 +3590,6 @@ transform:translateY(0);
       <div class="nav-section">
       <div class="nav-label">📖 QA RESOURCE CENTER</div>
 
-<!-- সবাই (employee login) দেখবে — গুগল শিট থেকে সরাসরি লাইভ ডাটা -->
 <div class="nav-item" data-tab="AUDITNEW" onclick="switchTab('AUDITNEW')"><span class="dot"></span>Audit Sheet (NEW)</div>
 <div class="nav-item" data-tab="CATVDISPO" onclick="switchTab('CATVDISPO')"><span class="dot"></span>CATV DISPO</div>
 <div class="nav-item" data-tab="BBTECHDISPO" onclick="switchTab('BBTECHDISPO')"><span class="dot"></span>BB TECH DISPO</div>
@@ -3619,7 +3599,6 @@ transform:translateY(0);
 <div class="nav-item" data-tab="AUDITPARAMETER" onclick="switchTab('AUDITPARAMETER')"><span class="dot"></span>Audit Parameter</div>
 <div class="nav-item" data-tab="DASHBOARDAPRMAR" onclick="switchTab('DASHBOARDAPRMAR')"><span class="dot"></span>Dashboard Apr'25-Mar'26</div>
 
-<!-- সবাই দেখবে -->
 <div class="nav-item"
      data-tab="UPDATES"
      onclick="switchTab('UPDATES')">
@@ -3629,7 +3608,6 @@ transform:translateY(0);
 
 </div>
 
-<!-- সবাই দেখবে, কনটেন্ট শুধু Admin থেকে এডিট হবে -->
 <div class="nav-item"
      data-tab="HELP"
      onclick="switchTab('HELP')">
@@ -3639,7 +3617,6 @@ transform:translateY(0);
 
 </div>
 
-<!-- শুধু Admin দেখবে -->
 <div class="nav-item admin-only"
      data-tab="ADMIN"
      onclick="switchTab('ADMIN')"
@@ -3650,7 +3627,6 @@ transform:translateY(0);
 
 </div>
 
-<!-- Admin ও Super Admin দুজনেই দেখবে -->
 <div class="nav-item admin-only"
      data-tab="EMPCHAT"
      onclick="switchTab('EMPCHAT')"
@@ -3661,7 +3637,6 @@ transform:translateY(0);
 
 </div>
 
-<!-- Admin ও Super Admin দুজনেই দেখবে — Home পেজের উপরে যে ব্যানার ছবি ঘোরে সেটা এখান থেকে ম্যানেজ হয় -->
 <div class="nav-item admin-only"
      data-tab="BANNERMGR"
      onclick="switchTab('BANNERMGR')"
@@ -3672,7 +3647,6 @@ transform:translateY(0);
 
 </div>
 
-<!-- শুধু Super Admin দেখবে (NEW - ADDITIVE) -->
 <div class="nav-item superadmin-only"
      data-tab="SUPERADMIN"
      onclick="switchTab('SUPERADMIN')"
@@ -3687,7 +3661,6 @@ transform:translateY(0);
       <div class="nav-section">
 <div class="nav-label">Outbound</div>
 
-<!-- শুধু Agent দেখবে -->
 <div class="nav-item agent-only"
      onclick="window.location.href='bb-retention.html'"
      style="display:none;">
@@ -3697,7 +3670,6 @@ transform:translateY(0);
 
 </div>
 
-<!-- শুধু Agent দেখবে -->
 <div class="nav-item agent-only"
      onclick="window.location.href='business-dev-bb.html'"
      style="display:none;">
@@ -3708,21 +3680,18 @@ transform:translateY(0);
 </div>
       </div>
 
-<!-- সবার সবচেয়ে নিচে থাকবে -->
 <div class="nav-item nav-quicklink-glow"
      onclick="window.location.href='https://qualityanalystkcbpl-collab.github.io/call-quality/quick_link.html'">
     <span class="dot"></span>
     Quick Link
 </div>
 
-<!-- Quick Link এর ঠিক নিচে — আলাদা Calendar পেজ -->
 <div class="nav-item nav-calendar-glow"
      onclick="window.location.href='calender.html'">
     <span class="dot"></span>
     Calendar
 </div>
 
-<!-- Calendar এর ঠিক নিচে — কারা এখন অনলাইন আছে, তার ছোট লিস্ট (সবসময় দেখা যাবে) -->
 <div class="sidebar-online-block" id="sidebarOnlineBlock">
     <div class="sidebar-online-title">
         <span class="pulse-dot" style="display:inline-block;"></span>
@@ -3735,7 +3704,7 @@ transform:translateY(0);
 
     </aside>
     <main class="content">
-      <!-- Home পেজে উপরে ঘোরা ব্যানার (শুধু HOME ট্যাবে দেখা যাবে) -->
+      
       <div id="bannerCarouselWrap" class="banner-carousel-wrap" style="display:none;"></div>
       <!-- Home overview panel -->
       <div class="panel active" id="panel-HOME"></div>
@@ -3770,7 +3739,7 @@ transform:translateY(0);
         </div>
         <div id="updatesList"></div>
       </div>
-      <!-- Help panel (New Update-এর মতোই — admin post/delete করতে পারবে) -->
+      
       <div class="panel" id="panel-HELP">
         <div class="panel-header">
           <div><h1>Help & Support</h1><p>প্রয়োজনীয় সহায়তা তথ্য ও নির্দেশনা এখানে পাবেন।</p></div>
@@ -3999,7 +3968,7 @@ transform:translateY(0);
       </g>
     </svg>
   </div>
-  <!-- ============ PAGE FOOTER (সাইডবারে নয়, একদম পাতার শেষে, fixed নয়, normal flow-এ scroll হবে) ============ -->
+  
   <footer class="page-footer">
     <div class="page-footer-brand">
       <h3>GTPL KCBPL · Call Quality Audit System</h3>
@@ -4056,17 +4025,13 @@ transform:translateY(0);
 /* ===================== GOOGLE API CONFIG ===================== */
 // 
 
-// ⚠️ এখানে 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbCrtIR8ww9F8eJBKZl92Ml-L7TwDq_hZBu3VHK8D8H-EYz2FM5nw/exec";
-/* ===================== SUPABASE (শুধু Home Banner ফিচারের জন্য — বাকি সব ডাটা Google Sheet-এই থাকবে) ===================== */
+
 const SUPABASE_URL = "https://iqjmlkpkrtdrwhksmvai.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxam1sa3BrcnRkcndoa3NtdmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzIyMDIsImV4cCI6MjEwMDU0ODIwMn0.sXxh4eXLmDax2be9yYmKTT2oUF7NwgLOmaHTfdFO2pY";
 const BANNER_BUCKET = "banners";
 const BANNER_MAX_COUNT = 10;
 
-/* ✅ CATV / BB TECH SUPPORT / BB RENEWAL — Agent Summary (Audit Count, Avg Score) এই নতুন
-   CALL QUALITY DASHBOARD ব্যাকএন্ড (Apps Script) থেকে আসবে। Call-Level Logs Detail
-   আগের মতোই WEB_APP_URL থেকে অটোমেটিক আসতে থাকবে — কোনো পরিবর্তন হয়নি। */
 const NEW_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwynUu1nChgzn5oJYILitU_O1ce4uIZ_Nnr899xdXlWWMFCRe7UDa74CLg5HFCS551Xug/exec";
 const NEW_BACKEND_PROCESS_KEY = {
   CATV: 'CATV',
@@ -4079,15 +4044,13 @@ const VERTICALS = {
   BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH', dashId: 'DASH-BBTECH', dashSheet: 'BBTECH_DASHBOARD' },
   BBRENEWAL: { label: 'BB Renewal', key: 'scores:BBRENEWAL', rawKey: 'raw:BBRENEWAL', dashId: 'DASH-BBRENEWAL', dashSheet: 'BBRENEWAL_DASHBOARD' }
 };
-/* গুগল শিটের যে ট্যাব থেকে "Answered Within 3 Seconds" ডাটা আসবে, সেই ট্যাবের নামগুলো এখানে দিন */
+
 const ANS3SEC_SHEETS = {
   CATV: 'CATV_ANSWERED_3SEC',
   BBTECH: 'BBTECH_ANSWERED_3SEC',
   BBRENEWAL: 'BBRENEWAL_ANSWERED_3SEC'
 };
-/* System সেকশনের ট্যাবগুলো — এগুলো একটি নতুন/আলাদা গুগল শিট থেকে ডাটা আনে, তাই এর জন্য
-   আলাদা একটি Google Apps Script Web App ডিপ্লয় করে তার /exec URL নিচের
-   RAW_SHEET_WEB_APP_URL ভ্যারিয়েবলে বসিয়ে দিতে হবে (নিচে নোট দেখুন)। */
+
 const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweHhwH_NAuH-fRKtLUdJC9d6t5GxKKN3Th0_0HHVoV4lIf7vbfaGt1VY8dgz0zlRSm/exec";
 const RAW_SHEET_TABS = {
   AUDITNEW:        { label: 'Audit Sheet (NEW)',              sheetName: 'Audit sheet(NEW)',        icon: '🗂️' },
@@ -4101,6 +4064,13 @@ const RAW_SHEET_TABS = {
 };
 let ans3secSubTab = 'CATV';
 let currentRole = null;
+let loginPopupFetchPromise = null; // shared fetch so the popup and admin editor don't both hit the backend separately
+function fetchLoginPopupOnce(){
+  if(!loginPopupFetchPromise){
+    loginPopupFetchPromise = storageGet('loginPopup');
+  }
+  return loginPopupFetchPromise;
+}
 let selectedRole = 'agent';
 let currentTab = 'HOME';
 let bannerTimer = null;
@@ -4127,7 +4097,7 @@ function startLiveClock() {
   }, 1000);
 }
 startLiveClock();
-/* লোগো এরিয়ায় */
+
 function startLogoRotator() {
   const brand = document.getElementById('logoRotatorBrand');
   const clock = document.getElementById('logoRotatorClock');
@@ -4201,9 +4171,7 @@ function toggleTheme(sourceEl){
   const isLight = sourceEl ? sourceEl.checked : false;
   document.body.classList.toggle('light-theme', isLight);
   localStorage.setItem('qa_theme', isLight ? 'light' : 'dark');
-  // দুই জায়গার টগলই (লগইন পেজ + মেইন অ্যাপ হেডার) একসাথে সিঙ্কে থাকবে
   document.querySelectorAll('.theme-switch-input').forEach(sw => { sw.checked = isLight; });
-  // Home পেজের চার্টগুলোর রঙ (tick/grid) থিম বদলানোর সাথে সাথেই ঠিক হয়ে যাবে
   if(typeof currentTab !== 'undefined' && currentTab === 'HOME' && typeof renderHomePage === 'function'){
     renderHomePage();
   }
@@ -4270,9 +4238,6 @@ async function storageSet(key, value){
   }
 }
 
-/* ===================== HOME BANNER CAROUSEL (Supabase-ব্যাকড) =====================
-   Admin/Super Admin "🖼️ Banner Manager" থেকে ছবি আপলোড করবে (সর্বোচ্চ ১০টা),
-   আর Home ট্যাবের উপরে সেই ছবিগুলো auto-rotate করে সবাই (Agent সহ) দেখতে পাবে। */
 let homeBannerList = [];
 let homeBannerIndex = 0;
 let homeBannerAutoTimer = null;
@@ -4306,7 +4271,7 @@ function renderHomeBannerCarousel(){
   if(!wrap || !homeBannerList.length) return;
   wrap.innerHTML = `
     <div class="banner-carousel-track" id="homeBannerTrack">
-      ${homeBannerList.map(b=>`<div class="banner-carousel-slide"><div class="banner-carousel-slide-bg" style="background-image:url('${escapeAttr(b.image_url)}')"></div><img src="${escapeAttr(b.image_url)}" alt="banner"></div>`).join('')}
+      ${homeBannerList.map((b,i)=>`<div class="banner-carousel-slide"><div class="banner-carousel-slide-bg" style="background-image:url('${escapeAttr(b.image_url)}')"></div><img src="${escapeAttr(b.image_url)}" alt="banner" loading="${i===0?'eager':'lazy'}" decoding="async" draggable="false"></div>`).join('')}
     </div>
     ${homeBannerList.length>1 ? `
     <button class="banner-carousel-arrow prev" onclick="goToHomeBanner(homeBannerIndex-1)">‹</button>
@@ -4332,7 +4297,39 @@ function goToHomeBanner(i){
   homeBannerAutoTimer = setInterval(()=> goToHomeBanner(homeBannerIndex+1), 10000);
 }
 
-/* ---------- Admin/Super Admin: Banner Manager প্যানেল ---------- */
+/* Mouse-drag (and touch, via the same pointer events) swipe for the banner carousel.
+   Drag left -> next slide, drag right -> previous slide. Everything else (arrows,
+   dots, auto-rotate every 10s) keeps working exactly as before. */
+(function setupBannerDragSwipe(){
+  const wrap = document.getElementById('bannerCarouselWrap');
+  if(!wrap) return;
+  const DRAG_THRESHOLD = 50;
+  let dragStartX = 0;
+  let isDragging = false;
+
+  wrap.addEventListener('pointerdown', (e)=>{
+    if(!homeBannerList.length) return;
+    isDragging = true;
+    dragStartX = e.clientX;
+    wrap.classList.add('dragging');
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', (e)=>{
+    if(!isDragging) return;
+    e.preventDefault();
+  }, { passive:false });
+  window.addEventListener('pointerup', (e)=>{
+    if(!isDragging) return;
+    isDragging = false;
+    wrap.classList.remove('dragging');
+    const dx = e.clientX - dragStartX;
+    if(Math.abs(dx) > DRAG_THRESHOLD){
+      if(dx < 0){ goToHomeBanner(homeBannerIndex+1); } // dragged left -> next
+      else{ goToHomeBanner(homeBannerIndex-1); } // dragged right -> previous
+    }
+  });
+})();
+
 let bannerMgrItems = [];
 async function renderBannerManagerPanel(){
   const panel = document.getElementById('panel-BANNERMGR');
@@ -4382,6 +4379,38 @@ async function loadBannerMgrList(){
       </div>
     </div>`).join('');
 }
+/* Resize + compress an image in the browser before upload, so large phone/camera
+   photos (often 3-5MB) don't get stored and re-downloaded at full size on every
+   Home page load. Caps the longest side at maxDim and re-encodes as JPEG. */
+function compressImageFile(file, maxDim = 1600, quality = 0.82) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objUrl);
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const scale = maxDim / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (blob && blob.size < file.size) {
+          resolve({ blob, ext: 'jpg', type: 'image/jpeg' });
+        } else {
+          resolve({ blob: file, ext: (file.name.split('.').pop() || 'jpg').toLowerCase(), type: file.type });
+        }
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => resolve({ blob: file, ext: (file.name.split('.').pop() || 'jpg').toLowerCase(), type: file.type });
+    img.src = objUrl;
+  });
+}
 async function handleBannerUpload(input){
   const file = input.files && input.files[0];
   if(!file) return;
@@ -4397,16 +4426,16 @@ async function handleBannerUpload(input){
   }
   showToast('আপলোড হচ্ছে, একটু অপেক্ষা করুন...');
   try{
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const { blob: uploadBlob, ext, type: uploadType } = await compressImageFile(file);
     const path = `banner_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
     const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${BANNER_BUCKET}/${path}`, {
       method:'POST',
       headers:{
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': file.type
+        'Content-Type': uploadType
       },
-      body: file
+      body: uploadBlob
     });
     if(!uploadRes.ok){ throw new Error('Storage upload failed: ' + uploadRes.status); }
     const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}/${path}`;
@@ -4490,13 +4519,9 @@ async function moveBanner(id, direction){
     await loadBannerMgrList();
   }catch(e){ console.error(e); showToast('অর্ডার পরিবর্তন ব্যর্থ হয়েছে।'); }
 }
-/* ===================== LIVE "ONLINE NOW" PRESENCE TRACKER =====================
-   কারা এই মুহূর্তে পোর্টাল খুলে রেখেছে তার লাইভ কাউন্ট।
-   কোনো নতুন Apps Script action লাগে না — এটি existing getSettings/saveSettings
-   generic key-value store-ই ব্যবহার করে ('onlineSessions' নামে একটি key)।
-*/
-const ONLINE_HEARTBEAT_MS = 30 * 1000;   // প্রতি ৩০ সেকেন্ডে একবার নিজের presence আপডেট
-const ONLINE_TIMEOUT_MS   = 90 * 1000;   // ৯০ সেকেন্ড কোনো heartbeat না এলে সেই সেশন "offline" ধরা হবে
+
+const ONLINE_HEARTBEAT_MS = 30 * 1000;
+const ONLINE_TIMEOUT_MS   = 90 * 1000;
 
 function getMySessionId(){
   let id = sessionStorage.getItem('qa_session_id');
@@ -4514,17 +4539,10 @@ function renderOnlineCount(count){
   if(b) b.textContent = count;
 }
 
-// পুরনো ফরম্যাট (শুধু নাম্বার timestamp) এবং নতুন ফরম্যাট ({ts,name,id}) — দুটোই নিরাপদে হ্যান্ডল করার জন্য
 function getSessionTs(entry){
   return (entry && typeof entry === 'object') ? entry.ts : entry;
 }
 
-/* ===================== প্রতিদিনের মোট অনলাইন সময় (per agent, per day) =====================
-   প্রতিটা agent আজ সর্বমোট কতক্ষণ অনলাইন ছিল তার হিসাব — 'dailyOnlineTime' নামে একটি
-   generic key-value entry-তে জমা থাকে: { "YYYY-MM-DD": { agentKey: {name, totalSec} } }
-   totalSec সরাসরি সেই agent-এর নিজের browser-এ থাকা qa_emp_session_start / qa_emp_today_prior
-   থেকে হিসাব করে পাঠানো হয় — অর্থাৎ ঠিক সেই একই সংখ্যা, যেটা তার নিজের welcome bar-এর
-   "Today: HH:MM:SS"-এ দেখায়। এতে দুই জায়গার সময় সবসময় মিলে যায়। */
 function getTodayKey(){
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -4534,9 +4552,6 @@ function formatDailyDuration(totalSec){
   return `${secToHMSClient(totalSec)} today`;
 }
 
-// প্রতি সেকেন্ডে "Currently Online" লিস্টের সময়টা লাইভ কাউন্ট-আপ হবে (শুধু ৩০ সেকেন্ড পরপর
-// রিফ্রেশের অপেক্ষা না করে)। প্রতিবার লিস্ট রেন্ডার হওয়ার সময় সার্ভার থেকে পাওয়া বেস সময়টা
-// এখানে জমা রাখা হয়, আর এই ticker সেই বেস থেকে প্রতি সেকেন্ডে গুনে গুনে UI আপডেট করে।
 window.__dailyTimeBase = window.__dailyTimeBase || {};
 function tickOnlineDailyTimes(){
   const now = Date.now();
@@ -4553,16 +4568,12 @@ if(!window.__dailyTimeTickerStarted){
   setInterval(tickOnlineDailyTimes, 1000);
 }
 
-/* এই ফাংশনটা "Currently Online" লিস্টে দেখানো আজকের মোট সময়টাকে ঠিক সেই একই সোর্স থেকে বসায়
-   যেটা দিয়ে ইউজারের নিজের welcome bar-এর "Today: HH:MM:SS" হিসাব হয় (qa_emp_session_start +
-   qa_emp_today_prior, EMP ব্যাকএন্ড থেকে আসা) — ফলে দুই জায়গার সংখ্যা সবসময় মিলে যাবে,
-   আলাদা করে হিসাব (accumulate) করার দরকার নেই। */
 async function publishDailyOnlineTime(agentKey, displayName, now){
   if(!agentKey) return;
   try{
     const sessionStart = Number(localStorage.getItem('qa_emp_session_start')) || null;
     const todayPrior = Number(localStorage.getItem('qa_emp_today_prior')) || 0;
-    if(!sessionStart) return; // এখনো employee session শুরু হয়নি
+    if(!sessionStart) return;
     const totalSec = todayPrior + Math.max(0, (now - sessionStart) / 1000);
 
     const day = getTodayKey();
@@ -4585,11 +4596,6 @@ async function getDailyOnlineMap(){
   }
 }
 
-/* সব জায়গায় (ব্যাজ, সাইডবার লিস্ট, মোডাল) একই sessions স্ন্যাপশট থেকে রেন্ডার হয় —
-   আগে প্রতিটা জায়গা আলাদা আলাদা করে storageGet('onlineSessions') কল করত, ফলে দুটো
-   প্রায়-একই-সময়ের fetch ভিন্ন ভিন্ন মুহূর্তের ডেটা পেয়ে যেত (অনেক এজেন্ট একসাথে
-   heartbeat পাঠালে সার্ভারের শেয়ার্ড ডেটাও পাল্টে যাচ্ছিল) — তাই ব্যাজ আর সাইডবারের
-   সংখ্যা না মেলার সমস্যা হতো। এখন একটামাত্র fetch থেকে সব জায়গা একসাথে আপডেট হয়। */
 function buildOnlineListHtml(sessions, dailyMap, fetchTs){
   const entries = Object.values(sessions);
   const seen = new Map();
@@ -4608,9 +4614,6 @@ function buildOnlineListHtml(sessions, dailyMap, fetchTs){
     return { count: 0, html: '<div class="online-agents-empty">No one is currently online.</div>' };
   }
 
-  // distinct headcount: একই agent-এর একাধিক ট্যাব একজন হিসেবেই গোনা হচ্ছে (dedup),
-  // কিন্তু anonymous session (এখনো নাম জানা যায়নি) আলাদা করা যায় না বলে প্রতিটাকে
-  // আলাদা ভাবেই গোনা হচ্ছে
   const distinctCount = seen.size + anonymousCount;
 
   let html = '';
@@ -4663,25 +4666,20 @@ async function pingOnlinePresence(){
     const mySessionId = getMySessionId();
     const now = Date.now();
     let sessions = (await storageGet('onlineSessions')) || {};
-    // পুরনো/মৃত সেশনগুলো বাদ দেওয়া হচ্ছে
     Object.keys(sessions).forEach(id=>{
       if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
     });
-    // নিজের নাম/আইডি (লগইন করা থাকলে) — না থাকলে null (যেমন লগইন স্ক্রিনে থাকা অবস্থায়)
     const myName = localStorage.getItem('qa_emp_name') || null;
     const myEmpId = localStorage.getItem('qa_emp_id') || null;
     sessions[mySessionId] = { ts: now, name: myName, id: myEmpId };
     await storageSet('onlineSessions', sessions);
     await renderPresenceUI(sessions);
-    // লগইন করা থাকলে আজকের মোট অনলাইন সময়টা (Today stat-এর সাথে মিলিয়ে) পাবলিশ করা হচ্ছে
     const myAgentKey = myEmpId || myName;
     if(myAgentKey) await publishDailyOnlineTime(myAgentKey, myName, now);
   }catch(e){
     console.error('Online presence update failed', e);
   }
 }
-// প্রতিবার হার্টবিটে সামান্য random jitter (0-4 সেকেন্ড) যোগ করা হচ্ছে, যাতে অনেক এজেন্ট
-// একসাথে ঠিক একই মুহূর্তে লিখতে না যায় (শেয়ার্ড ডেটাতে লেখার সংঘর্ষ কমাতে সাহায্য করে)।
 function scheduleNextPresencePing(){
   const jitter = Math.floor(Math.random() * 4000);
   setTimeout(async ()=>{
@@ -4692,7 +4690,6 @@ function scheduleNextPresencePing(){
 pingOnlinePresence();
 scheduleNextPresencePing();
 
-/* ===================== "কারা অনলাইন আছে" মোডাল (ম্যানুয়ালি ক্লিক করলে fresh fetch) ===================== */
 async function openOnlineAgentsModal(){
   const modal = document.getElementById('onlineAgentsModal');
   const listEl = document.getElementById('onlineAgentsList');
@@ -4721,7 +4718,6 @@ function closeOnlineAgentsModal(){
   if(modal) modal.style.display = 'none';
 }
 window.addEventListener('beforeunload', ()=>{
-  // ট্যাব বন্ধ হওয়ার সময় নিজের সেশনটি সরিয়ে ফেলার একটি best-effort চেষ্টা
   navigator.sendBeacon && storageGet('onlineSessions').then(sessions=>{
     if(!sessions) return;
     delete sessions[getMySessionId()];
@@ -4737,22 +4733,17 @@ function showToast(msg){
   t._timer = setTimeout(()=> t.style.display='none', 2600);
 }
 
-/* ===================== EMPLOYEE ⇄ ADMIN CHAT =====================
-   সব মেসেজ generic key-value store-এ ('chatThreads' key) জমা থাকে, যেটা ইতিমধ্যেই
-   Google Sheet-ব্যাকড Apps Script দিয়ে সেভ হয় — তাই এখানেও একই ব্যাকআপ পাওয়া যাবে।
-   গঠন: { employeeId: { employeeId, employeeName, messages:[{from,text,ts,senderName}], adminUnread } } */
 const CHAT_POLL_MS = 15 * 1000;
 let chatPollInterval = null;
-let chatOpenEmployeeId = null; // admin সাইডে কোন এজেন্টের থ্রেড খোলা আছে
+let chatOpenEmployeeId = null;
 
-/* প্রতিবার চ্যাট বাবল খোলা হলে প্যানেলের থিম কালার পরের সেট-এ ঘুরে যাবে (cycle) */
 const EMP_CHAT_THEMES = [
-  { panel:'#1D1642', header:'#140F30', bubble:'#2C2460' }, // বেগুনি (default)
-  { panel:'#0F2B1E', header:'#0A1E15', bubble:'#1B4A32' }, // সবুজ
-  { panel:'#2B1420', header:'#1F0D16', bubble:'#4A1F30' }, // ম্যাজেন্টা
-  { panel:'#12253A', header:'#0C1A2A', bubble:'#1E3E5C' }, // নীল
-  { panel:'#332614', header:'#26190D', bubble:'#5A431F' }, // অ্যাম্বার
-  { panel:'#14312F', header:'#0D2321', bubble:'#1F544F' }, // টিল
+  { panel:'#1D1642', header:'#140F30', bubble:'#2C2460' },
+  { panel:'#0F2B1E', header:'#0A1E15', bubble:'#1B4A32' },
+  { panel:'#2B1420', header:'#1F0D16', bubble:'#4A1F30' },
+  { panel:'#12253A', header:'#0C1A2A', bubble:'#1E3E5C' },
+  { panel:'#332614', header:'#26190D', bubble:'#5A431F' },
+  { panel:'#14312F', header:'#0D2321', bubble:'#1F544F' },
 ];
 let empChatThemeIndex = 0;
 function applyNextEmpChatTheme(){
@@ -4789,7 +4780,6 @@ function trimThreadMessages(thread){
   if(thread.messages.length > 200) thread.messages = thread.messages.slice(thread.messages.length - 200);
 }
 
-/* ---------- Employee সাইড ---------- */
 async function sendEmployeeChatMessage(){
   const input = document.getElementById('empChatInput');
   if(!input || !empEmployeeId) return;
@@ -4898,7 +4888,6 @@ function toggleEmployeeChatPanel(){
   }
 }
 
-/* ---------- Admin/Super Admin সাইড ---------- */
 async function renderAdminChatList(){
   const panel = document.getElementById('panel-EMPCHAT');
   if(!panel) return;
@@ -5018,7 +5007,6 @@ async function sendAdminChatReply(){
   }
 }
 
-/* ---------- পোলিং (নতুন মেসেজ/আনরিড ব্যাজের জন্য) ---------- */
 function startChatPolling(){
   if(chatPollInterval) clearInterval(chatPollInterval);
   chatPollInterval = setInterval(()=>{
@@ -5086,16 +5074,15 @@ async function doLogin(){
 
     currentRole = selectedRole;
 
-    // ১ ঘণ্টার জন্য Login Session Save
     localStorage.setItem("qa_role", currentRole);
     localStorage.setItem("qa_login_time", Date.now());
 
     btn.disabled = false;
     btn.textContent = originalBtnText;
-    enterApp();
     if(currentRole === 'agent'){
-      showLoginPopupIfNeeded();
+      showLoginPopupIfNeeded(); // fired before enterApp() so its request isn't queued behind the dashboard's own calls
     }
+    enterApp();
   }catch(e){
     console.error('Login check failed', e);
     errBox.textContent = 'Server is temporarily unavailable. Please try again in 2 minutes.';
@@ -5172,11 +5159,8 @@ if(currentRole==="agent"){
 }
   
   showToast('লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।...');
-  /* আগে এই ৫টা কল একটার পর একটা (await ... await ... await) চলত, ফলে প্রতিটার
-     সময় যোগ হয়ে লগইনের পর ডাটা লোড হতে অনেক দেরি হতো। এই ৫টা call একে অপরের
-     উপর নির্ভরশীল না, তাই Promise.all দিয়ে একসাথে (parallel-এ) চালানো হলো —
-     এতে মোট সময় লাগবে সবচেয়ে ধীর কলটার সমান, সবগুলোর যোগফলের সমান না। */
-  switchTab('HOME'); // এটা নিজে থেকেই dashboard/banner ডাটা আলাদাভাবে fetch করে, তাই সবার আগে শুরু করে দেওয়া হলো
+  
+  switchTab('HOME');
   await Promise.all([
     loadTicker(),
     loadBanners(),
@@ -5205,7 +5189,7 @@ async function saveTicker(){
 }
 /* ===================== AGENT LOGIN WELCOME POPUP ===================== */
 async function loadLoginPopupAdmin(){
-  const data = await storageGet('loginPopup');
+  const data = await fetchLoginPopupOnce();
   const text = (data && data.text) ? data.text : '';
   const el = document.getElementById('loginPopupInput');
   if(el) el.value = text;
@@ -5216,16 +5200,17 @@ async function saveLoginPopup(){
   showToast('Saving to WEBPAGEDATA...');
   const success = await storageSet('loginPopup', { text });
   if(success){
+    loginPopupFetchPromise = null; // invalidate cache so the next fetch picks up the new text
     showToast(text ? 'Popup message saved!' : 'Popup message cleared — popup আর দেখাবে না।');
   }
 }
 async function showLoginPopupIfNeeded(){
-  const data = await storageGet('loginPopup');
+  const data = await fetchLoginPopupOnce();
   const text = (data && data.text) ? data.text.trim() : '';
   const overlay = document.getElementById('loginPopupOverlay');
   const textEl = document.getElementById('loginPopupText');
   const greetEl = document.getElementById('loginPopupGreeting');
-  if(!text || !overlay || !textEl) return; // খালি থাকলে পপ-আপ দেখাবে না
+  if(!text || !overlay || !textEl) return;
   if(greetEl){
     const name = (empAgentName || localStorage.getItem('qa_emp_name') || '').toUpperCase();
     greetEl.textContent = name ? `${currentGreetingText()} - ${name}` : currentGreetingText();
@@ -5234,7 +5219,7 @@ async function showLoginPopupIfNeeded(){
   autoSizeLoginPopupText(textEl, text);
   overlay.classList.add('show');
 }
-/* লেখা বড় হলে ফন্ট ছোট হয়ে যাবে, লেখা ছোট হলে ফন্ট বড় হয়ে যাবে — automatic */
+
 function autoSizeLoginPopupText(el, text){
   const len = (text || '').length;
   let size;
@@ -5251,8 +5236,7 @@ function closeLoginPopup(){
   const overlay = document.getElementById('loginPopupOverlay');
   if(overlay) overlay.classList.remove('show');
 }
-/* একবার পুরো টেক্সট স্ক্রল হয়ে গেলে "UPDATE" ছোট জুম-ইন এফেক্টে ৩ সেকেন্ড ফ্ল্যাশ করবে,
-   তারপর স্ক্রলিং আবার ডান দিক থেকে শুরু হবে — এভাবে চক্রটি চলতেই থাকবে */
+
 function renderTopTicker(text){
   const tickerEl = document.querySelector('.ticker');
   const track = document.getElementById('tickerTrack');
@@ -5267,9 +5251,9 @@ function renderTopTicker(text){
 
   const containerW = tickerEl.clientWidth || 0;
   const contentW = track.scrollWidth || 0;
-  const pxPerSec = 55; // ফিক্সড, একটু ধীর গতি — লেখা যত বড়ই হোক, গতি একই থাকবে
+  const pxPerSec = 55;
 
-  let posX = containerW; // ডান দিক থেকে শুরু
+  let posX = containerW;
   let lastFrameTime = null;
   let running = true;
 
@@ -5285,7 +5269,7 @@ function renderTopTicker(text){
     posX -= pxPerSec * (dt/1000);
 
     if(posX <= -contentW){
-      /* একটা পুরো প্যাস শেষ — থেমে "UPDATE" ফ্ল্যাশ, তারপর আবার ডান দিক থেকে শুরু */
+      
       running = false;
       flash.classList.add('show');
       topTickerTimeoutId = setTimeout(()=>{
@@ -5380,7 +5364,7 @@ async function saveBanners(){
     showToast('Banners matching completely saved to Sheet!');
   }
 }
-/* ===================== NEWS-CHANNEL STYLE TEXT TICKER CORNER (ছবির ব্যানারের বদলে টেক্সট নিউজ ব্যানার) ===================== */
+
 function defaultNewsTicker(){
   return [];
 }
@@ -5393,7 +5377,7 @@ async function loadNewsTicker(){
 function renderNewsTicker(items){
   const wrap = document.getElementById('newsTickerWrap');
   if(!wrap) return;
-  /* আগের কোনো চলমান অ্যানিমেশন/টাইমার থাকলে বন্ধ করে দেওয়া হয় (Admin Panel থেকে টেক্সট বদলালে পুরো সাইকেল নতুন করে শুরু হবে) */
+  
   if(newsTickerFlashTimer){ clearInterval(newsTickerFlashTimer); newsTickerFlashTimer = null; }
   if(newsTickerAnimFrame){ cancelAnimationFrame(newsTickerAnimFrame); newsTickerAnimFrame = null; }
   if(newsTickerTimeoutId){ clearTimeout(newsTickerTimeoutId); newsTickerTimeoutId = null; }
@@ -5404,7 +5388,7 @@ function renderNewsTicker(items){
   tag.className = 'news-ticker-tag';
   tag.innerHTML = `<span class="news-ticker-dot"></span> NOTICE`;
   if(!clean.length){
-    /* কোনো নিউজ টেক্সট এখনো সেভ করা না থাকলেও NOTICE ট্যাগটা দেখা যাবে, শুধু পাশে একটা প্লেসহোল্ডার মেসেজ থাকবে */
+    
     const track = document.createElement('div');
     track.className = 'news-ticker-track';
     track.innerHTML = `<div class="news-ticker-empty">এখনো কোনো নিউজ যোগ করা হয়নি — Admin Panel থেকে যোগ করুন।</div>`;
@@ -5416,7 +5400,7 @@ function renderNewsTicker(items){
   track.className = 'news-ticker-track';
   const scroll = document.createElement('div');
   scroll.className = 'news-ticker-scroll';
-  /* সিমলেস লুপের জন্য লিস্টটা দুইবার বসানো হয় */
+  
   const doubled = clean.concat(clean);
   scroll.innerHTML = doubled.map(t=> `<span class="item">${escapeHtml(t)}</span>`).join('');
   track.appendChild(scroll);
@@ -5429,28 +5413,18 @@ function renderNewsTicker(items){
   wrap.appendChild(track);
   wrap.appendChild(flash);
 
-  /* ============================================================
-     নতুন স্ক্রলিং সিকোয়েন্স (Admin Panel-এর টেক্সট অনুযায়ী কাজ করবে):
-     ১) প্রথমে "Latest Update" ফ্ল্যাশ দেখাবে
-     ২) তারপর স্ক্রলিং শুরু হবে — একদম প্রথমবার ডান দিক থেকে শুরু হয়ে পুরো একটা
-        সম্পূর্ণ প্যাস (loop) শেষ করবে
-     ৩) পুরো প্যাস শেষ হলে স্ক্রলিং থেমে যাবে এবং "Latest Update" ৪ সেকেন্ডের জন্য দেখাবে
-        (এই সময় নিচে স্ক্রলিং থেমে থাকবে)
-     ৪) তারপর আবার স্ক্রলিং শুরু হবে — এভাবে চক্রটি চলতেই থাকবে
-     ৫) এছাড়া স্ক্রলিং চলাকালীন প্রতি ৩০ সেকেন্ড পরপর, ৩ সেকেন্ডের জন্য "Latest Update"
-        ফ্ল্যাশ হবে (স্ক্রলিং সাময়িক থেমে থাকবে, তারপর ঠিক যেখানে ছিল সেখান থেকেই আবার চলবে)
-     ============================================================ */
-  const END_FLASH_MS = 4000;      // পুরো প্যাস শেষে ফ্ল্যাশ
-  const INTERRUPT_FLASH_MS = 3000; // মাঝপথে প্রতি ৩০ সেকেন্ডে ফ্ল্যাশ
+  
+  const END_FLASH_MS = 4000;
+  const INTERRUPT_FLASH_MS = 3000;
   const INTERRUPT_EVERY_MS = 30000;
 
   const containerW = track.clientWidth || wrap.clientWidth || 0;
   const singleSetWidth = scroll.scrollWidth / 2;
-  /* লেখার পরিমাণ অনুযায়ী স্বাভাবিক গতি ঠিক করা হয় */
+  
   const speedSeconds = Math.max(10, clean.join(' ').length * 0.18);
   const pxPerSec = singleSetWidth / speedSeconds;
 
-  let posX = containerW; // প্রথমবার ডান দিক থেকে (কনটেইনারের বাইরে) শুরু হবে
+  let posX = containerW;
   let scrollingElapsed = 0;
   let lastFrameTime = null;
   let running = false;
@@ -5473,14 +5447,14 @@ function renderNewsTicker(items){
     scrollingElapsed += dt;
 
     if(posX <= -singleSetWidth){
-      /* একটা পুরো প্যাস শেষ — সিমলেস রিসেট, তারপর ৪ সেকেন্ডের ফ্ল্যাশ */
+      
       posX = 0;
       applyTransform();
       pauseForFlash(END_FLASH_MS);
       return;
     }
     if(scrollingElapsed >= INTERRUPT_EVERY_MS){
-      /* মাঝপথে ৩০ সেকেন্ড পার হলে ৩ সেকেন্ডের ছোট ফ্ল্যাশ, স্ক্রলিং একই জায়গা থেকে আবার চলবে */
+      
       pauseForFlash(INTERRUPT_FLASH_MS);
       return;
     }
@@ -5501,7 +5475,7 @@ function renderNewsTicker(items){
     }, durationMs);
   }
 
-  /* সাইকেলের শুরুতে প্রথমে "Latest Update" ফ্ল্যাশ, তারপর স্ক্রলিং শুরু (ডান দিক থেকে) */
+  
   showFlash();
   newsTickerTimeoutId = setTimeout(()=>{
     hideFlash();
@@ -5554,7 +5528,7 @@ async function saveNewsTicker(){
   }
 }
 /* ===================== NAVIGATION & TABS ===================== */
-function switchTab(tab){
+async function switchTab(tab){
   currentTab = tab;
   document.querySelectorAll('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.tab===tab));
   document.querySelectorAll('.panel').forEach(p=> p.classList.remove('active'));
@@ -5565,25 +5539,31 @@ function switchTab(tab){
     else{ bannerWrap.style.display = 'none'; if(homeBannerAutoTimer){ clearInterval(homeBannerAutoTimer); homeBannerAutoTimer=null; } }
   }
 
-  if (tab === 'HOME') {
-    renderHomePage();
-  } else if(VERTICALS[tab]){
-    renderVerticalPanel(tab);
-  } else if (tab.startsWith('DASH-')) {
-    const vKey = Object.keys(VERTICALS).find(k => VERTICALS[k].dashId === tab);
-    renderDedicatedDashboard(vKey);
-  } else if (tab === 'ANS3SEC') {
-    renderAnswered3SecPanel(ans3secSubTab);
-  } else if (RAW_SHEET_TABS[tab]) {
-    renderRawSheetTabPanel(tab);
-  } else if (tab === 'HELP') {
-    renderHelpPanel();
-  } else if (tab === 'QUICKLINK') {
-    renderQuickLinkPanel();
-  } else if (tab === 'EMPCHAT') {
-    renderAdminChatList();
-  } else if (tab === 'BANNERMGR') {
-    renderBannerManagerPanel();
+  
+  showPageLoadOverlay();
+  try{
+    if (tab === 'HOME') {
+      await renderHomePage();
+    } else if(VERTICALS[tab]){
+      await renderVerticalPanel(tab);
+    } else if (tab.startsWith('DASH-')) {
+      const vKey = Object.keys(VERTICALS).find(k => VERTICALS[k].dashId === tab);
+      await renderDedicatedDashboard(vKey);
+    } else if (tab === 'ANS3SEC') {
+      await renderAnswered3SecPanel(ans3secSubTab);
+    } else if (RAW_SHEET_TABS[tab]) {
+      await renderRawSheetTabPanel(tab);
+    } else if (tab === 'HELP') {
+      renderHelpPanel();
+    } else if (tab === 'QUICKLINK') {
+      renderQuickLinkPanel();
+    } else if (tab === 'EMPCHAT') {
+      renderAdminChatList();
+    } else if (tab === 'BANNERMGR') {
+      renderBannerManagerPanel();
+    }
+  } finally {
+    hidePageLoadOverlay();
   }
 }
 function statusFor(score){
@@ -5612,8 +5592,6 @@ async function renderVerticalPanel(tab){
   const newBackendKey = NEW_BACKEND_PROCESS_KEY[tab];
 
   if (newBackendKey) {
-    // ✅ CATV / BB TECH SUPPORT / BB RENEWAL — Agent Summary + Call-Level raw ডাটা,
-    // দুটোই এখন একই নতুন CALL QUALITY DASHBOARD ব্যাকএন্ড থেকে আসছে
     try {
       const res2 = await fetch(NEW_WEB_APP_URL);
       const summary = await res2.json();
@@ -5628,14 +5606,13 @@ async function renderVerticalPanel(tab){
           }));
         }
         if (Array.isArray(proc.rows)) {
-          json = proc.rows; // Call-Level Logs Detail এর জন্য raw, শিটের কলাম-অর্ডারেই
+          json = proc.rows;
         }
       }
     } catch (err) {
       console.error("New backend (Call Quality Dashboard) fetch failed:", err);
     }
   } else {
-    // অন্য কোনো LOB থাকলে (নতুন ব্যাকএন্ডে ম্যাপ করা নেই), আগের পুরনো সোর্স থেকেই আসবে
     try {
       const response = await fetch(WEB_APP_URL + "?vertical=" + tab);
       const data = await response.json();
@@ -5788,7 +5765,6 @@ async function renderRawSection(tab){
 }
 function buildRawSectionHtml(tab, raw, filterValue){
   if(!raw.length) return '';
-  // এই কলামগুলো Call-Level Logs Detail টেবিল থেকে বাদ যাবে
   const EXCLUDED_RAW_COLUMNS = [
     /^\s*timestamp\s*$/i,
     /^\s*associate\s*emp(loyee)?\s*id\s*$/i,
@@ -5799,7 +5775,6 @@ function buildRawSectionHtml(tab, raw, filterValue){
   ];
   let keys = Object.keys(raw[0]).filter(k => !EXCLUDED_RAW_COLUMNS.some(rx => rx.test(k)));
 
-  // Scores কলামটা Call Link এর ঠিক আগে বসানো হচ্ছে
   const scoreIdx = keys.findIndex(k => /^\s*scores?\s*$/i.test(k));
   const linkIdx = keys.findIndex(k => /call\s*link|recording|audio/i.test(k));
   if(scoreIdx !== -1 && linkIdx !== -1 && scoreIdx !== linkIdx){
@@ -5915,7 +5890,6 @@ async function renderDedicatedDashboard(vKey) {
     <div class="empty-state"><b>রিয়েল-টাইম ডাটা সিঙ্ক হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b></div>`;
     
   try {
-    // সরাসরি ড্যাশবোর্ড ট্যাব (যেমন: CATV_DASHBOARD) থেকে ডাটা ফেচ করা হচ্ছে
     const response = await fetch(WEB_APP_URL + "?vertical=" + meta.dashSheet);
     const data = await response.json();
     
@@ -5926,13 +5900,12 @@ async function renderDedicatedDashboard(vKey) {
     
     const headers = data[0]; // Agent name, April'26, May'26, etc.
     const rows = data.slice(1);
-    const monthHeaders = headers.slice(1); // মাসের কলামগুলো আলাদা করা হলো
+    const monthHeaders = headers.slice(1);
     
     let calculatedAgents = [];
     
     rows.forEach(row => {
       const agentName = String(row[0] || '').trim();
-      // Grand Total রো বাদ দেওয়া হচ্ছে
       if(!agentName || agentName.toLowerCase() === 'grand total' || agentName.includes('Total')) return;
       
       let totalScore = 0;
@@ -5950,7 +5923,6 @@ async function renderDedicatedDashboard(vKey) {
         }
       });
       
-      // ডাইনামিক এভারেজ স্কোর ক্যালকুলেশন
       let avgScore = validMonths > 0 ? Math.round((totalScore / validMonths) * 10) / 10 : 0;
       
       calculatedAgents.push({
@@ -5965,7 +5937,6 @@ async function renderDedicatedDashboard(vKey) {
       return;
     }
     
-    // HTML স্ট্রাকচার রেন্ডারিং
     let tableHeadersHtml = `<th>Agent Name</th>` + monthHeaders.map(m => `<th>${m}</th>`).join('') + `<th>Calculated Avg</th><th>Status Tier</th>`;
     
     let tableRowsHtml = calculatedAgents.map(a => {
@@ -5998,7 +5969,7 @@ async function renderDedicatedDashboard(vKey) {
         <button class="btn primary" onclick="switchTab('${meta.dashId}')">↻ Refresh Live Matrix</button>
       </div>
       
-      <!-- এজেন্টের অটো-ক্যালকুলেটেড এভারেজ চার্ট -->
+      
       <div class="chart-box"><canvas id="dashChart-${vKey}"></canvas></div>
       
       <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
@@ -6013,7 +5984,6 @@ async function renderDedicatedDashboard(vKey) {
       
     panel.innerHTML = html;
     
-    // Chart.js দিয়ে গ্রাফ লোড করা
     setTimeout(() => {
       const ctx = document.getElementById(`dashChart-${vKey}`);
       if(!ctx) return;
@@ -6052,8 +6022,7 @@ async function renderDedicatedDashboard(vKey) {
     panel.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
   }
 }
-/* ===================== HOME — CATV / BB TECH / BB RENEWAL এর Average Score, চার্ট সহ ===================== */
-/* লাইট মোডে চার্টের টেক্সট/গ্রিড যেন হালকা হয়ে অদৃশ্যের মতো না লাগে — থিম অনুযায়ী রঙ বদলে যাবে */
+
 function chartTickColor(){
   return document.body.classList.contains('light-theme') ? '#3A4A61' : '#8FA0B5';
 }
@@ -6075,8 +6044,6 @@ async function renderHomePage(){
   const vKeys = Object.keys(VERTICALS); // CATV, BBTECH, BBRENEWAL
 
   try{
-    // ঠিক একই ব্যাকএন্ড ব্যবহার করা হচ্ছে যেটা CATV Data / BB Tech Support Data /
-    // BB Renewal Data ট্যাবগুলো ব্যবহার করে, যাতে average score-টা সবখানে same থাকে।
     const res2 = await fetch(NEW_WEB_APP_URL);
     const summary = await res2.json();
 
@@ -6429,8 +6396,6 @@ async function renderRawSheetTabPanel(tab){
     const response = await fetch(RAW_SHEET_WEB_APP_URL + "?vertical=" + encodeURIComponent(meta.sheetName));
     const raw = await response.json();
 
-    // ব্যাকএন্ড দুই ধরনের রেসপন্স দিতে পারে: পুরনো ফরম্যাট (plain array-of-arrays)
-    // অথবা নতুন ফরম্যাট { values, merges } — merge cell তথ্যসহ। দুটোই সাপোর্ট করা হচ্ছে।
     let values, merges;
     if(Array.isArray(raw)){
       values = raw; merges = [];
@@ -6482,11 +6447,6 @@ async function renderRawSheetTabPanel(tab){
   }
 }
 
-/* শিটে যেভাবে সেলগুলো merge করা আছে ঠিক সেভাবেই টেবিলে দেখানো হবে (rowspan/colspan দিয়ে),
-   একদম ফাঁকা কলামগুলো বাদ দেওয়া হবে, এবং প্রতিটা সারি সুন্দরভাবে অ্যানিমেট হয়ে আসবে। */
-/* গুগল শিটের Time/Date টাইপ সেল, Apps Script থেকে JSON হয়ে আসার সময়
-   "1899-12-30T06:52:50.000Z" এর মতো raw ISO স্ট্রিং হয়ে যায় (1899-12-30 মানে শুধু সময়,
-   কোনো তারিখ নেই)। এই ফাংশনটা সেগুলোকে মানুষের পড়ার মতো সময়/তারিখে রূপান্তর করে। */
 function formatSheetCellValue(val){
   if(val === null || val === undefined) return '';
   const s = String(val);
@@ -6500,7 +6460,6 @@ function formatSheetCellValue(val){
   const ampm = hour < 12 ? 'AM' : 'PM';
   const timeStr = `${String(hh).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')} ${ampm}`;
 
-  // ১৮৯৯-১২-৩০ হলো গুগল শিটের "শুধু সময়" (Time only) সেলের epoch তারিখ — এক্ষেত্রে শুধু সময় দেখানো হবে
   if(year === 1899 && month === 12 && day === 30){
     return timeStr;
   }
@@ -6508,7 +6467,6 @@ function formatSheetCellValue(val){
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dateStr = `${String(day).padStart(2,'0')}-${MONTHS[month-1]}-${year}`;
 
-  // সময়ের অংশ 00:00:00 হলে সেটা শুধু তারিখ (Date only) সেল, নাহলে তারিখ + সময় দুটোই দেখানো হবে
   if(hour === 0 && min === 0 && sec === 0){
     return dateStr;
   }
@@ -6518,14 +6476,12 @@ function buildMergedSheetTableHtml(values, merges, tab){
   const numRows = values.length;
   const numCols = values.reduce((m, r) => Math.max(m, r.length), 0);
 
-  // পুরো গ্রিড সমান সাইজের করে নেওয়া হচ্ছে (কোনো row ছোট হলে ফাঁকা সেল বসিয়ে)
   const grid = values.map(r => {
     const row = r.slice(0, numCols);
     while(row.length < numCols) row.push('');
     return row;
   });
 
-  // কোন কলাম সম্পূর্ণ ফাঁকা (হেডার + সব ডাটা মিলিয়ে) সেটা বের করা হচ্ছে
   const isColBlank = [];
   for(let c = 0; c < numCols; c++){
     let blank = true;
@@ -6535,7 +6491,6 @@ function buildMergedSheetTableHtml(values, merges, tab){
     isColBlank.push(blank);
   }
 
-  // পুরনো কলাম ইনডেক্স -> নতুন (ফাঁকা কলাম বাদ দেওয়ার পর) কলাম ইনডেক্স ম্যাপিং
   const newColIndex = [];
   let running = 0;
   for(let c = 0; c < numCols; c++){
@@ -6548,10 +6503,8 @@ function buildMergedSheetTableHtml(values, merges, tab){
     return `<div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b></div>`;
   }
 
-  // নতুন গ্রিড তৈরি (ফাঁকা কলাম বাদ দিয়ে)
   const newGrid = grid.map(row => row.filter((_, c) => !isColBlank[c]));
 
-  // merge রেঞ্জগুলোকে নতুন কলাম ইনডেক্সের সাথে মিলিয়ে অ্যাডজাস্ট করা হচ্ছে
   const adjustedMerges = [];
   (merges || []).forEach(m => {
     const r0 = m.row, c0 = m.col, nr = m.numRows, nc = m.numCols;
@@ -6564,11 +6517,10 @@ function buildMergedSheetTableHtml(values, merges, tab){
         lastNewCol = nci;
       }
     }
-    if(firstNewCol === -1) return; // পুরো merge টাই ফাঁকা কলামের মধ্যে ছিল
+    if(firstNewCol === -1) return;
     adjustedMerges.push({ row: r0, col: firstNewCol, numRows: nr, numCols: (lastNewCol - firstNewCol + 1) });
   });
 
-  // কোন সেল অন্য একটা merge-এর ভেতরে ঢাকা পড়ে আছে (তাই আলাদা <td> বসবে না) সেটার ম্যাপ
   const covered = Array.from({length: numRows}, () => new Array(newNumCols).fill(false));
   const origin = Array.from({length: numRows}, () => new Array(newNumCols).fill(null));
   adjustedMerges.forEach(m => {
@@ -6622,7 +6574,7 @@ function filterRawSheetTable(input, tableId){
   const noMatch = table.parentElement.querySelector('.table-no-match');
   if(noMatch) noMatch.style.display = anyVisible ? 'none' : 'block';
 }
-/* ===================== HELP PANEL (New Update-এর মতোই — Admin post/delete করতে পারবে) ===================== */
+
 async function loadHelp(){
   const list = (await storageGet('helpList')) || [];
   renderHelpList(list);
@@ -6675,7 +6627,7 @@ async function deleteHelp(id){
   }
 }
 /* ===================== QUICK LINK PANEL ===================== */
-/* ⚠️ এখানে আপনার ওয়েবসাইটের লিংক বসিয়ে দিন — এটাই "Quick Link" ট্যাবে embed হয়ে দেখাবে */
+
 const QUICK_LINK_URL = "";
 function renderQuickLinkPanel(){
   const box = document.getElementById('quickLinkView');
@@ -6777,7 +6729,6 @@ function drawTopBottomChart(tab, rows){
   const sorted = rows.slice().sort((a,b)=> b.avgScore - a.avgScore);
   const top5 = sorted.slice(0, 5);
   const bottom5 = sorted.slice(-5).reverse();
-  // ছোট ডাটাসেটে (৫ জনের কম এজেন্ট) ওভারল্যাপ এড়ানো
   const seen = new Set(top5.map(r=>r.agent));
   const bottomFiltered = bottom5.filter(r=> !seen.has(r.agent));
   const combined = top5.concat(bottomFiltered);
@@ -6813,7 +6764,6 @@ function drawTopBottomChart(tab, rows){
   });
 }
 
-/* চার্ট কন্টেইনারে হালকা fade+scale-in এন্ট্রি অ্যানিমেশন */
 function animateChartBox(canvasEl){
   const box = canvasEl.closest('.chart-box');
   if(!box) return;
@@ -7113,9 +7063,6 @@ setInterval(updateWelcome,1000);
 </div>
 
 <style>
-/* ============ NEW ADDITIVE STYLES — Employee Login / Super Admin / Session UI ============
-   এই স্টাইলগুলো শুধুমাত্র নতুন যোগ করা এলিমেন্টের জন্য।
-   বিদ্যমান কোনো ক্লাস/কালার/অ্যানিমেশন/লেআউট পরিবর্তন করা হয়নি। */
 
 .emp-switch-row{
   display:flex; align-items:center; justify-content:center; gap:10px;
@@ -7373,7 +7320,7 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
   font-size:13px;
   animation: onlineRowGlow 2.6s ease-in-out infinite;
 }
-/* প্রতিটা agent row আলাদা আলাদা রঙে সাইকেল করবে (৬টা রঙ পালা করে) */
+
 .online-agent-row:nth-child(6n+1){ --row-color:#33C9B0; animation-delay:0s; }
 .online-agent-row:nth-child(6n+2){ --row-color:#E3A857; animation-delay:.3s; }
 .online-agent-row:nth-child(6n+3){ --row-color:#FF5E7E; animation-delay:.6s; }
@@ -7476,22 +7423,11 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 </style>
 
 <script>
-/* =====================================================================
-   NEW ADDITIVE SCRIPT — Employee Login System + Google Sheets Integration
-   এই ব্লকটি সম্পূর্ণ নতুন এবং আলাদা। এটি বিদ্যমান কোনো ফাংশন/ভ্যারিয়েবল
-   পরিবর্তন করে না।
 
-   ⚠️ এই সিস্টেমটি একটি আলাদা Google Sheet এবং আলাদা Apps Script প্রজেক্ট
-   ব্যবহার করে (Agent_Master, Login_Log, Activity_Log, Daily_Summary,
-   Audit_Log)। তাই এর জন্য নিচে সম্পূর্ণ আলাদা একটি Web App URL বসাতে হবে —
-   উপরের পুরনো WEB_APP_URL-এর সাথে এর কোনো সম্পর্ক নেই, সেটা স্পর্শ করা হয়নি।
-   ===================================================================== */
-
-/* 👉 এখানে শুধু আপনার Employee Login Apps Script প্রজেক্টের /exec URL বসান */
 const EMP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwktIZBumwKZM7z9rUZsT6vDoj1PBsMgcZL6VyH8HejBnBsx879O3Jy1dSLaGAiOLjr/exec";
 
-const EMP_HEARTBEAT_MS = 60 * 1000;         // Activity_Log আপডেট প্রতি ৬০ সেকেন্ডে
-const EMP_AUTO_LOGOUT_MS = 30 * 60 * 1000;  // লগইনের ঠিক ৩০ মিনিট পর ফিক্সড অটো লগ-আউট (activity-তে রিসেট হয় না)
+const EMP_HEARTBEAT_MS = 60 * 1000;
+const EMP_AUTO_LOGOUT_MS = 30 * 60 * 1000;
 
 let empSessionId = null;
 let empEmployeeId = null;
@@ -7631,10 +7567,10 @@ function completeEmployeeLogin(data){
   localStorage.setItem('qa_role', currentRole);
   localStorage.setItem('qa_login_time', Date.now());
 
+  showLoginPopupIfNeeded(); // fired before enterApp() so its request isn't queued behind the dashboard's own calls
   enterApp();
   showEmployeeWelcomeBar();
   startEmployeeSessionTracking();
-  showLoginPopupIfNeeded();
 }
 
 /* Convert a raw "HH:MM:SS" (24-hour) string to a 12-hour "hh:mm:ss am/pm" string,
@@ -7695,11 +7631,6 @@ function syncEmpBarOffset(){
   if(h) document.documentElement.style.setProperty('--emp-bar-h', h + 'px');
 }
 
-/* মোবাইলে welcome bar-টা কয়েক লাইনে ভাগ হয়ে অনেক লম্বা হয়ে যায় (নাম/গ্রিটিং/অনলাইন
-   ব্যাজ/ID-IP-Session স্ট্যাট/বাটন/কাউন্টডাউন — সব আলাদা আলাদা লাইনে)। এর real height
-   টেক্সট wrap, ফন্ট লোড, IP লোড হওয়া ইত্যাদির কারণে বদলে যেতে পারে — তাই একবার মাপার
-   বদলে ResizeObserver দিয়ে সবসময় লাইভ সিঙ্কে রাখা হচ্ছে, নাহলে নিচের ticker/header
-   ভুল জায়গায় বসে ID/IP/Session স্ট্যাটের উপর দিয়ে ওভারল্যাপ করে ঢেকে দিতে পারে। */
 let __empBarResizeObserver = null;
 function startEmpBarHeightWatch(){
   const bar = document.getElementById('employeeWelcomeBar');
@@ -7710,7 +7641,6 @@ function startEmpBarHeightWatch(){
     __empBarResizeObserver = new ResizeObserver(()=> syncEmpBarOffset());
     __empBarResizeObserver.observe(bar);
   }else{
-    // পুরনো ব্রাউজারে ResizeObserver না থাকলে কয়েকবার দেরি করে আবার মেপে নেওয়া হচ্ছে
     [150, 500, 1200].forEach(ms => setTimeout(syncEmpBarOffset, ms));
   }
 }
@@ -7756,7 +7686,6 @@ function startEmployeeSessionTracking(){
 
   setupInactivityWatch();
 
-  // চ্যাট বাবল/আনরিড ব্যাজ চালু করা (agent-only ভিজিবিলিটি enterApp()-এ টগল হয় আগে থেকেই)
   if(typeof refreshEmployeeChat === 'function') refreshEmployeeChat();
 }
 
@@ -7782,8 +7711,6 @@ function setupInactivityWatch(){
   });
 }
 
-/* ফিক্সড ৩০ মিনিটের সেশন — লগইনের ঠিক ৩০ মিনিট পর অটো লগ-আউট হয়ে যাবে,
-   এই সময়ের মধ্যে যত activity (mouse/keyboard/click/scroll) হোক না কেন, টাইমার রিসেট হবে না। */
 function scheduleFixedAutoLogout(){
   if(empInactivityTimeout) clearTimeout(empInactivityTimeout);
   const remainingMs = Math.max(0, EMP_AUTO_LOGOUT_MS - (Date.now() - Number(empSessionStartEpoch)));
@@ -7791,8 +7718,6 @@ function scheduleFixedAutoLogout(){
   tickAutoLogoutCountdown();
 }
 
-/* প্রতি সেকেন্ডে "Auto-logout in MM:SS" আপডেট হয় — লগইনের সময় থেকে ঠিক ৩০ মিনিট পর্যন্ত
-   গোনা হয়; পোর্টালে activity থাকুক বা না থাকুক, এই কাউন্টডাউন একটানা কমতেই থাকবে। */
 function tickAutoLogoutCountdown(){
   const el = document.getElementById('empAutoLogoutCountdown');
   if(!el) return;
@@ -7858,7 +7783,6 @@ function restoreEmployeeSessionIfAny(){
   if(!sid || !eid) return;
 
   if(Date.now() - sessionStart > EMP_AUTO_LOGOUT_MS){
-    // ৩০ মিনিটের ফিক্সড সেশন উইন্ডো ট্যাব বন্ধ থাকা অবস্থাতেই পার হয়ে গেছে — চুপচাপ ক্লিন-আপ
     ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity']
       .forEach(k=>localStorage.removeItem(k));
     return;
@@ -8095,6 +8019,7 @@ async function saDelete(id){
 
 /* Download any history sheet as .xlsx using the XLSX library already loaded on this page */
 async function saDownload(action, sheetLabel){
+  showPageLoadOverlay();
   try{
     const data = await empApiGet(action, { token: superAdminToken });
     if(!data || data.ok !== true){ showToast((data && data.error) || 'Download failed.'); return; }
@@ -8107,6 +8032,8 @@ async function saDownload(action, sheetLabel){
   }catch(e){
     console.error('Download failed', e);
     showToast('Download ব্যর্থ হয়েছে।');
+  } finally {
+    hidePageLoadOverlay();
   }
 }
 
@@ -8134,7 +8061,6 @@ doLogout = function(){
   <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
 </button>
 
-<!-- ============ EMPLOYEE ⇄ ADMIN CHAT WIDGET (শুধু Agent লগইনে দেখা যাবে) ============ -->
 <button class="chat-bubble-btn agent-only" id="empChatBubbleBtn" style="display:none;" onclick="toggleEmployeeChatPanel()" title="Ask Quality Team">
   <span class="chat-bubble-new-tag" id="empChatNewTag">NEW</span>
   💬 <span class="chat-bubble-btn-label">Ask Quality Team</span>
@@ -8156,9 +8082,7 @@ doLogout = function(){
 </div>
 
 <script>
-/* এই বাটন/প্যানেলটা মূল স্ক্রিপ্ট ব্লকের (যেখানে checkLoginSession()->enterApp() agent-only/admin-only
-   ভিজিবিলিটি টগল করে) পরে DOM-এ বসানো, তাই রিফ্রেশ করে সেশন রিস্টোর হওয়ার সময় ওই টগলটা এই এলিমেন্টদুটোর
-   উপর কাজ করে না — ফলে এগুলো চিরকাল display:none-ই থেকে যায়। তাই এখানে আবার একবার প্রয়োগ করা হলো। */
+
 (function reapplyChatWidgetVisibility(){
   if(typeof currentRole === 'undefined' || !currentRole) return;
   const btn = document.getElementById('empChatBubbleBtn');
@@ -8187,19 +8111,14 @@ doLogout = function(){
 })();
 </script>
 
-<!-- ============ AUTO REFRESH — শুধুমাত্র GitHub-এ আসল কোড change হলেই ============
-     প্রতি ২ মিনিট পর পর GitHub API দিয়ে main branch-এর latest commit SHA চেক করা হয়।
-     SHA বদলে গেলে বুঝতে হবে নতুন কোড deploy হয়েছে — তখনই চুপচাপ পেজ reload হবে।
-     কোনো change না থাকলে পেজ কখনোই খামোখা reload হবে না।
-     লগইন সেশন localStorage-এ থাকে বলে reload হলেও ইউজার লগইন অবস্থাতেই থাকবে। -->
 <script>
 (function(){
   var REPO   = 'qualityanalystkcbpl-collab/call-quality';
   var BRANCH = 'main';
-  var POLL_MS = 2 * 60 * 1000; // ২ মিনিট পর পর চেক
+  var POLL_MS = 2 * 60 * 1000;
   var API_URL = 'https://api.github.com/repos/' + REPO + '/commits/' + BRANCH;
 
-  var lastSha = null; // পেজ লোড হওয়ার সময়কার commit — এটাই baseline
+  var lastSha = null;
 
   async function checkForUpdate(){
     try{
@@ -8207,17 +8126,17 @@ doLogout = function(){
         cache: 'no-store',
         headers: { 'Accept': 'application/vnd.github+json' }
       });
-      if(!res.ok) return; // rate-limit বা network সমস্যা হলে চুপচাপ পরের বার আবার চেষ্টা
+      if(!res.ok) return;
       var data = await res.json();
       var sha = data && data.sha;
       if(!sha) return;
 
       if(lastSha === null){
-        lastSha = sha; // প্রথম চেক — শুধু baseline সেট হবে, reload হবে না
+        lastSha = sha;
         return;
       }
       if(sha !== lastSha){
-        location.reload(); // নতুন commit পাওয়া গেছে — এখনই রিফ্রেশ
+        location.reload();
       }
     }catch(e){
       console.error('Version check failed', e);
