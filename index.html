@@ -6942,13 +6942,6 @@ function updateWelcome(){
 updateWelcome();
 
 setInterval(updateWelcome,1000);
-/* ===============================
-   Auto Refresh Every 10 Minutes
-================================= */
-
-setInterval(() => {
-    location.reload();
-}, 10 * 60 * 1000); // 10 Minutes
 </script>
 <div class="login-popup-overlay" id="loginPopupOverlay" onclick="if(event.target===this) closeLoginPopup()">
   <div class="login-popup-box">
@@ -8106,6 +8099,48 @@ doLogout = function(){
   }
   window.addEventListener('scroll', toggleBtn, {passive:true});
   toggleBtn();
+})();
+</script>
+
+<!-- ============ AUTO REFRESH — শুধুমাত্র GitHub-এ আসল কোড change হলেই ============
+     প্রতি ২ মিনিট পর পর GitHub API দিয়ে main branch-এর latest commit SHA চেক করা হয়।
+     SHA বদলে গেলে বুঝতে হবে নতুন কোড deploy হয়েছে — তখনই চুপচাপ পেজ reload হবে।
+     কোনো change না থাকলে পেজ কখনোই খামোখা reload হবে না।
+     লগইন সেশন localStorage-এ থাকে বলে reload হলেও ইউজার লগইন অবস্থাতেই থাকবে। -->
+<script>
+(function(){
+  var REPO   = 'qualityanalystkcbpl-collab/call-quality';
+  var BRANCH = 'main';
+  var POLL_MS = 2 * 60 * 1000; // ২ মিনিট পর পর চেক
+  var API_URL = 'https://api.github.com/repos/' + REPO + '/commits/' + BRANCH;
+
+  var lastSha = null; // পেজ লোড হওয়ার সময়কার commit — এটাই baseline
+
+  async function checkForUpdate(){
+    try{
+      var res = await fetch(API_URL + '?_=' + Date.now(), {
+        cache: 'no-store',
+        headers: { 'Accept': 'application/vnd.github+json' }
+      });
+      if(!res.ok) return; // rate-limit বা network সমস্যা হলে চুপচাপ পরের বার আবার চেষ্টা
+      var data = await res.json();
+      var sha = data && data.sha;
+      if(!sha) return;
+
+      if(lastSha === null){
+        lastSha = sha; // প্রথম চেক — শুধু baseline সেট হবে, reload হবে না
+        return;
+      }
+      if(sha !== lastSha){
+        location.reload(); // নতুন commit পাওয়া গেছে — এখনই রিফ্রেশ
+      }
+    }catch(e){
+      console.error('Version check failed', e);
+    }
+  }
+
+  checkForUpdate();
+  setInterval(checkForUpdate, POLL_MS);
 })();
 </script>
 </body>
