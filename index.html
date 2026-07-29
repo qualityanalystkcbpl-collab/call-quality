@@ -3288,6 +3288,27 @@ transform:translateY(0);
 .chat-input-row input:focus{ outline:none; border-color:var(--agent); }
 .chat-input-row button{ border-radius:20px!important; }
 
+.total-audit-marquee-box{
+  position:relative; overflow:hidden;
+  flex:1 1 420px; max-width:760px; min-width:300px; height:38px;
+  align-self:flex-start; margin-top:-10px;
+}
+.total-audit-marquee-text{
+  position:absolute; right:12px; top:50%;
+  white-space:nowrap; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13px;
+  color:var(--agent); letter-spacing:.2px;
+  animation: totalAuditSlideIn 10s ease-in-out infinite;
+}
+@keyframes totalAuditSlideIn{
+  0%{ transform:translate(-560px,-50%); opacity:0; }
+  15%{ transform:translate(0,-50%); opacity:1; }
+  65%{ transform:translate(0,-50%); opacity:1; }
+  100%{ transform:translate(0,-50%); opacity:0; }
+}
+@media (max-width:640px){
+  .total-audit-marquee-box{ flex-basis:100%; max-width:100%; }
+}
+
 .admin-chat-layout{
   display:flex; gap:0; height:560px; max-height:70vh;
   border:1px solid var(--border); border-radius:12px; overflow:hidden;
@@ -6280,14 +6301,21 @@ async function renderHomePage(){
       </div>`;
     }).join('');
 
+    const grandTotalAudits = results.reduce((s,r)=> s + (Number(r.totalAudits)||0), 0);
+    const allLobWeightedSum = results.reduce((s,r)=> s + ((Number(r.avg)||0) * (Number(r.totalAudits)||0)), 0);
+    const allLobScorePct = grandTotalAudits > 0 ? (allLobWeightedSum / grandTotalAudits) : 0;
+
     panel.innerHTML = `
       <div class="panel-header">
         <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
         <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
       </div>
       <div class="stat-row">${statCardsHtml}</div>
-      <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
-        📊 LOB-wise Average Score Comparison
+      <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px; justify-content:space-between; flex-wrap:wrap; row-gap:10px;">
+        <span style="display:flex; align-items:center; gap:8px;">📊 LOB-wise Average Score Comparison</span>
+        <div class="total-audit-marquee-box">
+          <span class="total-audit-marquee-text">TOTAL CALL AUDIT COUNT (ALL LOB) - ${grandTotalAudits} (ALL LOB SCORE - ${allLobScorePct.toFixed(1)}%)</span>
+        </div>
       </h3>
       <div class="chart-box"><canvas id="homeAvgChart"></canvas></div>
       <div class="analysis-grid">
