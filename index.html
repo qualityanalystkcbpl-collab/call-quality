@@ -4141,6 +4141,13 @@ const NEW_BACKEND_PROCESS_KEY = {
   BBRENEWAL: 'BB RENEWAL'
 };
 
+/* Same backend the standalone "Parameter Wise Fail Count" page (parameter_wise_fail_count_all_lob.html)
+   uses. AI Insight pulls its per-parameter fail counts from THIS endpoint (not NEW_WEB_APP_URL above)
+   so the numbers the AI sees always match what "Parameter Wise Fail Count" shows. */
+const PARAM_WISE_FAIL_API_URL = "https://script.google.com/macros/s/AKfycbynuWG1pmogLgWrrWV3PliaoouH4zUQMP3On-stBbh3abS1-Ya5IJoNy75mYrzZzE1GUw/exec";
+let paramWiseFailDataCache = null; // caches the raw JSON from PARAM_WISE_FAIL_API_URL for this session
+let paramWiseFailDataPromise = null; // in-flight fetch guard so simultaneous calls don't double-fetch
+
 const VERTICALS = {
   CATV: { label: 'CATV', key: 'scores:CATV', rawKey: 'raw:CATV', dashId: 'DASH-CATV', dashSheet: 'CATV_DASHBOARD' },
   BBTECH: { label: 'BB Tech Support', key: 'scores:BBTECH', rawKey: 'raw:BBTECH', dashId: 'DASH-BBTECH', dashSheet: 'BBTECH_DASHBOARD' },
@@ -6108,8 +6115,32 @@ async function loadExistingAgentInsight(tab, agent){
   }
 }
 
+/* Fetches (once, cached) the exact same data source the standalone "Parameter Wise Fail Count"
+   page uses, so AI Insight's fail counts always match that page. */
+async function ensureParamWiseFailDataLoaded(forceRefresh){
+  if(!forceRefresh && paramWiseFailDataCache) return paramWiseFailDataCache;
+  if(!forceRefresh && paramWiseFailDataPromise) return paramWiseFailDataPromise;
+  paramWiseFailDataPromise = (async () => {
+    try{
+      const res = await fetch(PARAM_WISE_FAIL_API_URL, { method: 'GET' });
+      const json = await res.json();
+      if(json && json.ok !== false){
+        paramWiseFailDataCache = json;
+        return json;
+      }
+      console.error('Parameter Wise Fail Count API returned an error:', json && json.error);
+    }catch(e){
+      console.error('Parameter Wise Fail Count fetch failed:', e);
+    } finally {
+      paramWiseFailDataPromise = null;
+    }
+    return paramWiseFailDataCache; // may be null if it never succeeded
+  })();
+  return paramWiseFailDataPromise;
+}
+
 /* Build the performance context sent to the Edge Function: summary stats + a recent sample of raw calls */
-function buildAgentInsightPayload(tab, agent){
+async function buildAgentInsightPayload(tab, agent){
   const summaryRow = (agentRowsCache[tab] || []).find(r => String(r.agent).trim() === agent);
   const raw = rawDataCache[tab] || [];
   let sampleRows = [];
@@ -6122,12 +6153,38 @@ function buildAgentInsightPayload(tab, agent){
         .slice(-25); // last up to 25 calls for this agent — keeps the AI prompt small & fast
     }
   }
+
+  // Pull fails from the SAME source as the "Parameter Wise Fail Count" page (not agentRowsCache),
+  // so the numbers the AI writes about always match that page exactly.
+  let fails = null;
+  let parameterList = null;
+  try{
+    const paramData = await ensureParamWiseFailDataLoaded();
+    const procKey = NEW_BACKEND_PROCESS_KEY[tab];
+    const proc = paramData && paramData.processes ? paramData.processes[procKey] : null;
+    const agentRow = proc && Array.isArray(proc.agents)
+      ? proc.agents.find(a => String(a.name).trim() === agent)
+      : null;
+    if(agentRow && agentRow.fails){
+      fails = agentRow.fails;
+      parameterList = paramData.parameters || null;
+    }
+  }catch(e){
+    console.error('Could not load Parameter Wise Fail Count data for AI Insight:', e);
+  }
+  // Fallback only if the dedicated source was unreachable — keeps the feature working, but the
+  // dedicated source above is what should normally be used.
+  if(!fails){
+    fails = summaryRow ? (summaryRow.fails || null) : null;
+  }
+
   return {
     agentName: agent,
     lob: (VERTICALS[tab] && VERTICALS[tab].label) || tab,
     auditCount: summaryRow ? summaryRow.auditCount : null,
     avgScore: summaryRow ? summaryRow.avgScore : null,
-    fails: summaryRow ? (summaryRow.fails || null) : null,
+    fails: fails,
+    parameterList: parameterList,
     recentCalls: sampleRows
   };
 }
@@ -6154,7 +6211,7 @@ async function generateAgentInsight(){
   btn.disabled = true;
 
   try{
-    const payload = buildAgentInsightPayload(tab, agent);
+    const payload = await buildAgentInsightPayload(tab, agent);
     const res = await fetch(`${SUPABASE_URL}/functions/v1/${AI_INSIGHT_FUNCTION}`, {
       method: 'POST',
       headers: {
