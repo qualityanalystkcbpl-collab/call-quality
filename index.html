@@ -3144,12 +3144,33 @@ transform:translateY(0);
 }
 .chat-bubble-badge{
   position:absolute; top:-4px; right:-4px;
-  width:16px; height:16px; border-radius:50%;
+  min-width:17px; height:17px; padding:0 3px; border-radius:9px; box-sizing:border-box;
   background:var(--need); border:2px solid var(--bg, #0B1622);
   align-items:center; justify-content:center;
+  color:#fff; font-size:10px; font-weight:800; line-height:1;
   animation: chatBadgeBlink 1s ease-in-out infinite;
 }
-@keyframes chatBadgeBlink{ 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+@keyframes chatBadgeBlink{ 0%,100%{ opacity:1; background:var(--need); } 50%{ opacity:1; background:#ff2d2d; } }
+.nav-chat-badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:18px; height:18px; padding:0 5px; border-radius:9px; box-sizing:border-box;
+  background:var(--need); color:#fff; font-size:11px; font-weight:800; line-height:1;
+  margin-left:6px; vertical-align:middle;
+  animation: chatBadgeBlink 1s ease-in-out infinite;
+}
+.new-msg-received-label{
+  display:inline-block; margin-left:8px; padding:2px 8px; border-radius:6px;
+  background:#FFD400; color:#000; font-size:11px; font-weight:800;
+  animation: newMsgLabelBlink 1s ease-in-out infinite;
+}
+.new-msg-received-floating{
+  position:absolute; left:50%; top:-30px; transform:translateX(-50%);
+  white-space:nowrap; background:#FFD400; color:#000; font-size:10.5px; font-weight:800;
+  padding:3px 9px; border-radius:8px; border:1px solid rgba(0,0,0,.25);
+  box-shadow:0 3px 10px rgba(0,0,0,.35);
+  animation: newMsgLabelBlink 1s ease-in-out infinite;
+}
+@keyframes newMsgLabelBlink{ 0%,100%{ opacity:1; } 50%{ opacity:.5; } }
 .chat-bubble-new-tag{
   position:absolute; left:14px; top:-11px;
   background:var(--need); color:#fff; font-size:10px; font-weight:800;
@@ -3634,6 +3655,8 @@ transform:translateY(0);
 
     <span class="dot"></span>
     💬 Employee Messages
+    <span class="nav-chat-badge" id="empChatNavBadge" style="display:none;"></span>
+    <span class="new-msg-received-label" id="empChatNavNewLabel" style="display:none;">New message received</span>
 
 </div>
 
@@ -4792,8 +4815,29 @@ async function sendEmployeeChatMessage(){
     const key = empEmployeeId;
     if(!threads[key]) threads[key] = { employeeId: empEmployeeId, employeeName: empAgentName, messages: [] };
     threads[key].employeeName = empAgentName;
+
+    // Auto-reply শুধু তখনই যাবে যখন এটা এই থ্রেডের প্রথম মেসেজ, অথবা শেষ employee
+    // মেসেজের পর অনেকটা সময় (২ দিন) পার হয়ে গেছে — একটানা চ্যাট করার সময় প্রতিটা
+    // মেসেজে বারবার auto-reply আসবে না।
+    const AUTO_REPLY_GAP_MS = 2 * 24 * 60 * 60 * 1000; // ২ দিন
+    const priorEmployeeMsgs = (threads[key].messages || []).filter(m => m.from === 'employee');
+    const lastEmployeeMsgTs = priorEmployeeMsgs.length ? priorEmployeeMsgs[priorEmployeeMsgs.length - 1].ts : null;
+    const shouldAutoReply = !lastEmployeeMsgTs || (Date.now() - lastEmployeeMsgTs) > AUTO_REPLY_GAP_MS;
+
     threads[key].messages.push({ id: chatUid(), from:'employee', text, ts: Date.now() });
     threads[key].adminUnread = true;
+
+    if(shouldAutoReply){
+      threads[key].messages.push({
+        id: chatUid(),
+        from: 'admin',
+        senderName: 'Quality Team',
+        text: 'Thank you for contacting the Quality Team. Your message will be answered as soon as possible.',
+        ts: Date.now() + 1,
+        isAutoReply: true
+      });
+    }
+
     trimThreadMessages(threads[key]);
     await saveChatThreads(threads);
     localStorage.setItem('qa_emp_chat_seen_ts', String(Date.now()));
@@ -4851,12 +4895,21 @@ async function refreshEmployeeChat(){
   if(panel && panel.classList.contains('open')) renderEmployeeChatMessages(thread);
 
   const badge = document.getElementById('empChatBadge');
+  const floatLabel = document.getElementById('empChatNewMsgFloatLabel');
   if(badge){
-    const lastMsg = thread && thread.messages && thread.messages[thread.messages.length-1];
     const seenTs = Number(localStorage.getItem('qa_emp_chat_seen_ts')||0);
     const isOpen = panel && panel.classList.contains('open');
-    const hasUnread = !!(lastMsg && lastMsg.from==='admin' && lastMsg.ts > seenTs && !isOpen);
-    badge.style.display = hasUnread ? 'flex' : 'none';
+    const unreadCount = (thread && Array.isArray(thread.messages))
+      ? thread.messages.filter(m => m.from==='admin' && !m.deleted && m.ts > seenTs).length
+      : 0;
+    if(!isOpen && unreadCount > 0){
+      badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+      badge.style.display = 'flex';
+      if(floatLabel) floatLabel.style.display = 'block';
+    }else{
+      badge.style.display = 'none';
+      if(floatLabel) floatLabel.style.display = 'none';
+    }
   }
 }
 let empChatClockInterval = null;
@@ -4880,6 +4933,8 @@ function toggleEmployeeChatPanel(){
     refreshEmployeeChat();
     const badge = document.getElementById('empChatBadge');
     if(badge) badge.style.display = 'none';
+    const floatLabel = document.getElementById('empChatNewMsgFloatLabel');
+    if(floatLabel) floatLabel.style.display = 'none';
     updateEmpChatHeaderClock();
     if(empChatClockInterval) clearInterval(empChatClockInterval);
     empChatClockInterval = setInterval(updateEmpChatHeaderClock, 1000);
@@ -4904,12 +4959,30 @@ async function renderAdminChatList(){
     </div>`;
   await refreshAdminChatList();
 }
+async function updateAdminChatNavBadge(){
+  const badge = document.getElementById('empChatNavBadge');
+  const newLabel = document.getElementById('empChatNavNewLabel');
+  if(!badge) return;
+  try{
+    const threads = await getChatThreads();
+    const count = Object.values(threads||{}).filter(t => t && t.adminUnread).length;
+    if(count > 0){
+      badge.textContent = count > 9 ? '9+' : String(count);
+      badge.style.display = 'inline-flex';
+      if(newLabel) newLabel.style.display = 'inline-block';
+    }else{
+      badge.style.display = 'none';
+      if(newLabel) newLabel.style.display = 'none';
+    }
+  }catch(e){ /* ব্যাকগ্রাউন্ড আপডেট, চুপচাপ ইগনোর করা হলো */ }
+}
 async function refreshAdminChatList(){
   const listEl = document.getElementById('adminChatThreadList');
   if(!listEl) return;
   const threads = await getChatThreads();
   const entries = Object.values(threads).filter(t => t && t.messages && t.messages.length);
   entries.sort((a,b)=> b.messages[b.messages.length-1].ts - a.messages[a.messages.length-1].ts);
+  updateAdminChatNavBadge();
 
   if(!entries.length){
     listEl.innerHTML = '<div class="empty-state" style="border:none;">এখনো কোনো এজেন্ট মেসেজ পাঠায়নি।</div>';
@@ -4932,6 +5005,7 @@ async function openAdminChatThread(employeeId){
   if(!thread) return;
   thread.adminUnread = false;
   await saveChatThreads(threads);
+  updateAdminChatNavBadge();
 
   const view = document.getElementById('adminChatThreadView');
   view.innerHTML = `
@@ -5007,12 +5081,12 @@ async function sendAdminChatReply(){
   }
 }
 
-function startChatPolling(){
-  if(chatPollInterval) clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(()=>{
-    if(currentRole === 'agent'){
-      refreshEmployeeChat();
-    }else if(currentRole === 'admin' && currentTab === 'EMPCHAT'){
+function runChatPollTick(){
+  if(currentRole === 'agent'){
+    refreshEmployeeChat();
+  }else if(currentRole === 'admin'){
+    updateAdminChatNavBadge();
+    if(currentTab === 'EMPCHAT'){
       refreshAdminChatList();
       if(chatOpenEmployeeId){
         getChatThreads().then(threads=>{
@@ -5021,9 +5095,20 @@ function startChatPolling(){
         });
       }
     }
-  }, CHAT_POLL_MS);
+  }
+}
+function startChatPolling(){
+  if(chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(runChatPollTick, CHAT_POLL_MS);
 }
 startChatPolling();
+/* ব্রাউজার ট্যাব মিনিমাইজ/অন্য ট্যাবে থাকা অবস্থায় setInterval অনেক ধীর হয়ে যায় (throttle) —
+   তাই ট্যাবে ফিরে আসার সাথে সাথেই (বা উইন্ডো ফোকাস পেলে) সাথে সাথে একবার চেক করে নেওয়া হচ্ছে,
+   যাতে ম্যানুয়াল রিফ্রেশ ছাড়াই আনরিড ব্যাজ/"New message received" আপ-টু-ডেট থাকে। */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible') runChatPollTick();
+});
+window.addEventListener('focus', runChatPollTick);
 /* ===================== LOGIN SYSTEMS ===================== */
 function selectRole(role){
   selectedRole = role;
@@ -5157,9 +5242,10 @@ if(currentRole==="agent"){
         .forEach(el=>el.style.display="");
 
 }
+  if(currentRole==="admin" && typeof updateAdminChatNavBadge === 'function'){ updateAdminChatNavBadge(); }
   
   showToast('লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।...');
-  
+
   switchTab('HOME');
   await Promise.all([
     loadTicker(),
@@ -8063,6 +8149,7 @@ doLogout = function(){
 
 <button class="chat-bubble-btn agent-only" id="empChatBubbleBtn" style="display:none;" onclick="toggleEmployeeChatPanel()" title="Ask Quality Team">
   <span class="chat-bubble-new-tag" id="empChatNewTag">NEW</span>
+  <span class="new-msg-received-floating" id="empChatNewMsgFloatLabel" style="display:none;">New message received</span>
   💬 <span class="chat-bubble-btn-label">Ask Quality Team</span>
   <span class="chat-bubble-badge" id="empChatBadge" style="display:none;"></span>
 </button>
