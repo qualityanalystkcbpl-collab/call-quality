@@ -3685,6 +3685,12 @@ transform:translateY(0);
       </div>
 
       <div class="nav-section">
+      <div class="nav-label">AI Tools</div>
+      <div class="nav-item" data-tab="AIINSIGHT" onclick="switchTab('AIINSIGHT')"><span class="dot"></span>🤖 Get feedback from AI Agent</div>
+      </div>
+
+
+      <div class="nav-section">
       <div class="nav-label">All Dashboards</div>
       <div class="nav-item dashboard-tab" data-tab="DASH-CATV" onclick="switchTab('DASH-CATV')"><span class="dot"></span>CATV Dashboard</div>
       <div class="nav-item dashboard-tab" data-tab="DASH-BBTECH" onclick="switchTab('DASH-BBTECH')"><span class="dot"></span>BB Tech Dashboard</div>
@@ -3806,6 +3812,8 @@ transform:translateY(0);
       <div class="panel" id="panel-CATV" data-vertical="CATV"></div>
       <div class="panel" id="panel-BBTECH" data-vertical="BBTECH"></div>
       <div class="panel" id="panel-BBRENEWAL" data-vertical="BBRENEWAL"></div>
+      <!-- AI Insight panel -->
+      <div class="panel" id="panel-AIINSIGHT"></div>
       <!-- Dedicated Dashboards panels -->
       <div class="panel" id="panel-DASH-CATV"></div>
       <div class="panel" id="panel-DASH-BBTECH"></div>
@@ -4176,6 +4184,7 @@ let topTickerAnimFrame = null;
 let topTickerTimeoutId = null;
 let chartInstances = {};
 const rawDataCache = {};
+const agentRowsCache = {}; // { [tab]: [{agent, auditCount, avgScore, fails}, ...] } — used for AI Insight context
 /* ===================== LIVE SYSTEM CLOCK (now inside the logo area) ===================== */
 function startLiveClock() {
   setInterval(() => {
@@ -5729,6 +5738,11 @@ async function switchTab(tab){
       await renderDedicatedDashboard(vKey);
     } else if (tab === 'ANS3SEC') {
       await renderAnswered3SecPanel(ans3secSubTab);
+    } else if (tab === 'AIINSIGHT') {
+      renderAIInsightPanel();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const contentEl = document.querySelector('main.content');
+      if (contentEl) contentEl.scrollTop = 0;
     } else if (RAW_SHEET_TABS[tab]) {
       await renderRawSheetTabPanel(tab);
     } else if (tab === 'HELP') {
@@ -5754,17 +5768,7 @@ function statusFor(score){
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
 /* ===================== RENDER SHEETS WITH GOOGLE SHEET API ===================== */
-async function renderVerticalPanel(tab){
-  const meta = VERTICALS[tab];
-  const panel = document.getElementById('panel-'+tab);
-  const isAdmin = currentRole === 'admin';
-  
-  panel.innerHTML = `
-    <div class="panel-header">
-      <div><h1>${meta.label} Sheet Logs</h1><p>অনুগ্রহ করে অপেক্ষা করুন... লাইভ ডাটা লোড হচ্ছে।...</p></div>
-    </div>
-    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
-  
+async function fetchVerticalData(tab){
   let json = [];
   let rows = [];
   const newBackendKey = NEW_BACKEND_PROCESS_KEY[tab];
@@ -5811,6 +5815,28 @@ async function renderVerticalPanel(tab){
   }
 
   rawDataCache[tab] = json;
+  agentRowsCache[tab] = rows;
+  return { json, rows };
+}
+/* Cache-aware loader: reuses already-fetched data unless forceRefresh is true.
+   Lets tabs like AI Insight get an agent list without requiring the user to have
+   opened that LOB's own Data Sheet tab first. */
+async function ensureVerticalDataLoaded(tab, forceRefresh){
+  if(!forceRefresh && agentRowsCache[tab]) return { json: rawDataCache[tab] || [], rows: agentRowsCache[tab] };
+  return await fetchVerticalData(tab);
+}
+async function renderVerticalPanel(tab){
+  const meta = VERTICALS[tab];
+  const panel = document.getElementById('panel-'+tab);
+  const isAdmin = currentRole === 'admin';
+  
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>${meta.label} Sheet Logs</h1><p>অনুগ্রহ করে অপেক্ষা করুন... লাইভ ডাটা লোড হচ্ছে।...</p></div>
+    </div>
+    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+
+  const { json, rows } = await fetchVerticalData(tab);
   updateLoginAgentCount();
   
   let html = `
@@ -5914,6 +5940,247 @@ function filterAgentTable(input, tableId){
   const noMatch = table.parentElement.querySelector('.table-no-match');
   if(noMatch) noMatch.style.display = anyVisible ? 'none' : 'block';
 }
+
+/* ===================== AI AGENT PERFORMANCE INSIGHT (Supabase + OpenRouter) ===================== */
+/* Reuses the SUPABASE_URL / SUPABASE_ANON_KEY already configured above (used for banners).
+   The OpenRouter key itself is NEVER placed in this file — it lives only as a
+   secret inside the Supabase Edge Function, see supabase/functions/generate-agent-insight. */
+const AI_INSIGHT_FUNCTION = 'generate-agent-insight'; // Edge Function name (do not change unless you rename it)
+
+let aiInsightCurrentTab = null;
+let aiInsightCurrentAgent = null;
+
+function isSupabaseConfigured(){
+  return !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
+}
+
+/* Builds the "AI Insight" tab: a LOB dropdown + Agent dropdown, then a result card below */
+function renderAIInsightPanel(){
+  const panel = document.getElementById('panel-AIINSIGHT');
+  const lobOptions = Object.keys(VERTICALS)
+    .map(k => `<option value="${escapeAttr(k)}">${escapeHtml(VERTICALS[k].label)}</option>`).join('');
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>🤖 Get feedback from AI Agent</h1><p>একটা LOB ও Agent বেছে নিন — AI সেই এজেন্টের পারফরম্যান্স বিশ্লেষণ করে সংক্ষিপ্ত summary, দুর্বল জায়গা ও কোচিং সাজেশন দেবে।</p></div>
+    </div>
+
+    <div class="ai-insight-picker-box">
+      <div class="ai-insight-picker-row">
+        <div class="ai-field">
+          <label>LOB / Process</label>
+          <select id="aiInsightLobSelect" onchange="onAiInsightLobChange()">
+            <option value="">-- LOB বেছে নিন --</option>
+            ${lobOptions}
+          </select>
+        </div>
+        <div class="ai-field">
+          <label>Agent</label>
+          <select id="aiInsightAgentSelect" onchange="onAiInsightAgentChange()" disabled>
+            <option value="">-- আগে LOB বেছে নিন --</option>
+          </select>
+        </div>
+      </div>
+      <div class="ai-insight-picker-loading" id="aiInsightPickerLoading" style="display:none;">ডাটা লোড হচ্ছে...</div>
+    </div>
+
+    <div class="empty-state" id="aiInsightEmptyState">👈 উপরে থেকে একটা LOB ও Agent বেছে নিন।</div>
+
+    <div class="ai-insight-panel-card" id="aiInsightPanelCard" style="display:none;">
+      <div class="ai-insight-panel-head">
+        <div>
+          <h3 id="aiInsightPanelAgentName">—</h3>
+          <p class="hint" id="aiInsightPanelAgentMeta"></p>
+        </div>
+        <button class="btn primary" id="aiInsightGenBtn" onclick="generateAgentInsight()">✨ Generate New Insight</button>
+      </div>
+      <div class="ai-insight-body">
+        <div class="ai-insight-loading" id="aiInsightLoading" style="display:none;">
+          <div class="page-load-spinner" style="border-top-color:var(--agent);"></div>
+          <span>AI ইনসাইট তৈরি হচ্ছে...</span>
+        </div>
+        <div class="ai-insight-text" id="aiInsightText"></div>
+        <div class="ai-insight-meta" id="aiInsightMeta" style="display:none;"></div>
+        <div class="ai-insight-error login-error" id="aiInsightError" style="display:none;"></div>
+      </div>
+    </div>`;
+}
+
+/* When a LOB is picked: (re)load that LOB's agent list (from cache if already visited, else fetch fresh) */
+async function onAiInsightLobChange(){
+  const lob = document.getElementById('aiInsightLobSelect').value;
+  const agentSelect = document.getElementById('aiInsightAgentSelect');
+  const loadingEl = document.getElementById('aiInsightPickerLoading');
+
+  document.getElementById('aiInsightPanelCard').style.display = 'none';
+  document.getElementById('aiInsightEmptyState').style.display = 'block';
+
+  if(!lob){
+    agentSelect.disabled = true;
+    agentSelect.innerHTML = '<option value="">-- আগে LOB বেছে নিন --</option>';
+    return;
+  }
+
+  agentSelect.disabled = true;
+  agentSelect.innerHTML = '<option value="">লোড হচ্ছে...</option>';
+  loadingEl.style.display = 'block';
+  try{
+    const { rows } = await ensureVerticalDataLoaded(lob);
+    if(!rows.length){
+      agentSelect.innerHTML = '<option value="">কোনো এজেন্ট ডাটা পাওয়া যায়নি</option>';
+      return;
+    }
+    const sorted = rows.slice().sort((a,b)=> String(a.agent).localeCompare(String(b.agent), 'bn'));
+    agentSelect.innerHTML = '<option value="">-- Agent বেছে নিন --</option>' +
+      sorted.map(r => `<option value="${escapeAttr(r.agent)}">${escapeHtml(r.agent)}</option>`).join('');
+    agentSelect.disabled = false;
+  }catch(e){
+    console.error('Load agent list failed', e);
+    agentSelect.innerHTML = '<option value="">ডাটা লোড ব্যর্থ হয়েছে</option>';
+  } finally {
+    loadingEl.style.display = 'none';
+  }
+}
+
+/* When an Agent is picked: show the result card and load their most recent stored insight */
+function onAiInsightAgentChange(){
+  const lob = document.getElementById('aiInsightLobSelect').value;
+  const agent = document.getElementById('aiInsightAgentSelect').value;
+
+  if(!lob || !agent){
+    document.getElementById('aiInsightPanelCard').style.display = 'none';
+    document.getElementById('aiInsightEmptyState').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('aiInsightEmptyState').style.display = 'none';
+  document.getElementById('aiInsightPanelCard').style.display = 'block';
+
+  aiInsightCurrentTab = lob;
+  aiInsightCurrentAgent = agent;
+
+  const summaryRow = (agentRowsCache[lob] || []).find(r => String(r.agent).trim() === agent);
+  document.getElementById('aiInsightPanelAgentName').textContent = agent;
+  document.getElementById('aiInsightPanelAgentMeta').textContent =
+    `LOB: ${(VERTICALS[lob] && VERTICALS[lob].label) || lob}` +
+    (summaryRow ? `  •  Audit Count: ${summaryRow.auditCount}  •  Avg Score: ${summaryRow.avgScore}%` : '');
+
+  document.getElementById('aiInsightText').textContent = '';
+  document.getElementById('aiInsightMeta').style.display = 'none';
+  document.getElementById('aiInsightError').style.display = 'none';
+
+  // Agent বেছে নেওয়া মাত্রই স্বয়ংক্রিয়ভাবে নতুন AI insight জেনারেট হবে — আলাদা করে বাটনে চাপার দরকার নেই।
+  generateAgentInsight();
+}
+
+/* Read-only fetch of the most recent stored insight for this agent (uses the public anon key + RLS) */
+async function loadExistingAgentInsight(tab, agent){
+  const textEl = document.getElementById('aiInsightText');
+  const metaEl = document.getElementById('aiInsightMeta');
+  const errEl = document.getElementById('aiInsightError');
+  const loadingEl = document.getElementById('aiInsightLoading');
+  errEl.style.display = 'none';
+
+  if(!isSupabaseConfigured()){
+    textEl.textContent = 'এখনো কোনো insight জেনারেট করা হয়নি। "Generate New Insight" চাপুন।';
+    return;
+  }
+
+  loadingEl.style.display = 'flex';
+  try{
+    const url = `${SUPABASE_URL}/rest/v1/agent_ai_insights?agent_name=eq.${encodeURIComponent(agent)}&lob=eq.${encodeURIComponent(tab)}&order=created_at.desc&limit=1`;
+    const res = await fetch(url, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    const data = await res.json();
+    if(Array.isArray(data) && data.length){
+      textEl.textContent = data[0].insight_text || '';
+      metaEl.innerHTML = `সর্বশেষ জেনারেট: ${new Date(data[0].created_at).toLocaleString('bn-BD')} <span style="opacity:.65;font-style:italic;">— এটি AI generated information, তথ্য ভুল হতে পারে।</span>`;
+      metaEl.style.display = 'block';
+    } else {
+      textEl.textContent = 'এখনো কোনো insight জেনারেট করা হয়নি। "Generate New Insight" চাপুন।';
+    }
+  }catch(e){
+    console.error('Load existing insight failed', e);
+    textEl.textContent = 'এখনো কোনো insight জেনারেট করা হয়নি। "Generate New Insight" চাপুন।';
+  } finally {
+    loadingEl.style.display = 'none';
+  }
+}
+
+/* Build the performance context sent to the Edge Function: summary stats + a recent sample of raw calls */
+function buildAgentInsightPayload(tab, agent){
+  const summaryRow = (agentRowsCache[tab] || []).find(r => String(r.agent).trim() === agent);
+  const raw = rawDataCache[tab] || [];
+  let sampleRows = [];
+  if(raw.length){
+    const keys = Object.keys(raw[0]);
+    const { nameKey } = detectColumnKeys(keys);
+    if(nameKey){
+      sampleRows = raw
+        .filter(r => String(r[nameKey]).trim() === agent)
+        .slice(-25); // last up to 25 calls for this agent — keeps the AI prompt small & fast
+    }
+  }
+  return {
+    agentName: agent,
+    lob: (VERTICALS[tab] && VERTICALS[tab].label) || tab,
+    auditCount: summaryRow ? summaryRow.auditCount : null,
+    avgScore: summaryRow ? summaryRow.avgScore : null,
+    fails: summaryRow ? (summaryRow.fails || null) : null,
+    recentCalls: sampleRows
+  };
+}
+
+async function generateAgentInsight(){
+  const tab = aiInsightCurrentTab;
+  const agent = aiInsightCurrentAgent;
+  if(!tab || !agent) return;
+
+  const textEl = document.getElementById('aiInsightText');
+  const metaEl = document.getElementById('aiInsightMeta');
+  const errEl = document.getElementById('aiInsightError');
+  const loadingEl = document.getElementById('aiInsightLoading');
+  const btn = document.getElementById('aiInsightGenBtn');
+
+  if(!isSupabaseConfigured()){
+    errEl.textContent = 'Supabase এখনো কনফিগার করা হয়নি। কোডে SUPABASE_URL ও SUPABASE_ANON_KEY বসান।';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  loadingEl.style.display = 'flex';
+  btn.disabled = true;
+
+  try{
+    const payload = buildAgentInsightPayload(tab, agent);
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${AI_INSIGHT_FUNCTION}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(!res.ok || !data || data.ok !== true){
+      throw new Error((data && data.error) || `Server error (${res.status})`);
+    }
+    textEl.textContent = data.insight || '';
+    metaEl.innerHTML = `সর্বশেষ জেনারেট: ${new Date().toLocaleString('bn-BD')} <span style="opacity:.65;font-style:italic;">— এটি AI generated information, তথ্য ভুল হতে পারে।</span>`;
+    metaEl.style.display = 'block';
+  }catch(e){
+    console.error('Generate insight failed', e);
+    errEl.textContent = 'Insight তৈরি করা যায়নি। একটু পরে আবার চেষ্টা করুন।';
+    errEl.style.display = 'block';
+  } finally {
+    loadingEl.style.display = 'none';
+    btn.disabled = false;
+  }
+}
+
 function runCountUps(scope){
   const els = (scope || document).querySelectorAll('[data-countup]');
   els.forEach(el=>{
@@ -7473,6 +7740,65 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 .emp-pw-rules{ font-size:11.5px; color: var(--text-muted, #8FA0B5); margin-top:8px; }
 .emp-modal-box .login-btn{ width:100%; margin-top:16px; }
 .emp-modal-box .login-error{ margin-top:8px; }
+
+/* AI Insight tab */
+.ai-insight-picker-box{
+  background: var(--surface, #0E1A2B);
+  border:1px solid var(--border, #203859);
+  border-radius: var(--radius, 12px);
+  padding:18px 20px;
+  margin-bottom:20px;
+}
+.ai-insight-picker-row{
+  display:flex; flex-wrap:wrap; gap:16px;
+}
+.ai-insight-picker-row .ai-field{ flex:1; min-width:220px; }
+.ai-insight-picker-row .ai-field label{
+  display:block; font-size:12px; color: var(--text-muted, #8FA0B5); margin-bottom:6px;
+}
+.ai-insight-picker-row .ai-field select{
+  width:100%; padding:10px 12px; background: var(--surface-2, #14253D);
+  border:1px solid var(--border, #203859); border-radius:8px; color:var(--text, #EAF0F6); font-size:13px;
+  outline:none;
+}
+.ai-insight-picker-loading{
+  margin-top:12px; font-size:12.5px; color: var(--text-muted, #8FA0B5);
+}
+.ai-insight-panel-card{
+  background: var(--surface, #0E1A2B);
+  border:1px solid var(--border, #203859);
+  border-radius: var(--radius, 12px);
+  padding:20px 22px;
+}
+.ai-insight-panel-head{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+  flex-wrap:wrap;
+  border-bottom:1px solid var(--border, #203859);
+  padding-bottom:14px; margin-bottom:14px;
+}
+.ai-insight-panel-head h3{ font-family:'Space Grotesk',sans-serif; font-size:19px; }
+.ai-insight-panel-head .hint{ margin-top:4px; }
+.ai-insight-body{ min-height:60px; }
+.ai-insight-loading{
+  display:flex; align-items:center; gap:10px;
+  color: var(--text-muted, #8FA0B5);
+  font-size:13px;
+  padding:14px 0;
+}
+.ai-insight-text{
+  font-size:13.5px;
+  line-height:1.7;
+  white-space:pre-wrap;
+  color: var(--text, #EAF0F6);
+}
+.ai-insight-meta{
+  margin-top:14px;
+  font-size:11.5px;
+  color: var(--text-muted, #8FA0B5);
+  font-family:'IBM Plex Mono', monospace;
+  border-top:1px dashed var(--border, #203859);
+  padding-top:8px;
+}
 
 /* "Currently Online" agents modal */
 .online-agents-box{ max-width:340px; }
