@@ -4223,6 +4223,7 @@ startLogoRotator();
   }, {passive:true});
 })();
 /* ---------- PAGE LOAD OVERLAY helpers ---------- */
+if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 function showPageLoadOverlay(){
   const el = document.getElementById('pageLoadOverlay');
   if(el) el.classList.remove('hide');
@@ -5306,6 +5307,7 @@ async function enterApp(){
   }
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('mainScreen').style.display = 'flex';
+  window.scrollTo(0, 0);
   const pill = document.getElementById('rolePill');
   pill.textContent = currentRole.toUpperCase();
   pill.className = 'role-pill ' + currentRole;
