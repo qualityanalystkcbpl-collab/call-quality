@@ -5928,18 +5928,99 @@ function statusFor(score){
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
 
-/* Splits the AI response into the fixed intro/disclaimer line (rendered in a distinct color/box)
-   and the actual feedback body (rendered normally, preserving line breaks). */
+/* Renders the AI insight. New rows are a JSON object (from the updated Edge Function):
+     { intro, summary, weak_areas:[{parameter,fail_count,impact,pattern}], coaching:[{parameter,suggestion}], priority, managers_note }
+   Old rows (generated before this update) are a plain markdown-ish text string. We try JSON first
+   and fall back to the legacy renderer so old history rows in the database don't break. */
 function renderAIInsightText(container, rawText){
+  const text = String(rawText || '');
+  let structured = null;
+  try{
+    const parsed = JSON.parse(text);
+    if(parsed && typeof parsed === 'object' && (parsed.summary || Array.isArray(parsed.weak_areas))){
+      structured = parsed;
+    }
+  }catch(e){ /* not JSON — legacy plain-text row, fall through below */ }
+
+  if(structured){
+    renderStructuredAIInsight(container, structured);
+    return;
+  }
+  renderLegacyAIInsightText(container, text);
+}
+
+function renderStructuredAIInsight(container, data){
+  let html = '';
+  if(data.intro){
+    html += `<div class="ai-insight-disclaimer">${escapeHtml(data.intro)}</div>`;
+  }
+
+  if(data.summary){
+    html += `<div class="ai-insight-section">
+      <div class="ai-insight-section-title">📊 Overall Performance Summary</div>
+      <div class="ai-insight-section-body">${escapeHtml(data.summary)}</div>
+    </div>`;
+  }
+
+  const weakAreas = Array.isArray(data.weak_areas) ? data.weak_areas : [];
+  if(weakAreas.length){
+    html += `<div class="ai-insight-section">
+      <div class="ai-insight-section-title">⚠️ Weak Areas</div>
+      ${weakAreas.map(w => `
+        <div class="ai-insight-weak-item">
+          <div class="wi-head">
+            <span class="wi-param">${escapeHtml(w.parameter || '')}</span>
+            ${(w.fail_count !== null && w.fail_count !== undefined && w.fail_count !== '') ? `<span class="wi-count">Fails: ${escapeHtml(String(w.fail_count))}</span>` : ''}
+          </div>
+          ${w.impact ? `<div class="wi-impact">${escapeHtml(w.impact)}</div>` : ''}
+          ${w.pattern ? `<div class="wi-pattern">🔎 ${escapeHtml(w.pattern)}</div>` : ''}
+        </div>`).join('')}
+    </div>`;
+  }
+
+  const coaching = Array.isArray(data.coaching) ? data.coaching : [];
+  if(coaching.length){
+    html += `<div class="ai-insight-section">
+      <div class="ai-insight-section-title">🎯 Coaching Suggestions</div>
+      ${coaching.map(c => `
+        <div class="ai-insight-coaching-item">
+          ${c.parameter ? `<div class="ci-param">${escapeHtml(c.parameter)}</div>` : ''}
+          <div class="ci-suggestion">${escapeHtml(c.suggestion || '')}</div>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  if(data.priority){
+    html += `<div class="ai-insight-section">
+      <div class="ai-insight-section-title">🚀 Priority</div>
+      <div class="ai-insight-priority-box">${escapeHtml(data.priority)}</div>
+    </div>`;
+  }
+
+  if(data.managers_note){
+    html += `<div class="ai-insight-section">
+      <div class="ai-insight-section-title">📝 Manager's Note</div>
+      <div class="ai-insight-managers-note">${escapeHtml(data.managers_note)}</div>
+    </div>`;
+  }
+
+  container.innerHTML = html || '<div class="ai-insight-body-text">কোনো ডাটা পাওয়া যায়নি।</div>';
+}
+
+/* Legacy renderer for insight rows generated before the structured-JSON update —
+   splits off the fixed intro/disclaimer line and renders the rest as preformatted text,
+   turning any leftover **bold** markdown into real <b> so old rows don't show literal asterisks. */
+function renderLegacyAIInsightText(container, rawText){
   const text = String(rawText || '');
   const parts = text.split(/\n\n+/);
   const intro = parts[0] && /Quality Analysis Team/i.test(parts[0]) ? parts[0] : null;
   const body = intro ? parts.slice(1).join('\n\n') : text;
+  const boldedBody = escapeHtml(body).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   let html = '';
   if(intro){
     html += `<div class="ai-insight-disclaimer">${escapeHtml(intro)}</div>`;
   }
-  html += `<div class="ai-insight-body-text">${escapeHtml(body)}</div>`;
+  html += `<div class="ai-insight-body-text">${boldedBody}</div>`;
   container.innerHTML = html;
 }
 
@@ -6293,6 +6374,43 @@ const AI_ROBOT_HTML = `
 }
 .ai-insight-body-text{
   white-space:pre-wrap;
+}
+/* ---- Structured AI insight (JSON schema) rendering ---- */
+.ai-insight-section{ margin-bottom:16px; }
+.ai-insight-section:last-child{ margin-bottom:0; }
+.ai-insight-section-title{
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px;
+  letter-spacing:.3px; margin-bottom:6px; display:flex; align-items:center; gap:6px;
+  color:var(--text);
+}
+.ai-insight-section-body{ font-size:13.5px; line-height:1.7; white-space:pre-wrap; color:var(--text); }
+.ai-insight-weak-item{
+  border-left:3px solid var(--need); background:var(--surface-2, #14253D);
+  border-radius:8px; padding:10px 12px; margin-bottom:8px;
+}
+.ai-insight-weak-item:last-child{ margin-bottom:0; }
+.ai-insight-weak-item .wi-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px; }
+.ai-insight-weak-item .wi-param{ font-weight:700; font-size:13px; color:var(--need); }
+.ai-insight-weak-item .wi-count{
+  font-size:11px; font-family:'IBM Plex Mono',monospace; color:var(--text-muted);
+  background:var(--surface-3,#1B3150); border-radius:10px; padding:2px 8px; flex-shrink:0;
+}
+.ai-insight-weak-item .wi-impact{ font-size:13px; line-height:1.6; color:var(--text); }
+.ai-insight-weak-item .wi-pattern{ font-size:12px; line-height:1.6; color:var(--text-muted); margin-top:4px; font-style:italic; }
+.ai-insight-coaching-item{
+  border-left:3px solid var(--agent); background:var(--agent-dim); border-radius:8px;
+  padding:10px 12px; margin-bottom:8px;
+}
+.ai-insight-coaching-item:last-child{ margin-bottom:0; }
+.ai-insight-coaching-item .ci-param{ font-weight:700; font-size:13px; color:var(--agent); margin-bottom:4px; }
+.ai-insight-coaching-item .ci-suggestion{ font-size:13px; line-height:1.6; color:var(--text); }
+.ai-insight-priority-box{
+  border-left:3px solid var(--admin); background:var(--admin-dim); border-radius:8px;
+  padding:10px 12px; font-size:13px; line-height:1.6; color:var(--text);
+}
+.ai-insight-managers-note{
+  border-left:3px solid var(--text-muted); background:var(--surface-2, #14253D); border-radius:8px;
+  padding:10px 12px; font-size:13px; line-height:1.6; color:var(--text); font-style:italic;
 }
 .ai-insight-loading-icon{
   display:inline-block;
