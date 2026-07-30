@@ -6011,6 +6011,107 @@ function renderAIInsightPanel(){
         <div class="ai-insight-error login-error" id="aiInsightError" style="display:none;"></div>
       </div>
     </div>`;
+
+  setupAIRobot();
+}
+
+/* ===================== AI ROBOT MASCOT (AI Insight tab only) ===================== */
+const AI_ROBOT_HTML = `
+<div id="aiRobotWrap" style="position:fixed; z-index:9999; cursor:grab; user-select:none; touch-action:none; left:80px; top:120px; display:none;">
+  <div id="aiRobotBubble" style="position:absolute; top:-36px; left:50%; transform:translateX(-50%); background:#10b981; color:#fff; padding:5px 12px; border-radius:12px; font-size:14px; font-weight:700; white-space:nowrap; opacity:0; transition:opacity .3s; box-shadow:0 4px 10px rgba(0,0,0,.25);">Hello! 👋</div>
+  <div style="position:relative; font-size:110px; line-height:1; filter:drop-shadow(0 8px 14px rgba(0,0,0,.35));">
+    <span id="aiRobotBody" style="display:inline-block;">🤖</span>
+    <span id="aiRobotHand" style="display:inline-block; position:absolute; top:2px; right:-14px; font-size:42px; transform-origin:70% 85%; animation: aiRobotWave 1.1s ease-in-out infinite;">👋</span>
+  </div>
+</div>
+<style>
+@keyframes aiRobotWave{
+  0%,100%{ transform:rotate(0deg); }
+  25%{ transform:rotate(-28deg); }
+  50%{ transform:rotate(12deg); }
+  75%{ transform:rotate(-18deg); }
+}
+@keyframes aiRobotBob{
+  0%,100%{ transform:translateY(0px); }
+  50%{ transform:translateY(-12px); }
+}
+#aiRobotBody{ animation: aiRobotBob 2.2s ease-in-out infinite; }
+</style>`;
+
+const aiRobotState = { dragging:false, offsetX:0, offsetY:0 };
+
+function setupAIRobot(){
+  let wrap = document.getElementById('aiRobotWrap');
+  if(!wrap){
+    document.body.insertAdjacentHTML('beforeend', AI_ROBOT_HTML);
+    wrap = document.getElementById('aiRobotWrap');
+    wrap.addEventListener('mousedown', aiRobotDragStart);
+    document.addEventListener('mousemove', aiRobotDragMove);
+    document.addEventListener('mouseup', aiRobotDragEnd);
+    wrap.addEventListener('touchstart', aiRobotDragStart, {passive:false});
+    document.addEventListener('touchmove', aiRobotDragMove, {passive:false});
+    document.addEventListener('touchend', aiRobotDragEnd);
+  }
+  if(!window._aiRobotInterval){
+    window._aiRobotInterval = setInterval(aiRobotWanderTick, 2600);
+  }
+  aiRobotWanderTick();
+}
+
+function aiRobotIsPanelActive(){
+  const p = document.getElementById('panel-AIINSIGHT');
+  return !!(p && p.classList.contains('active'));
+}
+
+function aiRobotWanderTick(){
+  const wrap = document.getElementById('aiRobotWrap');
+  if(!wrap) return;
+  if(!aiRobotIsPanelActive()){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  if(aiRobotState.dragging) return;
+  const panel = document.getElementById('panel-AIINSIGHT');
+  const rect = panel.getBoundingClientRect();
+  const w = 130, h = 130;
+  const minX = rect.left + 10, maxX = Math.max(minX, rect.right - w);
+  const minY = Math.max(rect.top + 50, 90), maxY = Math.max(minY, rect.bottom - h - 10);
+  const targetX = minX + Math.random() * (maxX - minX);
+  const targetY = minY + Math.random() * (maxY - minY);
+  wrap.style.transition = 'left 2.3s ease-in-out, top 2.3s ease-in-out';
+  wrap.style.left = targetX + 'px';
+  wrap.style.top = targetY + 'px';
+  if(Math.random() < 0.45){
+    const bubble = document.getElementById('aiRobotBubble');
+    if(bubble){
+      bubble.style.opacity = '1';
+      setTimeout(()=>{ bubble.style.opacity='0'; }, 1800);
+    }
+  }
+}
+
+function aiRobotDragStart(e){
+  aiRobotState.dragging = true;
+  const wrap = document.getElementById('aiRobotWrap');
+  wrap.style.transition = 'none';
+  wrap.style.cursor = 'grabbing';
+  const point = e.touches ? e.touches[0] : e;
+  const rect = wrap.getBoundingClientRect();
+  aiRobotState.offsetX = point.clientX - rect.left;
+  aiRobotState.offsetY = point.clientY - rect.top;
+  e.preventDefault();
+}
+function aiRobotDragMove(e){
+  if(!aiRobotState.dragging) return;
+  const wrap = document.getElementById('aiRobotWrap');
+  const point = e.touches ? e.touches[0] : e;
+  wrap.style.left = (point.clientX - aiRobotState.offsetX) + 'px';
+  wrap.style.top = (point.clientY - aiRobotState.offsetY) + 'px';
+  e.preventDefault();
+}
+function aiRobotDragEnd(){
+  if(!aiRobotState.dragging) return;
+  aiRobotState.dragging = false;
+  const wrap = document.getElementById('aiRobotWrap');
+  if(wrap) wrap.style.cursor = 'grab';
 }
 
 /* When a LOB is picked: (re)load that LOB's agent list (from cache if already visited, else fetch fresh) */
@@ -6140,6 +6241,53 @@ async function ensureParamWiseFailDataLoaded(forceRefresh){
 }
 
 /* Build the performance context sent to the Edge Function: summary stats + a recent sample of raw calls */
+/* Raw sheet columns look like: "Opening (5 Marks)" followed by a separate "Remarks 1" column.
+   The number in parentheses is just the MAX WEIGHT for that parameter — not a fail count.
+   A call FAILS a parameter when its paired Remarks column is non-empty (or the score given is
+   below the max marks); it PASSES when Remarks is blank. This function turns each raw call row
+   into an explicit, unambiguous structure so the AI never has to guess at what the raw
+   header/number combination means. */
+function cleanCallRowForAI(row){
+  const keys = Object.keys(row);
+  const meta = {};
+  const parameters = [];
+  let i = 0;
+  while(i < keys.length){
+    const key = keys[i];
+    const marksMatch = key.match(/^(.*?)\s*\((\d+)\s*Marks?\s*(?:\/\s*FATAL)?\)\s*$/i);
+    if(marksMatch){
+      const paramName = marksMatch[1].trim();
+      const maxMarks = parseInt(marksMatch[2], 10);
+      const isFatal = /FATAL/i.test(key);
+      const scoreGiven = parseFloat(row[key]);
+      let remarksText = '';
+      const nextKey = keys[i+1];
+      if(nextKey && /^Remarks\s*\d+/i.test(nextKey)){
+        remarksText = String(row[nextKey] == null ? '' : row[nextKey]).trim();
+        i += 2;
+      }else{
+        i += 1;
+      }
+      const failed = remarksText.length > 0 || (!isNaN(scoreGiven) && !isNaN(maxMarks) && scoreGiven < maxMarks);
+      parameters.push({
+        parameter: paramName,
+        maxMarks: isNaN(maxMarks) ? null : maxMarks,
+        fatal: isFatal,
+        result: failed ? 'FAIL' : 'PASS',
+        remarks: failed ? (remarksText || null) : null
+      });
+      continue;
+    }
+    if(/^Remarks\s*\d+/i.test(key)){
+      i += 1; // orphan remarks column already consumed by its pair above; skip if not
+      continue;
+    }
+    meta[key] = row[key];
+    i += 1;
+  }
+  return { meta, parameters };
+}
+
 async function buildAgentInsightPayload(tab, agent){
   const summaryRow = (agentRowsCache[tab] || []).find(r => String(r.agent).trim() === agent);
   const raw = rawDataCache[tab] || [];
@@ -6150,7 +6298,8 @@ async function buildAgentInsightPayload(tab, agent){
     if(nameKey){
       sampleRows = raw
         .filter(r => String(r[nameKey]).trim() === agent)
-        .slice(-25); // last up to 25 calls for this agent — keeps the AI prompt small & fast
+        .slice(-25) // last up to 25 calls for this agent — keeps the AI prompt small & fast
+        .map(cleanCallRowForAI);
     }
   }
 
