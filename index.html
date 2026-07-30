@@ -4132,6 +4132,11 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbC
 const SUPABASE_URL = "https://iqjmlkpkrtdrwhksmvai.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxam1sa3BrcnRkcndoa3NtdmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzIyMDIsImV4cCI6MjEwMDU0ODIwMn0.sXxh4eXLmDax2be9yYmKTT2oUF7NwgLOmaHTfdFO2pY";
 const BANNER_BUCKET = "banners";
+const BANNER_MAX_IMAGE_MB = 5;   // images/GIFs above this are rejected client-side
+const BANNER_MAX_VIDEO_MB = 15;  // videos above this are rejected client-side — keeps Home page load fast
+function isVideoUrl(url){
+  return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(String(url || ''));
+}
 const BANNER_MAX_COUNT = 10;
 
 const NEW_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwynUu1nChgzn5oJYILitU_O1ce4uIZ_Nnr899xdXlWWMFCRe7UDa74CLg5HFCS551Xug/exec";
@@ -4382,7 +4387,11 @@ function renderHomeBannerCarousel(){
   if(!wrap || !homeBannerList.length) return;
   wrap.innerHTML = `
     <div class="banner-carousel-track" id="homeBannerTrack">
-      ${homeBannerList.map((b,i)=>`<div class="banner-carousel-slide"><div class="banner-carousel-slide-bg" style="background-image:url('${escapeAttr(b.image_url)}')"></div><img src="${escapeAttr(b.image_url)}" alt="banner" loading="${i===0?'eager':'lazy'}" decoding="async" draggable="false"></div>`).join('')}
+      ${homeBannerList.map((b,i)=>`<div class="banner-carousel-slide">${
+        isVideoUrl(b.image_url)
+          ? `<video src="${escapeAttr(b.image_url)}" autoplay muted loop playsinline preload="${i===0?'auto':'metadata'}" style="width:100%;height:100%;object-fit:cover;"></video>`
+          : `<div class="banner-carousel-slide-bg" style="background-image:url('${escapeAttr(b.image_url)}')"></div><img src="${escapeAttr(b.image_url)}" alt="banner" loading="${i===0?'eager':'lazy'}" decoding="async" draggable="false">`
+      }</div>`).join('')}
     </div>
     ${homeBannerList.length>1 ? `
     <button class="banner-carousel-arrow prev" onclick="goToHomeBanner(homeBannerIndex-1)">‹</button>
@@ -4449,7 +4458,7 @@ async function renderBannerManagerPanel(){
     <div class="panel-header">
       <div><h1>🖼️ Banner Manager</h1><p>Employee Home পেজের উপরে যেসব ব্যানার ছবি ঘুরতে থাকবে, সেগুলো এখান থেকে আপলোড/ম্যানেজ করুন (সর্বোচ্চ ${BANNER_MAX_COUNT}টা)।</p></div>
       <div>
-        <input type="file" id="bannerFileInput" accept="image/*" style="display:none;" onchange="handleBannerUpload(this)">
+        <input type="file" id="bannerFileInput" accept="image/*,video/mp4,video/webm,video/quicktime" style="display:none;" onchange="handleBannerUpload(this)">
         <button class="btn primary" onclick="document.getElementById('bannerFileInput').click()">⬆️ নতুন ব্যানার আপলোড</button>
       </div>
     </div>
@@ -4477,7 +4486,9 @@ async function loadBannerMgrList(){
   }
   listEl.innerHTML = bannerMgrItems.map((b,i)=>`
     <div class="banner-mgr-item">
-      <img src="${escapeAttr(b.image_url)}" class="banner-mgr-thumb">
+      ${isVideoUrl(b.image_url)
+        ? `<video src="${escapeAttr(b.image_url)}" class="banner-mgr-thumb" muted loop autoplay playsinline></video>`
+        : `<img src="${escapeAttr(b.image_url)}" class="banner-mgr-thumb">`}
       <div class="banner-mgr-meta">
         <div>${b.is_active ? '🟢 Active (Home-এ দেখা যাচ্ছে)' : '⚪ Hidden'}</div>
         <div style="font-size:11px;color:var(--text-muted);">Order: ${i+1}</div>
@@ -4530,14 +4541,33 @@ async function handleBannerUpload(input){
     input.value = '';
     return;
   }
-  if(!file.type || !file.type.startsWith('image/')){
-    showToast('শুধু ছবি ফাইল (jpg/png/webp) আপলোড করা যাবে।');
+  const isImage = file.type && file.type.startsWith('image/');
+  const isVideo = file.type && file.type.startsWith('video/');
+  const isGif = file.type === 'image/gif';
+  if(!isImage && !isVideo){
+    showToast('শুধু ছবি (jpg/png/webp/gif) অথবা ভিডিও (mp4/webm/mov) আপলোড করা যাবে।');
+    input.value = '';
+    return;
+  }
+  const sizeMB = file.size / (1024*1024);
+  if(isImage && sizeMB > BANNER_MAX_IMAGE_MB){
+    showToast(`ছবি/GIF ফাইল সর্বোচ্চ ${BANNER_MAX_IMAGE_MB}MB পর্যন্ত হতে পারে (এই ফাইলটা ${sizeMB.toFixed(1)}MB) — Home page দ্রুত লোড রাখতে ছোট ফাইল ব্যবহার করুন।`);
+    input.value = '';
+    return;
+  }
+  if(isVideo && sizeMB > BANNER_MAX_VIDEO_MB){
+    showToast(`ভিডিও সর্বোচ্চ ${BANNER_MAX_VIDEO_MB}MB পর্যন্ত হতে পারে (এই ফাইলটা ${sizeMB.toFixed(1)}MB) — ছোট/কম্প্রেসড ভিডিও ব্যবহার করুন, নাহলে পেজ লোড ধীর হবে।`);
     input.value = '';
     return;
   }
   showToast('আপলোড হচ্ছে, একটু অপেক্ষা করুন...');
   try{
-    const { blob: uploadBlob, ext, type: uploadType } = await compressImageFile(file);
+    // GIFs and videos are uploaded as-is — running them through the image-compression
+    // canvas would strip GIF animation entirely (canvas only captures one frame),
+    // and canvas compression doesn't apply to video at all.
+    const { blob: uploadBlob, ext, type: uploadType } = (isGif || isVideo)
+      ? { blob: file, ext: (file.name.split('.').pop() || (isVideo ? 'mp4' : 'gif')).toLowerCase(), type: file.type }
+      : await compressImageFile(file);
     const path = `banner_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
     const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${BANNER_BUCKET}/${path}`, {
       method:'POST',
