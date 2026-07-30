@@ -3265,8 +3265,16 @@ transform:translateY(0);
 .chat-bubble-sender{ font-size:10.5px; font-weight:700; opacity:.85; margin-bottom:3px; color:var(--agent); }
 .chat-bubble.me .chat-bubble-sender{ color:#0B4A3D; }
 .chat-bubble-text{ white-space:pre-wrap; word-break:break-word; }
-.chat-bubble-time{ font-size:10px; opacity:.65; margin-top:3px; text-align:right; }
+.chat-bubble-time{ font-size:10px; opacity:.65; margin-top:3px; text-align:right; display:flex; align-items:center; justify-content:flex-end; gap:4px; }
 .chat-bubble.deleted .chat-bubble-text{ font-style:italic; opacity:.75; }
+/* Read-receipt ticks (WhatsApp-style ✓ / ✓✓) shown on the sender's own bubbles */
+.chat-tick{ display:inline-flex; align-items:center; letter-spacing:-3px; font-size:12px; line-height:1; }
+.chat-tick.sent{ color:currentColor; opacity:.7; }
+.chat-tick.read{ color:#53BDEB; opacity:1; }
+.chat-bubble-broadcast-tag{
+  font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--admin); background:var(--admin-dim); border-radius:6px; padding:1px 6px; margin-bottom:4px; display:inline-block;
+}
 .chat-bubble-delete-btn{
   position:absolute; top:-8px; right:-8px; width:20px; height:20px; border-radius:50%;
   border:1px solid var(--border); background:var(--surface-2, #14253D); color:var(--text-muted);
@@ -4979,19 +4987,28 @@ async function sendEmployeeChatMessage(){
     input.focus();
   }
 }
+function chatReadTick(isRead){
+  // ✓ = পাঠানো হয়েছে (sent), ✓✓ (নীল) = অপর পক্ষ পড়ে ফেলেছে (read)
+  return isRead
+    ? `<span class="chat-tick read" title="Read">✓✓</span>`
+    : `<span class="chat-tick sent" title="Sent">✓</span>`;
+}
 function renderEmployeeChatMessages(thread){
   const box = document.getElementById('empChatMessages');
   if(!box) return;
   const msgs = (thread && thread.messages) || [];
+  const readByAdminAt = (thread && thread.lastReadByAdminAt) || 0;
   box.innerHTML = msgs.length ? msgs.map(m => {
     const isMe = m.from==='employee';
     const isDeleted = !!m.deleted;
+    const isBroadcast = !isMe && !!m.isBroadcast;
     return `
     <div class="chat-bubble-row ${isMe ? 'me' : 'them'}">
       <div class="chat-bubble ${isMe ? 'me' : 'them'} ${isDeleted ? 'deleted' : ''}">
         ${!isMe ? `<div class="chat-bubble-sender">${escapeHtml(m.senderName || 'Quality Team')}</div>` : ''}
+        ${isBroadcast ? `<span class="chat-bubble-broadcast-tag">📢 Broadcast</span>` : ''}
         <div class="chat-bubble-text">${isDeleted ? '🚫 এই মেসেজটি মুছে ফেলা হয়েছে' : escapeHtml(m.text)}</div>
-        <div class="chat-bubble-time">${chatTimeLabel(m.ts)}</div>
+        <div class="chat-bubble-time">${chatTimeLabel(m.ts)}${isMe && !isDeleted ? chatReadTick(m.ts <= readByAdminAt) : ''}</div>
         ${isMe && !isDeleted ? `<button class="chat-bubble-delete-btn" title="মেসেজ মুছুন" onclick="deleteEmployeeChatMessage('${m.id}')">🗑</button>` : ''}
       </div>
     </div>`;
@@ -5016,18 +5033,37 @@ async function deleteEmployeeChatMessage(msgId){
     showToast('মেসেজ মুছতে ব্যর্থ, আবার চেষ্টা করুন।');
   }
 }
+/* Employee has the chat panel open and has seen Quality Team's messages up to now —
+   record this on the shared thread so Admin's own "✓✓ Read" ticks can update. */
+async function markThreadReadByEmployee(){
+  if(!empEmployeeId) return;
+  try{
+    const threads = await getChatThreads();
+    const thread = threads[empEmployeeId];
+    if(!thread) return;
+    const already = thread.lastReadByEmployeeAt || 0;
+    const now = Date.now();
+    if(now - already < 8000) return; // avoid hammering the backend on every poll tick
+    thread.lastReadByEmployeeAt = now;
+    thread.employeeUnread = false;
+    await saveChatThreads(threads);
+  }catch(e){ console.error('Failed to mark thread read by employee', e); }
+}
 async function refreshEmployeeChat(){
   if(!empEmployeeId) return;
   const threads = await getChatThreads();
   const thread = threads[empEmployeeId];
   const panel = document.getElementById('empChatPanel');
-  if(panel && panel.classList.contains('open')) renderEmployeeChatMessages(thread);
+  const isOpen = panel && panel.classList.contains('open');
+  if(isOpen){
+    renderEmployeeChatMessages(thread);
+    markThreadReadByEmployee();
+  }
 
   const badge = document.getElementById('empChatBadge');
   const floatLabel = document.getElementById('empChatNewMsgFloatLabel');
   if(badge){
     const seenTs = Number(localStorage.getItem('qa_emp_chat_seen_ts')||0);
-    const isOpen = panel && panel.classList.contains('open');
     const unreadCount = (thread && Array.isArray(thread.messages))
       ? thread.messages.filter(m => m.from==='admin' && !m.deleted && m.ts > seenTs).length
       : 0;
@@ -5078,7 +5114,10 @@ async function renderAdminChatList(){
   panel.innerHTML = `
     <div class="panel-header">
       <div><h1>💬 Employee Messages</h1><p>এজেন্টদের পাঠানো মেসেজ দেখুন এবং রিপ্লাই দিন।</p></div>
-      <button class="btn primary" onclick="renderAdminChatList()">↻ Refresh</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" onclick="openBroadcastModal()">📢 Broadcast</button>
+        <button class="btn primary" onclick="renderAdminChatList()">↻ Refresh</button>
+      </div>
     </div>
     <div id="adminChatBody" class="admin-chat-layout">
       <div id="adminChatThreadList" class="admin-chat-thread-list"><div class="empty-state" style="border:none;">লোড হচ্ছে...</div></div>
@@ -5137,6 +5176,7 @@ async function openAdminChatThread(employeeId){
   const thread = threads[employeeId];
   if(!thread) return;
   thread.adminUnread = false;
+  thread.lastReadByAdminAt = Date.now();
   await saveChatThreads(threads);
   updateAdminChatNavBadge();
 
@@ -5159,15 +5199,18 @@ function renderAdminChatMessages(thread){
   const box = document.getElementById('adminChatMessages');
   if(!box || !thread) return;
   const msgs = thread.messages || [];
+  const readByEmployeeAt = thread.lastReadByEmployeeAt || 0;
   box.innerHTML = msgs.map(m => {
     const isMe = m.from==='admin';
     const isDeleted = !!m.deleted;
+    const isBroadcast = isMe && !!m.isBroadcast;
     return `
     <div class="chat-bubble-row ${isMe ? 'me' : 'them'}">
       <div class="chat-bubble ${isMe ? 'me' : 'them'} ${isDeleted ? 'deleted' : ''}">
         ${m.from==='employee' ? `<div class="chat-bubble-sender">${escapeHtml(thread.employeeName||thread.employeeId)}</div>` : `<div class="chat-bubble-sender">${escapeHtml(m.senderName||'Quality Team')}</div>`}
+        ${isBroadcast ? `<span class="chat-bubble-broadcast-tag">📢 Broadcast</span>` : ''}
         <div class="chat-bubble-text">${isDeleted ? '🚫 এই মেসেজটি মুছে ফেলা হয়েছে' : escapeHtml(m.text)}</div>
-        <div class="chat-bubble-time">${chatTimeLabel(m.ts)}</div>
+        <div class="chat-bubble-time">${chatTimeLabel(m.ts)}${isMe && !isDeleted ? chatReadTick(m.ts <= readByEmployeeAt) : ''}</div>
         <button class="chat-bubble-delete-btn" title="স্থায়ীভাবে মুছে ফেলুন" onclick="deleteAdminChatMessage('${m.id}')">🗑</button>
       </div>
     </div>`;
@@ -5218,6 +5261,78 @@ async function sendAdminChatReply(){
   }
 }
 
+/* ===================== BROADCAST ANNOUNCEMENT (Admin/Super Admin → all agents) ===================== */
+function openBroadcastModal(){
+  const modal = document.getElementById('broadcastModal');
+  const input = document.getElementById('broadcastMessageInput');
+  const errBox = document.getElementById('broadcastError');
+  const infoBox = document.getElementById('broadcastTargetInfo');
+  if(errBox) errBox.textContent = '';
+  if(input) input.value = '';
+  if(infoBox){
+    infoBox.textContent = superAdminToken
+      ? 'এই মেসেজ System-এ থাকা সব এজেন্ট (এখনো চ্যাট না করা এজেন্টসহ) পাবে।'
+      : 'এই মেসেজ পাবে শুধু তারা, যাদের সাথে অন্তত একবার চ্যাট থ্রেড তৈরি হয়েছে। সবার কাছে পৌঁছাতে Super Admin দিয়ে পাঠান।';
+  }
+  if(modal) modal.style.display = 'flex';
+}
+function closeBroadcastModal(){
+  const modal = document.getElementById('broadcastModal');
+  if(modal) modal.style.display = 'none';
+}
+async function sendBroadcastAnnouncement(){
+  const input = document.getElementById('broadcastMessageInput');
+  const errBox = document.getElementById('broadcastError');
+  const sendBtn = document.getElementById('broadcastSendBtn');
+  const text = (input && input.value || '').trim();
+  if(errBox) errBox.textContent = '';
+  if(!text){ if(errBox) errBox.textContent = 'একটি মেসেজ লিখুন।'; return; }
+  if(!confirm('এই মেসেজটি সব এজেন্টের চ্যাটে একসাথে পাঠাতে চান?')) return;
+
+  if(sendBtn){ sendBtn.disabled = true; sendBtn.textContent = 'পাঠানো হচ্ছে...'; }
+  try{
+    const threads = await getChatThreads();
+    const nameMap = {};
+
+    // Super Admin can reach every registered agent, even ones with no chat history yet.
+    if(superAdminToken){
+      try{
+        const data = await empApiGet('listAgents', { token: superAdminToken });
+        if(data && data.ok && Array.isArray(data.agents)){
+          data.agents.forEach(a=>{ if(a && a.employeeId) nameMap[a.employeeId] = a.agentName || a.employeeId; });
+        }
+      }catch(e){ console.error('listAgents fetch failed for broadcast', e); }
+    }
+    Object.keys(threads).forEach(id=>{ if(!nameMap[id]) nameMap[id] = threads[id].employeeName || id; });
+
+    const targetIds = Object.keys(nameMap);
+    if(!targetIds.length){ if(errBox) errBox.textContent = 'কোনো এজেন্ট খুঁজে পাওয়া যায়নি।'; return; }
+
+    const ts = Date.now();
+    targetIds.forEach(id=>{
+      if(!threads[id]) threads[id] = { employeeId: id, employeeName: nameMap[id], messages: [] };
+      threads[id].employeeName = threads[id].employeeName || nameMap[id];
+      threads[id].messages.push({
+        id: chatUid(), from:'admin', senderName:'Quality Team', text, ts, isBroadcast:true
+      });
+      threads[id].employeeUnread = true;
+      threads[id].adminUnread = false;
+      threads[id].lastReadByAdminAt = ts; // admin obviously has "read" its own broadcast
+      trimThreadMessages(threads[id]);
+    });
+
+    await saveChatThreads(threads);
+    closeBroadcastModal();
+    showToast(`Broadcast পাঠানো হয়েছে (${targetIds.length} জন এজেন্টকে)।`);
+    if(currentTab === 'EMPCHAT') refreshAdminChatList();
+  }catch(e){
+    console.error('Broadcast failed', e);
+    if(errBox) errBox.textContent = 'Broadcast পাঠাতে ব্যর্থ হয়েছে, আবার চেষ্টা করুন।';
+  }finally{
+    if(sendBtn){ sendBtn.disabled = false; sendBtn.textContent = 'সবাইকে পাঠান'; }
+  }
+}
+
 function runChatPollTick(){
   if(currentRole === 'agent'){
     refreshEmployeeChat();
@@ -5226,9 +5341,17 @@ function runChatPollTick(){
     if(currentTab === 'EMPCHAT'){
       refreshAdminChatList();
       if(chatOpenEmployeeId){
-        getChatThreads().then(threads=>{
+        getChatThreads().then(async threads=>{
           const t = threads[chatOpenEmployeeId];
-          if(t) renderAdminChatMessages(t);
+          if(!t) return;
+          renderAdminChatMessages(t);
+          // Thread is actively open on screen — keep marking new incoming messages as read.
+          const now = Date.now();
+          if(now - (t.lastReadByAdminAt||0) > 8000 || t.adminUnread){
+            t.lastReadByAdminAt = now;
+            t.adminUnread = false;
+            await saveChatThreads(threads);
+          }
         });
       }
     }
@@ -7942,6 +8065,23 @@ setInterval(updateWelcome,1000);
     <div class="online-agents-list" id="onlineAgentsList">
       <div class="online-agents-loading">Loading…</div>
     </div>
+  </div>
+</div>
+
+<!-- Broadcast Announcement (Admin / Super Admin → all agents at once) -->
+<div class="emp-modal-overlay" id="broadcastModal" style="display:none;" onclick="if(event.target===this) closeBroadcastModal()">
+  <div class="emp-modal-box">
+    <button class="login-popup-close" onclick="closeBroadcastModal()" title="Close">✕</button>
+    <h2>📢 Broadcast Announcement</h2>
+    <p class="hint">এই মেসেজটি একসাথে সব এজেন্টের "Ask Quality Team" চ্যাটে পাঠানো হবে।</p>
+    <div class="field">
+      <label>Message</label>
+      <textarea id="broadcastMessageInput" rows="4" placeholder="যেমন: আজকের মধ্যে সবাইকে নতুন গাইডলাইন পড়ে নিতে হবে..."
+        style="width:100%; resize:vertical; background:var(--surface,#0F1D30); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-size:13.5px; font-family:inherit;"></textarea>
+    </div>
+    <div class="field" id="broadcastTargetInfo" style="font-size:11.5px; color:var(--text-muted); margin-top:6px;"></div>
+    <button class="login-btn" id="broadcastSendBtn" onclick="sendBroadcastAnnouncement()">সবাইকে পাঠান</button>
+    <div class="login-error" id="broadcastError"></div>
   </div>
 </div>
 
