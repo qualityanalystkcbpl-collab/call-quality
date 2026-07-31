@@ -5266,6 +5266,9 @@ async function renderAdminChatList(){
 }
 /* Broadcast messages এখন পাঠানোর সময় broadcast_log টেবিলে লগ হয়ে যায়, যাতে
    Super Admin এখান থেকে দেখতে পারেন কে, কবে, কতজনকে কী bulk মেসেজ পাঠিয়েছে। */
+/* প্রতিটা broadcast row-এর ডাটা (message, target_ids, sent_ts ইত্যাদি) এখানে
+   ক্যাশ থাকে, যাতে "কে কে পড়েছে" বাটনে ক্লিক করলে আবার fetch করতে না হয়। */
+let broadcastLogRows = {};
 async function loadBroadcastHistory(){
   const listEl = document.getElementById('broadcastHistoryList');
   if(!listEl) return;
@@ -5277,20 +5280,68 @@ async function loadBroadcastHistory(){
     const rows = await res.json();
     if(!Array.isArray(rows) || !rows.length){
       listEl.innerHTML = '<div class="chat-empty-hint">এখনো কোনো Broadcast পাঠানো হয়নি।</div>';
+      broadcastLogRows = {};
       return;
     }
+    broadcastLogRows = {};
+    rows.forEach(r => { broadcastLogRows[r.id] = r; });
     listEl.innerHTML = rows.map(r => `
-      <div class="broadcast-history-item">
+      <div class="broadcast-history-item" id="broadcastItem-${escapeAttr(r.id)}">
         <div class="broadcast-history-msg">${escapeHtml(r.message||'')}</div>
         <div class="broadcast-history-meta">
           <span>👤 ${escapeHtml(r.sent_by||'Admin')}</span>
           <span>👥 ${r.target_count||0} জন এজেন্ট</span>
           <span>🕒 ${escapeHtml(chatTimeLabel(new Date(r.created_at).getTime()))}</span>
+          <button class="btn small" id="broadcastReadBtn-${escapeAttr(r.id)}" onclick="toggleBroadcastReadStatus('${r.id}', this)">👁️ কে কে পড়েছে</button>
         </div>
       </div>`).join('');
   }catch(e){
     console.error('Broadcast history load failed', e);
     listEl.innerHTML = '<div class="chat-empty-hint">লোড করতে ব্যর্থ হয়েছে।</div>';
+  }
+}
+/* একটা নির্দিষ্ট broadcast কে কে পড়েছে তা agent থ্রেডের lastReadByEmployeeAt-এর
+   সাথে broadcast পাঠানোর ts মিলিয়ে বের করে (একই মেকানিজম, যেটা ✓✓ read-tick দেখাতে
+   এমনিতেই ব্যবহার হয়)। */
+async function toggleBroadcastReadStatus(logId, btnEl){
+  const item = document.getElementById(`broadcastItem-${logId}`);
+  if(!item) return;
+  const existing = document.getElementById(`broadcastReadPanel-${logId}`);
+  if(existing){
+    const show = existing.style.display === 'none';
+    existing.style.display = show ? '' : 'none';
+    if(btnEl) btnEl.textContent = show ? '👁️ লুকান' : '👁️ কে কে পড়েছে';
+    return;
+  }
+  const row = broadcastLogRows[logId];
+  if(!row){ showToast('তথ্য পাওয়া যায়নি, আবার Refresh করুন।'); return; }
+  if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'লোড হচ্ছে...'; }
+  try{
+    const targetIds = Array.isArray(row.target_ids) ? row.target_ids : [];
+    const sentTs = Number(row.sent_ts) || new Date(row.created_at).getTime();
+    const threads = await getChatThreads();
+    let readCount = 0;
+    const rowsHtml = targetIds.map(id=>{
+      const t = threads[id];
+      const name = (t && t.employeeName) || id;
+      const readAt = (t && t.lastReadByEmployeeAt) || 0;
+      const isRead = readAt >= sentTs;
+      if(isRead) readCount++;
+      return `<div class="broadcast-read-row">
+        <span>${escapeHtml(name)} <span class="mono" style="color:var(--text-muted); font-size:10px;">(${escapeHtml(id)})</span></span>
+        <span class="${isRead ? 'read-yes' : 'read-no'}">${isRead ? '✓✓ পড়েছে' : '✓ পড়েনি'}</span>
+      </div>`;
+    }).join('');
+    const panel = document.createElement('div');
+    panel.id = `broadcastReadPanel-${logId}`;
+    panel.className = 'broadcast-read-status';
+    panel.innerHTML = `<div class="broadcast-read-summary">${readCount}/${targetIds.length} জন পড়েছেন</div>${rowsHtml || '<div class="chat-empty-hint">কোনো টার্গেট পাওয়া যায়নি।</div>'}`;
+    item.appendChild(panel);
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = '👁️ লুকান'; }
+  }catch(e){
+    console.error('Broadcast read status load failed', e);
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = '👁️ কে কে পড়েছে'; }
+    showToast('Read status লোড করতে ব্যর্থ হয়েছে।');
   }
 }
 async function updateAdminChatNavBadge(){
@@ -5523,7 +5574,8 @@ async function sendBroadcastAnnouncement(){
           message: text,
           sent_by: (typeof empAgentName !== 'undefined' && empAgentName) ? empAgentName : 'Admin',
           target_count: targetIds.length,
-          target_ids: targetIds
+          target_ids: targetIds,
+          sent_ts: ts
         })
       });
     }catch(e){ console.error('Broadcast log insert failed', e); }
@@ -8973,8 +9025,45 @@ setInterval(updateWelcome,1000);
   display:flex;
   gap:14px;
   flex-wrap:wrap;
+  align-items:center;
   font-size:11px;
   color:var(--text-muted);
+}
+.broadcast-history-meta .btn.small{
+  margin-left:auto;
+}
+.broadcast-read-status{
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px dashed var(--border);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.broadcast-read-summary{
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--text);
+  margin-bottom:2px;
+}
+.broadcast-read-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:12px;
+  padding:4px 6px;
+  border-radius:6px;
+  background:var(--surface,#0F1D30);
+}
+.broadcast-read-row .read-yes{
+  color:var(--excellent);
+  font-weight:600;
+  white-space:nowrap;
+}
+.broadcast-read-row .read-no{
+  color:var(--text-muted);
+  white-space:nowrap;
 }
 
 .broadcast-target-list{
