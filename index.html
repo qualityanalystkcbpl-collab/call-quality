@@ -2463,6 +2463,22 @@ input[type=file]{display:none;}
     font-weight:700;
 }
 
+.page-footer-visitors{
+    margin-top:6px;
+    padding:5px 10px;
+    border-radius:6px;
+    background:#1b2a3f;
+    border:1px solid #3a5a8a;
+    color:#bcc7d8;
+    font-size:10px;
+    display:inline-block;
+}
+.page-footer-visitors span{
+    color:#7cc6ff;
+    font-weight:700;
+    font-family:'IBM Plex Mono',monospace;
+}
+
 .info-card{
     display:flex;
     align-items:center;
@@ -4110,6 +4126,7 @@ transform:translateY(0);
     <div class="page-footer-meta">
       <div class="page-footer-dev">© 2026 Developed &amp; Maintained by <span>Kalyan Sarkar</span></div>
       <div class="page-footer-version">👤 Quality Analyst | Version 1.0 <span>(Live)</span></div>
+      <div class="page-footer-visitors" id="pageFooterVisitors">👁 Total Visitors: <span id="visitorCountValue">…</span></div>
     </div>
   </footer>
 </div>
@@ -4692,6 +4709,29 @@ function getSessionTs(entry){
   return (entry && typeof entry === 'object') ? entry.ts : entry;
 }
 
+/* Fetches everyone's presence rows from Supabase and returns them in the EXACT same shape the
+   rest of the presence UI code already expects: { sessionId: { ts, name, id } }.
+   The 90-second staleness cutoff is applied server-side (in the query itself), so a stale
+   session simply stops being returned — no client ever needs to "clean up" someone else's row. */
+async function fetchOnlineSessionsMap(){
+  try{
+    const cutoffIso = new Date(Date.now() - ONLINE_TIMEOUT_MS).toISOString();
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/online_sessions?select=session_id,agent_id,agent_name,updated_at&updated_at=gte.${encodeURIComponent(cutoffIso)}`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    const rows = await res.json().catch(()=>[]);
+    const sessions = {};
+    (Array.isArray(rows) ? rows : []).forEach(r=>{
+      sessions[r.session_id] = { ts: new Date(r.updated_at).getTime(), name: r.agent_name || null, id: r.agent_id || null };
+    });
+    return sessions;
+  }catch(e){
+    console.error('Failed to fetch online sessions from Supabase', e);
+    return {};
+  }
+}
+
 function getTodayKey(){
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -4726,10 +4766,19 @@ async function publishDailyOnlineTime(agentKey, displayName, now){
     const totalSec = todayPrior + Math.max(0, (now - sessionStart) / 1000);
 
     const day = getTodayKey();
-    let dailyData = (await storageGet('dailyOnlineTime')) || {};
-    if(!dailyData[day]) dailyData[day] = {};
-    dailyData[day][agentKey] = { name: displayName, totalSec };
-    await storageSet('dailyOnlineTime', dailyData);
+    // Atomic upsert of just MY OWN (day, agent_key) row via Postgres ON CONFLICT — no
+    // read-the-whole-blob/modify/write-it-all-back needed, so concurrent agents can never
+    // clobber each other's numbers.
+    await fetch(`${SUPABASE_URL}/rest/v1/daily_online_time?on_conflict=day,agent_key`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ day, agent_key: agentKey, agent_name: displayName, total_sec: totalSec })
+    });
   }catch(e){
     console.error('Daily online time update failed', e);
   }
@@ -4737,8 +4786,17 @@ async function publishDailyOnlineTime(agentKey, displayName, now){
 
 async function getDailyOnlineMap(){
   try{
-    const dailyData = (await storageGet('dailyOnlineTime')) || {};
-    return dailyData[getTodayKey()] || {};
+    const day = getTodayKey();
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/daily_online_time?select=agent_key,agent_name,total_sec&day=eq.${day}`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    const rows = await res.json().catch(()=>[]);
+    const map = {};
+    (Array.isArray(rows) ? rows : []).forEach(r=>{
+      map[r.agent_key] = { name: r.agent_name, totalSec: Number(r.total_sec) || 0 };
+    });
+    return map;
   }catch(e){
     console.error('Failed to load daily online time', e);
     return {};
@@ -4814,14 +4872,26 @@ async function pingOnlinePresence(){
   try{
     const mySessionId = getMySessionId();
     const now = Date.now();
-    let sessions = (await storageGet('onlineSessions')) || {};
-    Object.keys(sessions).forEach(id=>{
-      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
-    });
     const myName = localStorage.getItem('qa_emp_name') || null;
     const myEmpId = localStorage.getItem('qa_emp_id') || null;
-    sessions[mySessionId] = { ts: now, name: myName, id: myEmpId };
-    await storageSet('onlineSessions', sessions);
+
+    // Atomic upsert of ONLY my own row (Postgres ON CONFLICT) — unlike the old single-JSON-blob
+    // approach, this can never overwrite/clobber another agent's session that pinged at the same time.
+    await fetch(`${SUPABASE_URL}/rest/v1/online_sessions?on_conflict=session_id`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        session_id: mySessionId, agent_id: myEmpId, agent_name: myName,
+        updated_at: new Date(now).toISOString()
+      })
+    });
+
+    const sessions = await fetchOnlineSessionsMap();
     await renderPresenceUI(sessions);
     const myAgentKey = myEmpId || myName;
     if(myAgentKey) await publishDailyOnlineTime(myAgentKey, myName, now);
@@ -4847,11 +4917,7 @@ async function openOnlineAgentsModal(){
   modal.style.display = 'flex';
   listEl.innerHTML = '<div class="online-agents-loading">Loading…</div>';
   try{
-    const now = Date.now();
-    let sessions = (await storageGet('onlineSessions')) || {};
-    Object.keys(sessions).forEach(id=>{
-      if(now - getSessionTs(sessions[id]) > ONLINE_TIMEOUT_MS) delete sessions[id];
-    });
+    const sessions = await fetchOnlineSessionsMap();
     const dailyMap = await getDailyOnlineMap();
     const fetchTs = Date.now();
     const { count, html } = buildOnlineListHtml(sessions, dailyMap, fetchTs);
@@ -4866,14 +4932,22 @@ function closeOnlineAgentsModal(){
   const modal = document.getElementById('onlineAgentsModal');
   if(modal) modal.style.display = 'none';
 }
-window.addEventListener('beforeunload', ()=>{
-  navigator.sendBeacon && storageGet('onlineSessions').then(sessions=>{
-    if(!sessions) return;
-    delete sessions[getMySessionId()];
-    const blob = new Blob([JSON.stringify({ key:'onlineSessions', value: JSON.stringify(sessions) })], {type:'application/json'});
-    navigator.sendBeacon(`${WEB_APP_URL}?action=saveSettings`, blob);
-  });
-});
+/* Best-effort immediate cleanup when a tab closes, so the person disappears from the
+   list right away instead of waiting for the 90-second staleness timeout. Uses fetch()
+   with keepalive (not sendBeacon) specifically because Supabase's REST API requires the
+   apikey/Authorization headers, and sendBeacon cannot set custom headers. If this fails
+   for any reason, the row still naturally drops out of the list after ONLINE_TIMEOUT_MS. */
+function cleanupMyPresenceOnUnload(){
+  try{
+    fetch(`${SUPABASE_URL}/rest/v1/online_sessions?session_id=eq.${encodeURIComponent(getMySessionId())}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+      keepalive: true
+    });
+  }catch(e){ /* non-fatal — TTL cutoff will remove it anyway */ }
+}
+window.addEventListener('beforeunload', cleanupMyPresenceOnUnload);
+window.addEventListener('pagehide', cleanupMyPresenceOnUnload);
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -9325,6 +9399,73 @@ function restoreEmployeeSessionIfAny(){
   }
 }
 window.addEventListener('load', ()=> setTimeout(restoreEmployeeSessionIfAny, 300));
+
+/* ===================== TOTAL VISITOR COUNTER (footer) =====================
+   Uses the SAME Supabase project/anon key already configured above for banners —
+   no separate API key or AI model needed for this, it's just a simple counter table.
+
+   One-time Supabase setup (run once in Supabase Dashboard → SQL Editor):
+
+   create table if not exists site_stats (
+     key text primary key,
+     value bigint not null default 0
+   );
+   insert into site_stats (key, value) values ('total_visitors', 0)
+     on conflict (key) do nothing;
+
+   -- Atomic increment via a function, so the anon key can only increment the
+   -- counter (through this function) and can never overwrite it directly.
+   create or replace function increment_visitor_count()
+   returns bigint
+   language sql
+   security definer
+   set search_path = public
+   as $$
+     update site_stats set value = value + 1 where key = 'total_visitors' returning value;
+   $$;
+
+   alter table site_stats enable row level security;
+   create policy "Allow anon read" on site_stats for select using (true);
+   grant execute on function increment_visitor_count() to anon;
+
+   Counting rule: EVERY page load/reload counts as a separate visit (no session
+   dedupe) — so refreshing the dashboard repeatedly will increase the number each time. */
+async function initVisitorCounter(){
+  const el = document.getElementById('visitorCountValue');
+  if(!el) return;
+  if(!SUPABASE_URL || !SUPABASE_ANON_KEY){ el.textContent = '—'; return; }
+
+  try{
+    let count;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_visitor_count`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
+    if(res.ok){
+      count = await res.json();
+    }
+
+    if(count === undefined || count === null){
+      // Increment call failed for some reason — just read the current value instead.
+      const res2 = await fetch(`${SUPABASE_URL}/rest/v1/site_stats?select=value&key=eq.total_visitors`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+      });
+      const rows = await res2.json().catch(()=>[]);
+      count = (Array.isArray(rows) && rows[0]) ? rows[0].value : null;
+    }
+
+    el.textContent = (count !== null && count !== undefined) ? Number(count).toLocaleString('en-IN') : '—';
+  }catch(e){
+    console.error('Visitor counter failed:', e);
+    el.textContent = '—';
+  }
+}
+window.addEventListener('load', ()=> setTimeout(initVisitorCounter, 300));
 
 /* ---------- Force password change (first login / after Super Admin reset) ---------- */
 async function submitForceChangePassword(){
