@@ -5242,13 +5242,56 @@ async function renderAdminChatList(){
         <button class="btn primary" onclick="renderAdminChatList()">↻ Refresh</button>
       </div>
     </div>
+    <div class="broadcast-history-box superadmin-only" id="broadcastHistoryBox" style="display:none;">
+      <div class="broadcast-history-header">
+        <span>📜 Broadcast History <span class="mono" style="color:var(--text-muted); font-size:10.5px;">(শুধু Super Admin দেখতে পাচ্ছেন)</span></span>
+        <button class="btn small" onclick="loadBroadcastHistory()">↻ Refresh</button>
+      </div>
+      <div id="broadcastHistoryList" class="broadcast-history-list">
+        <div class="chat-empty-hint">লোড হচ্ছে...</div>
+      </div>
+    </div>
     <div id="adminChatBody" class="admin-chat-layout">
       <div id="adminChatThreadList" class="admin-chat-thread-list"><div class="empty-state" style="border:none;">লোড হচ্ছে...</div></div>
       <div id="adminChatThreadView" class="admin-chat-thread-view">
         <div class="chat-empty-hint">বাম দিক থেকে একজন এজেন্ট সিলেক্ট করুন</div>
       </div>
     </div>`;
+  const historyBox = document.getElementById('broadcastHistoryBox');
+  if(historyBox && superAdminToken){
+    historyBox.style.display = '';
+    loadBroadcastHistory();
+  }
   await refreshAdminChatList();
+}
+/* Broadcast messages এখন পাঠানোর সময় broadcast_log টেবিলে লগ হয়ে যায়, যাতে
+   Super Admin এখান থেকে দেখতে পারেন কে, কবে, কতজনকে কী bulk মেসেজ পাঠিয়েছে। */
+async function loadBroadcastHistory(){
+  const listEl = document.getElementById('broadcastHistoryList');
+  if(!listEl) return;
+  listEl.innerHTML = '<div class="chat-empty-hint">লোড হচ্ছে...</div>';
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/broadcast_log?select=*&order=created_at.desc&limit=50`, {
+      headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    const rows = await res.json();
+    if(!Array.isArray(rows) || !rows.length){
+      listEl.innerHTML = '<div class="chat-empty-hint">এখনো কোনো Broadcast পাঠানো হয়নি।</div>';
+      return;
+    }
+    listEl.innerHTML = rows.map(r => `
+      <div class="broadcast-history-item">
+        <div class="broadcast-history-msg">${escapeHtml(r.message||'')}</div>
+        <div class="broadcast-history-meta">
+          <span>👤 ${escapeHtml(r.sent_by||'Admin')}</span>
+          <span>👥 ${r.target_count||0} জন এজেন্ট</span>
+          <span>🕒 ${escapeHtml(chatTimeLabel(new Date(r.created_at).getTime()))}</span>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    console.error('Broadcast history load failed', e);
+    listEl.innerHTML = '<div class="chat-empty-hint">লোড করতে ব্যর্থ হয়েছে।</div>';
+  }
 }
 async function updateAdminChatNavBadge(){
   const badge = document.getElementById('empChatNavBadge');
@@ -5465,9 +5508,29 @@ async function sendBroadcastAnnouncement(){
     });
 
     await saveChatThreads(threads, targetIds);
+
+    // Super Admin যেন পরে এসে দেখতে পারেন কে, কবে, কতজনকে কী broadcast পাঠিয়েছেন
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/broadcast_log`, {
+        method:'POST',
+        headers:{
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type':'application/json',
+          Prefer:'return=minimal'
+        },
+        body: JSON.stringify({
+          message: text,
+          sent_by: (typeof empAgentName !== 'undefined' && empAgentName) ? empAgentName : 'Admin',
+          target_count: targetIds.length,
+          target_ids: targetIds
+        })
+      });
+    }catch(e){ console.error('Broadcast log insert failed', e); }
+
     closeBroadcastModal();
     showToast(`Broadcast পাঠানো হয়েছে (${targetIds.length} জন এজেন্টকে)।`);
-    if(currentTab === 'EMPCHAT') refreshAdminChatList();
+    if(currentTab === 'EMPCHAT'){ refreshAdminChatList(); loadBroadcastHistory(); }
   }catch(e){
     console.error('Broadcast failed', e);
     if(errBox) errBox.textContent = 'Broadcast পাঠাতে ব্যর্থ হয়েছে, আবার চেষ্টা করুন।';
@@ -8871,6 +8934,48 @@ setInterval(updateWelcome,1000);
 </div>
 
 <style>
+
+.broadcast-history-box{
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  margin:0 0 16px 0;
+  background:var(--surface,#0F1D30);
+}
+.broadcast-history-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-weight:600;
+  font-size:13.5px;
+  margin-bottom:10px;
+}
+.broadcast-history-list{
+  max-height:220px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.broadcast-history-item{
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px 10px;
+  background:var(--surface-2,#14253D);
+}
+.broadcast-history-msg{
+  font-size:13px;
+  margin-bottom:6px;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.broadcast-history-meta{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  font-size:11px;
+  color:var(--text-muted);
+}
 
 .broadcast-target-list{
   max-height:220px;
