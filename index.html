@@ -5385,19 +5385,51 @@ async function sendAdminChatReply(){
 }
 
 /* ===================== BROADCAST ANNOUNCEMENT (Admin/Super Admin → all agents) ===================== */
-function openBroadcastModal(){
+let broadcastNameMap = {};
+async function openBroadcastModal(){
   const modal = document.getElementById('broadcastModal');
   const input = document.getElementById('broadcastMessageInput');
   const errBox = document.getElementById('broadcastError');
   const infoBox = document.getElementById('broadcastTargetInfo');
+  const listBox = document.getElementById('broadcastTargetList');
   if(errBox) errBox.textContent = '';
   if(input) input.value = '';
+  if(modal) modal.style.display = 'flex';
+  if(listBox) listBox.innerHTML = '<div class="chat-empty-hint">লোড হচ্ছে...</div>';
+
+  broadcastNameMap = {};
+  try{
+    // Super Admin এভাবে সিস্টেমে থাকা প্রতিটা এজেন্টের নাম আনতে পারে,
+    // এমনকি যাদের সাথে এখনো কোনো চ্যাট থ্রেড শুরু হয়নি তাদেরও।
+    if(superAdminToken){
+      const data = await empApiGet('listAgents', { token: superAdminToken });
+      if(data && data.ok && Array.isArray(data.agents)){
+        data.agents.forEach(a=>{ if(a && a.employeeId) broadcastNameMap[a.employeeId] = a.agentName || a.employeeId; });
+      }
+    }
+    const threads = await getChatThreads();
+    Object.keys(threads).forEach(id=>{ if(!broadcastNameMap[id]) broadcastNameMap[id] = threads[id].employeeName || id; });
+  }catch(e){ console.error('Broadcast target list load failed', e); }
+
   if(infoBox){
     infoBox.textContent = superAdminToken
-      ? 'এই মেসেজ System-এ থাকা সব এজেন্ট (এখনো চ্যাট না করা এজেন্টসহ) পাবে।'
-      : 'এই মেসেজ পাবে শুধু তারা, যাদের সাথে অন্তত একবার চ্যাট থ্রেড তৈরি হয়েছে। সবার কাছে পৌঁছাতে Super Admin দিয়ে পাঠান।';
+      ? 'নিচে সব এজেন্টের নাম দেখা যাচ্ছে — যাদের কাছে পাঠাতে চান না তাদের আনচেক করুন।'
+      : 'এই লিস্টে শুধু তারাই আছে, যাদের সাথে অন্তত একবার চ্যাট থ্রেড তৈরি হয়েছে। সবার কাছে পৌঁছাতে Super Admin দিয়ে পাঠান।';
   }
-  if(modal) modal.style.display = 'flex';
+
+  const ids = Object.keys(broadcastNameMap).sort((a,b)=> String(broadcastNameMap[a]).localeCompare(String(broadcastNameMap[b])));
+  if(listBox){
+    listBox.innerHTML = ids.length
+      ? ids.map(id => `
+        <label class="broadcast-target-item">
+          <input type="checkbox" class="broadcast-target-checkbox" value="${escapeAttr(id)}" checked>
+          <span>${escapeHtml(broadcastNameMap[id])} <span class="mono" style="color:var(--text-muted); font-size:10.5px;">(${escapeHtml(id)})</span></span>
+        </label>`).join('')
+      : '<div class="chat-empty-hint">কোনো এজেন্ট পাওয়া যায়নি।</div>';
+  }
+}
+function broadcastSelectAll(checked){
+  document.querySelectorAll('.broadcast-target-checkbox').forEach(cb => { cb.checked = checked; });
 }
 function closeBroadcastModal(){
   const modal = document.getElementById('broadcastModal');
@@ -5410,31 +5442,19 @@ async function sendBroadcastAnnouncement(){
   const text = (input && input.value || '').trim();
   if(errBox) errBox.textContent = '';
   if(!text){ if(errBox) errBox.textContent = 'একটি মেসেজ লিখুন।'; return; }
-  if(!confirm('এই মেসেজটি সব এজেন্টের চ্যাটে একসাথে পাঠাতে চান?')) return;
+
+  const targetIds = Array.from(document.querySelectorAll('.broadcast-target-checkbox:checked')).map(cb => cb.value);
+  if(!targetIds.length){ if(errBox) errBox.textContent = 'অন্তত একজন এজেন্ট সিলেক্ট করুন।'; return; }
+  if(!confirm(`সিলেক্ট করা ${targetIds.length} জন এজেন্টের চ্যাটে এই মেসেজটি পাঠাতে চান?`)) return;
 
   if(sendBtn){ sendBtn.disabled = true; sendBtn.textContent = 'পাঠানো হচ্ছে...'; }
   try{
     const threads = await getChatThreads();
-    const nameMap = {};
-
-    // Super Admin can reach every registered agent, even ones with no chat history yet.
-    if(superAdminToken){
-      try{
-        const data = await empApiGet('listAgents', { token: superAdminToken });
-        if(data && data.ok && Array.isArray(data.agents)){
-          data.agents.forEach(a=>{ if(a && a.employeeId) nameMap[a.employeeId] = a.agentName || a.employeeId; });
-        }
-      }catch(e){ console.error('listAgents fetch failed for broadcast', e); }
-    }
-    Object.keys(threads).forEach(id=>{ if(!nameMap[id]) nameMap[id] = threads[id].employeeName || id; });
-
-    const targetIds = Object.keys(nameMap);
-    if(!targetIds.length){ if(errBox) errBox.textContent = 'কোনো এজেন্ট খুঁজে পাওয়া যায়নি।'; return; }
-
     const ts = Date.now();
     targetIds.forEach(id=>{
-      if(!threads[id]) threads[id] = { employeeId: id, employeeName: nameMap[id], messages: [] };
-      threads[id].employeeName = threads[id].employeeName || nameMap[id];
+      const name = broadcastNameMap[id] || id;
+      if(!threads[id]) threads[id] = { employeeId: id, employeeName: name, messages: [] };
+      threads[id].employeeName = threads[id].employeeName || name;
       threads[id].messages.push({
         id: chatUid(), from:'admin', senderName:'Quality Team', text, ts, isBroadcast:true
       });
@@ -8834,6 +8854,16 @@ setInterval(updateWelcome,1000);
       <textarea id="broadcastMessageInput" rows="4" placeholder="যেমন: আজকের মধ্যে সবাইকে নতুন গাইডলাইন পড়ে নিতে হবে..."
         style="width:100%; resize:vertical; background:var(--surface,#0F1D30); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-size:13.5px; font-family:inherit;"></textarea>
     </div>
+    <div class="field">
+      <label style="display:flex; align-items:center; justify-content:space-between;">
+        <span>পাঠানো হবে যাদের কাছে</span>
+        <span style="display:flex; gap:6px;">
+          <button type="button" class="btn small" onclick="broadcastSelectAll(true)">সব সিলেক্ট</button>
+          <button type="button" class="btn small" onclick="broadcastSelectAll(false)">সব বাদ</button>
+        </span>
+      </label>
+      <div id="broadcastTargetList" class="broadcast-target-list"></div>
+    </div>
     <div class="field" id="broadcastTargetInfo" style="font-size:11.5px; color:var(--text-muted); margin-top:6px;"></div>
     <button class="login-btn" id="broadcastSendBtn" onclick="sendBroadcastAnnouncement()">সবাইকে পাঠান</button>
     <div class="login-error" id="broadcastError"></div>
@@ -8841,6 +8871,38 @@ setInterval(updateWelcome,1000);
 </div>
 
 <style>
+
+.broadcast-target-list{
+  max-height:220px;
+  overflow-y:auto;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:6px;
+  margin-top:6px;
+  background:var(--surface,#0F1D30);
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.broadcast-target-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 8px;
+  border-radius:6px;
+  font-size:13px;
+  cursor:pointer;
+}
+.broadcast-target-item:hover{
+  background:var(--surface-2,#14253D);
+}
+.broadcast-target-item input[type="checkbox"]{
+  width:15px;
+  height:15px;
+  flex-shrink:0;
+  accent-color:var(--agent);
+  cursor:pointer;
+}
 
 .emp-switch-row{
   display:flex; align-items:center; justify-content:center; gap:10px;
