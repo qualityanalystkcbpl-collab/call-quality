@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#070F19;
@@ -4159,6 +4160,12 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbC
 
 const SUPABASE_URL = "https://iqjmlkpkrtdrwhksmvai.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxam1sa3BrcnRkcndoa3NtdmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzIyMDIsImV4cCI6MjEwMDU0ODIwMn0.sXxh4eXLmDax2be9yYmKTT2oUF7NwgLOmaHTfdFO2pY";
+/* supabase-js client, শুধু চ্যাট রিয়েলটাইম সাবস্ক্রাইব করার জন্য ব্যবহার হচ্ছে।
+   বাকি সব Supabase কল (banners, sessions ইত্যাদি) আগের মতোই raw fetch() দিয়ে হচ্ছে,
+   এখানে কিছু বদলানো হয়নি। */
+const sbClient = (typeof supabase !== 'undefined' && supabase.createClient)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 const BANNER_BUCKET = "banners";
 const BANNER_MAX_IMAGE_MB = 5;   // images/GIFs above this are rejected client-side
 const BANNER_MAX_VIDEO_MB = 15;  // videos above this are rejected client-side — keeps Home page load fast
@@ -5012,13 +5019,45 @@ function chatHeaderClockLabel(){
   const timePart = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
   return `${datePart} • ${timePart}`;
 }
+/* ===================== CHAT STORAGE (Supabase — realtime) =====================
+   আগে পুরো chatThreads object একটাই GAS "settings" key হিসেবে সেভ হতো এবং
+   ১৫ সেকেন্ড পরপর পোল করে রিফ্রেশ হতো। এখন প্রতিটা এজেন্টের থ্রেড আলাদা row
+   হিসেবে Supabase-এর chat_threads টেবিলে থাকে, আর Realtime subscription দিয়ে
+   মেসেজ পাঠানোর সাথে সাথেই অন্য পাশে দেখা যায়। In-memory shape (threads object,
+   keys = employeeId) আগের মতোই আছে, তাই বাকি কোনো ফাংশন বদলাতে হয়নি। */
+const CHAT_TABLE = 'chat_threads';
 async function getChatThreads(){
-  try{ return (await storageGet('chatThreads')) || {}; }
-  catch(e){ console.error('Failed to load chat threads', e); return {}; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${CHAT_TABLE}?select=employee_id,data`, {
+      headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    const rows = await res.json();
+    const threads = {};
+    (Array.isArray(rows) ? rows : []).forEach(r => { if(r && r.employee_id) threads[r.employee_id] = r.data || {}; });
+    return threads;
+  }catch(e){ console.error('Failed to load chat threads', e); return {}; }
 }
-async function saveChatThreads(threads){
-  try{ await storageSet('chatThreads', threads); }
-  catch(e){ console.error('Failed to save chat threads', e); }
+/* keys: ঐচ্ছিক — কোন employeeId(গুলোর) থ্রেড সত্যিই আপলোড করতে হবে সেটা বলে দেয়,
+   যাতে একটা মেসেজ পাঠালে বাকি সবার থ্রেড আবার আপলোড না হয়। না দিলে (broadcast-এর
+   ক্ষেত্রে) threads object-এ থাকা সবগুলো key-ই আপলোড হবে। */
+async function saveChatThreads(threads, keys){
+  try{
+    const targetKeys = Array.isArray(keys) ? keys : Object.keys(threads || {});
+    const rows = targetKeys
+      .filter(k => threads && threads[k])
+      .map(k => ({ employee_id: k, data: threads[k] }));
+    if(!rows.length) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/${CHAT_TABLE}?on_conflict=employee_id`, {
+      method:'POST',
+      headers:{
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type':'application/json',
+        Prefer:'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(rows)
+    });
+  }catch(e){ console.error('Failed to save chat threads', e); }
 }
 function trimThreadMessages(thread){
   if(thread.messages.length > 200) thread.messages = thread.messages.slice(thread.messages.length - 200);
@@ -5060,7 +5099,7 @@ async function sendEmployeeChatMessage(){
     }
 
     trimThreadMessages(threads[key]);
-    await saveChatThreads(threads);
+    await saveChatThreads(threads, [key]);
     localStorage.setItem('qa_emp_chat_seen_ts', String(Date.now()));
     renderEmployeeChatMessages(threads[key]);
   }catch(e){
@@ -5110,7 +5149,7 @@ async function deleteEmployeeChatMessage(msgId){
     if(!msg || msg.from!=='employee') return;
     msg.deleted = true;
     msg.text = '';
-    await saveChatThreads(threads);
+    await saveChatThreads(threads, [empEmployeeId]);
     renderEmployeeChatMessages(thread);
   }catch(e){
     console.error(e);
@@ -5130,7 +5169,7 @@ async function markThreadReadByEmployee(){
     if(now - already < 8000) return; // avoid hammering the backend on every poll tick
     thread.lastReadByEmployeeAt = now;
     thread.employeeUnread = false;
-    await saveChatThreads(threads);
+    await saveChatThreads(threads, [empEmployeeId]);
   }catch(e){ console.error('Failed to mark thread read by employee', e); }
 }
 async function refreshEmployeeChat(){
@@ -5261,7 +5300,7 @@ async function openAdminChatThread(employeeId){
   if(!thread) return;
   thread.adminUnread = false;
   thread.lastReadByAdminAt = Date.now();
-  await saveChatThreads(threads);
+  await saveChatThreads(threads, [employeeId]);
   updateAdminChatNavBadge();
 
   const view = document.getElementById('adminChatThreadView');
@@ -5309,7 +5348,7 @@ async function deleteAdminChatMessage(msgId){
     const thread = threads[chatOpenEmployeeId];
     if(!thread) return;
     thread.messages = (thread.messages||[]).filter(m=>m.id!==msgId);
-    await saveChatThreads(threads);
+    await saveChatThreads(threads, [chatOpenEmployeeId]);
     renderAdminChatMessages(thread);
     await refreshAdminChatList();
   }catch(e){
@@ -5333,7 +5372,7 @@ async function sendAdminChatReply(){
     thread.employeeUnread = true;
     thread.adminUnread = false;
     trimThreadMessages(thread);
-    await saveChatThreads(threads);
+    await saveChatThreads(threads, [chatOpenEmployeeId]);
     renderAdminChatMessages(thread);
     await refreshAdminChatList();
   }catch(e){
@@ -5405,7 +5444,7 @@ async function sendBroadcastAnnouncement(){
       trimThreadMessages(threads[id]);
     });
 
-    await saveChatThreads(threads);
+    await saveChatThreads(threads, targetIds);
     closeBroadcastModal();
     showToast(`Broadcast পাঠানো হয়েছে (${targetIds.length} জন এজেন্টকে)।`);
     if(currentTab === 'EMPCHAT') refreshAdminChatList();
@@ -5434,7 +5473,7 @@ function runChatPollTick(){
           if(now - (t.lastReadByAdminAt||0) > 8000 || t.adminUnread){
             t.lastReadByAdminAt = now;
             t.adminUnread = false;
-            await saveChatThreads(threads);
+            await saveChatThreads(threads, [chatOpenEmployeeId]);
           }
         });
       }
@@ -5446,6 +5485,24 @@ function startChatPolling(){
   chatPollInterval = setInterval(runChatPollTick, CHAT_POLL_MS);
 }
 startChatPolling();
+
+/* ===================== CHAT REALTIME (Supabase) =====================
+   chat_threads টেবিলে যেকোনো insert/update হলে সাথে সাথে runChatPollTick()
+   চালিয়ে UI রিফ্রেশ করে দেয় — ১৫ সেকেন্ড পোলিং-এর জন্য আর অপেক্ষা করতে হয় না।
+   পোলিং (উপরে) safety-net হিসেবে চলতেই থাকে, যদি কখনো realtime সংযোগ ছিঁড়ে যায়। */
+let chatRealtimeChannel = null;
+function initChatRealtime(){
+  if(!sbClient || chatRealtimeChannel) return;
+  try{
+    chatRealtimeChannel = sbClient
+      .channel('chat_threads_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_threads' }, () => {
+        runChatPollTick();
+      })
+      .subscribe();
+  }catch(e){ console.error('Chat realtime সংযোগ ব্যর্থ, পোলিং দিয়ে চলবে', e); }
+}
+initChatRealtime();
 /* ব্রাউজার ট্যাব মিনিমাইজ/অন্য ট্যাবে থাকা অবস্থায় setInterval অনেক ধীর হয়ে যায় (throttle) —
    তাই ট্যাবে ফিরে আসার সাথে সাথেই (বা উইন্ডো ফোকাস পেলে) সাথে সাথে একবার চেক করে নেওয়া হচ্ছে,
    যাতে ম্যানুয়াল রিফ্রেশ ছাড়াই আনরিড ব্যাজ/"New message received" আপ-টু-ডেট থাকে। */
@@ -8139,7 +8196,7 @@ async function renderMonthDataPanel(section){
 
   panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>📅 Month wise Data (Previous Month)</h1><p>প্রতি মাসের OLD ডাটা এখান থেকে দেখা যাবে।</p></div>
+      <div><h1>📅 Month wise Data (Previous Month)</h1><p>প্রতি মাসের ডাটা এখান থেকে দেখা যাবে।</p></div>
     </div>
     <div class="lob-tab-row">
       <button class="lob-tab ${monthDataSection==='RAW'?'active':''}" onclick="renderMonthDataPanel('RAW')">📁 Raw data</button>
