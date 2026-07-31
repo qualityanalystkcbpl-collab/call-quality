@@ -5451,6 +5451,21 @@ localStorage.removeItem("qa_role");
   if(empPassEl) empPassEl.value = '';
   if(bannerTimer) clearInterval(bannerTimer);
   closePlayerBar();
+  aiRobotTeardown();
+}
+/* The AI robot only belongs inside the AI Insight tab. On any logout (manual or auto)
+   it must fully disappear — stop wandering, stop timers, hide/remove itself. */
+function aiRobotTeardown(){
+  if(window._aiRobotInterval){ clearInterval(window._aiRobotInterval); window._aiRobotInterval = null; }
+  if(window._aiRobotBlinkTimer){ clearTimeout(window._aiRobotBlinkTimer); window._aiRobotBlinkTimer = null; }
+  if(window._aiRobotHandTimer){ clearTimeout(window._aiRobotHandTimer); window._aiRobotHandTimer = null; }
+  clearTimeout(window._aiRobotBubbleTimer);
+  clearInterval(window._aiRobotTalkInterval);
+  window._aiRobotMessageBusy = false;
+  window._aiRobotGreeted = false;
+  window._aiRobotClickTimes = [];
+  const wrap = document.getElementById('aiRobotWrap');
+  if(wrap) wrap.remove();
 }
 /* If this page was opened with ?return=someFile.html (sent here by the
    Parameter Wise page's login gate because that page wasn't logged in),
@@ -6262,7 +6277,10 @@ function renderAIInsightPanel(){
       <div class="ai-insight-body">
         <div class="ai-insight-loading" id="aiInsightLoading" style="display:none;">
           <span class="ai-insight-loading-icon">✨</span>
-          <span id="aiInsightLoadingText">প্যাটার্ন বিশ্লেষণ করা হচ্ছে...</span>
+          <span class="ai-insight-loading-text-wrap">
+            <span id="aiInsightLoadingText">Analyzing patterns...</span>
+            <span id="aiInsightLoadingTextBn">প্যাটার্ন বিশ্লেষণ করা হচ্ছে...</span>
+          </span>
         </div>
         <div class="ai-insight-text" id="aiInsightText"></div>
         <div class="ai-insight-meta" id="aiInsightMeta" style="display:none;"></div>
@@ -6307,16 +6325,17 @@ const AI_ROBOT_HTML = `
 
 /* ---- eyes & mouth overlaid on the 🤖 emoji face ---- */
 .ai-robot-eye{
-  position:absolute; top:40px; width:18px; height:18px; border-radius:50%;
+  position:absolute; top:36px; width:26px; height:26px; border-radius:50%;
   background:#FFFFFF;
   overflow:hidden;
 }
-#aiRobotEyeL{ left:29px; }
-#aiRobotEyeR{ right:29px; }
+#aiRobotEyeL{ left:23px; }
+#aiRobotEyeR{ right:23px; }
 .ai-robot-pupil{
-  position:absolute; width:9px; height:9px; border-radius:50%; background:#12202f;
-  opacity:1; top:4.5px; left:4.5px; transition: transform .15s ease;
+  position:absolute; width:12px; height:12px; border-radius:50%; background:#12202f;
+  opacity:1; top:7px; left:7px; transition: transform .15s ease, width .2s ease, height .2s ease;
 }
+.ai-robot-pupil.excited{ width:15px; height:15px; }
 .ai-robot-eyelid{
   position:absolute; inset:0; background:#5b6b7d; border-radius:50%;
   transform:scaleY(0); transform-origin:center;
@@ -6333,6 +6352,7 @@ const AI_ROBOT_HTML = `
   opacity:.85; height:13px; width:15px; border-radius:6px;
 }
 #aiRobotHand.hand-wave{ animation: aiRobotWave 1.1s ease-in-out infinite; }
+#aiRobotHand.hand-wave.hand-excited{ animation: aiRobotWave .35s ease-in-out infinite; }
 #aiRobotHand.hand-down{
   animation:none;
   transform: rotate(70deg) translate(2px, 14px);
@@ -6479,6 +6499,15 @@ const AI_ROBOT_HTML = `
   font-weight:600;
   animation: aiHeaderGradientMove 2.2s linear infinite;
 }
+.ai-insight-loading-text-wrap{
+  display:flex; flex-direction:column; gap:2px;
+}
+#aiInsightLoadingTextBn{
+  font-size:11.5px;
+  font-weight:400;
+  color: var(--text-muted, #8FA0B5);
+  opacity:.85;
+}
 </style>`;
 
 const aiRobotState = { dragging:false, offsetX:0, offsetY:0, startX:0, startY:0, moved:false, userPlaced:false };
@@ -6493,17 +6522,58 @@ const AI_ROBOT_MESSAGES = [
   'Quality first, always. 🎯'
 ];
 
-function aiRobotSayRandom(){
+/* 10 distinct bubble colors, each paired with a text color chosen for readability */
+const AI_ROBOT_BUBBLE_COLORS = [
+  { bg:'#10b981', fg:'#ffffff' },
+  { bg:'#3b82f6', fg:'#ffffff' },
+  { bg:'#8b5cf6', fg:'#ffffff' },
+  { bg:'#ef4444', fg:'#ffffff' },
+  { bg:'#d97706', fg:'#ffffff' },
+  { bg:'#ec4899', fg:'#ffffff' },
+  { bg:'#0d9488', fg:'#ffffff' },
+  { bg:'#6366f1', fg:'#ffffff' },
+  { bg:'#ea580c', fg:'#ffffff' },
+  { bg:'#0891b2', fg:'#ffffff' }
+];
+
+/* Sets the bubble's text and gives it the next color in the palette (never repeats the same color twice in a row) */
+function aiRobotSetBubbleText(text){
   const bubble = document.getElementById('aiRobotBubble');
   if(!bubble) return;
-  const msg = AI_ROBOT_MESSAGES[Math.floor(Math.random() * AI_ROBOT_MESSAGES.length)];
-  bubble.textContent = msg;
+  let idx = Math.floor(Math.random() * AI_ROBOT_BUBBLE_COLORS.length);
+  if(idx === window._aiRobotColorIdx) idx = (idx + 1) % AI_ROBOT_BUBBLE_COLORS.length;
+  window._aiRobotColorIdx = idx;
+  const c = AI_ROBOT_BUBBLE_COLORS[idx];
+  bubble.textContent = text;
+  bubble.style.background = c.bg;
+  bubble.style.color = c.fg;
   bubble.style.opacity = '1';
+}
+
+function aiRobotSayRandom(){
+  if(window._aiRobotMessageBusy) return;
+  const bubble = document.getElementById('aiRobotBubble');
+  if(!bubble) return;
+  window._aiRobotMessageBusy = true;
+  const fullName = (typeof empAgentName !== 'undefined' && empAgentName) ? empAgentName : (localStorage.getItem('qa_emp_name') || '');
+  const firstName = (fullName || '').trim().split(/\s+/)[0] || '';
+  aiRobotSetBubbleText(firstName ? `Hello ${firstName}! 👋` : 'Hello! 👋');
   clearTimeout(window._aiRobotBubbleTimer);
-  window._aiRobotBubbleTimer = setTimeout(()=>{ bubble.style.opacity='0'; }, 5000);
+  window._aiRobotBubbleTimer = setTimeout(()=>{
+    aiRobotSetBubbleText('I am AI Agent of KCBPL QA Team.');
+    window._aiRobotBubbleTimer = setTimeout(()=>{
+      const msg = AI_ROBOT_MESSAGES[Math.floor(Math.random() * AI_ROBOT_MESSAGES.length)];
+      aiRobotSetBubbleText(msg);
+      window._aiRobotBubbleTimer = setTimeout(()=>{
+        bubble.style.opacity = '0';
+        window._aiRobotMessageBusy = false;
+      }, 5000);
+    }, 5000);
+  }, 10000);
 }
 
 const AI_ROBOT_POKE_ANIMS = ['ai-poke-squish', 'ai-poke-spin', 'ai-poke-jump', 'ai-poke-shake', 'ai-poke-flip', 'ai-poke-pulse'];
+const AI_ROBOT_EXCITED_MESSAGES = ['Whoa, easy there! 😄', 'Hehe, that tickles! 🤖', 'Okay okay, I\'m awake! ⚡', 'You really like clicking me! 😆'];
 
 function aiRobotPokeBounce(){
   const body = document.getElementById('aiRobotBody');
@@ -6515,6 +6585,64 @@ function aiRobotPokeBounce(){
   clearTimeout(window._aiRobotPokeTimer);
   window._aiRobotPokeTimer = setTimeout(()=>{ body.classList.remove(anim); }, 700);
   aiRobotMouthTalk();
+  aiRobotEyePop();
+  aiRobotHandExcite();
+}
+
+/* Pupils pop bigger for a moment, so a click feels like the robot reacts with its eyes too */
+function aiRobotEyePop(){
+  const pL = document.getElementById('aiRobotPupilL');
+  const pR = document.getElementById('aiRobotPupilR');
+  [pL, pR].forEach(p=>{
+    if(!p) return;
+    p.classList.add('excited');
+    clearTimeout(p._aiRobotPopTimer);
+    p._aiRobotPopTimer = setTimeout(()=> p.classList.remove('excited'), 350);
+  });
+}
+
+/* Hand gives a quick excited wave burst on click, whatever it was doing before */
+function aiRobotHandExcite(){
+  const hand = document.getElementById('aiRobotHand');
+  if(!hand) return;
+  hand.classList.remove('hand-down');
+  hand.classList.add('hand-wave', 'hand-excited');
+  clearTimeout(window._aiRobotHandExciteTimer);
+  window._aiRobotHandExciteTimer = setTimeout(()=> hand.classList.remove('hand-excited'), 900);
+}
+
+/* Track how many times the robot was clicked in quick succession, so repeated
+   clicking feels more alive instead of repeating the same small reaction */
+function aiRobotRegisterClick(){
+  const now = Date.now();
+  window._aiRobotClickTimes = (window._aiRobotClickTimes || []).filter(t => now - t < 2500);
+  window._aiRobotClickTimes.push(now);
+  return window._aiRobotClickTimes.length;
+}
+
+/* Extra-energetic reaction once someone clicks rapidly several times */
+function aiRobotExcitedReaction(){
+  const bubble = document.getElementById('aiRobotBubble');
+  const body = document.getElementById('aiRobotBody');
+  if(body){
+    AI_ROBOT_POKE_ANIMS.forEach(c => body.classList.remove(c));
+    void body.offsetWidth;
+    body.classList.add('ai-poke-shake');
+    clearTimeout(window._aiRobotPokeTimer);
+    window._aiRobotPokeTimer = setTimeout(()=> body.classList.remove('ai-poke-shake'), 700);
+  }
+  aiRobotMouthTalk();
+  aiRobotEyePop();
+  aiRobotHandExcite();
+  if(bubble){
+    aiRobotSetBubbleText(AI_ROBOT_EXCITED_MESSAGES[Math.floor(Math.random() * AI_ROBOT_EXCITED_MESSAGES.length)]);
+    clearTimeout(window._aiRobotBubbleTimer);
+    window._aiRobotMessageBusy = true;
+    window._aiRobotBubbleTimer = setTimeout(()=>{
+      bubble.style.opacity = '0';
+      window._aiRobotMessageBusy = false;
+    }, 3000);
+  }
 }
 
 /* Mouth moves a few times when the robot is clicked */
@@ -6608,6 +6736,12 @@ function setupAIRobot(){
   }
   if(!window._aiRobotHandTimer){
     aiRobotScheduleHandDown();
+  }
+  if(!window._aiRobotGreeted){
+    window._aiRobotGreeted = true;
+    aiRobotWanderTick();
+    aiRobotSayRandom();
+    return;
   }
   aiRobotWanderTick();
 }
@@ -6707,7 +6841,12 @@ function aiRobotDragEnd(){
   if(!aiRobotState.moved){
     // it was a click/poke, not a drag — react playfully
     aiRobotPokeBounce();
-    aiRobotSayRandom();
+    const streak = aiRobotRegisterClick();
+    if(streak >= 4){
+      aiRobotExcitedReaction();
+    } else {
+      aiRobotSayRandom();
+    }
   }
 }
 
@@ -6950,22 +7089,37 @@ async function buildAgentInsightPayload(tab, agent){
   };
 }
 
-const AI_LOADING_MESSAGES = [
-  'প্যাটার্ন বিশ্লেষণ করা হচ্ছে...',
-  'কল ডাটা যাচাই করা হচ্ছে...',
-  'পারফরম্যান্স বোঝার চেষ্টা করছি...',
-  'ফিডব্যাক সাজানো হচ্ছে...',
-  'প্রায় হয়ে এসেছে...'
+const AI_LOADING_REGULAR_MESSAGES = [
+  { en:'Thinking...', bn:'চিন্তা করছি...' },
+  { en:'Analyzing patterns...', bn:'প্যাটার্ন বিশ্লেষণ করা হচ্ছে...' },
+  { en:'Verifying call data...', bn:'কল ডাটা যাচাই করা হচ্ছে...' },
+  { en:'Understanding performance...', bn:'পারফরম্যান্স বোঝার চেষ্টা করছি...' },
+  { en:'Organizing feedback...', bn:'ফিডব্যাক সাজানো হচ্ছে...' },
+  { en:'Reviewing quality parameters...', bn:'কোয়ালিটি প্যারামিটার পর্যালোচনা করা হচ্ছে...' },
+  { en:'Cross-checking scores...', bn:'স্কোর মিলিয়ে দেখা হচ্ছে...' },
+  { en:'Spotting improvement areas...', bn:'উন্নতির জায়গা খোঁজা হচ্ছে...' },
+  { en:'Summarizing insights...', bn:'ইনসাইট সংক্ষিপ্ত করা হচ্ছে...' }
 ];
+const AI_LOADING_ALMOST_MESSAGE = { en:'Almost there...', bn:'প্রায় হয়ে এসেছে...' };
 function startAILoadingMessages(){
-  const el = document.getElementById('aiInsightLoadingText');
-  if(!el) return;
+  const elEn = document.getElementById('aiInsightLoadingText');
+  const elBn = document.getElementById('aiInsightLoadingTextBn');
+  if(!elEn) return;
   let i = 0;
-  el.textContent = AI_LOADING_MESSAGES[0];
+  elEn.textContent = AI_LOADING_REGULAR_MESSAGES[0].en;
+  if(elBn) elBn.textContent = AI_LOADING_REGULAR_MESSAGES[0].bn;
   clearInterval(window._aiLoadingMsgTimer);
   window._aiLoadingMsgTimer = setInterval(()=>{
-    i = (i + 1) % AI_LOADING_MESSAGES.length;
-    el.textContent = AI_LOADING_MESSAGES[i];
+    let msg;
+    if(Math.random() < 0.2){
+      // "Almost there" pops in occasionally, without using up a regular message's turn
+      msg = AI_LOADING_ALMOST_MESSAGE;
+    } else {
+      i = (i + 1) % AI_LOADING_REGULAR_MESSAGES.length;
+      msg = AI_LOADING_REGULAR_MESSAGES[i];
+    }
+    elEn.textContent = msg.en;
+    if(elBn) elBn.textContent = msg.bn;
   }, 1600);
 }
 function stopAILoadingMessages(){
