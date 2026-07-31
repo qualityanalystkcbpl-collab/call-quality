@@ -3706,6 +3706,7 @@ transform:translateY(0);
     <span class="dot"></span>
     OLD Google Sheet
 </div>
+      <div class="nav-item" data-tab="MONTHDATA" onclick="switchTab('MONTHDATA')"><span class="dot"></span>📅 Month wise Data (Previous Month)</div>
       </div>
 
       <div class="nav-section">
@@ -3853,6 +3854,8 @@ transform:translateY(0);
       <div class="panel" id="panel-CALLSCRIPTHINDI"></div>
       <div class="panel" id="panel-AUDITPARAMETER"></div>
       <div class="panel" id="panel-DASHBOARDAPRMAR"></div>
+      <!-- Month wise Data (previous month) — two separate Google Sheets, two separate Apps Scripts -->
+      <div class="panel" id="panel-MONTHDATA"></div>
       <!-- Updates panel -->
       <div class="panel" id="panel-UPDATES">
         <div class="panel-header">
@@ -4191,6 +4194,13 @@ const ANS3SEC_SHEETS = {
 };
 
 const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweHhwH_NAuH-fRKtLUdJC9d6t5GxKKN3Th0_0HHVoV4lIf7vbfaGt1VY8dgz0zlRSm/exec";
+
+/* Month wise Data (Previous Month) tab — TWO separate Google Sheets, so TWO separate Apps Script
+   deployments. Deploy the matching Code.gs inside each spreadsheet (Extensions > Apps Script),
+   then paste the resulting /exec URL below. Until a real URL is pasted in, that section just shows
+   a friendly "not set up yet" message instead of breaking. */
+const MONTHDATA_RAW_WEB_APP_URL   = "https://script.google.com/macros/s/AKfycbzmDR7gUlWWB8otqttA2jTSozqSbmsjL_y6SreiAW67sh35X1zYj6c_vdDLN9eh6kJn1w/exec";   // "Month wise raw data 2026-27" sheet
+const MONTHDATA_PARAM_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8W5xkSwmIYv5SoR4wS8pdHLydrl7s_29ywWExn-WJ6YqFfFMY0ufjogqXOachEDwCcg/exec"; // "month wais audit data 2026" sheet
 const RAW_SHEET_TABS = {
   AUDITNEW:        { label: 'Audit Sheet (NEW)',              sheetName: 'Audit sheet(NEW)',        icon: '🗂️' },
   CATVDISPO:       { label: 'CATV DISPO',                     sheetName: 'CATV DISPO',               icon: '📋' },
@@ -5994,6 +6004,8 @@ async function switchTab(tab){
       if (contentEl) contentEl.scrollTop = 0;
     } else if (RAW_SHEET_TABS[tab]) {
       await renderRawSheetTabPanel(tab);
+    } else if (tab === 'MONTHDATA') {
+      await renderMonthDataPanel(monthDataSection);
     } else if (tab === 'HELP') {
       renderHelpPanel();
     } else if (tab === 'QUICKLINK') {
@@ -7242,7 +7254,10 @@ async function generateAgentInsight(){
     metaEl.style.display = 'block';
   }catch(e){
     console.error('Generate insight failed', e);
-    errEl.textContent = 'Insight তৈরি করা যায়নি। একটু পরে আবার চেষ্টা করুন।';
+    const isRateLimit = /rate limit/i.test(e.message || '');
+    errEl.textContent = isRateLimit
+      ? `⏳ ${e.message}`
+      : 'Insight তৈরি করা যায়নি। একটু পরে আবার চেষ্টা করুন।';
     errEl.style.display = 'block';
   } finally {
     loadingEl.style.display = 'none';
@@ -8095,6 +8110,173 @@ function filterRawSheetTable(input, tableId){
   });
   const noMatch = table.parentElement.querySelector('.table-no-match');
   if(noMatch) noMatch.style.display = anyVisible ? 'none' : 'block';
+}
+
+/* ===================== MONTH WISE DATA (PREVIOUS MONTH) =====================
+   Two independent Google Sheets → two independent Apps Script deployments:
+     - MONTHDATA_RAW_WEB_APP_URL   → "Month wise raw data 2026-27" spreadsheet
+     - MONTHDATA_PARAM_WEB_APP_URL → "month wais audit data 2026" spreadsheet (parameter wise report)
+   Each Apps Script exposes:
+     ?action=list                → { sheets: ["April2026","May2026",...] }
+     ?action=data&sheet=NAME     → { values: [[...]], merges:[...] }  (raw)
+                                    { values: [[...]], backgrounds:[[...]], fontColors:[[...]], fontWeights:[[...]] } (param — for the colour heatmap)
+   New month tabs added to the sheet later show up automatically (no code change needed) —
+   just click "↻ Refresh" once, or revisit the tab after the cache clears on page reload. */
+let monthDataSection = 'RAW'; // 'RAW' | 'PARAM'
+let monthDataSheetListCache = { RAW: null, PARAM: null };
+let monthDataActiveSheet   = { RAW: null, PARAM: null };
+
+function monthDataConfig(section){
+  return section === 'PARAM'
+    ? { url: MONTHDATA_PARAM_WEB_APP_URL, label: 'Parameter wise report', icon:'📊' }
+    : { url: MONTHDATA_RAW_WEB_APP_URL,   label: 'Raw data',              icon:'📁' };
+}
+
+async function renderMonthDataPanel(section){
+  monthDataSection = section || monthDataSection || 'RAW';
+  const panel = document.getElementById('panel-MONTHDATA');
+  if(!panel) return;
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>📅 Month wise Data (Previous Month)</h1><p>প্রতি মাসের ডাটা এখান থেকে দেখা যাবে। Google Sheet-এ নতুন মাসের ট্যাব যোগ হলে, এখানেও নিজে থেকে নতুন ট্যাব চলে আসবে।</p></div>
+    </div>
+    <div class="lob-tab-row">
+      <button class="lob-tab ${monthDataSection==='RAW'?'active':''}" onclick="renderMonthDataPanel('RAW')">📁 Raw data</button>
+      <button class="lob-tab ${monthDataSection==='PARAM'?'active':''}" onclick="renderMonthDataPanel('PARAM')">📊 Parameter wise report</button>
+    </div>
+    <div id="monthDataSheetTabs" class="lob-tab-row"></div>
+    <div id="monthDataTableWrap"></div>
+  `;
+
+  await monthDataLoadSheetList(monthDataSection);
+}
+
+async function monthDataLoadSheetList(section){
+  const cfg = monthDataConfig(section);
+  const tabsWrap = document.getElementById('monthDataSheetTabs');
+  const tableWrap = document.getElementById('monthDataTableWrap');
+  if(!tabsWrap || !tableWrap) return;
+
+  if(!cfg.url || cfg.url.indexOf('PASTE_') === 0){
+    tabsWrap.innerHTML = '';
+    const constName = section === 'PARAM' ? 'MONTHDATA_PARAM_WEB_APP_URL' : 'MONTHDATA_RAW_WEB_APP_URL';
+    tableWrap.innerHTML = `<div class="empty-state"><b>⚙️ Apps Script URL সেট করা হয়নি</b><br>এই সেকশনের জন্য নিজের Google Sheet-এ Apps Script ডিপ্লয় করে, সেই URL কোডে <code>${constName}</code>-এর জায়গায় বসাতে হবে।</div>`;
+    return;
+  }
+
+  if(monthDataSheetListCache[section]){
+    monthDataRenderSheetTabs(section, monthDataSheetListCache[section]);
+    return;
+  }
+
+  tabsWrap.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">মাসের তালিকা লোড হচ্ছে...</span>`;
+  tableWrap.innerHTML = `<div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+
+  try{
+    const res = await fetch(cfg.url + "?action=list");
+    const data = await res.json();
+    const sheets = Array.isArray(data) ? data : (Array.isArray(data.sheets) ? data.sheets : []);
+    monthDataSheetListCache[section] = sheets;
+    monthDataRenderSheetTabs(section, sheets);
+  }catch(err){
+    console.error('Month wise data: sheet list fetch failed', err);
+    tabsWrap.innerHTML = '';
+    tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">মাসের তালিকা আনতে ব্যর্থ!</b><br>Apps Script URL বা কানেকশন চেক করুন।<br><button class="btn" onclick="monthDataRefreshList('${section}')">↻ আবার চেষ্টা করুন</button></div>`;
+  }
+}
+
+async function monthDataRefreshList(section){
+  monthDataSheetListCache[section] = null;
+  await monthDataLoadSheetList(section);
+}
+
+function monthDataRenderSheetTabs(section, sheets){
+  const tabsWrap = document.getElementById('monthDataSheetTabs');
+  if(!tabsWrap) return;
+  if(!sheets || !sheets.length){
+    tabsWrap.innerHTML = '';
+    const tableWrap = document.getElementById('monthDataTableWrap');
+    if(tableWrap) tableWrap.innerHTML = `<div class="empty-state"><b>কোনো শিট পাওয়া যায়নি</b></div>`;
+    return;
+  }
+  const active = (monthDataActiveSheet[section] && sheets.includes(monthDataActiveSheet[section]))
+    ? monthDataActiveSheet[section] : sheets[0];
+  monthDataActiveSheet[section] = active;
+
+  tabsWrap.innerHTML = sheets.map(name =>
+    `<button class="lob-tab ${name===active?'active':''}" onclick="monthDataSelectSheet('${section}','${escapeAttr(name)}')">${escapeHtml(name)}</button>`
+  ).join('') + `<button class="btn" style="padding:8px 14px;" onclick="monthDataRefreshList('${section}')">↻ Refresh</button>`;
+
+  monthDataLoadSheetTable(section, active);
+}
+
+function monthDataSelectSheet(section, sheetName){
+  monthDataActiveSheet[section] = sheetName;
+  monthDataRenderSheetTabs(section, monthDataSheetListCache[section]);
+}
+
+async function monthDataLoadSheetTable(section, sheetName){
+  const cfg = monthDataConfig(section);
+  const tableWrap = document.getElementById('monthDataTableWrap');
+  if(!tableWrap) return;
+  tableWrap.innerHTML = `<div class="empty-state"><b>"${escapeHtml(sheetName)}" লোড হচ্ছে...</b></div>`;
+
+  try{
+    const res = await fetch(cfg.url + "?action=data&sheet=" + encodeURIComponent(sheetName));
+    const data = await res.json();
+    const values = Array.isArray(data.values) ? data.values : [];
+    if(!values.length){
+      tableWrap.innerHTML = `<div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b></div>`;
+      return;
+    }
+    const searchTargetId = section === 'PARAM' ? 'monthDataParamTable' : 'rawSheetTable-MONTHDATARAW';
+    const tableHtml = section === 'PARAM'
+      ? buildColoredSheetTableHtml(values, data.backgrounds || [], data.fontColors || [], data.fontWeights || [])
+      : buildMergedSheetTableHtml(values, Array.isArray(data.merges) ? data.merges : [], 'MONTHDATARAW');
+    tableWrap.innerHTML = `
+      <div class="table-search-wrap">
+        <span class="table-search-icon">🔎</span>
+        <input type="text" class="table-search-input" id="monthDataSearch" placeholder="যেকোনো তথ্য দিয়ে খুঁজুন..." oninput="filterRawSheetTable(this,'${searchTargetId}')">
+      </div>
+      <div class="raw-sheet-wrap">
+        ${tableHtml}
+        <div class="table-no-match" style="display:none;">😕 কোনো তথ্য পাওয়া যায়নি।</div>
+      </div>`;
+  }catch(err){
+    console.error('Month wise data: table fetch failed', err);
+    tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা আনতে ব্যর্থ!</b><br><button class="btn" onclick="monthDataLoadSheetTable('${section}','${escapeAttr(sheetName)}')">↻ আবার চেষ্টা করুন</button></div>`;
+  }
+}
+
+/* Renders a table that also carries each cell's background/font colour + bold weight,
+   so the "Parameter wise report" heatmap (red/yellow/green score cells, bold yellow
+   Grand Total row) looks exactly like it does in the source Google Sheet. */
+function buildColoredSheetTableHtml(values, backgrounds, fontColors, fontWeights){
+  const numRows = values.length;
+  const numCols = values.reduce((m, r) => Math.max(m, (r||[]).length), 0);
+  let rowsHtml = '';
+  for(let r = 0; r < numRows; r++){
+    const isHeaderRow = (r === 0);
+    const row = values[r] || [];
+    const rowText = row.map(v => String(v ?? '')).join(' ').toLowerCase();
+    let cellsHtml = '';
+    for(let c = 0; c < numCols; c++){
+      const val = row[c];
+      const cellText = (val===null || val===undefined || val==='') ? '' : (isHeaderRow ? val : formatSheetCellValue(val));
+      const bg = (backgrounds[r] && backgrounds[r][c]) ? String(backgrounds[r][c]) : null;
+      const fg = (fontColors[r] && fontColors[r][c]) ? String(fontColors[r][c]) : null;
+      const fw = (fontWeights[r] && fontWeights[r][c]) ? String(fontWeights[r][c]) : null;
+      let style = '';
+      if(bg && !/^#(ffffff|fff)$/i.test(bg)) style += `background:${bg};`;
+      if(fg && !/^#(000000|000)$/i.test(fg)) style += `color:${fg};`;
+      if(fw === 'bold') style += 'font-weight:700;';
+      const cls = isHeaderRow ? ' class="rs-head"' : '';
+      cellsHtml += `<td${cls}${style?` style="${escapeAttr(style)}"`:''}>${escapeHtml(cellText)}</td>`;
+    }
+    rowsHtml += `<tr class="rs-anim-row ${isHeaderRow?'rs-header-row':''}" ${isHeaderRow?'':`data-row-text="${escapeAttr(rowText)}"`}>${cellsHtml}</tr>`;
+  }
+  return `<table class="raw-sheet-table" id="monthDataParamTable"><tbody>${rowsHtml}</tbody></table>`;
 }
 
 async function loadHelp(){
