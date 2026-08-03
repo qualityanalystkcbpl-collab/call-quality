@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#070F19;
@@ -4363,6 +4364,12 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbC
 
 const SUPABASE_URL = "https://iqjmlkpkrtdrwhksmvai.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxam1sa3BrcnRkcndoa3NtdmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzIyMDIsImV4cCI6MjEwMDU0ODIwMn0.sXxh4eXLmDax2be9yYmKTT2oUF7NwgLOmaHTfdFO2pY";
+/* supabase-js client, শুধু চ্যাট রিয়েলটাইম সাবস্ক্রাইব করার জন্য ব্যবহার হচ্ছে।
+   বাকি সব Supabase কল (banners, sessions ইত্যাদি) আগের মতোই raw fetch() দিয়ে হচ্ছে,
+   এখানে কিছু বদলানো হয়নি। */
+const sbClient = (typeof supabase !== 'undefined' && supabase.createClient)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 const BANNER_BUCKET = "banners";
 const BANNER_MAX_IMAGE_MB = 5;   // images/GIFs above this are rejected client-side
 const BANNER_MAX_VIDEO_MB = 15;  // videos above this are rejected client-side — keeps Home page load fast
@@ -4403,8 +4410,8 @@ const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweHhwH_N
    deployments. Deploy the matching Code.gs inside each spreadsheet (Extensions > Apps Script),
    then paste the resulting /exec URL below. Until a real URL is pasted in, that section just shows
    a friendly "not set up yet" message instead of breaking. */
-const MONTHDATA_RAW_WEB_APP_URL   = "PASTE_RAW_DATA_APPS_SCRIPT_URL_HERE";   // "Month wise raw data 2026-27" sheet
-const MONTHDATA_PARAM_WEB_APP_URL = "PASTE_PARAMETER_REPORT_APPS_SCRIPT_URL_HERE"; // "month wais audit data 2026" sheet
+const MONTHDATA_RAW_WEB_APP_URL   = "https://script.google.com/macros/s/AKfycbzmDR7gUlWWB8otqttA2jTSozqSbmsjL_y6SreiAW67sh35X1zYj6c_vdDLN9eh6kJn1w/exec";   // "Month wise raw data 2026-27" sheet
+const MONTHDATA_PARAM_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8W5xkSwmIYv5SoR4wS8pdHLydrl7s_29ywWExn-WJ6YqFfFMY0ufjogqXOachEDwCcg/exec"; // "month wais audit data 2026" sheet
 
 /* LOB Wise Data tab — ONE Google Sheet, ONE table. Rows = CATV / BB Tech Support / BB Renewal,
    columns = months (April'26, May'26, ...) + an Average column. Deploy ONE Apps Script inside
@@ -5416,13 +5423,107 @@ async function renderAdminChatList(){
         <button class="btn primary" onclick="renderAdminChatList()">↻ Refresh</button>
       </div>
     </div>
+    <div class="broadcast-history-box superadmin-only" id="broadcastHistoryBox" style="display:none;">
+      <div class="broadcast-history-header">
+        <span>📜 Broadcast History <span class="mono" style="color:var(--text-muted); font-size:10.5px;">(শুধু Super Admin দেখতে পাচ্ছেন)</span></span>
+        <button class="btn small" onclick="loadBroadcastHistory()">↻ Refresh</button>
+      </div>
+      <div id="broadcastHistoryList" class="broadcast-history-list">
+        <div class="chat-empty-hint">লোড হচ্ছে...</div>
+      </div>
+    </div>
     <div id="adminChatBody" class="admin-chat-layout">
       <div id="adminChatThreadList" class="admin-chat-thread-list"><div class="empty-state" style="border:none;">লোড হচ্ছে...</div></div>
       <div id="adminChatThreadView" class="admin-chat-thread-view">
         <div class="chat-empty-hint">বাম দিক থেকে একজন এজেন্ট সিলেক্ট করুন</div>
       </div>
     </div>`;
+  const historyBox = document.getElementById('broadcastHistoryBox');
+  if(historyBox && superAdminToken){
+    historyBox.style.display = '';
+    loadBroadcastHistory();
+  }
   await refreshAdminChatList();
+}
+/* Broadcast messages এখন পাঠানোর সময় broadcast_log টেবিলে লগ হয়ে যায়, যাতে
+   Super Admin এখান থেকে দেখতে পারেন কে, কবে, কতজনকে কী bulk মেসেজ পাঠিয়েছে। */
+/* প্রতিটা broadcast row-এর ডাটা (message, target_ids, sent_ts ইত্যাদি) এখানে
+   ক্যাশ থাকে, যাতে "কে কে পড়েছে" বাটনে ক্লিক করলে আবার fetch করতে না হয়। */
+let broadcastLogRows = {};
+async function loadBroadcastHistory(){
+  const listEl = document.getElementById('broadcastHistoryList');
+  if(!listEl) return;
+  listEl.innerHTML = '<div class="chat-empty-hint">লোড হচ্ছে...</div>';
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/broadcast_log?select=*&order=created_at.desc&limit=50`, {
+      headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    const rows = await res.json();
+    if(!Array.isArray(rows) || !rows.length){
+      listEl.innerHTML = '<div class="chat-empty-hint">এখনো কোনো Broadcast পাঠানো হয়নি।</div>';
+      broadcastLogRows = {};
+      return;
+    }
+    broadcastLogRows = {};
+    rows.forEach(r => { broadcastLogRows[r.id] = r; });
+    listEl.innerHTML = rows.map(r => `
+      <div class="broadcast-history-item" id="broadcastItem-${escapeAttr(r.id)}">
+        <div class="broadcast-history-msg">${escapeHtml(r.message||'')}</div>
+        <div class="broadcast-history-meta">
+          <span>👤 ${escapeHtml(r.sent_by||'Admin')}</span>
+          <span>👥 ${r.target_count||0} জন এজেন্ট</span>
+          <span>🕒 ${escapeHtml(chatTimeLabel(new Date(r.created_at).getTime()))}</span>
+          <button class="btn small" id="broadcastReadBtn-${escapeAttr(r.id)}" onclick="toggleBroadcastReadStatus('${r.id}', this)">👁️ কে কে পড়েছে</button>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    console.error('Broadcast history load failed', e);
+    listEl.innerHTML = '<div class="chat-empty-hint">লোড করতে ব্যর্থ হয়েছে।</div>';
+  }
+}
+/* একটা নির্দিষ্ট broadcast কে কে পড়েছে তা agent থ্রেডের lastReadByEmployeeAt-এর
+   সাথে broadcast পাঠানোর ts মিলিয়ে বের করে (একই মেকানিজম, যেটা ✓✓ read-tick দেখাতে
+   এমনিতেই ব্যবহার হয়)। */
+async function toggleBroadcastReadStatus(logId, btnEl){
+  const item = document.getElementById(`broadcastItem-${logId}`);
+  if(!item) return;
+  const existing = document.getElementById(`broadcastReadPanel-${logId}`);
+  if(existing){
+    const show = existing.style.display === 'none';
+    existing.style.display = show ? '' : 'none';
+    if(btnEl) btnEl.textContent = show ? '👁️ লুকান' : '👁️ কে কে পড়েছে';
+    return;
+  }
+  const row = broadcastLogRows[logId];
+  if(!row){ showToast('তথ্য পাওয়া যায়নি, আবার Refresh করুন।'); return; }
+  if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'লোড হচ্ছে...'; }
+  try{
+    const targetIds = Array.isArray(row.target_ids) ? row.target_ids : [];
+    const sentTs = Number(row.sent_ts) || new Date(row.created_at).getTime();
+    const threads = await getChatThreads();
+    let readCount = 0;
+    const rowsHtml = targetIds.map(id=>{
+      const t = threads[id];
+      const name = (t && t.employeeName) || id;
+      const readAt = (t && t.lastReadByEmployeeAt) || 0;
+      const isRead = readAt >= sentTs;
+      if(isRead) readCount++;
+      return `<div class="broadcast-read-row">
+        <span>${escapeHtml(name)} <span class="mono" style="color:var(--text-muted); font-size:10px;">(${escapeHtml(id)})</span></span>
+        <span class="${isRead ? 'read-yes' : 'read-no'}">${isRead ? '✓✓ পড়েছে' : '✓ পড়েনি'}</span>
+      </div>`;
+    }).join('');
+    const panel = document.createElement('div');
+    panel.id = `broadcastReadPanel-${logId}`;
+    panel.className = 'broadcast-read-status';
+    panel.innerHTML = `<div class="broadcast-read-summary">${readCount}/${targetIds.length} জন পড়েছেন</div>${rowsHtml || '<div class="chat-empty-hint">কোনো টার্গেট পাওয়া যায়নি।</div>'}`;
+    item.appendChild(panel);
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = '👁️ লুকান'; }
+  }catch(e){
+    console.error('Broadcast read status load failed', e);
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = '👁️ কে কে পড়েছে'; }
+    showToast('Read status লোড করতে ব্যর্থ হয়েছে।');
+  }
 }
 async function updateAdminChatNavBadge(){
   const badge = document.getElementById('empChatNavBadge');
@@ -5559,19 +5660,51 @@ async function sendAdminChatReply(){
 }
 
 /* ===================== BROADCAST ANNOUNCEMENT (Admin/Super Admin → all agents) ===================== */
-function openBroadcastModal(){
+let broadcastNameMap = {};
+async function openBroadcastModal(){
   const modal = document.getElementById('broadcastModal');
   const input = document.getElementById('broadcastMessageInput');
   const errBox = document.getElementById('broadcastError');
   const infoBox = document.getElementById('broadcastTargetInfo');
+  const listBox = document.getElementById('broadcastTargetList');
   if(errBox) errBox.textContent = '';
   if(input) input.value = '';
+  if(modal) modal.style.display = 'flex';
+  if(listBox) listBox.innerHTML = '<div class="chat-empty-hint">লোড হচ্ছে...</div>';
+
+  broadcastNameMap = {};
+  try{
+    // Super Admin এভাবে সিস্টেমে থাকা প্রতিটা এজেন্টের নাম আনতে পারে,
+    // এমনকি যাদের সাথে এখনো কোনো চ্যাট থ্রেড শুরু হয়নি তাদেরও।
+    if(superAdminToken){
+      const data = await empApiGet('listAgents', { token: superAdminToken });
+      if(data && data.ok && Array.isArray(data.agents)){
+        data.agents.forEach(a=>{ if(a && a.employeeId) broadcastNameMap[a.employeeId] = a.agentName || a.employeeId; });
+      }
+    }
+    const threads = await getChatThreads();
+    Object.keys(threads).forEach(id=>{ if(!broadcastNameMap[id]) broadcastNameMap[id] = threads[id].employeeName || id; });
+  }catch(e){ console.error('Broadcast target list load failed', e); }
+
   if(infoBox){
     infoBox.textContent = superAdminToken
-      ? 'এই মেসেজ System-এ থাকা সব এজেন্ট (এখনো চ্যাট না করা এজেন্টসহ) পাবে।'
-      : 'এই মেসেজ পাবে শুধু তারা, যাদের সাথে অন্তত একবার চ্যাট থ্রেড তৈরি হয়েছে। সবার কাছে পৌঁছাতে Super Admin দিয়ে পাঠান।';
+      ? 'নিচে সব এজেন্টের নাম দেখা যাচ্ছে — যাদের কাছে পাঠাতে চান না তাদের আনচেক করুন।'
+      : 'এই লিস্টে শুধু তারাই আছে, যাদের সাথে অন্তত একবার চ্যাট থ্রেড তৈরি হয়েছে। সবার কাছে পৌঁছাতে Super Admin দিয়ে পাঠান।';
   }
-  if(modal) modal.style.display = 'flex';
+
+  const ids = Object.keys(broadcastNameMap).sort((a,b)=> String(broadcastNameMap[a]).localeCompare(String(broadcastNameMap[b])));
+  if(listBox){
+    listBox.innerHTML = ids.length
+      ? ids.map(id => `
+        <label class="broadcast-target-item">
+          <input type="checkbox" class="broadcast-target-checkbox" value="${escapeAttr(id)}" checked>
+          <span>${escapeHtml(broadcastNameMap[id])} <span class="mono" style="color:var(--text-muted); font-size:10.5px;">(${escapeHtml(id)})</span></span>
+        </label>`).join('')
+      : '<div class="chat-empty-hint">কোনো এজেন্ট পাওয়া যায়নি।</div>';
+  }
+}
+function broadcastSelectAll(checked){
+  document.querySelectorAll('.broadcast-target-checkbox').forEach(cb => { cb.checked = checked; });
 }
 function closeBroadcastModal(){
   const modal = document.getElementById('broadcastModal');
@@ -5584,31 +5717,19 @@ async function sendBroadcastAnnouncement(){
   const text = (input && input.value || '').trim();
   if(errBox) errBox.textContent = '';
   if(!text){ if(errBox) errBox.textContent = 'একটি মেসেজ লিখুন।'; return; }
-  if(!confirm('এই মেসেজটি সব এজেন্টের চ্যাটে একসাথে পাঠাতে চান?')) return;
+
+  const targetIds = Array.from(document.querySelectorAll('.broadcast-target-checkbox:checked')).map(cb => cb.value);
+  if(!targetIds.length){ if(errBox) errBox.textContent = 'অন্তত একজন এজেন্ট সিলেক্ট করুন।'; return; }
+  if(!confirm(`সিলেক্ট করা ${targetIds.length} জন এজেন্টের চ্যাটে এই মেসেজটি পাঠাতে চান?`)) return;
 
   if(sendBtn){ sendBtn.disabled = true; sendBtn.textContent = 'পাঠানো হচ্ছে...'; }
   try{
     const threads = await getChatThreads();
-    const nameMap = {};
-
-    // Super Admin can reach every registered agent, even ones with no chat history yet.
-    if(superAdminToken){
-      try{
-        const data = await empApiGet('listAgents', { token: superAdminToken });
-        if(data && data.ok && Array.isArray(data.agents)){
-          data.agents.forEach(a=>{ if(a && a.employeeId) nameMap[a.employeeId] = a.agentName || a.employeeId; });
-        }
-      }catch(e){ console.error('listAgents fetch failed for broadcast', e); }
-    }
-    Object.keys(threads).forEach(id=>{ if(!nameMap[id]) nameMap[id] = threads[id].employeeName || id; });
-
-    const targetIds = Object.keys(nameMap);
-    if(!targetIds.length){ if(errBox) errBox.textContent = 'কোনো এজেন্ট খুঁজে পাওয়া যায়নি।'; return; }
-
     const ts = Date.now();
     targetIds.forEach(id=>{
-      if(!threads[id]) threads[id] = { employeeId: id, employeeName: nameMap[id], messages: [] };
-      threads[id].employeeName = threads[id].employeeName || nameMap[id];
+      const name = broadcastNameMap[id] || id;
+      if(!threads[id]) threads[id] = { employeeId: id, employeeName: name, messages: [] };
+      threads[id].employeeName = threads[id].employeeName || name;
       threads[id].messages.push({
         id: chatUid(), from:'admin', senderName:'Quality Team', text, ts, isBroadcast:true
       });
@@ -5618,10 +5739,31 @@ async function sendBroadcastAnnouncement(){
       trimThreadMessages(threads[id]);
     });
 
-    await saveChatThreads(threads);
+    await saveChatThreads(threads, targetIds);
+
+    // Super Admin যেন পরে এসে দেখতে পারেন কে, কবে, কতজনকে কী broadcast পাঠিয়েছেন
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/broadcast_log`, {
+        method:'POST',
+        headers:{
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type':'application/json',
+          Prefer:'return=minimal'
+        },
+        body: JSON.stringify({
+          message: text,
+          sent_by: (typeof empAgentName !== 'undefined' && empAgentName) ? empAgentName : 'Admin',
+          target_count: targetIds.length,
+          target_ids: targetIds,
+          sent_ts: ts
+        })
+      });
+    }catch(e){ console.error('Broadcast log insert failed', e); }
+
     closeBroadcastModal();
     showToast(`Broadcast পাঠানো হয়েছে (${targetIds.length} জন এজেন্টকে)।`);
-    if(currentTab === 'EMPCHAT') refreshAdminChatList();
+    if(currentTab === 'EMPCHAT'){ refreshAdminChatList(); loadBroadcastHistory(); }
   }catch(e){
     console.error('Broadcast failed', e);
     if(errBox) errBox.textContent = 'Broadcast পাঠাতে ব্যর্থ হয়েছে, আবার চেষ্টা করুন।';
@@ -5659,6 +5801,24 @@ function startChatPolling(){
   chatPollInterval = setInterval(runChatPollTick, CHAT_POLL_MS);
 }
 startChatPolling();
+
+/* ===================== CHAT REALTIME (Supabase) =====================
+   chat_threads টেবিলে যেকোনো insert/update হলে সাথে সাথে runChatPollTick()
+   চালিয়ে UI রিফ্রেশ করে দেয় — ১৫ সেকেন্ড পোলিং-এর জন্য আর অপেক্ষা করতে হয় না।
+   পোলিং (উপরে) safety-net হিসেবে চলতেই থাকে, যদি কখনো realtime সংযোগ ছিঁড়ে যায়। */
+let chatRealtimeChannel = null;
+function initChatRealtime(){
+  if(!sbClient || chatRealtimeChannel) return;
+  try{
+    chatRealtimeChannel = sbClient
+      .channel('chat_threads_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_threads' }, () => {
+        runChatPollTick();
+      })
+      .subscribe();
+  }catch(e){ console.error('Chat realtime সংযোগ ব্যর্থ, পোলিং দিয়ে চলবে', e); }
+}
+initChatRealtime();
 /* ব্রাউজার ট্যাব মিনিমাইজ/অন্য ট্যাবে থাকা অবস্থায় setInterval অনেক ধীর হয়ে যায় (throttle) —
    তাই ট্যাবে ফিরে আসার সাথে সাথেই (বা উইন্ডো ফোকাস পেলে) সাথে সাথে একবার চেক করে নেওয়া হচ্ছে,
    যাতে ম্যানুয়াল রিফ্রেশ ছাড়াই আনরিড ব্যাজ/"New message received" আপ-টু-ডেট থাকে। */
@@ -9503,6 +9663,16 @@ setInterval(updateWelcome,1000);
       <textarea id="broadcastMessageInput" rows="4" placeholder="যেমন: আজকের মধ্যে সবাইকে নতুন গাইডলাইন পড়ে নিতে হবে..."
         style="width:100%; resize:vertical; background:var(--surface,#0F1D30); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-size:13.5px; font-family:inherit;"></textarea>
     </div>
+    <div class="field">
+      <label style="display:flex; align-items:center; justify-content:space-between;">
+        <span>পাঠানো হবে যাদের কাছে</span>
+        <span style="display:flex; gap:6px;">
+          <button type="button" class="btn small" onclick="broadcastSelectAll(true)">সব সিলেক্ট</button>
+          <button type="button" class="btn small" onclick="broadcastSelectAll(false)">সব বাদ</button>
+        </span>
+      </label>
+      <div id="broadcastTargetList" class="broadcast-target-list"></div>
+    </div>
     <div class="field" id="broadcastTargetInfo" style="font-size:11.5px; color:var(--text-muted); margin-top:6px;"></div>
     <button class="login-btn" id="broadcastSendBtn" onclick="sendBroadcastAnnouncement()">সবাইকে পাঠান</button>
     <div class="login-error" id="broadcastError"></div>
@@ -9510,6 +9680,117 @@ setInterval(updateWelcome,1000);
 </div>
 
 <style>
+
+.broadcast-history-box{
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  margin:0 0 16px 0;
+  background:var(--surface,#0F1D30);
+}
+.broadcast-history-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-weight:600;
+  font-size:13.5px;
+  margin-bottom:10px;
+}
+.broadcast-history-list{
+  max-height:220px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.broadcast-history-item{
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px 10px;
+  background:var(--surface-2,#14253D);
+}
+.broadcast-history-msg{
+  font-size:13px;
+  margin-bottom:6px;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.broadcast-history-meta{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  align-items:center;
+  font-size:11px;
+  color:var(--text-muted);
+}
+.broadcast-history-meta .btn.small{
+  margin-left:auto;
+}
+.broadcast-read-status{
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px dashed var(--border);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.broadcast-read-summary{
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--text);
+  margin-bottom:2px;
+}
+.broadcast-read-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:12px;
+  padding:4px 6px;
+  border-radius:6px;
+  background:var(--surface,#0F1D30);
+}
+.broadcast-read-row .read-yes{
+  color:var(--excellent);
+  font-weight:600;
+  white-space:nowrap;
+}
+.broadcast-read-row .read-no{
+  color:var(--text-muted);
+  white-space:nowrap;
+}
+
+.broadcast-target-list{
+  max-height:220px;
+  overflow-y:auto;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:6px;
+  margin-top:6px;
+  background:var(--surface,#0F1D30);
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.broadcast-target-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 8px;
+  border-radius:6px;
+  font-size:13px;
+  cursor:pointer;
+}
+.broadcast-target-item:hover{
+  background:var(--surface-2,#14253D);
+}
+.broadcast-target-item input[type="checkbox"]{
+  width:15px;
+  height:15px;
+  flex-shrink:0;
+  accent-color:var(--agent);
+  cursor:pointer;
+}
 
 .emp-switch-row{
   display:flex; align-items:center; justify-content:center; gap:10px;
