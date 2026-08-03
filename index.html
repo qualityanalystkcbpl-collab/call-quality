@@ -8,7 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root{
   --bg:#070F19;
@@ -134,6 +135,7 @@ body.light-theme .bg-floating-circles span{
 @media (prefers-reduced-motion: reduce){
   .bg-floating-circles{ display:none; }
 }
+
 .mono{font-family:'IBM Plex Mono',monospace;}
 .display{font-family:'Space Grotesk',sans-serif;}
 
@@ -1799,6 +1801,17 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 .btn:hover{border-color:var(--agent);background:var(--surface-3);}
 .btn.primary{background:var(--agent);color:#04211C;border-color:var(--agent);}
 .btn.primary:hover{opacity:.9;}
+
+/* Icon-only Excel download button, used right above every table */
+.xlsx-btn-row{ display:flex; justify-content:flex-end; margin-bottom:6px; }
+.xlsx-icon-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:30px; height:30px; border-radius:7px; border:none; cursor:pointer;
+  background:#1E7145; box-shadow:0 2px 8px rgba(0,0,0,.3);
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease;
+}
+.xlsx-icon-btn:hover{ transform:translateY(-2px) scale(1.1); box-shadow:0 6px 16px rgba(33,115,70,.55); }
+.xlsx-icon-btn:active{ transform:scale(.92); }
 .btn.gold{background:var(--admin);color:#2B1D06;border-color:var(--admin);}
 .btn.danger{color:var(--need);border-color:rgba(224,82,74,0.3);}
 .btn.danger:hover{background:rgba(224,82,74,0.1);border-color:var(--need);}
@@ -2072,6 +2085,11 @@ main.content{flex:1;padding:0 24px 80px 0;min-width:0;}
 .chart-anim-in{
   animation:chartBoxIn .6s cubic-bezier(.22,1,.36,1);
 }
+/* LOB Wise Data — shrink Monthly Trend & Overall Average chart boxes, single-column grid since
+   Latest Month / Performance Tier Distribution charts were removed */
+.lobdata-trend-box{ height:190px; }
+.lobdata-avg-only-grid{ grid-template-columns:1fr; max-width:520px; }
+.lobdata-avg-box{ height:230px; }
 @keyframes chartBoxIn{
   0%{ opacity:0; transform:translateY(14px) scale(.97); }
   100%{ opacity:1; transform:translateY(0) scale(1); }
@@ -2478,6 +2496,24 @@ input[type=file]{display:none;}
     color:#7cc6ff;
     font-weight:700;
     font-family:'IBM Plex Mono',monospace;
+}
+.page-footer-signature{
+    text-align:center;
+    font-size:10px;
+    line-height:1.7;
+    color:var(--text-muted, #7C8CA3);
+    padding:14px 0 4px 0;
+    margin-top:12px;
+    border-top:1px dashed var(--border, #203859);
+    animation: footerSignatureIn .8s ease both, footerSignatureBreathe 4s ease-in-out 1s infinite;
+}
+@keyframes footerSignatureIn{
+    from{ opacity:0; transform:translateY(6px); }
+    to{ opacity:.7; transform:translateY(0); }
+}
+@keyframes footerSignatureBreathe{
+    0%,100%{ opacity:.55; }
+    50%{ opacity:.9; }
 }
 
 .info-card{
@@ -2956,6 +2992,149 @@ transform:translateY(0);
   color:#FFD27A;
   border-color:rgba(227,168,87,0.5);
 }
+
+/* LOB Wise Data table — richer 5-tier conditional formatting + trend arrows + row entrance animation */
+.lobdata-row{ animation: lobDataRowIn .4s ease both; }
+@keyframes lobDataRowIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+.lobdata-cell{
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  min-width:64px; padding:10px 14px; border-radius:10px;
+  font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13px;
+  border:1px solid transparent;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.lobdata-cell:hover{ transform:translateY(-2px) scale(1.05); box-shadow:0 6px 16px rgba(0,0,0,.35); z-index:2; position:relative; }
+.lobdata-cell.agent-name{
+  justify-content:flex-start; min-width:170px; font-family:'Inter',sans-serif;
+  font-weight:700; font-size:13.5px; color:var(--text); background:var(--surface); border:1px solid var(--border);
+}
+.lobdata-cell.na{ color:var(--text-muted); background:rgba(255,255,255,.03); border:1px dashed var(--border); }
+.lobdata-cell.top{ color:#2B1D06; background:linear-gradient(135deg,#FFD27A,#E3A857); border-color:rgba(227,168,87,.7); box-shadow:0 0 12px rgba(227,168,87,.3); }
+.lobdata-cell.excellent{ color:#eafff3; background:linear-gradient(135deg,#1b6b46,#0f4530); border-color:rgba(63,191,127,.5); }
+.lobdata-cell.good{ color:#3a2f00; background:linear-gradient(135deg,#f4dd66,#e0c341); border-color:rgba(224,195,65,.6); }
+.lobdata-cell.average{ color:#fff3e6; background:linear-gradient(135deg,#a85b28,#7a4019); border-color:rgba(224,138,63,.55); }
+.lobdata-cell.need{ color:#fff0ef; background:linear-gradient(135deg,#8a2b26,#5c1a17); border-color:rgba(224,82,74,.5); }
+.lobdata-cell.grand-total{
+  font-weight:900; color:#2B1D06;
+  background:linear-gradient(135deg,#FFD27A,#E3A857);
+  border-color:rgba(227,168,87,.7);
+  box-shadow:0 0 14px rgba(227,168,87,.35);
+}
+.lobdata-cell.avg-col{ outline:2px solid rgba(96,165,250,.55); outline-offset:-2px; }
+.lobdata-row-total .lobdata-cell.agent-name{
+  background:linear-gradient(135deg,#3D2E18,#2B1D06); color:#FFD27A; border-color:rgba(227,168,87,.5);
+}
+.trend-arrow{ font-size:10px; opacity:.85; }
+.trend-arrow.up{ color:#3FBF7F; }
+.trend-arrow.down{ color:#E0524A; }
+.trend-arrow.flat{ color:var(--text-muted); }
+.lobdata-table thead th.avg-head{ background:linear-gradient(135deg,#274a7a,#1B3150); }
+.lobdata-legend{
+  display:flex; flex-wrap:wrap; gap:14px; padding:12px 6px 4px 6px;
+  font-size:11.5px; color:var(--text-muted); align-items:center;
+}
+.lobdata-legend span{ display:flex; align-items:center; gap:6px; }
+.lobdata-legend i{ display:inline-block; width:13px !important; height:13px !important; min-width:13px !important; padding:0 !important; border-radius:4px; }
+
+/* LOB Wise Data — colourful animated hero banner above the panel header */
+.lobdata-hero{
+  position:relative; overflow:hidden; border-radius:16px; padding:20px 24px; margin-bottom:18px;
+  background:linear-gradient(120deg,#7C3AED,#3B82F6,#10B981,#F59E0B,#EC4899,#7C3AED);
+  background-size:400% 400%;
+  animation:lobHeroFlow 12s ease infinite;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+.lobdata-hero::before{
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(circle at 20% 30%, rgba(255,255,255,.18), transparent 45%),
+             radial-gradient(circle at 80% 70%, rgba(255,255,255,.12), transparent 40%);
+  animation:lobHeroShimmer 5s ease-in-out infinite;
+}
+@keyframes lobHeroFlow{
+  0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;}
+}
+@keyframes lobHeroShimmer{
+  0%,100%{opacity:.7;} 50%{opacity:1;}
+}
+.lobdata-hero h1{ position:relative; z-index:1; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.35); margin:0; }
+.lobdata-hero p{ position:relative; z-index:1; color:rgba(255,255,255,.92); margin:6px 0 0 0; }
+.lobdata-hero .btn{ position:relative; z-index:1; }
+.lobdata-datetime{
+  position:absolute; z-index:2; top:20px; right:24px; margin-top:0;
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11.5px; font-weight:600; color:rgba(255,255,255,.92);
+  background:rgba(0,0,0,.22); padding:6px 12px; border-radius:20px;
+  backdrop-filter:blur(4px); font-family:'IBM Plex Mono',monospace;
+}
+@media (max-width: 640px){
+  .lobdata-datetime{ position:relative; top:auto; right:auto; margin-top:10px; }
+}
+.lobdata-access-ticker{
+  overflow:hidden; white-space:nowrap;
+  margin:0 0 14px 0; padding:6px 0;
+  border-top:1px dashed var(--border, #203859);
+  border-bottom:1px dashed var(--border, #203859);
+}
+.lobdata-access-ticker span{
+  display:inline-block; padding-left:100%;
+  font-size:11px; font-weight:600; letter-spacing:.3px;
+  color:var(--text-muted, #7C8CA3);
+  animation: lobdataTickerScroll 14s linear infinite;
+}
+@keyframes lobdataTickerScroll{
+  0%{ transform:translateX(0); }
+  100%{ transform:translateX(-100%); }
+}
+
+/* Animated glowing border on the chart boxes inside LOB Wise Data */
+.lobdata-chart-box{
+  position:relative; border-radius:14px; overflow:hidden;
+  transition:transform .3s ease, box-shadow .3s ease;
+}
+.lobdata-chart-box::before{
+  content:''; position:absolute; inset:-2px; border-radius:14px; z-index:0;
+  background:linear-gradient(120deg,#3FBF7F,#60A5FA,#8B5CF6,#EC4899,#3FBF7F);
+  background-size:300% 300%;
+  animation:lobHeroFlow 8s ease infinite;
+  opacity:.35; transition:opacity .3s ease;
+}
+.lobdata-chart-box:hover::before{ opacity:.85; }
+.lobdata-chart-box:hover{ transform:translateY(-4px); box-shadow:0 14px 34px rgba(0,0,0,.4); }
+.lobdata-chart-box > *{ position:relative; z-index:1; }
+.lobdata-chart-box{ background:var(--surface); }
+.lobdata-chart-box canvas{ position:relative; z-index:1; }
+
+/* Richer table row + cell hover behaviour */
+.lobdata-row{ transition:background .2s ease; }
+.lobdata-row:hover{ background:rgba(96,165,250,.06); }
+.lobdata-cell{ position:relative; }
+.lobdata-cell::after{
+  content:''; position:absolute; inset:0; border-radius:10px; z-index:0;
+  background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,.35) 50%, transparent 80%);
+  background-size:250% 100%; background-position:150% 0;
+  opacity:0; pointer-events:none;
+}
+.lobdata-cell:hover::after{ opacity:1; animation:lobCellShine .6s ease; }
+@keyframes lobCellShine{
+  from{ background-position:150% 0; }
+  to{ background-position:-50% 0; }
+}
+.lobdata-cell > *{ position:relative; z-index:1; }
+.lobdata-cell:hover{ transform:translateY(-3px) scale(1.08); box-shadow:0 8px 20px rgba(0,0,0,.4); }
+.lob-tab{ transition:transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease; }
+.lob-tab:hover{ transform:translateY(-2px) scale(1.04); box-shadow:0 6px 16px rgba(0,0,0,.3); }
+
+/* Scroll hint under the LOB Wise Data hero banner */
+.lobdata-scroll-hint{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  margin:0 0 18px 0; padding:6px 16px; cursor:pointer; user-select:none;
+  font-size:12px; font-weight:600; color:var(--text-muted);
+  text-align:center; animation: lobScrollFade 2.2s ease-in-out infinite;
+}
+.lobdata-scroll-hint:hover{ color:var(--text); }
+.lobdata-scroll-arrow{ font-size:16px; display:inline-block; animation: lobScrollBounce 1.4s ease-in-out infinite; }
+@keyframes lobScrollBounce{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(6px); } }
+@keyframes lobScrollFade{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
 
 /* ============================================================
    CATV / BB TECH / BB RENEWAL — animated colorful sub-tab buttons
@@ -3734,6 +3913,7 @@ transform:translateY(0);
 <div class="nav-item" data-tab="CALLSCRIPTHINDI" onclick="switchTab('CALLSCRIPTHINDI')"><span class="dot"></span>Call Script in Hindi</div>
 <div class="nav-item" data-tab="AUDITPARAMETER" onclick="switchTab('AUDITPARAMETER')"><span class="dot"></span>Audit Parameter</div>
 <div class="nav-item" data-tab="DASHBOARDAPRMAR" onclick="switchTab('DASHBOARDAPRMAR')"><span class="dot"></span>Dashboard Apr'25-Mar'26</div>
+<div class="nav-item" data-tab="LOBDATA" onclick="switchTab('LOBDATA')"><span class="dot"></span>📈 LOB Wise Data</div>
 
 <div class="nav-item"
      data-tab="UPDATES"
@@ -3857,6 +4037,8 @@ transform:translateY(0);
       <div class="panel" id="panel-DASHBOARDAPRMAR"></div>
       <!-- Month wise Data (previous month) — two separate Google Sheets, two separate Apps Scripts -->
       <div class="panel" id="panel-MONTHDATA"></div>
+      <!-- LOB Wise Data — one Google Sheet, three LOB tabs (CATV / BB Tech Support / BB Renewal), each with a chart -->
+      <div class="panel" id="panel-LOBDATA"></div>
       <!-- Updates panel -->
       <div class="panel" id="panel-UPDATES">
         <div class="panel-header">
@@ -3963,6 +4145,22 @@ transform:translateY(0);
               <button class="btn small" onclick="saDownload('getDailySummary','Daily_Summary')">⬇ Daily Summary</button>
             </div>
             <div style="overflow-x:auto;">
+              <div class="xlsx-btn-row"><button class="xlsx-icon-btn" title="Download as Excel" onclick="exportTableToExcel('saAgentTable','All_Agents')">
+                <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="21" y="7" width="21" height="34" rx="2" fill="#F5F6F5"/>
+                  <g stroke="#1E7145" stroke-width="1.1">
+                    <line x1="21" y1="14.5" x2="42" y2="14.5"/>
+                    <line x1="21" y1="22" x2="42" y2="22"/>
+                    <line x1="21" y1="29.5" x2="42" y2="29.5"/>
+                    <line x1="21" y1="37" x2="42" y2="37"/>
+                    <line x1="28" y1="7" x2="28" y2="41"/>
+                    <line x1="35" y1="7" x2="35" y2="41"/>
+                  </g>
+                  <path d="M6 4h18l6 6v33a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="#1E7145"/>
+                  <path d="M24 4l6 6h-6z" fill="#0C4B2C"/>
+                  <text x="7" y="29" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#FFFFFF">X</text>
+                </svg>
+              </button></div>
               <table class="score-table" id="saAgentTable">
                 <thead><tr><th>Employee ID</th><th>Name</th><th>Team</th><th>Process</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody id="saAgentTableBody"><tr><td colspan="7">Refresh চাপুন agent list দেখতে।</td></tr></tbody>
@@ -4130,7 +4328,12 @@ transform:translateY(0);
     <div class="page-footer-meta">
       <div class="page-footer-dev">© 2026 Developed &amp; Maintained by <span>Kalyan Sarkar</span></div>
       <div class="page-footer-version">👤 Quality Analyst | Version 1.0 <span>(Live)</span></div>
-      <div class="page-footer-visitors" id="pageFooterVisitors">👁 Total Visit Count: <span id="visitorCountValue">…</span></div>
+      <div class="page-footer-visitors" id="pageFooterVisitors">👁 Total Visitors: <span id="visitorCountValue">…</span></div>
+    </div>
+    <div class="page-footer-signature">
+      GTPL-KCBPL QUALITY ANALYSIS TEAM<br>
+      Design and develop by - Kalyan Sarkar<br>
+      Any issues please contact at - kalyan.sarkar@gtplkcbpl.com
     </div>
   </footer>
 </div>
@@ -4160,12 +4363,6 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi5cSRHtLhQ8ykWqbC
 
 const SUPABASE_URL = "https://iqjmlkpkrtdrwhksmvai.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxam1sa3BrcnRkcndoa3NtdmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5NzIyMDIsImV4cCI6MjEwMDU0ODIwMn0.sXxh4eXLmDax2be9yYmKTT2oUF7NwgLOmaHTfdFO2pY";
-/* supabase-js client, শুধু চ্যাট রিয়েলটাইম সাবস্ক্রাইব করার জন্য ব্যবহার হচ্ছে।
-   বাকি সব Supabase কল (banners, sessions ইত্যাদি) আগের মতোই raw fetch() দিয়ে হচ্ছে,
-   এখানে কিছু বদলানো হয়নি। */
-const sbClient = (typeof supabase !== 'undefined' && supabase.createClient)
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
 const BANNER_BUCKET = "banners";
 const BANNER_MAX_IMAGE_MB = 5;   // images/GIFs above this are rejected client-side
 const BANNER_MAX_VIDEO_MB = 15;  // videos above this are rejected client-side — keeps Home page load fast
@@ -4206,8 +4403,17 @@ const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweHhwH_N
    deployments. Deploy the matching Code.gs inside each spreadsheet (Extensions > Apps Script),
    then paste the resulting /exec URL below. Until a real URL is pasted in, that section just shows
    a friendly "not set up yet" message instead of breaking. */
-const MONTHDATA_RAW_WEB_APP_URL   = "https://script.google.com/macros/s/AKfycbzmDR7gUlWWB8otqttA2jTSozqSbmsjL_y6SreiAW67sh35X1zYj6c_vdDLN9eh6kJn1w/exec";   // "Month wise raw data 2026-27" sheet
-const MONTHDATA_PARAM_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8W5xkSwmIYv5SoR4wS8pdHLydrl7s_29ywWExn-WJ6YqFfFMY0ufjogqXOachEDwCcg/exec"; // "month wais audit data 2026" sheet
+const MONTHDATA_RAW_WEB_APP_URL   = "PASTE_RAW_DATA_APPS_SCRIPT_URL_HERE";   // "Month wise raw data 2026-27" sheet
+const MONTHDATA_PARAM_WEB_APP_URL = "PASTE_PARAMETER_REPORT_APPS_SCRIPT_URL_HERE"; // "month wais audit data 2026" sheet
+
+/* LOB Wise Data tab — ONE Google Sheet, ONE table. Rows = CATV / BB Tech Support / BB Renewal,
+   columns = months (April'26, May'26, ...) + an Average column. Deploy ONE Apps Script inside
+   that spreadsheet (Extensions > Apps Script, code given separately), paste the /exec URL below.
+   A "GRAND TOTAL" row (average of the 3 LOB rows, i.e. "average of averages") is computed
+   automatically by the app — it does not need to exist in the sheet itself. */
+const LOBDATA_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxOGm2OUBGutTlwN_m37IssJiBb5rOXLBSzk_NywZGgeyx0wIwVlUy_5Pn88QpqfKMJ/exec";
+const LOBDATA_SHEET_NAME = 'LOB WISE DATA'; // change this to match your actual sheet/tab name
+let lobDataCache = null;
 const RAW_SHEET_TABS = {
   AUDITNEW:        { label: 'Audit Sheet (NEW)',              sheetName: 'Audit sheet(NEW)',        icon: '🗂️' },
   CATVDISPO:       { label: 'CATV DISPO',                     sheetName: 'CATV DISPO',               icon: '📋' },
@@ -5019,45 +5225,13 @@ function chatHeaderClockLabel(){
   const timePart = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
   return `${datePart} • ${timePart}`;
 }
-/* ===================== CHAT STORAGE (Supabase — realtime) =====================
-   আগে পুরো chatThreads object একটাই GAS "settings" key হিসেবে সেভ হতো এবং
-   ১৫ সেকেন্ড পরপর পোল করে রিফ্রেশ হতো। এখন প্রতিটা এজেন্টের থ্রেড আলাদা row
-   হিসেবে Supabase-এর chat_threads টেবিলে থাকে, আর Realtime subscription দিয়ে
-   মেসেজ পাঠানোর সাথে সাথেই অন্য পাশে দেখা যায়। In-memory shape (threads object,
-   keys = employeeId) আগের মতোই আছে, তাই বাকি কোনো ফাংশন বদলাতে হয়নি। */
-const CHAT_TABLE = 'chat_threads';
 async function getChatThreads(){
-  try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${CHAT_TABLE}?select=employee_id,data`, {
-      headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
-    });
-    const rows = await res.json();
-    const threads = {};
-    (Array.isArray(rows) ? rows : []).forEach(r => { if(r && r.employee_id) threads[r.employee_id] = r.data || {}; });
-    return threads;
-  }catch(e){ console.error('Failed to load chat threads', e); return {}; }
+  try{ return (await storageGet('chatThreads')) || {}; }
+  catch(e){ console.error('Failed to load chat threads', e); return {}; }
 }
-/* keys: ঐচ্ছিক — কোন employeeId(গুলোর) থ্রেড সত্যিই আপলোড করতে হবে সেটা বলে দেয়,
-   যাতে একটা মেসেজ পাঠালে বাকি সবার থ্রেড আবার আপলোড না হয়। না দিলে (broadcast-এর
-   ক্ষেত্রে) threads object-এ থাকা সবগুলো key-ই আপলোড হবে। */
-async function saveChatThreads(threads, keys){
-  try{
-    const targetKeys = Array.isArray(keys) ? keys : Object.keys(threads || {});
-    const rows = targetKeys
-      .filter(k => threads && threads[k])
-      .map(k => ({ employee_id: k, data: threads[k] }));
-    if(!rows.length) return;
-    await fetch(`${SUPABASE_URL}/rest/v1/${CHAT_TABLE}?on_conflict=employee_id`, {
-      method:'POST',
-      headers:{
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type':'application/json',
-        Prefer:'resolution=merge-duplicates'
-      },
-      body: JSON.stringify(rows)
-    });
-  }catch(e){ console.error('Failed to save chat threads', e); }
+async function saveChatThreads(threads){
+  try{ await storageSet('chatThreads', threads); }
+  catch(e){ console.error('Failed to save chat threads', e); }
 }
 function trimThreadMessages(thread){
   if(thread.messages.length > 200) thread.messages = thread.messages.slice(thread.messages.length - 200);
@@ -5099,7 +5273,7 @@ async function sendEmployeeChatMessage(){
     }
 
     trimThreadMessages(threads[key]);
-    await saveChatThreads(threads, [key]);
+    await saveChatThreads(threads);
     localStorage.setItem('qa_emp_chat_seen_ts', String(Date.now()));
     renderEmployeeChatMessages(threads[key]);
   }catch(e){
@@ -5149,7 +5323,7 @@ async function deleteEmployeeChatMessage(msgId){
     if(!msg || msg.from!=='employee') return;
     msg.deleted = true;
     msg.text = '';
-    await saveChatThreads(threads, [empEmployeeId]);
+    await saveChatThreads(threads);
     renderEmployeeChatMessages(thread);
   }catch(e){
     console.error(e);
@@ -5169,7 +5343,7 @@ async function markThreadReadByEmployee(){
     if(now - already < 8000) return; // avoid hammering the backend on every poll tick
     thread.lastReadByEmployeeAt = now;
     thread.employeeUnread = false;
-    await saveChatThreads(threads, [empEmployeeId]);
+    await saveChatThreads(threads);
   }catch(e){ console.error('Failed to mark thread read by employee', e); }
 }
 async function refreshEmployeeChat(){
@@ -5242,107 +5416,13 @@ async function renderAdminChatList(){
         <button class="btn primary" onclick="renderAdminChatList()">↻ Refresh</button>
       </div>
     </div>
-    <div class="broadcast-history-box superadmin-only" id="broadcastHistoryBox" style="display:none;">
-      <div class="broadcast-history-header">
-        <span>📜 Broadcast History <span class="mono" style="color:var(--text-muted); font-size:10.5px;">(শুধু Super Admin দেখতে পাচ্ছেন)</span></span>
-        <button class="btn small" onclick="loadBroadcastHistory()">↻ Refresh</button>
-      </div>
-      <div id="broadcastHistoryList" class="broadcast-history-list">
-        <div class="chat-empty-hint">লোড হচ্ছে...</div>
-      </div>
-    </div>
     <div id="adminChatBody" class="admin-chat-layout">
       <div id="adminChatThreadList" class="admin-chat-thread-list"><div class="empty-state" style="border:none;">লোড হচ্ছে...</div></div>
       <div id="adminChatThreadView" class="admin-chat-thread-view">
         <div class="chat-empty-hint">বাম দিক থেকে একজন এজেন্ট সিলেক্ট করুন</div>
       </div>
     </div>`;
-  const historyBox = document.getElementById('broadcastHistoryBox');
-  if(historyBox && superAdminToken){
-    historyBox.style.display = '';
-    loadBroadcastHistory();
-  }
   await refreshAdminChatList();
-}
-/* Broadcast messages এখন পাঠানোর সময় broadcast_log টেবিলে লগ হয়ে যায়, যাতে
-   Super Admin এখান থেকে দেখতে পারেন কে, কবে, কতজনকে কী bulk মেসেজ পাঠিয়েছে। */
-/* প্রতিটা broadcast row-এর ডাটা (message, target_ids, sent_ts ইত্যাদি) এখানে
-   ক্যাশ থাকে, যাতে "কে কে পড়েছে" বাটনে ক্লিক করলে আবার fetch করতে না হয়। */
-let broadcastLogRows = {};
-async function loadBroadcastHistory(){
-  const listEl = document.getElementById('broadcastHistoryList');
-  if(!listEl) return;
-  listEl.innerHTML = '<div class="chat-empty-hint">লোড হচ্ছে...</div>';
-  try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/broadcast_log?select=*&order=created_at.desc&limit=50`, {
-      headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
-    });
-    const rows = await res.json();
-    if(!Array.isArray(rows) || !rows.length){
-      listEl.innerHTML = '<div class="chat-empty-hint">এখনো কোনো Broadcast পাঠানো হয়নি।</div>';
-      broadcastLogRows = {};
-      return;
-    }
-    broadcastLogRows = {};
-    rows.forEach(r => { broadcastLogRows[r.id] = r; });
-    listEl.innerHTML = rows.map(r => `
-      <div class="broadcast-history-item" id="broadcastItem-${escapeAttr(r.id)}">
-        <div class="broadcast-history-msg">${escapeHtml(r.message||'')}</div>
-        <div class="broadcast-history-meta">
-          <span>👤 ${escapeHtml(r.sent_by||'Admin')}</span>
-          <span>👥 ${r.target_count||0} জন এজেন্ট</span>
-          <span>🕒 ${escapeHtml(chatTimeLabel(new Date(r.created_at).getTime()))}</span>
-          <button class="btn small" id="broadcastReadBtn-${escapeAttr(r.id)}" onclick="toggleBroadcastReadStatus('${r.id}', this)">👁️ কে কে পড়েছে</button>
-        </div>
-      </div>`).join('');
-  }catch(e){
-    console.error('Broadcast history load failed', e);
-    listEl.innerHTML = '<div class="chat-empty-hint">লোড করতে ব্যর্থ হয়েছে।</div>';
-  }
-}
-/* একটা নির্দিষ্ট broadcast কে কে পড়েছে তা agent থ্রেডের lastReadByEmployeeAt-এর
-   সাথে broadcast পাঠানোর ts মিলিয়ে বের করে (একই মেকানিজম, যেটা ✓✓ read-tick দেখাতে
-   এমনিতেই ব্যবহার হয়)। */
-async function toggleBroadcastReadStatus(logId, btnEl){
-  const item = document.getElementById(`broadcastItem-${logId}`);
-  if(!item) return;
-  const existing = document.getElementById(`broadcastReadPanel-${logId}`);
-  if(existing){
-    const show = existing.style.display === 'none';
-    existing.style.display = show ? '' : 'none';
-    if(btnEl) btnEl.textContent = show ? '👁️ লুকান' : '👁️ কে কে পড়েছে';
-    return;
-  }
-  const row = broadcastLogRows[logId];
-  if(!row){ showToast('তথ্য পাওয়া যায়নি, আবার Refresh করুন।'); return; }
-  if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'লোড হচ্ছে...'; }
-  try{
-    const targetIds = Array.isArray(row.target_ids) ? row.target_ids : [];
-    const sentTs = Number(row.sent_ts) || new Date(row.created_at).getTime();
-    const threads = await getChatThreads();
-    let readCount = 0;
-    const rowsHtml = targetIds.map(id=>{
-      const t = threads[id];
-      const name = (t && t.employeeName) || id;
-      const readAt = (t && t.lastReadByEmployeeAt) || 0;
-      const isRead = readAt >= sentTs;
-      if(isRead) readCount++;
-      return `<div class="broadcast-read-row">
-        <span>${escapeHtml(name)} <span class="mono" style="color:var(--text-muted); font-size:10px;">(${escapeHtml(id)})</span></span>
-        <span class="${isRead ? 'read-yes' : 'read-no'}">${isRead ? '✓✓ পড়েছে' : '✓ পড়েনি'}</span>
-      </div>`;
-    }).join('');
-    const panel = document.createElement('div');
-    panel.id = `broadcastReadPanel-${logId}`;
-    panel.className = 'broadcast-read-status';
-    panel.innerHTML = `<div class="broadcast-read-summary">${readCount}/${targetIds.length} জন পড়েছেন</div>${rowsHtml || '<div class="chat-empty-hint">কোনো টার্গেট পাওয়া যায়নি।</div>'}`;
-    item.appendChild(panel);
-    if(btnEl){ btnEl.disabled = false; btnEl.textContent = '👁️ লুকান'; }
-  }catch(e){
-    console.error('Broadcast read status load failed', e);
-    if(btnEl){ btnEl.disabled = false; btnEl.textContent = '👁️ কে কে পড়েছে'; }
-    showToast('Read status লোড করতে ব্যর্থ হয়েছে।');
-  }
 }
 async function updateAdminChatNavBadge(){
   const badge = document.getElementById('empChatNavBadge');
@@ -5394,7 +5474,7 @@ async function openAdminChatThread(employeeId){
   if(!thread) return;
   thread.adminUnread = false;
   thread.lastReadByAdminAt = Date.now();
-  await saveChatThreads(threads, [employeeId]);
+  await saveChatThreads(threads);
   updateAdminChatNavBadge();
 
   const view = document.getElementById('adminChatThreadView');
@@ -5442,7 +5522,7 @@ async function deleteAdminChatMessage(msgId){
     const thread = threads[chatOpenEmployeeId];
     if(!thread) return;
     thread.messages = (thread.messages||[]).filter(m=>m.id!==msgId);
-    await saveChatThreads(threads, [chatOpenEmployeeId]);
+    await saveChatThreads(threads);
     renderAdminChatMessages(thread);
     await refreshAdminChatList();
   }catch(e){
@@ -5466,7 +5546,7 @@ async function sendAdminChatReply(){
     thread.employeeUnread = true;
     thread.adminUnread = false;
     trimThreadMessages(thread);
-    await saveChatThreads(threads, [chatOpenEmployeeId]);
+    await saveChatThreads(threads);
     renderAdminChatMessages(thread);
     await refreshAdminChatList();
   }catch(e){
@@ -5479,51 +5559,19 @@ async function sendAdminChatReply(){
 }
 
 /* ===================== BROADCAST ANNOUNCEMENT (Admin/Super Admin → all agents) ===================== */
-let broadcastNameMap = {};
-async function openBroadcastModal(){
+function openBroadcastModal(){
   const modal = document.getElementById('broadcastModal');
   const input = document.getElementById('broadcastMessageInput');
   const errBox = document.getElementById('broadcastError');
   const infoBox = document.getElementById('broadcastTargetInfo');
-  const listBox = document.getElementById('broadcastTargetList');
   if(errBox) errBox.textContent = '';
   if(input) input.value = '';
-  if(modal) modal.style.display = 'flex';
-  if(listBox) listBox.innerHTML = '<div class="chat-empty-hint">লোড হচ্ছে...</div>';
-
-  broadcastNameMap = {};
-  try{
-    // Super Admin এভাবে সিস্টেমে থাকা প্রতিটা এজেন্টের নাম আনতে পারে,
-    // এমনকি যাদের সাথে এখনো কোনো চ্যাট থ্রেড শুরু হয়নি তাদেরও।
-    if(superAdminToken){
-      const data = await empApiGet('listAgents', { token: superAdminToken });
-      if(data && data.ok && Array.isArray(data.agents)){
-        data.agents.forEach(a=>{ if(a && a.employeeId) broadcastNameMap[a.employeeId] = a.agentName || a.employeeId; });
-      }
-    }
-    const threads = await getChatThreads();
-    Object.keys(threads).forEach(id=>{ if(!broadcastNameMap[id]) broadcastNameMap[id] = threads[id].employeeName || id; });
-  }catch(e){ console.error('Broadcast target list load failed', e); }
-
   if(infoBox){
     infoBox.textContent = superAdminToken
-      ? 'নিচে সব এজেন্টের নাম দেখা যাচ্ছে — যাদের কাছে পাঠাতে চান না তাদের আনচেক করুন।'
-      : 'এই লিস্টে শুধু তারাই আছে, যাদের সাথে অন্তত একবার চ্যাট থ্রেড তৈরি হয়েছে। সবার কাছে পৌঁছাতে Super Admin দিয়ে পাঠান।';
+      ? 'এই মেসেজ System-এ থাকা সব এজেন্ট (এখনো চ্যাট না করা এজেন্টসহ) পাবে।'
+      : 'এই মেসেজ পাবে শুধু তারা, যাদের সাথে অন্তত একবার চ্যাট থ্রেড তৈরি হয়েছে। সবার কাছে পৌঁছাতে Super Admin দিয়ে পাঠান।';
   }
-
-  const ids = Object.keys(broadcastNameMap).sort((a,b)=> String(broadcastNameMap[a]).localeCompare(String(broadcastNameMap[b])));
-  if(listBox){
-    listBox.innerHTML = ids.length
-      ? ids.map(id => `
-        <label class="broadcast-target-item">
-          <input type="checkbox" class="broadcast-target-checkbox" value="${escapeAttr(id)}" checked>
-          <span>${escapeHtml(broadcastNameMap[id])} <span class="mono" style="color:var(--text-muted); font-size:10.5px;">(${escapeHtml(id)})</span></span>
-        </label>`).join('')
-      : '<div class="chat-empty-hint">কোনো এজেন্ট পাওয়া যায়নি।</div>';
-  }
-}
-function broadcastSelectAll(checked){
-  document.querySelectorAll('.broadcast-target-checkbox').forEach(cb => { cb.checked = checked; });
+  if(modal) modal.style.display = 'flex';
 }
 function closeBroadcastModal(){
   const modal = document.getElementById('broadcastModal');
@@ -5536,19 +5584,31 @@ async function sendBroadcastAnnouncement(){
   const text = (input && input.value || '').trim();
   if(errBox) errBox.textContent = '';
   if(!text){ if(errBox) errBox.textContent = 'একটি মেসেজ লিখুন।'; return; }
-
-  const targetIds = Array.from(document.querySelectorAll('.broadcast-target-checkbox:checked')).map(cb => cb.value);
-  if(!targetIds.length){ if(errBox) errBox.textContent = 'অন্তত একজন এজেন্ট সিলেক্ট করুন।'; return; }
-  if(!confirm(`সিলেক্ট করা ${targetIds.length} জন এজেন্টের চ্যাটে এই মেসেজটি পাঠাতে চান?`)) return;
+  if(!confirm('এই মেসেজটি সব এজেন্টের চ্যাটে একসাথে পাঠাতে চান?')) return;
 
   if(sendBtn){ sendBtn.disabled = true; sendBtn.textContent = 'পাঠানো হচ্ছে...'; }
   try{
     const threads = await getChatThreads();
+    const nameMap = {};
+
+    // Super Admin can reach every registered agent, even ones with no chat history yet.
+    if(superAdminToken){
+      try{
+        const data = await empApiGet('listAgents', { token: superAdminToken });
+        if(data && data.ok && Array.isArray(data.agents)){
+          data.agents.forEach(a=>{ if(a && a.employeeId) nameMap[a.employeeId] = a.agentName || a.employeeId; });
+        }
+      }catch(e){ console.error('listAgents fetch failed for broadcast', e); }
+    }
+    Object.keys(threads).forEach(id=>{ if(!nameMap[id]) nameMap[id] = threads[id].employeeName || id; });
+
+    const targetIds = Object.keys(nameMap);
+    if(!targetIds.length){ if(errBox) errBox.textContent = 'কোনো এজেন্ট খুঁজে পাওয়া যায়নি।'; return; }
+
     const ts = Date.now();
     targetIds.forEach(id=>{
-      const name = broadcastNameMap[id] || id;
-      if(!threads[id]) threads[id] = { employeeId: id, employeeName: name, messages: [] };
-      threads[id].employeeName = threads[id].employeeName || name;
+      if(!threads[id]) threads[id] = { employeeId: id, employeeName: nameMap[id], messages: [] };
+      threads[id].employeeName = threads[id].employeeName || nameMap[id];
       threads[id].messages.push({
         id: chatUid(), from:'admin', senderName:'Quality Team', text, ts, isBroadcast:true
       });
@@ -5558,31 +5618,10 @@ async function sendBroadcastAnnouncement(){
       trimThreadMessages(threads[id]);
     });
 
-    await saveChatThreads(threads, targetIds);
-
-    // Super Admin যেন পরে এসে দেখতে পারেন কে, কবে, কতজনকে কী broadcast পাঠিয়েছেন
-    try{
-      await fetch(`${SUPABASE_URL}/rest/v1/broadcast_log`, {
-        method:'POST',
-        headers:{
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type':'application/json',
-          Prefer:'return=minimal'
-        },
-        body: JSON.stringify({
-          message: text,
-          sent_by: (typeof empAgentName !== 'undefined' && empAgentName) ? empAgentName : 'Admin',
-          target_count: targetIds.length,
-          target_ids: targetIds,
-          sent_ts: ts
-        })
-      });
-    }catch(e){ console.error('Broadcast log insert failed', e); }
-
+    await saveChatThreads(threads);
     closeBroadcastModal();
     showToast(`Broadcast পাঠানো হয়েছে (${targetIds.length} জন এজেন্টকে)।`);
-    if(currentTab === 'EMPCHAT'){ refreshAdminChatList(); loadBroadcastHistory(); }
+    if(currentTab === 'EMPCHAT') refreshAdminChatList();
   }catch(e){
     console.error('Broadcast failed', e);
     if(errBox) errBox.textContent = 'Broadcast পাঠাতে ব্যর্থ হয়েছে, আবার চেষ্টা করুন।';
@@ -5608,7 +5647,7 @@ function runChatPollTick(){
           if(now - (t.lastReadByAdminAt||0) > 8000 || t.adminUnread){
             t.lastReadByAdminAt = now;
             t.adminUnread = false;
-            await saveChatThreads(threads, [chatOpenEmployeeId]);
+            await saveChatThreads(threads);
           }
         });
       }
@@ -5620,24 +5659,6 @@ function startChatPolling(){
   chatPollInterval = setInterval(runChatPollTick, CHAT_POLL_MS);
 }
 startChatPolling();
-
-/* ===================== CHAT REALTIME (Supabase) =====================
-   chat_threads টেবিলে যেকোনো insert/update হলে সাথে সাথে runChatPollTick()
-   চালিয়ে UI রিফ্রেশ করে দেয় — ১৫ সেকেন্ড পোলিং-এর জন্য আর অপেক্ষা করতে হয় না।
-   পোলিং (উপরে) safety-net হিসেবে চলতেই থাকে, যদি কখনো realtime সংযোগ ছিঁড়ে যায়। */
-let chatRealtimeChannel = null;
-function initChatRealtime(){
-  if(!sbClient || chatRealtimeChannel) return;
-  try{
-    chatRealtimeChannel = sbClient
-      .channel('chat_threads_live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_threads' }, () => {
-        runChatPollTick();
-      })
-      .subscribe();
-  }catch(e){ console.error('Chat realtime সংযোগ ব্যর্থ, পোলিং দিয়ে চলবে', e); }
-}
-initChatRealtime();
 /* ব্রাউজার ট্যাব মিনিমাইজ/অন্য ট্যাবে থাকা অবস্থায় setInterval অনেক ধীর হয়ে যায় (throttle) —
    তাই ট্যাবে ফিরে আসার সাথে সাথেই (বা উইন্ডো ফোকাস পেলে) সাথে সাথে একবার চেক করে নেওয়া হচ্ছে,
    যাতে ম্যানুয়াল রিফ্রেশ ছাড়াই আনরিড ব্যাজ/"New message received" আপ-টু-ডেট থাকে। */
@@ -6168,6 +6189,9 @@ async function saveNewsTicker(){
 /* ===================== NAVIGATION & TABS ===================== */
 async function switchTab(tab){
   currentTab = tab;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const contentEl = document.querySelector('main.content');
+  if (contentEl) contentEl.scrollTop = 0;
   document.querySelectorAll('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.tab===tab));
   document.querySelectorAll('.panel').forEach(p=> p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
@@ -6198,6 +6222,8 @@ async function switchTab(tab){
       await renderRawSheetTabPanel(tab);
     } else if (tab === 'MONTHDATA') {
       await renderMonthDataPanel(monthDataSection);
+    } else if (tab === 'LOBDATA') {
+      await renderLobDataPanel();
     } else if (tab === 'HELP') {
       renderHelpPanel();
     } else if (tab === 'QUICKLINK') {
@@ -6220,6 +6246,35 @@ function statusFor(score){
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
+
+/* ===================== GENERIC EXCEL DOWNLOAD (used above every table in the app) ===================== */
+/* Exports whatever is currently rendered inside a <table id="tableId"> to an .xlsx file — reads the
+   table exactly as shown (values, merged cells) rather than needing a separate copy of the data. */
+function exportTableToExcel(tableId, filename){
+  const table = document.getElementById(tableId);
+  if(!table){ alert('Table not found or not loaded yet.'); return; }
+  const wb = XLSX.utils.table_to_book(table, { sheet: String(filename||'Sheet1').slice(0,31) });
+  XLSX.writeFile(wb, `${filename || 'Export'}_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+/* Small icon-only Excel button (no text, per design) — drop this right above any table. */
+function xlsxDownloadBtnHtml(tableId, filename){
+  return `<div class="xlsx-btn-row"><button class="xlsx-icon-btn" title="Download as Excel" onclick="exportTableToExcel('${tableId}','${filename}')">
+    <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="21" y="7" width="21" height="34" rx="2" fill="#F5F6F5"/>
+                  <g stroke="#1E7145" stroke-width="1.1">
+                    <line x1="21" y1="14.5" x2="42" y2="14.5"/>
+                    <line x1="21" y1="22" x2="42" y2="22"/>
+                    <line x1="21" y1="29.5" x2="42" y2="29.5"/>
+                    <line x1="21" y1="37" x2="42" y2="37"/>
+                    <line x1="28" y1="7" x2="28" y2="41"/>
+                    <line x1="35" y1="7" x2="35" y2="41"/>
+                  </g>
+                  <path d="M6 4h18l6 6v33a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="#1E7145"/>
+                  <path d="M24 4l6 6h-6z" fill="#0C4B2C"/>
+                  <text x="7" y="29" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#FFFFFF">X</text>
+                </svg>
+  </button></div>`;
+}
 
 /* Renders the AI insight. New rows are a JSON object (from the updated Edge Function):
      { intro, summary, weak_areas:[{parameter,fail_count,impact,pattern}], coaching:[{parameter,suggestion}], priority, managers_note }
@@ -6446,6 +6501,7 @@ async function renderVerticalPanel(tab){
       <input type="text" class="table-search-input" placeholder="এজেন্টের নাম দিয়ে খুঁজুন..." oninput="filterAgentTable(this,'agentTable-${tab}')">
     </div>
     <div class="table-wrapper">
+      ${xlsxDownloadBtnHtml('agentTable-'+tab, 'Agent_Scores_'+tab)}
       <table class="score-table" id="agentTable-${tab}">
         <thead><tr><th>Agent Name</th><th>Audit Count</th><th>Average Score</th><th>Status Tier</th>${isAdmin?'<th>Action</th>':''}</tr></thead>
         <tbody>
@@ -7536,7 +7592,8 @@ if (nameKey) {
       </div>
     </div>
     <div class="table-wrapper" style="overflow:auto; max-height:500px;">
-      <table class="score-table">
+      ${xlsxDownloadBtnHtml('rawSectionTable-'+tab, 'Call_Level_Logs_'+tab)}
+      <table class="score-table" id="rawSectionTable-${tab}">
         <thead><tr>${keys.map(c=> `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
         <tbody>
           ${filtered.map((r, rIdx)=> `<tr>${keys.map(c=>{
@@ -7698,7 +7755,8 @@ async function renderDedicatedDashboard(vKey) {
         📋 Month-wise Agent Performance Matrix
       </h3>
       <div class="table-wrapper" style="overflow-x: auto;">
-        <table class="score-table">
+        ${xlsxDownloadBtnHtml('dashMatrixTable-'+vKey, meta.label+'_Monthwise_Matrix')}
+        <table class="score-table" id="dashMatrixTable-${vKey}">
           <thead><tr>${tableHeadersHtml}</tr></thead>
           <tbody>${tableRowsHtml}</tbody>
         </table>
@@ -7832,7 +7890,8 @@ async function renderHomePage(){
       return `<div class="qcr-section">
         <div class="qcr-header ${qcrHeaderCls[r.vKey]||''}"><span class="qcr-title-text">${qcrIcon[r.vKey]||'📋'} ${r.meta.label} — Call Quality Score</span></div>
         <div class="table-wrapper qcr-table-wrap">
-          <table class="score-table">
+          ${xlsxDownloadBtnHtml('homeQcrTable-'+r.vKey, r.meta.label+'_Call_Quality_Score')}
+          <table class="score-table" id="homeQcrTable-${r.vKey}">
             <thead><tr><th>Agent Name</th><th>Audit Count</th><th>Average of Scores</th></tr></thead>
             <tbody>
               ${bodyRows}
@@ -8050,7 +8109,8 @@ function buildAns3SecTableHtml(monthHeaders, rows, label){
 
   return `
     <div class="ans3sec-table-wrap">
-      <table class="ans3sec-table">
+      ${xlsxDownloadBtnHtml('ans3secTable', 'Answered_3Sec_'+label)}
+      <table class="ans3sec-table" id="ans3secTable">
         <thead><tr><th>Agent Name (${label})</th>${monthHeaders.map(m=>`<th>${escapeHtml(m)}</th>`).join('')}</tr></thead>
         <tbody>${bodyRows}</tbody>
       </table>
@@ -8162,6 +8222,7 @@ async function renderRawSheetTabPanel(tab){
         <input type="text" class="table-search-input" id="rawSheetSearch-${tab}" placeholder="যেকোনো তথ্য দিয়ে খুঁজুন..." oninput="filterRawSheetTable(this,'rawSheetTable-${tab}')">
       </div>
       <div class="raw-sheet-wrap">
+        ${xlsxDownloadBtnHtml('rawSheetTable-'+tab, (RAW_SHEET_TABS[tab]&&RAW_SHEET_TABS[tab].label ? RAW_SHEET_TABS[tab].label : tab))}
         ${buildMergedSheetTableHtml(values, merges, tab)}
         <div class="table-no-match" style="display:none;">😕 কোনো তথ্য পাওয়া যায়নি।</div>
       </div>`;
@@ -8331,7 +8392,7 @@ async function renderMonthDataPanel(section){
 
   panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>📅 Month wise Data (Previous Month)</h1><p>প্রতি মাসের ডাটা এখান থেকে দেখা যাবে।</p></div>
+      <div><h1>📅 Month wise Data (Previous Month)</h1><p>প্রতি মাসের ডাটা এখান থেকে দেখা যাবে। Google Sheet-এ নতুন মাসের ট্যাব যোগ হলে, এখানেও নিজে থেকে নতুন ট্যাব চলে আসবে।</p></div>
     </div>
     <div class="lob-tab-row">
       <button class="lob-tab ${monthDataSection==='RAW'?'active':''}" onclick="renderMonthDataPanel('RAW')">📁 Raw data</button>
@@ -8432,6 +8493,7 @@ async function monthDataLoadSheetTable(section, sheetName){
         <input type="text" class="table-search-input" id="monthDataSearch" placeholder="যেকোনো তথ্য দিয়ে খুঁজুন..." oninput="filterRawSheetTable(this,'${searchTargetId}')">
       </div>
       <div class="raw-sheet-wrap">
+        ${xlsxDownloadBtnHtml(searchTargetId, sheetName)}
         ${tableHtml}
         <div class="table-no-match" style="display:none;">😕 কোনো তথ্য পাওয়া যায়নি।</div>
       </div>`;
@@ -8469,6 +8531,478 @@ function buildColoredSheetTableHtml(values, backgrounds, fontColors, fontWeights
     rowsHtml += `<tr class="rs-anim-row ${isHeaderRow?'rs-header-row':''}" ${isHeaderRow?'':`data-row-text="${escapeAttr(rowText)}"`}>${cellsHtml}</tr>`;
   }
   return `<table class="raw-sheet-table" id="monthDataParamTable"><tbody>${rowsHtml}</tbody></table>`;
+}
+
+/* ===================== LOB WISE DATA ===================== */
+function statusClassForLobData(val){
+  if(val === '-' || val === '' || val === undefined || val === null) return 'na';
+  const num = parseFloat(val);
+  if(isNaN(num)) return 'na';
+  if(num >= 99) return 'top';
+  if(num >= 95) return 'excellent';
+  if(num >= 90) return 'good';
+  if(num >= 85) return 'average';
+  return 'need';
+}
+
+/* Auto-computes the "AVERAGE" column per row from the real month columns — no need to type it
+   into the sheet, and if it IS in the sheet, this recalculates it fresh so it's always correct.
+   Returns { monthHeaders, rows } since it may add an "AVERAGE" header if one wasn't there. */
+function lobDataWithAutoAverage(monthHeaders, rows){
+  let headers = monthHeaders.slice();
+  let avgIdx = headers.findIndex(h => /average|avg/i.test(String(h||'')));
+  if(avgIdx === -1){
+    headers.push('AVERAGE');
+    avgIdx = headers.length - 1;
+  }
+  const realIdxs = headers.map((h,i)=>i).filter(i => i !== avgIdx);
+
+  const newRows = rows.map(row=>{
+    const newRow = row.slice();
+    const nums = realIdxs.map(i => parseFloat(newRow[i+1])).filter(n => !isNaN(n));
+    const avg = nums.length ? +(nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(2) : '-';
+    newRow[avgIdx+1] = avg;
+    return newRow;
+  });
+
+  return { monthHeaders: headers, rows: newRows };
+}
+
+/* Adds a "GRAND TOTAL" row = average of the LOB rows (CATV / BB Tech / BB Renewal), column by
+   column — including the Average column itself, i.e. "average of averages". This row is computed
+   in the app; it does not need to exist in the Google Sheet. */
+function lobDataWithGrandTotal(monthHeaders, rows){
+  const dataRows = rows.filter(r => !/grand\s*total|overall/i.test(String(r[0] || '')));
+  if(!dataRows.length) return rows;
+  const totalRow = ['GRAND TOTAL'];
+  monthHeaders.forEach((m, idx)=>{
+    const nums = dataRows.map(r => parseFloat(r[idx+1])).filter(n => !isNaN(n));
+    totalRow.push(nums.length ? +(nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(2) : '-');
+  });
+  return [...dataRows, totalRow];
+}
+
+function buildLobDataTableHtml(monthHeaders, rows, label){
+  const avgColIdx = monthHeaders.findIndex(h => /average|avg/i.test(String(h||'')));
+
+  const bodyRows = rows.map((row, rIdx)=>{
+    const rowLabel = String(row[0] || '').trim();
+    if(!rowLabel) return '';
+    const isTotal = /grand\s*total|average|overall/i.test(rowLabel);
+
+    let prevVal = null;
+    const cells = monthHeaders.map((m, idx)=>{
+      const rawVal = row[idx+1];
+      const val = (rawVal === undefined || rawVal === null || rawVal === '') ? '-' : String(rawVal).trim();
+      const num = parseFloat(val);
+      const isAvgCol = idx === avgColIdx;
+      const cls = isTotal ? 'grand-total' : statusClassForLobData(val);
+
+      let arrow = '';
+      if(!isTotal && !isAvgCol && !isNaN(num) && prevVal !== null && !isNaN(prevVal)){
+        if(num > prevVal) arrow = '<span class="trend-arrow up">▲</span>';
+        else if(num < prevVal) arrow = '<span class="trend-arrow down">▼</span>';
+        else arrow = '<span class="trend-arrow flat">—</span>';
+      }
+      if(!isAvgCol && !isNaN(num)) prevVal = num;
+
+      return `<td><div class="lobdata-cell ${cls}${isAvgCol?' avg-col':''}">${escapeHtml(val)}${arrow}</div></td>`;
+    }).join('');
+
+    return `<tr class="lobdata-row${isTotal?' lobdata-row-total':''}" style="animation-delay:${Math.min(rIdx*45,500)}ms">
+      <td><div class="lobdata-cell agent-name">${escapeHtml(rowLabel)}</div></td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="ans3sec-table-wrap">
+      ${xlsxDownloadBtnHtml('lobDataTable', 'LOB_Wise_Data')}
+      <table class="ans3sec-table lobdata-table" id="lobDataTable">
+        <thead><tr><th>${escapeHtml(label)}</th>${monthHeaders.map(m=>`<th${/average|avg/i.test(m)?' class="avg-head"':''}>${escapeHtml(m)}</th>`).join('')}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+      <div class="lobdata-legend">
+        <span><i class="lobdata-cell top"></i> Top Performer (99+)</span>
+        <span><i class="lobdata-cell excellent"></i> Excellent (95+)</span>
+        <span><i class="lobdata-cell good"></i> Good (90+)</span>
+        <span><i class="lobdata-cell average"></i> Average (85+)</span>
+        <span><i class="lobdata-cell need"></i> Need Improvement (&lt;85)</span>
+        <span><span class="trend-arrow up">▲</span> Better than last month &nbsp; <span class="trend-arrow down">▼</span> Lower than last month</span>
+      </div>
+    </div>`;
+}
+
+/* Line chart of the month-over-month trend — uses the auto-computed GRAND TOTAL row. */
+function drawLobDataChart(monthHeaders, rows){
+  const ctx = document.getElementById('lobDataChart');
+  if(!ctx) return;
+  const key = 'lobdata-trend';
+  if(chartInstances[key]) chartInstances[key].destroy();
+  animateChartBox(ctx);
+
+  const { realMonthIdxs, realMonthLabels } = lobDataParseHeaders(monthHeaders);
+  const totalRow = rows.find(r => /grand\s*total|average|overall/i.test(String(r[0] || '')));
+  let trendValues;
+  if(totalRow){
+    trendValues = realMonthIdxs.map(idx => parseFloat(totalRow[idx+1]) || 0);
+  } else {
+    trendValues = realMonthIdxs.map(idx => {
+      const nums = rows.map(r => parseFloat(r[idx+1])).filter(n => !isNaN(n));
+      if(!nums.length) return 0;
+      return +(nums.reduce((a,b)=>a+b,0) / nums.length).toFixed(2);
+    });
+  }
+
+  chartInstances[key] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: realMonthLabels,
+      datasets: [{
+        label: 'Grand Total Trend',
+        data: trendValues,
+        borderColor: '#3FBF7F',
+        backgroundColor: 'rgba(63,191,127,.15)',
+        fill: true,
+        tension: .35,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointBackgroundColor: '#3FBF7F'
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      animation:{ duration:1300, easing:'easeOutQuart' },
+      animations:{
+        y:{ from: (ctxA)=> ctxA.chart.scales.y.getPixelForValue(0) },
+        x:{ type:'number', easing:'easeOutQuart', duration:1300, from: NaN, delay:(ctxA)=> ctxA.type==='data' ? ctxA.dataIndex*90 : 0 }
+      },
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ ticks:{ color:'#000000', font:{size:12, weight:'700'} }, grid:{ display:false } },
+        y:{ ticks:{ color:'#000000', font:{size:12, weight:'700'} }, grid:{ color:'#203859' } }
+      }
+    }
+  });
+}
+
+/* Splits the month headers into the real calendar months + where the "Average" column is,
+   so each chart below knows which index in a row array to read. */
+function lobDataParseHeaders(monthHeaders){
+  const avgIdx = monthHeaders.findIndex(h => /average|avg/i.test(String(h||'')));
+  const realMonthIdxs = monthHeaders.map((h,i)=>i).filter(i => i !== avgIdx);
+  return { avgIdx, realMonthIdxs, realMonthLabels: realMonthIdxs.map(i => monthHeaders[i]) };
+}
+
+/* Chart 2: bar comparison of CATV / BB Tech / BB Renewal in the most recent real month */
+function drawLobDataLatestChart(monthHeaders, rows){
+  const ctx = document.getElementById('lobDataLatestChart');
+  if(!ctx) return;
+  const key = 'lobdata-latest';
+  if(chartInstances[key]) chartInstances[key].destroy();
+  animateChartBox(ctx);
+
+  const { realMonthIdxs } = lobDataParseHeaders(monthHeaders);
+  const dataRows = rows.filter(r => !/grand\s*total|average|overall/i.test(String(r[0] || '')));
+  if(!realMonthIdxs.length || !dataRows.length) return;
+  const lastIdx = realMonthIdxs[realMonthIdxs.length - 1];
+  const lastLabel = monthHeaders[lastIdx];
+  const sorted = dataRows.slice().sort((a,b)=> (parseFloat(b[lastIdx+1])||0) - (parseFloat(a[lastIdx+1])||0));
+
+  chartInstances[key] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(r => String(r[0])),
+      datasets: [{
+        label: lastLabel,
+        data: sorted.map(r => parseFloat(r[lastIdx+1]) || 0),
+        backgroundColor: sorted.map(r => statusFor(parseFloat(r[lastIdx+1])||0).cls==='need' ? '#E0524A' : (statusFor(parseFloat(r[lastIdx+1])||0).cls==='top'||statusFor(parseFloat(r[lastIdx+1])||0).cls==='excellent' ? '#3FBF7F' : '#E0C341')),
+        borderRadius: 4,
+        maxBarThickness: 34
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      animation:{ duration:1000, easing:'easeOutBack', delay:(ctxA)=> ctxA.type==='data' ? ctxA.dataIndex*80 : 0 },
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ ticks:{ color:'#7C8CA3', font:{size:11} }, grid:{ display:false } },
+        y:{ ticks:{ color:'#7C8CA3' }, grid:{ color:'#203859' } }
+      }
+    }
+  });
+}
+
+/* Chart 3: doughnut of how many of the 3 LOBs fall into each performance tier, latest real month */
+function drawLobDataDistChart(monthHeaders, rows){
+  const ctx = document.getElementById('lobDataDistChart');
+  if(!ctx) return;
+  const key = 'lobdata-dist';
+  if(chartInstances[key]) chartInstances[key].destroy();
+  animateChartBox(ctx);
+
+  const { realMonthIdxs } = lobDataParseHeaders(monthHeaders);
+  const dataRows = rows.filter(r => !/grand\s*total|average|overall/i.test(String(r[0] || '')));
+  if(!realMonthIdxs.length || !dataRows.length) return;
+  const lastIdx = realMonthIdxs[realMonthIdxs.length - 1];
+
+  const buckets = { 'TOP PERFORMER':0, 'EXCELLENT':0, 'GOOD':0, 'AVERAGE':0, 'NEED IMPROVEMENT':0 };
+  const colorMap = { 'TOP PERFORMER':'#E3A857', 'EXCELLENT':'#3FBF7F', 'GOOD':'#E0C341', 'AVERAGE':'#E08A3F', 'NEED IMPROVEMENT':'#E0524A' };
+  dataRows.forEach(r => {
+    const val = parseFloat(r[lastIdx+1]) || 0;
+    const s = statusFor(val);
+    const label = s.label.replace(/^[^A-Za-z]+/, '').trim();
+    if(buckets[label] !== undefined) buckets[label]++;
+  });
+  const labels = Object.keys(buckets).filter(k => buckets[k] > 0);
+  const data = labels.map(k => buckets[k]);
+
+  chartInstances[key] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: labels.map(l => colorMap[l]),
+        borderColor: 'transparent',
+        borderWidth: 2,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      animation:{ animateRotate:true, animateScale:true, duration:1100, easing:'easeOutElastic' },
+      plugins:{ legend:{ position:'bottom', labels:{ color:'#7C8CA3', font:{size:10.5}, boxWidth:12, padding:10 } } }
+    }
+  });
+}
+
+/* Chart 4: bar comparison of CATV / BB Tech / BB Renewal using their overall Average column */
+function drawLobDataAvgChart(monthHeaders, rows){
+  const ctx = document.getElementById('lobDataAvgChart');
+  if(!ctx) return;
+  const key = 'lobdata-avg';
+  if(chartInstances[key]) chartInstances[key].destroy();
+  animateChartBox(ctx);
+
+  const { avgIdx, realMonthIdxs } = lobDataParseHeaders(monthHeaders);
+  const dataRows = rows.filter(r => !/grand\s*total|average|overall/i.test(String(r[0] || '')));
+  if(!dataRows.length) return;
+
+  const getAvg = (r) => {
+    if(avgIdx >= 0) return parseFloat(r[avgIdx+1]) || 0;
+    const nums = realMonthIdxs.map(i => parseFloat(r[i+1])).filter(n => !isNaN(n));
+    return nums.length ? +(nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(2) : 0;
+  };
+  const sorted = dataRows.slice().sort((a,b)=> getAvg(b) - getAvg(a));
+
+  chartInstances[key] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(r => String(r[0])),
+      datasets: [{
+        label: 'Overall Average',
+        data: sorted.map(r => getAvg(r)),
+        backgroundColor: sorted.map(r => {
+          const cls = statusFor(getAvg(r)).cls;
+          return {top:'#E3A857',excellent:'#3FBF7F',good:'#E0C341',average:'#E08A3F',need:'#E0524A'}[cls];
+        }),
+        borderRadius: 4,
+        maxBarThickness: 30
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive:true, maintainAspectRatio:false,
+      animation:{ duration:1000, easing:'easeOutBack', delay:(ctxA)=> ctxA.type==='data' ? ctxA.dataIndex*90 : 0 },
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ ticks:{ color:'#000000', font:{size:12, weight:'700'} }, grid:{ color:'#203859' } },
+        y:{ ticks:{ color:'#000000', font:{size:12, weight:'700'} }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+/* Small scrolling access notice shown under the hero in every state of this tab */
+const LOBDATA_ACCESS_TICKER = `<div class="lobdata-access-ticker"><span>⚠️ This tab is only meant to be used by HR, HOD, and Team Leader.</span></div>`;
+
+/* Keeps the most recently rendered table around so the download buttons don't need to re-fetch */
+let lobDataLastMonthHeaders = null;
+let lobDataLastRows = null;
+
+function downloadLobDataExcel(){
+  if(!lobDataLastRows || !lobDataLastMonthHeaders){ alert('Data has not loaded yet — please wait for it to sync first.'); return; }
+  const header = ['LOB', ...lobDataLastMonthHeaders];
+  const aoa = [header, ...lobDataLastRows.map(r => [r[0], ...lobDataLastMonthHeaders.map((_,i)=> r[i+1] ?? '-')])];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'LOB Wise Data');
+  XLSX.writeFile(wb, `LOB_Wise_Data_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function downloadLobDataPDF(){
+  if(!lobDataLastRows || !lobDataLastMonthHeaders){ alert('Data has not loaded yet — please wait for it to sync first.'); return; }
+  if(!window.jspdf){ alert('PDF library failed to load — please check your internet connection and try again.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape' });
+  doc.setFontSize(15);
+  doc.text('LOB Wise Data', 14, 16);
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+  doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, 14, 22);
+
+  const header = ['LOB', ...lobDataLastMonthHeaders];
+  const body = lobDataLastRows.map(r => [String(r[0]||''), ...lobDataLastMonthHeaders.map((_,i)=> String(r[i+1] ?? '-'))]);
+  const totalRowIdx = lobDataLastRows.findIndex(r => /grand\s*total|average|overall/i.test(String(r[0]||'')));
+
+  doc.autoTable({
+    head: [header],
+    body: body,
+    startY: 28,
+    styles: { fontSize: 9, cellPadding: 4 },
+    headStyles: { fillColor: [63,191,127], textColor: 255, fontStyle: 'bold' },
+    didParseCell: function(data){
+      if(totalRowIdx >= 0 && data.row.index === totalRowIdx && data.section === 'body'){
+        data.cell.styles.fillColor = [227,168,87];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    }
+  });
+  doc.save(`LOB_Wise_Data_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+async function renderLobDataPanel(){
+  const panel = document.getElementById('panel-LOBDATA');
+  if(!panel) return;
+
+  if(!LOBDATA_WEB_APP_URL || LOBDATA_WEB_APP_URL.indexOf('PASTE_') === 0){
+    panel.innerHTML = `
+      <div class="lobdata-hero">
+        <div class="panel-header" style="margin:0;"><div><h1>📈 LOB Wise Data</h1><p>CATV, BB Tech Support &amp; BB Renewal — one table, live from Google Sheets.</p></div></div>
+        <div class="lobdata-datetime" id="lobDataDateTime"></div>
+      </div>
+      ${LOBDATA_ACCESS_TICKER}
+      <div class="empty-state"><b>⚙️ Apps Script URL not set</b><br>Deploy an Apps Script inside your Google Sheet, then paste that URL into the code where it says <code>LOBDATA_WEB_APP_URL</code>.</div>`;
+    startLobDataClock();
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="lobdata-hero">
+      <div class="panel-header" style="margin:0;"><div><h1>📈 LOB Wise Data</h1><p>Tab: <b>${escapeHtml(LOBDATA_SHEET_NAME)}</b> — live synced report.</p></div></div>
+      <div class="lobdata-datetime" id="lobDataDateTime"></div>
+    </div>
+    ${LOBDATA_ACCESS_TICKER}
+    <div class="empty-state"><b>Syncing data...</b><br>Please wait a moment.</div>`;
+  startLobDataClock();
+
+  try{
+    let data = lobDataCache;
+    if(!data){
+      const response = await fetch(LOBDATA_WEB_APP_URL + "?sheet=" + encodeURIComponent(LOBDATA_SHEET_NAME));
+      const json = await response.json();
+      data = Array.isArray(json) ? json : (Array.isArray(json.values) ? json.values : []);
+      lobDataCache = data;
+    }
+
+    if(!Array.isArray(data) || data.length === 0){
+      panel.innerHTML = `
+        <div class="lobdata-hero">
+          <div class="panel-header" style="margin:0;"><div><h1>📈 LOB Wise Data</h1><p>Live system tracking</p></div></div>
+          <div class="lobdata-datetime" id="lobDataDateTime"></div>
+        </div>
+        ${LOBDATA_ACCESS_TICKER}
+        <div class="empty-state"><b>No data found</b><br>Please check the "${escapeHtml(LOBDATA_SHEET_NAME)}" tab in your sheet.</div>`;
+      startLobDataClock();
+      return;
+    }
+
+    const headers = data[0];
+    const rawMonthHeaders = headers.slice(1);
+    const rawRows = data.slice(1).filter(r => String(r[0] || '').trim());
+    const { monthHeaders, rows: avgRows } = lobDataWithAutoAverage(rawMonthHeaders, rawRows); // auto-fills AVERAGE column
+    const rows = lobDataWithGrandTotal(monthHeaders, avgRows); // auto-adds GRAND TOTAL (average of averages)
+    lobDataLastMonthHeaders = monthHeaders;
+    lobDataLastRows = rows;
+
+    panel.innerHTML = `
+      <div class="lobdata-hero">
+        <div class="panel-header" style="margin:0;">
+          <div>
+            <h1>📈 LOB Wise Data</h1>
+            <p>Tab: <b>${escapeHtml(LOBDATA_SHEET_NAME)}</b> — live synced report. CATV, BB Tech Support &amp; BB Renewal in one table.</p>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn primary" onclick="lobDataCache=null; renderLobDataPanel()">↻ Refresh Live Data</button>
+            <button class="btn" onclick="downloadLobDataExcel()" style="display:inline-flex; align-items:center; gap:6px;">
+              <svg width="16" height="16" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <rect x="21" y="7" width="21" height="34" rx="2" fill="#F5F6F5"/>
+                <g stroke="#1E7145" stroke-width="1.1">
+                  <line x1="21" y1="14.5" x2="42" y2="14.5"/>
+                  <line x1="21" y1="22" x2="42" y2="22"/>
+                  <line x1="21" y1="29.5" x2="42" y2="29.5"/>
+                  <line x1="21" y1="37" x2="42" y2="37"/>
+                  <line x1="28" y1="7" x2="28" y2="41"/>
+                  <line x1="35" y1="7" x2="35" y2="41"/>
+                </g>
+                <path d="M6 4h18l6 6v33a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="#1E7145"/>
+                <path d="M24 4l6 6h-6z" fill="#0C4B2C"/>
+                <text x="7" y="29" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#FFFFFF">X</text>
+              </svg>
+              Excel Download
+            </button>
+            <button class="btn" onclick="downloadLobDataPDF()">⬇ PDF Download</button>
+          </div>
+        </div>
+        <div class="lobdata-datetime" id="lobDataDateTime"></div>
+      </div>
+      ${LOBDATA_ACCESS_TICKER}
+      ${buildLobDataTableHtml(monthHeaders, rows, 'LOB')}
+      <div class="lobdata-scroll-hint" onclick="document.getElementById('lobDataChart')?.closest('.chart-box')?.scrollIntoView({behavior:'smooth', block:'start'})">
+        <span>Scroll down to see the charts &amp; table</span>
+        <span class="lobdata-scroll-arrow">⌄</span>
+      </div>
+      <div class="chart-box lobdata-chart-box lobdata-trend-box" style="margin-bottom:18px;">
+        <div class="chart-box-title">📈 Monthly Trend (Grand Total)</div>
+        <canvas id="lobDataChart"></canvas>
+      </div>
+      <div class="analysis-grid lobdata-avg-only-grid">
+        <div class="chart-box small lobdata-chart-box lobdata-avg-box">
+          <div class="chart-box-title">Overall Average — LOB Comparison</div>
+          <canvas id="lobDataAvgChart"></canvas>
+        </div>
+      </div>
+    `;
+    startLobDataClock();
+    drawLobDataChart(monthHeaders, rows);
+    drawLobDataAvgChart(monthHeaders, rows);
+  }catch(err){
+    console.error('LOB wise data fetch failed', err);
+    panel.innerHTML = `
+      <div class="lobdata-hero">
+        <div class="panel-header" style="margin:0;"><div><h1>📈 LOB Wise Data</h1><p>Live tracking</p></div></div>
+        <div class="lobdata-datetime" id="lobDataDateTime"></div>
+      </div>
+      ${LOBDATA_ACCESS_TICKER}
+      <div class="empty-state"><b style="color:var(--need);">Failed to sync data!</b><br>Please check the Apps Script URL or your connection.</div>`;
+    startLobDataClock();
+  }
+}
+
+/* Live-updating date & time shown in the LOB Wise Data hero banner */
+function startLobDataClock(){
+  clearInterval(window._lobDataClockTimer);
+  const el = document.getElementById('lobDataDateTime');
+  if(!el) return;
+  const tick = ()=>{
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+    el.textContent = `📅 ${dateStr}  •  🕐 ${timeStr}`;
+  };
+  tick();
+  window._lobDataClockTimer = setInterval(tick, 1000);
 }
 
 async function loadHelp(){
@@ -8969,16 +9503,6 @@ setInterval(updateWelcome,1000);
       <textarea id="broadcastMessageInput" rows="4" placeholder="যেমন: আজকের মধ্যে সবাইকে নতুন গাইডলাইন পড়ে নিতে হবে..."
         style="width:100%; resize:vertical; background:var(--surface,#0F1D30); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-size:13.5px; font-family:inherit;"></textarea>
     </div>
-    <div class="field">
-      <label style="display:flex; align-items:center; justify-content:space-between;">
-        <span>পাঠানো হবে যাদের কাছে</span>
-        <span style="display:flex; gap:6px;">
-          <button type="button" class="btn small" onclick="broadcastSelectAll(true)">সব সিলেক্ট</button>
-          <button type="button" class="btn small" onclick="broadcastSelectAll(false)">সব বাদ</button>
-        </span>
-      </label>
-      <div id="broadcastTargetList" class="broadcast-target-list"></div>
-    </div>
     <div class="field" id="broadcastTargetInfo" style="font-size:11.5px; color:var(--text-muted); margin-top:6px;"></div>
     <button class="login-btn" id="broadcastSendBtn" onclick="sendBroadcastAnnouncement()">সবাইকে পাঠান</button>
     <div class="login-error" id="broadcastError"></div>
@@ -8986,117 +9510,6 @@ setInterval(updateWelcome,1000);
 </div>
 
 <style>
-
-.broadcast-history-box{
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:12px 14px;
-  margin:0 0 16px 0;
-  background:var(--surface,#0F1D30);
-}
-.broadcast-history-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  font-weight:600;
-  font-size:13.5px;
-  margin-bottom:10px;
-}
-.broadcast-history-list{
-  max-height:220px;
-  overflow-y:auto;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.broadcast-history-item{
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:8px 10px;
-  background:var(--surface-2,#14253D);
-}
-.broadcast-history-msg{
-  font-size:13px;
-  margin-bottom:6px;
-  white-space:pre-wrap;
-  word-break:break-word;
-}
-.broadcast-history-meta{
-  display:flex;
-  gap:14px;
-  flex-wrap:wrap;
-  align-items:center;
-  font-size:11px;
-  color:var(--text-muted);
-}
-.broadcast-history-meta .btn.small{
-  margin-left:auto;
-}
-.broadcast-read-status{
-  margin-top:8px;
-  padding-top:8px;
-  border-top:1px dashed var(--border);
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-.broadcast-read-summary{
-  font-size:11.5px;
-  font-weight:600;
-  color:var(--text);
-  margin-bottom:2px;
-}
-.broadcast-read-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  font-size:12px;
-  padding:4px 6px;
-  border-radius:6px;
-  background:var(--surface,#0F1D30);
-}
-.broadcast-read-row .read-yes{
-  color:var(--excellent);
-  font-weight:600;
-  white-space:nowrap;
-}
-.broadcast-read-row .read-no{
-  color:var(--text-muted);
-  white-space:nowrap;
-}
-
-.broadcast-target-list{
-  max-height:220px;
-  overflow-y:auto;
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:6px;
-  margin-top:6px;
-  background:var(--surface,#0F1D30);
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-}
-.broadcast-target-item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:6px 8px;
-  border-radius:6px;
-  font-size:13px;
-  cursor:pointer;
-}
-.broadcast-target-item:hover{
-  background:var(--surface-2,#14253D);
-}
-.broadcast-target-item input[type="checkbox"]{
-  width:15px;
-  height:15px;
-  flex-shrink:0;
-  accent-color:var(--agent);
-  cursor:pointer;
-}
 
 .emp-switch-row{
   display:flex; align-items:center; justify-content:center; gap:10px;
