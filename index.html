@@ -3564,6 +3564,44 @@ transform:translateY(0);
 @media (max-width:640px){
   .total-audit-marquee-box{ flex-basis:100%; max-width:100%; }
 }
+/* ===== HOME — scrolling ticker listing agents scoring below 85% (name / LOB / score, in red) ===== */
+.home-lowscore-ticker{
+  position:relative; overflow:hidden;
+  width:100%; height:38px; margin:2px 0 20px 0;
+  border:1px solid rgba(224,82,74,0.55); border-radius:8px;
+  background:rgba(224,82,74,0.07);
+  display:flex; align-items:center;
+}
+.home-lowscore-ticker-tag{
+  flex:none; height:100%; display:flex; align-items:center; gap:6px;
+  padding:0 12px; font-size:11px; font-weight:800; letter-spacing:.5px;
+  color:var(--need); background:#fff; white-space:nowrap;
+}
+.home-lowscore-ticker-tag .blink-dot{
+  display:inline-block; animation: homeLowScoreDotBlink 1s ease-in-out infinite;
+}
+@keyframes homeLowScoreDotBlink{
+  0%, 100%{ opacity:1; transform:scale(1); filter:drop-shadow(0 0 2px rgba(224,82,74,.9)); }
+  50%{ opacity:.25; transform:scale(0.7); filter:drop-shadow(0 0 0px rgba(224,82,74,0)); }
+}
+.home-lowscore-ticker-track{ flex:1; height:100%; overflow:hidden; position:relative; }
+.home-lowscore-ticker-scroll{
+  position:absolute; top:0; left:0; height:100%; display:flex; align-items:center;
+  white-space:nowrap; animation: homeLowScoreScroll linear infinite;
+}
+.home-lowscore-ticker-scroll span.lowscore-item{
+  display:inline-flex; align-items:center; padding:0 22px;
+  font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12.5px;
+  color:var(--need);
+}
+.home-lowscore-ticker-scroll span.lowscore-item b{ color:#FF8A80; margin:0 4px; }
+.home-lowscore-ticker-ok{
+  flex:1; text-align:center; font-size:12px; font-weight:700; color:var(--excellent);
+}
+@keyframes homeLowScoreScroll{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
+}
 
 .admin-chat-layout{
   display:flex; gap:0; height:560px; max-height:70vh;
@@ -8049,7 +8087,7 @@ async function renderHomePage(){
       const proc = (summary && summary.ok && summary.processes) ? summary.processes[newBackendKey] : null;
 
       if(!proc || !Array.isArray(proc.agents) || !proc.agents.length){
-        return { vKey, meta, avg: null, agentCount: 0, agents: [], totalAudits: 0 };
+        return { vKey, meta, avg: null, agentCount: 0, agents: [], totalAudits: 0, rawRows: Array.isArray(proc && proc.rows) ? proc.rows : [] };
       }
 
       const rows = proc.agents.map(a => ({
@@ -8060,7 +8098,7 @@ async function renderHomePage(){
       const overallAvg = (rows.reduce((s,r)=> s + (Number(r.avgScore)||0), 0) / rows.length);
       const totalAudits = rows.reduce((s,r)=> s + (Number(r.auditCount)||0), 0);
       const agentsSorted = rows.slice().sort((a,b)=> b.avgScore - a.avgScore);
-      return { vKey, meta, avg: Math.round(overallAvg * 10) / 10, agentCount: rows.length, agents: agentsSorted, totalAudits };
+      return { vKey, meta, avg: Math.round(overallAvg * 10) / 10, agentCount: rows.length, agents: agentsSorted, totalAudits, rawRows: Array.isArray(proc.rows) ? proc.rows : [] };
     });
 
     const statCardsHtml = results.map(r => {
@@ -8126,11 +8164,44 @@ async function renderHomePage(){
     const allLobWeightedSum = results.reduce((s,r)=> s + ((Number(r.avg)||0) * (Number(r.totalAudits)||0)), 0);
     const allLobScorePct = grandTotalAudits > 0 ? (allLobWeightedSum / grandTotalAudits) : 0;
 
+    /* Individual CALL-LEVEL scores below 90% across ALL LOBs (including 0%) — every call, not just
+       agent averages — worst first — feeds the scrolling red ticker under the Home panel header. */
+    const lowScoreCalls = [];
+    results.forEach(r=>{
+      (r.rawRows || []).forEach(row=>{
+        const { meta } = cleanCallRowForAI(row);
+        const nameKey = findMetaKey(meta, /^\s*associate\s*name\s*$/i);
+        const scoreKey = findMetaKey(meta, /^\s*scores?\s*$/i);
+        const idKey = findMetaKey(meta, /^\s*call\s*id\s*$/i);
+        const agentName = nameKey ? String(meta[nameKey] || '').trim() : '';
+        const sc = scoreKey ? Number(meta[scoreKey]) : NaN;
+        if(!agentName || isNaN(sc) || sc >= 90) return;
+        lowScoreCalls.push({ agent: agentName, lob: r.meta.label, score: sc, callId: idKey ? meta[idKey] : '' });
+      });
+    });
+    lowScoreCalls.sort((a,b)=> a.score - b.score);
+    const homeLowScoreTickerHtml = (() => {
+      if(!lowScoreCalls.length){
+        return `<div class="home-lowscore-ticker"><div class="home-lowscore-ticker-ok">✅ সব কল ৯০%+ স্কোরে আছে — কোনো Under Performing Call নেই!</div></div>`;
+      }
+      const itemsHtml = lowScoreCalls.map(a=>
+        `<span class="lowscore-item">⚠️ <b>${escapeHtml(a.agent)}</b> (${escapeHtml(a.lob)}${a.callId ? ' | '+escapeHtml(a.callId) : ''}) — <b>${a.score.toFixed(2)}%</b></span>`
+      ).join('');
+      const durationSec = Math.max(35, lowScoreCalls.length * 9);
+      return `<div class="home-lowscore-ticker">
+        <span class="home-lowscore-ticker-tag"><span class="blink-dot">🔴</span> &lt;90% Scores agent</span>
+        <div class="home-lowscore-ticker-track">
+          <div class="home-lowscore-ticker-scroll" style="animation-duration:${durationSec}s;">${itemsHtml}${itemsHtml}</div>
+        </div>
+      </div>`;
+    })();
+
     panel.innerHTML = `
       <div class="panel-header">
         <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
         <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
       </div>
+      ${homeLowScoreTickerHtml}
       <div class="stat-row">${statCardsHtml}</div>
       <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px; justify-content:space-between; flex-wrap:wrap; row-gap:10px;">
         <span style="display:flex; align-items:center; gap:8px;">📊 LOB-wise Average Score Comparison</span>
