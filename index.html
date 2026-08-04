@@ -2549,6 +2549,22 @@ input[type=file]{display:none;}
     font-weight:700;
     font-family:'IBM Plex Mono',monospace;
 }
+.page-footer-privacy{
+    margin-top:6px;
+    padding:5px 10px;
+    border-radius:6px;
+    background:#1b2a3f;
+    border:1px solid #3a5a8a;
+    color:#bcc7d8;
+    font-size:10px;
+    display:inline-block;
+    cursor:pointer;
+    transition: border-color .2s ease, color .2s ease;
+}
+.page-footer-privacy:hover{
+    border-color:var(--agent, #33C9B0);
+    color:var(--agent, #33C9B0);
+}
 .page-footer-signature{
     text-align:center;
     font-size:10px;
@@ -3602,6 +3618,22 @@ transform:translateY(0);
   from{ transform:translateX(0); }
   to{ transform:translateX(-50%); }
 }
+/* ===== Privacy Policy panel ===== */
+.privacy-policy-body{
+  max-width:840px; color:var(--text); line-height:1.7; font-size:14px;
+}
+.privacy-policy-body h3{
+  font-family:'Space Grotesk',sans-serif; font-size:16px; color:var(--agent);
+  margin:26px 0 8px 0; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.privacy-policy-body h3:first-of-type{ margin-top:20px; }
+.privacy-policy-body p{ color:var(--text-muted); margin-bottom:6px; }
+.privacy-policy-body ul{ margin:6px 0 6px 22px; color:var(--text-muted); }
+.privacy-policy-body ul li{ margin-bottom:4px; }
+.privacy-policy-footer{
+  margin-top:30px; padding-top:16px; border-top:1px dashed var(--border);
+  color:var(--text-muted); font-size:12px; line-height:1.7;
+}
 
 .admin-chat-layout{
   display:flex; gap:0; height:560px; max-height:70vh;
@@ -4162,6 +4194,95 @@ transform:translateY(0);
         </div>
         <div id="quickLinkView"></div>
       </div>
+      <!-- Privacy Policy panel (static content) -->
+      <div class="panel" id="panel-PRIVACYPOLICY">
+        <div class="panel-header">
+          <div><h1>📄 Privacy Policy</h1><p>Last Updated: August 2026</p></div>
+        </div>
+        <div class="privacy-policy-body">
+          <p>Welcome to the QA Control Room &amp; Analytics Portal. Your privacy is important to us. This Privacy Policy explains how information is collected, used, and protected while using this portal.</p>
+
+          <h3>1. Purpose</h3>
+          <p>This portal is designed exclusively for GTPL KCBPL employees to monitor and manage Call Quality Performance, audit reports, analytics, and quality-related activities.</p>
+
+          <h3>2. Information We Collect</h3>
+          <p>The portal may collect and display the following information:</p>
+          <ul>
+            <li>Employee Name</li>
+            <li>Employee ID</li>
+            <li>Department / Process</li>
+            <li>Team Leader Information</li>
+            <li>Call Quality Scores</li>
+            <li>Audit Reports</li>
+            <li>Performance Metrics</li>
+            <li>Login Activity</li>
+            <li>Portal Usage Duration</li>
+            <li>AI-generated Feedback</li>
+            <li>Other quality-related information</li>
+          </ul>
+
+          <h3>3. How We Use Your Information</h3>
+          <p>The collected information is used only for:</p>
+          <ul>
+            <li>Quality monitoring</li>
+            <li>Performance evaluation</li>
+            <li>Coaching and feedback</li>
+            <li>Reporting and analytics</li>
+            <li>Management review</li>
+            <li>Process improvement</li>
+            <li>Internal operational purposes</li>
+          </ul>
+
+          <h3>4. Data Security</h3>
+          <p>Reasonable security measures are implemented to protect information stored within the portal. Access is restricted based on user roles and permissions.</p>
+
+          <h3>5. Confidentiality</h3>
+          <p>All information available in this portal is strictly confidential. Users are prohibited from:</p>
+          <ul>
+            <li>Sharing portal data with unauthorized persons.</li>
+            <li>Downloading or distributing confidential information without approval.</li>
+            <li>Using portal information for personal or non-business purposes.</li>
+          </ul>
+
+          <h3>6. User Responsibilities</h3>
+          <p>Every user is responsible for:</p>
+          <ul>
+            <li>Keeping login credentials confidential.</li>
+            <li>Logging out after completing work.</li>
+            <li>Reporting any unauthorized access immediately.</li>
+            <li>Using the portal only for official business purposes.</li>
+          </ul>
+
+          <h3>7. AI-Generated Information</h3>
+          <p>Some sections of this portal use Artificial Intelligence (AI) to generate insights, recommendations, and performance summaries. AI-generated content is provided for informational purposes only and should not be considered the sole basis for performance evaluation. Final decisions remain with the Quality Team and Management.</p>
+
+          <h3>8. Third-Party Services</h3>
+          <p>This portal may utilize trusted third-party services such as:</p>
+          <ul>
+            <li>Google Sheets</li>
+            <li>Google API</li>
+            <li>GitHub Pages</li>
+          </ul>
+          <p>These services process data only to support the functionality of the portal.</p>
+
+          <h3>9. Data Accuracy</h3>
+          <p>Users are encouraged to report any incorrect information or discrepancies to the Quality Team for verification and correction.</p>
+
+          <h3>10. Policy Updates</h3>
+          <p>This Privacy Policy may be updated periodically without prior notice. Continued use of the portal constitutes acceptance of the latest version.</p>
+
+          <h3>11. Contact</h3>
+          <p>For questions, concerns, or privacy-related issues, please contact:<br>
+          Quality Team<br>
+          GTPL KCBPL Customer Care</p>
+
+          <div class="privacy-policy-footer">
+            © 2026 QA Control Room &amp; Analytics Portal<br>
+            Developed &amp; Maintained by Kalyan Sarkar – Quality Analyst<br>
+            All Rights Reserved.
+          </div>
+        </div>
+      </div>
       <!-- Admin panel -->
       <div class="panel" id="panel-ADMIN">
         <div class="panel-header">
@@ -4421,11 +4542,7 @@ transform:translateY(0);
       <div class="page-footer-dev">© 2026 Developed &amp; Maintained by <span>Kalyan Sarkar</span></div>
       <div class="page-footer-version">👤 Quality Analyst | Version 1.0 <span>(Live)</span></div>
       <div class="page-footer-visitors" id="pageFooterVisitors">👁 Total Visitors: <span id="visitorCountValue">…</span></div>
-    </div>
-    <div class="page-footer-signature">
-      GTPL-KCBPL QUALITY ANALYSIS TEAM<br>
-      Design and develop by - Kalyan Sarkar<br>
-      Any issues please contact at - kalyan.sarkar@gtplkcbpl.com
+      <div class="page-footer-privacy" onclick="switchTab('PRIVACYPOLICY')">📄 Privacy Policy</div>
     </div>
   </footer>
 </div>
