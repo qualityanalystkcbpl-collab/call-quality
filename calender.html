@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📅 Live Calendar — QA Control Room</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   :root{
     --bg:#05060c;
@@ -662,6 +663,110 @@
   @media (max-width:640px){
     #backToTopBtn{ left:16px; bottom:16px; width:42px; height:42px; }
   }
+
+  /* ===================== DASHBOARD INFO PANEL (News + Weather) ===================== */
+  .dashboard-info-panel{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    max-width:1200px;
+    margin:0 auto 28px;
+    padding:0 20px;
+    align-items:stretch;
+  }
+  @media (max-width:820px){
+    .dashboard-info-panel{grid-template-columns:1fr; padding:0 14px;}
+  }
+  .info-widget{
+    background:var(--surface-2);
+    -webkit-backdrop-filter:blur(18px);
+    backdrop-filter:blur(18px);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    padding:18px 20px 16px;
+    display:flex;
+    flex-direction:column;
+    min-height:430px;
+    transition:background .4s ease, border-color .4s ease, transform .25s ease;
+  }
+  .info-widget:hover{transform:translateY(-2px);}
+  .widget-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding-bottom:12px;
+    margin-bottom:12px;
+    border-bottom:1px solid var(--border);
+  }
+  .widget-icon-badge{
+    width:40px; height:40px; flex:0 0 40px;
+    border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; color:#fff;
+    box-shadow:0 4px 14px rgba(0,0,0,0.25);
+  }
+  .news-widget .widget-icon-badge{background:linear-gradient(135deg,#ff6a6a,#d81f2a);}
+  .weather-widget .widget-icon-badge{background:linear-gradient(135deg,#4fc3ff,#1e78e0);}
+  .widget-header h2{
+    margin:0; font-size:1.02rem; font-weight:700; color:var(--text); letter-spacing:.2px;
+  }
+  .widget-refresh-note{
+    margin-left:auto; font-size:.68rem; color:var(--text-muted);
+    display:flex; align-items:center; gap:5px;
+  }
+  .widget-body{flex:1; overflow-y:auto; padding-right:2px;}
+  .widget-body::-webkit-scrollbar{width:6px;}
+  .widget-body::-webkit-scrollbar-thumb{background:var(--border); border-radius:6px;}
+  .widget-footer{
+    margin-top:12px; padding-top:10px; border-top:1px dashed var(--border);
+    font-size:.7rem; color:var(--text-muted); display:flex; align-items:center; gap:6px;
+  }
+  .widget-loading{
+    text-align:center; padding:40px 10px; color:var(--text-muted); font-size:.85rem;
+  }
+  .widget-loading i{margin-right:6px; animation:spin 1s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  .widget-error{
+    text-align:center; padding:34px 10px; color:var(--text-muted); font-size:.85rem; line-height:1.6;
+  }
+  .widget-error i{font-size:1.4rem; color:var(--accent2); display:block; margin-bottom:8px;}
+
+  @keyframes fadeInUp{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  .fade-refresh{animation:fadeInUp .45s ease both;}
+
+  /* --- News item --- */
+  .news-item{
+    padding:10px 2px; border-bottom:1px dashed var(--border);
+  }
+  .news-item:last-child{border-bottom:none;}
+  .news-headline{
+    font-size:.9rem; line-height:1.45; color:var(--text); font-weight:500;
+    user-select:text; cursor:default;
+  }
+  .news-time{
+    display:flex; align-items:center; gap:5px; margin-top:5px;
+    font-size:.7rem; color:var(--text-muted);
+  }
+
+  /* --- Weather --- */
+  .weather-main{display:flex; align-items:center; gap:16px; margin-bottom:14px;}
+  .weather-icon-big{font-size:2.7rem; color:var(--accent1); flex:0 0 auto;}
+  .weather-temp{font-size:2.3rem; font-weight:800; color:var(--text); line-height:1;}
+  .weather-condition{font-size:.85rem; color:var(--text-muted); margin-top:4px;}
+  .weather-datetime{
+    font-size:.76rem; color:var(--text-muted); margin-bottom:14px;
+    display:flex; flex-wrap:wrap; align-items:center; gap:6px;
+  }
+  .weather-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  }
+  .weather-stat{
+    background:var(--surface); border:1px solid var(--border); border-radius:11px;
+    padding:10px 8px; text-align:center; font-size:.72rem; color:var(--text-muted);
+  }
+  .weather-stat i{color:var(--accent1); margin-bottom:4px; display:block; font-size:1rem;}
+  .weather-stat b{display:block; margin-top:3px; font-size:.86rem; color:var(--text); font-weight:700;}
 </style>
 </head>
 <body>
@@ -797,6 +902,41 @@
     </div>
   </div>
 </div>
+
+<!-- ===================== Dashboard Information Panel ===================== -->
+<section class="dashboard-info-panel">
+
+  <!-- 📰 Bengali News Widget -->
+  <div class="info-widget news-widget">
+    <div class="widget-header">
+      <span class="widget-icon-badge"><i class="fa-solid fa-newspaper"></i></span>
+      <h2>Latest Bengali News</h2>
+      <span class="widget-refresh-note"><i class="fa-solid fa-rotate"></i> Every 15 min</span>
+    </div>
+    <div class="widget-body" id="newsBody">
+      <div class="widget-loading"><i class="fa-solid fa-spinner"></i> খবর লোড হচ্ছে...</div>
+    </div>
+    <div class="widget-footer">
+      <i class="fa-regular fa-clock"></i> <span id="newsLastUpdated">Last updated: --</span>
+    </div>
+  </div>
+
+  <!-- 🌤️ Kolkata Weather Widget -->
+  <div class="info-widget weather-widget">
+    <div class="widget-header">
+      <span class="widget-icon-badge"><i class="fa-solid fa-cloud-sun"></i></span>
+      <h2>Kolkata Weather</h2>
+      <span class="widget-refresh-note"><i class="fa-solid fa-rotate"></i> Every 2 min</span>
+    </div>
+    <div class="widget-body" id="weatherBody">
+      <div class="widget-loading"><i class="fa-solid fa-spinner"></i> আবহাওয়া লোড হচ্ছে...</div>
+    </div>
+    <div class="widget-footer">
+      <i class="fa-regular fa-clock"></i> <span id="weatherLastUpdated">Last updated: --</span>
+    </div>
+  </div>
+
+</section>
 
 <script>
 /* ===================== THEME ===================== */
@@ -2233,6 +2373,308 @@ window.onload = function() {
 
     renderCalendar();
 };
+
+/* ===========================================================================
+   📰 BENGALI NEWS WIDGET  —  ABP Ananda RSS Feed
+   =========================================================================== */
+const NEWS_RSS_URL   = 'https://bengali.abplive.com/home/feed';
+const NEWS_MAX_ITEMS = 8;
+const NEWS_REFRESH_MS = 15 * 60 * 1000; // 15 minutes
+
+/* Browsers block direct cross-origin RSS/XML fetches (the feed has no CORS
+   headers), so a read-only relay/converter service is needed. Free public
+   services occasionally go down or rate-limit, so several are tried in
+   order — if one fails, the next is tried automatically until one works.
+   Swap/add your own back-end URL here if you have one, for best reliability. */
+const NEWS_SOURCES = [
+    { type: 'rss2json', url: 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(NEWS_RSS_URL) },
+    { type: 'xml',       url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(NEWS_RSS_URL) },
+    { type: 'xml',       url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(NEWS_RSS_URL) },
+    { type: 'xml',       url: 'https://corsproxy.io/?url=' + encodeURIComponent(NEWS_RSS_URL) },
+    { type: 'xml',       url: 'https://thingproxy.freeboard.io/fetch/' + NEWS_RSS_URL }
+];
+
+function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : str;
+    return div.innerHTML;
+}
+
+function formatNewsTime(pubDateStr){
+    if (!pubDateStr) return '';
+    const d = new Date(pubDateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
+
+/* Normalizes results from either source type into a plain {title, pubDate}[] array */
+function parseXmlFeed(xmlText){
+    const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
+    if (xml.querySelector('parsererror')) throw new Error('Feed parse error');
+    const items = Array.from(xml.querySelectorAll('item')).slice(0, NEWS_MAX_ITEMS);
+    if (!items.length) throw new Error('Empty feed');
+    return items.map(item => ({
+        title: (item.querySelector('title') ? item.querySelector('title').textContent : '').trim(),
+        pubDate: (item.querySelector('pubDate') ? item.querySelector('pubDate').textContent : '').trim()
+    }));
+}
+
+function parseRss2Json(jsonData){
+    if (jsonData.status !== 'ok' || !Array.isArray(jsonData.items) || !jsonData.items.length) {
+        throw new Error('rss2json returned no items');
+    }
+    return jsonData.items.slice(0, NEWS_MAX_ITEMS).map(item => ({
+        title: (item.title || '').trim(),
+        pubDate: (item.pubDate || '').trim()
+    }));
+}
+
+/* Tries each configured source in order; resolves with the first that succeeds */
+async function fetchNewsFromAnySource(){
+    let lastError = null;
+    for (const source of NEWS_SOURCES){
+        try {
+            const res = await fetch(source.url, { cache: 'no-store' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+
+            if (source.type === 'rss2json'){
+                const data = await res.json();
+                return parseRss2Json(data);
+            } else {
+                const text = await res.text();
+                return parseXmlFeed(text);
+            }
+        } catch (err){
+            lastError = err;
+            console.warn('News source failed (' + source.url + '):', err.message);
+            /* automatically fall through to the next source */
+        }
+    }
+    throw lastError || new Error('All news sources failed');
+}
+
+function renderNewsItems(items){
+    const body = document.getElementById('newsBody');
+    if (!body) return;
+    body.innerHTML = '';
+    items.forEach((item, idx) => {
+        const title   = item.title || 'শিরোনাম পাওয়া যায়নি';
+        const timeLbl = formatNewsTime(item.pubDate);
+
+        const row = document.createElement('div');
+        row.className = 'news-item fade-refresh';
+        row.style.animationDelay = (idx * 0.06) + 's';
+        row.innerHTML =
+            '<div class="news-headline">' + escapeHtml(title) + '</div>' +
+            (timeLbl ? '<div class="news-time"><i class="fa-regular fa-clock"></i>' + timeLbl + '</div>' : '');
+        body.appendChild(row);
+    });
+}
+
+function updateNewsTimestamp(){
+    const el = document.getElementById('newsLastUpdated');
+    if (el) el.innerText = 'Last updated: ' + new Date().toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+}
+
+async function fetchBengaliNews(){
+    const body = document.getElementById('newsBody');
+    if (!body) return;
+    try {
+        const items = await fetchNewsFromAnySource();
+        renderNewsItems(items);
+        updateNewsTimestamp();
+    } catch (err){
+        console.error('Bengali News fetch failed on all sources:', err);
+        body.innerHTML = '<div class="widget-error"><i class="fa-solid fa-triangle-exclamation"></i>News temporarily unavailable.</div>';
+    }
+}
+
+/* ===========================================================================
+   🌤️ KOLKATA WEATHER WIDGET  —  multiple sources, auto-failover
+   Location is always fixed to Kolkata (22.5726, 88.3639) — only the SOURCE
+   used to fetch that same location's data rotates/fails-over, never the place.
+   =========================================================================== */
+const KOLKATA_LAT = 22.5726;
+const KOLKATA_LON = 88.3639;
+const WEATHER_REFRESH_MS = 2 * 60 * 1000; // 2 minutes
+
+/* WMO weather_code (Open-Meteo) -> Font Awesome icon + Bengali condition label */
+const WEATHER_CODE_MAP = {
+    0:  { icon: 'fa-sun',                label: 'পরিষ্কার আকাশ' },
+    1:  { icon: 'fa-cloud-sun',          label: 'প্রায় পরিষ্কার' },
+    2:  { icon: 'fa-cloud-sun',          label: 'আংশিক মেঘলা' },
+    3:  { icon: 'fa-cloud',              label: 'মেঘলা আকাশ' },
+    45: { icon: 'fa-smog',               label: 'কুয়াশাচ্ছন্ন' },
+    48: { icon: 'fa-smog',               label: 'কুয়াশাচ্ছন্ন' },
+    51: { icon: 'fa-cloud-rain',         label: 'হালকা গুঁড়ি বৃষ্টি' },
+    53: { icon: 'fa-cloud-rain',         label: 'গুঁড়ি বৃষ্টি' },
+    55: { icon: 'fa-cloud-rain',         label: 'ভারী গুঁড়ি বৃষ্টি' },
+    61: { icon: 'fa-cloud-showers-heavy',label: 'হালকা বৃষ্টি' },
+    63: { icon: 'fa-cloud-showers-heavy',label: 'বৃষ্টি' },
+    65: { icon: 'fa-cloud-showers-heavy',label: 'ভারী বৃষ্টি' },
+    71: { icon: 'fa-snowflake',          label: 'তুষারপাত' },
+    80: { icon: 'fa-cloud-showers-heavy',label: 'বৃষ্টির ঝাপটা' },
+    81: { icon: 'fa-cloud-showers-heavy',label: 'বৃষ্টির ঝাপটা' },
+    82: { icon: 'fa-cloud-showers-heavy',label: 'তীব্র বৃষ্টির ঝাপটা' },
+    95: { icon: 'fa-cloud-bolt',         label: 'বজ্রঝড়' },
+    96: { icon: 'fa-cloud-bolt',         label: 'বজ্রঝড় ও শিলাবৃষ্টি' },
+    99: { icon: 'fa-cloud-bolt',         label: 'বজ্রঝড় ও শিলাবৃষ্টি' }
+};
+function weatherInfoFor(code){
+    return WEATHER_CODE_MAP[code] || { icon: 'fa-cloud', label: 'অজানা অবস্থা' };
+}
+
+/* Free-text condition (from non-WMO sources) -> Font Awesome icon, by keyword */
+function iconForConditionText(desc){
+    const d = (desc || '').toLowerCase();
+    if (d.includes('thunder')) return 'fa-cloud-bolt';
+    if (d.includes('snow')) return 'fa-snowflake';
+    if (d.includes('rain') || d.includes('drizzle') || d.includes('shower')) return 'fa-cloud-showers-heavy';
+    if (d.includes('fog') || d.includes('mist') || d.includes('haze')) return 'fa-smog';
+    if (d.includes('overcast') || d.includes('cloud')) return 'fa-cloud';
+    if (d.includes('clear') || d.includes('sunny')) return 'fa-sun';
+    return 'fa-cloud-sun';
+}
+
+function formatClockTime(isoOrDateStr){
+    if (!isoOrDateStr) return '--:--';
+    const d = new Date(isoOrDateStr);
+    if (isNaN(d.getTime())) return '--:--';
+    return d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+}
+
+/* --- Each source's raw response is normalized into this common shape:
+   { temp, feelsLike, humidity, windSpeed, icon, condition, sunrise, sunset } --- */
+function parseOpenMeteoText(text){
+    const data = JSON.parse(text);
+    if (!data.current) throw new Error('Malformed Open-Meteo response');
+    const cur = data.current, daily = data.daily || {};
+    const info = weatherInfoFor(cur.weather_code);
+    return {
+        temp: Math.round(cur.temperature_2m),
+        feelsLike: Math.round(cur.apparent_temperature),
+        humidity: cur.relative_humidity_2m + '%',
+        windSpeed: cur.wind_speed_10m + ' km/h',
+        icon: info.icon,
+        condition: info.label,
+        sunrise: formatClockTime(daily.sunrise ? daily.sunrise[0] : null),
+        sunset: formatClockTime(daily.sunset ? daily.sunset[0] : null)
+    };
+}
+
+function parseWttrText(text){
+    const data = JSON.parse(text);
+    const cur = data.current_condition && data.current_condition[0];
+    if (!cur) throw new Error('Malformed wttr.in response');
+    const astro = data.weather && data.weather[0] && data.weather[0].astronomy && data.weather[0].astronomy[0];
+    const descText = (cur.weatherDesc && cur.weatherDesc[0] && cur.weatherDesc[0].value) || 'Unknown';
+    return {
+        temp: Math.round(parseFloat(cur.temp_C)),
+        feelsLike: Math.round(parseFloat(cur.FeelsLikeC)),
+        humidity: cur.humidity + '%',
+        windSpeed: cur.windspeedKmph + ' km/h',
+        icon: iconForConditionText(descText),
+        condition: descText,
+        sunrise: astro ? astro.sunrise : '--:--',
+        sunset: astro ? astro.sunset : '--:--'
+    };
+}
+
+/* Multiple independent sources for the SAME fixed Kolkata location — if one
+   fails or rate-limits, the next is tried automatically. Only this source
+   list rotates; latitude/longitude/city never change from Kolkata. */
+const OPEN_METEO_KOLKATA_URL =
+    'https://api.open-meteo.com/v1/forecast?latitude=' + KOLKATA_LAT + '&longitude=' + KOLKATA_LON +
+    '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m' +
+    '&daily=sunrise,sunset&timezone=Asia/Kolkata';
+
+const WEATHER_SOURCES = [
+    { name: 'open-meteo',            url: OPEN_METEO_KOLKATA_URL, parse: parseOpenMeteoText },
+    { name: 'open-meteo-via-proxy1', url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(OPEN_METEO_KOLKATA_URL), parse: parseOpenMeteoText },
+    { name: 'wttr.in',               url: 'https://wttr.in/' + KOLKATA_LAT + ',' + KOLKATA_LON + '?format=j1', parse: parseWttrText },
+    { name: 'open-meteo-via-proxy2', url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(OPEN_METEO_KOLKATA_URL), parse: parseOpenMeteoText }
+];
+
+async function fetchWeatherFromAnySource(){
+    let lastError = null;
+    for (const source of WEATHER_SOURCES){
+        try {
+            const res = await fetch(source.url, { cache: 'no-store' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const text = await res.text();
+            return source.parse(text);
+        } catch (err){
+            lastError = err;
+            console.warn('Weather source failed (' + source.name + '):', err.message);
+            /* automatically fall through to the next source */
+        }
+    }
+    throw lastError || new Error('All weather sources failed');
+}
+
+function updateWeatherTimestamp(){
+    const el = document.getElementById('weatherLastUpdated');
+    if (el) el.innerText = 'Last updated: ' + new Date().toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+}
+
+function renderWeather(w){
+    const body = document.getElementById('weatherBody');
+    if (!body) return;
+    const now = new Date();
+
+    const dateLabel = now.toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const timeLabel = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+
+    body.innerHTML =
+        '<div class="weather-main fade-refresh">' +
+            '<div class="weather-icon-big"><i class="fa-solid ' + w.icon + '"></i></div>' +
+            '<div>' +
+                '<div class="weather-temp">' + w.temp + '°C</div>' +
+                '<div class="weather-condition">' + escapeHtml(w.condition) + '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="weather-datetime fade-refresh">' +
+            '<i class="fa-regular fa-calendar"></i> ' + dateLabel +
+            ' &nbsp;•&nbsp; <i class="fa-regular fa-clock"></i> ' + timeLabel +
+        '</div>' +
+        '<div class="weather-grid fade-refresh">' +
+            '<div class="weather-stat"><i class="fa-solid fa-temperature-half"></i>Feels like<b>' + w.feelsLike + '°C</b></div>' +
+            '<div class="weather-stat"><i class="fa-solid fa-droplet"></i>Humidity<b>' + w.humidity + '</b></div>' +
+            '<div class="weather-stat"><i class="fa-solid fa-wind"></i>Wind Speed<b>' + w.windSpeed + '</b></div>' +
+            '<div class="weather-stat"><i class="fa-solid fa-sun"></i>Sunrise<b>' + w.sunrise + '</b></div>' +
+            '<div class="weather-stat"><i class="fa-solid fa-moon"></i>Sunset<b>' + w.sunset + '</b></div>' +
+        '</div>';
+}
+
+async function fetchKolkataWeather(){
+    const body = document.getElementById('weatherBody');
+    if (!body) return;
+    try {
+        const normalized = await fetchWeatherFromAnySource();
+        renderWeather(normalized);
+        updateWeatherTimestamp();
+    } catch (err){
+        console.error('Kolkata Weather fetch failed on all sources:', err);
+        body.innerHTML = '<div class="widget-error"><i class="fa-solid fa-triangle-exclamation"></i>Weather temporarily unavailable.</div>';
+    }
+}
+
+/* ===================== INIT + AUTO-REFRESH ===================== */
+document.addEventListener('DOMContentLoaded', function(){
+    fetchBengaliNews();
+    fetchKolkataWeather();
+    setInterval(fetchBengaliNews, NEWS_REFRESH_MS);
+    setInterval(fetchKolkataWeather, WEATHER_REFRESH_MS);
+});
 </script>
 
 <button id="backToTopBtn" title="Back to Top" aria-label="Back to Top" onclick="window.scrollTo({top:0, behavior:'smooth'})">
