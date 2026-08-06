@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ডিসপ্যাচ বোর্ড — CATV / BB TECH / BB RENEWAL পোর্টাল</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #f6f7fb;
+    --panel: #ffffff;
+    --panel-2: #f1f3fb;
+    --line: #e3e6f2;
+    --text: #1c2333;
+    --text-soft: #3a4257;
+    --muted: #7681a0;
+    --accent: #6c5ce7;
+    --accent-dim: #eae7fd;
+    --amber: #ff9f43;
+    --amber-dim: #fff1e0;
+    --green: #16a679;
+    --green-dim: #e3f9f1;
+    --red: #ef5b6f;
+    --red-dim: #fdeaee;
+    --pink: #ff6fa5;
+    --dept-catv: #6c5ce7;
+    --dept-bbtech: #3d8bfd;
+    --dept-bbrenewal: #17a2b8;
+    --radius: 12px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 40%),
+      radial-gradient(circle at 95% 15%, rgba(255,159,67,0.12), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(61,139,253,0.08), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Hind Siliguri', sans-serif;
+    min-height:100vh;
+    transition:background .3s ease;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+  ::selection{background:var(--amber); color:#fff;}
+
+  .bg-blob{
+    position:fixed; border-radius:50%; filter:blur(40px); z-index:0; pointer-events:none; opacity:.55;
+  }
+  .bg-blob.b1{ width:340px; height:340px; top:-80px; left:-80px; background:var(--accent); animation:blobMove1 16s ease-in-out infinite; }
+  .bg-blob.b2{ width:300px; height:300px; top:20%; right:-100px; background:var(--amber); animation:blobMove2 20s ease-in-out infinite; }
+  .bg-blob.b3{ width:280px; height:280px; bottom:-100px; left:30%; background:var(--pink); animation:blobMove3 18s ease-in-out infinite; }
+
+  .bg-particles{ position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none; }
+  .bg-particle{
+    position:absolute; bottom:-60px; border-radius:50%;
+    animation-name:riseUp; animation-timing-function:linear; animation-iteration-count:infinite;
+  }
+  @keyframes riseUp{
+    0%{ transform:translateY(0) translateX(0) scale(1); opacity:0; }
+    12%{ opacity:.5; }
+    88%{ opacity:.35; }
+    100%{ transform:translateY(-115vh) translateX(var(--drift, 20px)) scale(1.3); opacity:0; }
+  }
+  .topstrip, .wrap{ position:relative; z-index:1; }
+
+  .screen.active{ animation:screenSlideIn .38s cubic-bezier(.22,1,.36,1) both; }
+
+  .ripple-el{
+    position:absolute; border-radius:50%; background:rgba(255,255,255,0.55); pointer-events:none;
+    animation:ripple .55s ease-out forwards; transform:scale(0);
+  }
+  .btn, .gate-card, .tab, .chip, .theme-btn, .fmt-btn{ position:relative; overflow:hidden; }
+
+  .wiggle-hover:hover{ animation:wiggle .4s ease; display:inline-block; }
+
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes floatSlow{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+  @keyframes popIn{ from{opacity:0; transform:scale(.96);} to{opacity:1; transform:scale(1);} }
+  @keyframes shimmer{ 0%{background-position:0% 50%;} 100%{background-position:200% 50%;} }
+  @keyframes pulseDot{ 0%,100%{transform:scale(1); opacity:1;} 50%{transform:scale(1.4); opacity:.6;} }
+  @keyframes blobMove1{ 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(40px,30px) scale(1.15);} 66%{transform:translate(-20px,50px) scale(.9);} }
+  @keyframes blobMove2{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-50px,-30px) scale(1.2);} }
+  @keyframes blobMove3{ 0%,100%{transform:translate(0,0) scale(1);} 40%{transform:translate(30px,-40px) scale(.85);} 70%{transform:translate(-30px,20px) scale(1.1);} }
+  @keyframes wiggle{ 0%,100%{transform:rotate(0deg);} 25%{transform:rotate(-8deg);} 75%{transform:rotate(8deg);} }
+  @keyframes badgePulse{ 0%,100%{box-shadow:0 0 0 0 rgba(239,91,111,0.45);} 50%{box-shadow:0 0 0 6px rgba(239,91,111,0);} }
+  @keyframes ripple{ from{transform:scale(0); opacity:.55;} to{transform:scale(2.6); opacity:0;} }
+  @keyframes spinDots{ to{transform:rotate(360deg);} }
+  @keyframes screenSlideIn{ from{opacity:0; transform:translateY(14px) scale(.99);} to{opacity:1; transform:translateY(0) scale(1);} }
+  @keyframes bounceIn{ 0%{opacity:0; transform:scale(.7);} 60%{opacity:1; transform:scale(1.06);} 100%{transform:scale(1);} }
+  @keyframes slideInLeft{ from{opacity:0; transform:translateX(-26px);} to{opacity:1; transform:translateX(0);} }
+  @keyframes slideInScale{ from{opacity:0; transform:scale(.86);} to{opacity:1; transform:scale(1);} }
+  @keyframes dropInTop{ from{opacity:0; transform:translateY(-26px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes glowCatv{ 0%,100%{box-shadow:0 2px 10px rgba(28,35,51,0.04);} 50%{box-shadow:0 8px 22px rgba(108,92,231,0.28);} }
+  @keyframes glowBbtech{ 0%,100%{box-shadow:0 2px 10px rgba(28,35,51,0.04);} 50%{box-shadow:0 8px 22px rgba(61,139,253,0.28);} }
+  @keyframes glowBbrenewal{ 0%,100%{box-shadow:0 2px 10px rgba(28,35,51,0.04);} 50%{box-shadow:0 8px 22px rgba(23,162,184,0.28);} }
+  @keyframes tabPop{ from{transform:scale(.9);} to{transform:scale(1);} }
+  @keyframes chipPop{ 0%{transform:scale(.85);} 60%{transform:scale(1.1);} 100%{transform:scale(1);} }
+  @keyframes shimmerSweep{ 0%{left:-150%;} 45%{left:150%;} 100%{left:150%;} }
+
+  .topstrip{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 28px; border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,0.85); backdrop-filter:blur(8px);
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:11px; height:11px; border-radius:50%;
+    background:linear-gradient(135deg, var(--accent), var(--pink));
+    animation:pulseDot 2.2s ease-in-out infinite;
+  }
+  .brand-name{font-family:'JetBrains Mono',monospace; letter-spacing:2px; font-size:13px; color:var(--muted); text-transform:uppercase;}
+  .topstrip-right{display:flex; align-items:center; gap:14px;}
+  .clock{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); font-weight:600;}
+  .datetime-box{ display:flex; flex-direction:column; align-items:flex-end; line-height:1.35; }
+  .date-text{ font-size:10px; color:var(--muted); letter-spacing:.5px; }
+
+  .theme-wrap{position:relative;}
+  .theme-btn{
+    width:32px; height:32px; border-radius:50%; border:2px solid var(--line); cursor:pointer;
+    background:linear-gradient(135deg, var(--accent), var(--pink)); display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+  }
+  .theme-panel{
+    position:absolute; top:42px; right:0; background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px; box-shadow:0 12px 28px rgba(28,35,51,0.15);
+    display:none; z-index:30; width:200px; animation:popIn .18s ease both;
+  }
+  .theme-panel.open{display:block;}
+  .theme-panel-title{font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:1px; margin-bottom:10px; text-transform:uppercase;}
+  .swatches{display:grid; grid-template-columns:repeat(6,1fr); gap:8px;}
+  .swatch{
+    width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:transform .12s ease;
+  }
+  .swatch:hover{transform:scale(1.15);}
+  .swatch.active{border-color:var(--text);}
+
+  .wrap{max-width:1040px; margin:0 auto; padding:40px 20px 80px;}
+
+  .gate-head{text-align:center; margin-bottom:44px; animation:fadeUp .5s ease both;}
+  .gate-eyebrow{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:3px;
+    color:var(--accent); text-transform:uppercase; margin-bottom:14px; padding:5px 14px;
+    background:var(--accent-dim); border-radius:20px;
+  }
+  .gate-title{font-size:34px; font-weight:700; margin-bottom:10px;}
+  .gate-sub{color:var(--muted); font-size:15px;}
+
+  .gate-cards{display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; perspective:900px;}
+  @media (max-width:760px){.gate-cards{grid-template-columns:1fr;}}
+
+  .gate-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:30px 26px; cursor:pointer; text-align:left; position:relative; overflow:hidden;
+    transition:box-shadow .2s ease, transform .2s ease;
+    box-shadow:0 2px 10px rgba(28,35,51,0.04);
+    animation:fadeUp .5s ease both;
+    will-change:transform;
+  }
+  .gate-card:hover{ transform:translateY(-4px); box-shadow:0 12px 24px rgba(28,35,51,0.14); }
+  /* Deep entrance: elastic overshoot */
+  .gate-cards .gate-card:nth-child(1){ animation:slideInLeft .7s cubic-bezier(.34,1.56,.64,1) both; }
+  .gate-cards .gate-card:nth-child(2){ animation:dropInTop .7s cubic-bezier(.34,1.56,.64,1) both; animation-delay:.1s; }
+  .gate-cards .gate-card:nth-child(3){ animation:slideInScale .7s cubic-bezier(.34,1.56,.64,1) both; animation-delay:.2s; }
+  .gate-card.dept-catv{ border-top:3px solid var(--dept-catv); }
+  .gate-card.dept-bbtech{ border-top:3px solid var(--dept-bbtech); }
+  .gate-card.dept-bbrenewal{ border-top:3px solid var(--dept-bbrenewal); }
+  /* Deep always-on glow pulse, independent of transform so entrance/tilt still work */
+  .gate-cards .gate-card.dept-catv{ animation:slideInLeft .7s cubic-bezier(.34,1.56,.64,1) both, glowCatv 2.6s ease-in-out infinite 1s; }
+  .gate-cards .gate-card.dept-bbtech{ animation:dropInTop .7s cubic-bezier(.34,1.56,.64,1) both .1s, glowBbtech 2.6s ease-in-out infinite 1.3s; }
+  .gate-cards .gate-card.dept-bbrenewal{ animation:slideInScale .7s cubic-bezier(.34,1.56,.64,1) both .2s, glowBbrenewal 2.6s ease-in-out infinite 1.6s; }
+  .gate-card::before{
+    content:attr(data-code); position:absolute; top:14px; right:18px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--line); letter-spacing:1px;
+    animation:pulseDot 2.4s ease-in-out infinite;
+  }
+  .gate-card-icon{
+    font-size:26px; display:inline-block; margin-bottom:10px;
+    animation:floatSlow 3s ease-in-out infinite;
+  }
+  .gate-cards .gate-card:nth-child(1) .gate-card-icon{ animation-delay:0s; }
+  .gate-cards .gate-card:nth-child(2) .gate-card-icon{ animation-delay:.4s; }
+  .gate-cards .gate-card:nth-child(3) .gate-card-icon{ animation-delay:.8s; }
+  /* Shimmer sweep across the card surface, looping */
+  .gate-cards .gate-card::after{
+    content:''; position:absolute; top:0; left:-150%; width:55%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,0.5), transparent);
+    transform:skewX(-20deg); pointer-events:none;
+    animation:shimmerSweep 4.2s ease-in-out infinite;
+  }
+  .gate-cards .gate-card:nth-child(1)::after{ animation-delay:.3s; }
+  .gate-cards .gate-card:nth-child(2)::after{ animation-delay:1.1s; }
+  .gate-cards .gate-card:nth-child(3)::after{ animation-delay:1.9s; }
+  .gate-card h3{font-size:20px; margin-bottom:8px;}
+  .gate-card p{color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:20px;}
+  .gate-card .go{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:1px; display:flex; align-items:center; gap:6px;
+  }
+  .dept-catv .go{ color:var(--dept-catv); }
+  .dept-bbtech .go{ color:var(--dept-bbtech); }
+  .dept-bbrenewal .go{ color:var(--dept-bbrenewal); }
+  .gate-card .go::after{content:"→"; transition:transform .15s ease;}
+  .gate-cards .gate-card:hover .go::after{transform:translateX(6px) scale(1.15);}
+
+  .role-cards{ max-width:680px; margin:0 auto; }
+
+  /* Big highlighted Agent card */
+  .agent-hero{
+    display:block; text-align:center; padding:44px 30px; margin-bottom:22px;
+    border-width:2px; border-style:solid; border-color:var(--dept-bbtech);
+    box-shadow:0 10px 34px rgba(61,139,253,0.18);
+    animation:bounceIn .55s ease both, glowBbtech 2.4s ease-in-out infinite .6s;
+  }
+  .agent-hero-icon{ font-size:46px; margin-bottom:14px; display:block; animation:floatSlow 2.6s ease-in-out infinite; }
+  .agent-hero h3{ font-size:26px; margin-bottom:10px; }
+  .agent-hero p{ font-size:15px; margin-bottom:24px; }
+  .agent-hero .go{ justify-content:center; font-size:13px; }
+
+  /* Small TL / Manager / QA row */
+  .small-roles{ display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:12px; }
+  @media (max-width:560px){ .small-roles{ grid-template-columns:1fr; } }
+  .gate-card.small{ padding:16px 14px; text-align:center; }
+  .gate-card.small h3{ font-size:14px; margin-bottom:6px; }
+  .gate-card.small .go{ font-size:10px; justify-content:center; }
+  .small-roles .gate-card:nth-child(2){ animation-delay:.06s; }
+  .small-roles .gate-card:nth-child(3){ animation-delay:.12s; }
+  .gate-card.rc-leader{ border-top:3px solid #ffb020; }
+  .gate-card.rc-leader .go{ color:#ffb020; }
+  .gate-card.rc-agent{ border-top:3px solid var(--dept-bbtech); }
+  .gate-card.rc-agent .go{ color:var(--dept-bbtech); }
+  .gate-card.rc-manager{ border-top:3px solid #2dd4bf; }
+  .gate-card.rc-manager .go{ color:#2dd4bf; }
+  .gate-card.rc-qa{ border-top:3px solid #c084fc; }
+  .gate-card.rc-qa .go{ color:#c084fc; }
+  .gate-card.rc-supervisor{ border-top:3px solid #f0653e; }
+  .gate-card.rc-supervisor .go{ color:#f0653e; }
+  .clock{ position:relative; }
+  .clock::after{ content:"●"; margin-left:6px; color:var(--green); animation:pulseDot 1.4s ease-in-out infinite; font-size:9px; }
+
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    max-width:420px; margin:0 auto; padding:32px;
+    box-shadow:0 8px 30px rgba(28,35,51,0.07);
+    animation:popIn .3s ease both;
+  }
+  .panel-back{
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);
+    cursor:pointer; margin-bottom:22px; display:inline-block;
+  }
+  .panel-back:hover{color:var(--accent);}
+  .panel-tag{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:6px;}
+  .panel-title{font-size:22px; font-weight:700; margin-bottom:22px;}
+
+  .tabs{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:22px;}
+  .tab{flex:1; text-align:center; padding:10px; font-size:13px; cursor:pointer; color:var(--muted); background:var(--panel-2); transition:all .15s ease;}
+  .tab.active{background:linear-gradient(135deg, var(--accent), var(--pink)); color:#fff; font-weight:600; animation:tabPop .22s ease;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-family:'JetBrains Mono',monospace; letter-spacing:.5px;}
+  .field input, .field select{
+    width:100%; padding:11px 12px; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:var(--radius); color:var(--text); font-family:'Hind Siliguri',sans-serif; font-size:15px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus, .field select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);}
+
+  .btn{
+    width:100%; padding:12px; border:none; border-radius:var(--radius);
+    background:linear-gradient(135deg, var(--accent), var(--pink)); color:#fff; font-weight:700; font-size:15px; cursor:pointer;
+    font-family:'Hind Siliguri',sans-serif; transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 4px 14px rgba(28,35,51,0.2);
+  }
+  .btn:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(28,35,51,0.28);}
+  .btn:active{transform:translateY(0);}
+  .btn:disabled{opacity:.5; cursor:not-allowed; transform:none;}
+  .btn:focus-visible, .tab:focus-visible, .gate-card:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .btn-ghost{
+    background:transparent; border:1px solid var(--line); color:var(--muted); font-weight:500; box-shadow:none;
+  }
+  .btn-ghost:hover{border-color:var(--red); color:var(--red); background:var(--red-dim); transform:none; box-shadow:none;}
+  .btn-sm{width:auto; padding:8px 14px; font-size:13px;}
+  .btn-outline{
+    background:transparent; border:1px solid var(--accent); color:var(--accent); box-shadow:none; font-weight:600;
+  }
+  .btn-outline:hover{background:var(--accent-dim); transform:none; box-shadow:none;}
+  .btn-danger-outline{
+    background:transparent; border:1px solid var(--red); color:var(--red); box-shadow:none; font-weight:600;
+  }
+  .btn-danger-outline:hover{background:var(--red-dim); transform:none; box-shadow:none;}
+
+  .error-msg{
+    background:var(--red-dim); border:1px solid var(--red); color:var(--red);
+    padding:10px 12px; border-radius:var(--radius); font-size:13px; margin-bottom:16px; display:none;
+    animation:fadeUp .2s ease both;
+  }
+  .hint{font-size:12px; color:var(--muted); margin-top:14px; line-height:1.6;}
+
+  .dash-header{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;
+    padding-bottom:18px; border-bottom:1px solid var(--line);
+    animation:fadeUp .4s ease both; flex-wrap:wrap; gap:14px;
+  }
+  .dash-role{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase;}
+  .dash-name{font-size:22px; font-weight:700; margin-top:4px;}
+  .dash-actions{display:flex; gap:10px; align-items:center;}
+  .dept-pill{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1px;
+    padding:4px 12px; border-radius:20px; margin-top:6px; font-weight:600;
+  }
+  .dept-pill.catv{ background:#eae7fd; color:var(--dept-catv); }
+  .dept-pill.bbtech{ background:#e3edff; color:var(--dept-bbtech); }
+  .dept-pill.bbrenewal{ background:#e2f6f9; color:var(--dept-bbrenewal); }
+
+  .panel-2card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:24px; margin-bottom:24px;
+    box-shadow:0 2px 10px rgba(28,35,51,0.04);
+    animation:fadeUp .4s ease both;
+  }
+  .panel-2card h3{font-size:16px; margin-bottom:18px; display:flex; align-items:center; gap:8px;}
+  .panel-2card h3::before{content:""; width:8px; height:8px; background:linear-gradient(135deg, var(--amber), var(--pink)); border-radius:50%;}
+
+  .fmt-toolbar{display:flex; gap:6px; margin-bottom:8px;}
+  .fmt-btn{
+    width:34px; height:34px; border-radius:8px; border:1px solid var(--line); background:var(--panel-2);
+    cursor:pointer; font-size:14px; color:var(--text); transition:all .12s ease;
+  }
+  .fmt-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .fmt-btn.b{font-weight:800;}
+  .fmt-btn.i{font-style:italic;}
+  .fmt-btn.u{text-decoration:underline;}
+
+  textarea{
+    width:100%; padding:11px 12px; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:var(--radius); color:var(--text); font-family:'Hind Siliguri',sans-serif; font-size:15px;
+    min-height:90px; resize:vertical; transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);}
+
+  .image-field{
+    border:1.5px dashed var(--line); border-radius:var(--radius); padding:14px; text-align:center;
+    background:var(--panel-2); cursor:pointer;
+  }
+  .image-field:hover{border-color:var(--accent);}
+  .image-field input[type=file]{display:none;}
+  .image-field-label{font-size:13px; color:var(--muted);}
+  #image-preview{margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  #image-preview img{max-width:110px; border-radius:8px; border:1px solid var(--line);}
+
+  .search-box{
+    position:relative; margin-bottom:16px;
+  }
+  .search-box .search-icon{
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    font-size:14px; opacity:.6; pointer-events:none;
+  }
+  .search-box input{
+    width:100%; padding:12px 14px 12px 40px; background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); color:var(--text); font-family:'Hind Siliguri',sans-serif; font-size:15px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .search-box input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }
+
+  .date-filter-row{
+    display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;
+  }
+  .date-filter-row label{ font-size:13px; color:var(--muted); }
+  .date-filter-row input[type=date]{
+    padding:9px 12px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    color:var(--text); font-family:'Hind Siliguri',sans-serif; font-size:14px;
+  }
+  .date-filter-row input[type=date]:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }
+
+  .ticker-bar{
+    display:flex; align-items:center; gap:10px;
+    background:linear-gradient(135deg, var(--accent-dim), var(--panel));
+    border:1px solid var(--accent); border-radius:var(--radius);
+    padding:10px 16px; margin-bottom:16px; overflow:hidden;
+  }
+  .ticker-icon{ flex-shrink:0; font-size:16px; animation:pulseDot 1.6s ease-in-out infinite; }
+  .ticker-viewport{ flex:1; overflow:hidden; white-space:nowrap; position:relative; }
+  .ticker-track{
+    display:inline-block; padding-left:100%; font-weight:700; color:var(--text);
+    animation:tickerScroll 16s linear infinite;
+  }
+  @keyframes tickerScroll{ 0%{ transform:translateX(0); } 100%{ transform:translateX(-100%); } }
+  .ticker-edit-box{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+  .ticker-edit-box input{ flex:1; min-width:180px; }
+
+  .feed-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;}
+  .feed-toolbar h3{font-size:16px;}
+  .filter-chips{display:flex; gap:8px;}
+  .chip{
+    font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 12px; border:1px solid var(--line);
+    border-radius:20px; cursor:pointer; color:var(--muted); letter-spacing:.5px; transition:all .15s ease; background:var(--panel);
+  }
+  .chip.active{border-color:var(--accent); color:#fff; background:linear-gradient(135deg, var(--accent), var(--pink)); animation:chipPop .25s ease;}
+
+  .bulk-bar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; padding:10px 14px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius); font-size:13px;
+  }
+  .bulk-bar label{display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--muted);}
+  .bulk-count{font-family:'JetBrains Mono',monospace; color:var(--accent); font-weight:600;}
+
+  .post{
+    background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--dept-bbtech);
+    border-radius:var(--radius); padding:18px 20px; margin-bottom:12px; position:relative;
+    box-shadow:0 2px 10px rgba(28,35,51,0.04);
+    animation:fadeUp .35s ease both;
+    transition:transform .15s ease, box-shadow .15s ease;
+    display:flex; gap:12px;
+  }
+  .post:hover{ transform:translateY(-2px); box-shadow:0 10px 22px rgba(28,35,51,0.08); }
+  #leader-feed .post:nth-child(1),#agent-feed .post:nth-child(1){animation-delay:.02s;}
+  #leader-feed .post:nth-child(2),#agent-feed .post:nth-child(2){animation-delay:.06s;}
+  #leader-feed .post:nth-child(3),#agent-feed .post:nth-child(3){animation-delay:.10s;}
+  #leader-feed .post:nth-child(4),#agent-feed .post:nth-child(4){animation-delay:.14s;}
+  #leader-feed .post:nth-child(5),#agent-feed .post:nth-child(5){animation-delay:.18s;}
+  #leader-feed .post:nth-child(n+6),#agent-feed .post:nth-child(n+6){animation-delay:.22s;}
+  .post.urgent{border-left-color:var(--red);}
+  .post-check{margin-top:4px; width:16px; height:16px; accent-color:var(--accent); cursor:pointer; flex-shrink:0;}
+  .post-content{flex:1; min-width:0;}
+  .post-meta{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; gap:10px;}
+  .post-badges{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .badge{
+    font-family:'JetBrains Mono',monospace; font-size:10px; padding:3px 9px; border-radius:10px;
+    letter-spacing:.5px; text-transform:uppercase; font-weight:600;
+  }
+  .badge.urgent{background:var(--red-dim); color:var(--red); animation:badgePulse 1.8s ease-in-out infinite;}
+  .badge.normal{background:var(--green-dim); color:var(--green);}
+  .post-title{font-size:16px; font-weight:700; margin-bottom:6px;}
+  .post-body{color:var(--text-soft); font-size:14px; line-height:1.7; white-space:pre-wrap; word-break:break-word;}
+  .post-img{
+    margin-top:12px; max-width:100%; border-radius:8px; display:block; border:1px solid var(--line); cursor:zoom-in;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .post-img:hover{ transform:scale(1.015); box-shadow:0 10px 24px rgba(28,35,51,0.15); }
+  .post-foot{display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); flex-wrap:wrap; gap:8px;}
+  .post-author{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); font-weight:600;}
+  .post-time{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted);}
+  .del-btn{
+    background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:13px;
+    font-family:'JetBrains Mono',monospace; transition:color .15s ease;
+  }
+  .del-btn:hover{color:var(--red);}
+
+  .empty{
+    text-align:center; padding:50px 20px; color:var(--muted); border:1px dashed var(--line); border-radius:var(--radius);
+    background:var(--panel);
+  }
+  .empty .big{font-size:28px; margin-bottom:10px; display:inline-block; animation:floatSlow 3s ease-in-out infinite;}
+
+  /* ---------------- Login-based zones (TL / Manager / QA): visually separated, distinct per role ---------------- */
+  .zone-dark{
+    --panel: #151b2c;
+    --panel-2: #1d2540;
+    --line: #2b3352;
+    --text: #f1f3f9;
+    --text-soft: #c7cfe6;
+    --muted: #93a0c4;
+    background:
+      radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 45%),
+      radial-gradient(circle at 100% 100%, rgba(108,92,231,0.12), transparent 45%),
+      #0d1220;
+    border-radius:20px;
+    padding:32px 24px 54px;
+    margin-top:-6px;
+    box-shadow:0 24px 55px rgba(8,11,22,0.35);
+    animation:fadeUp .4s ease both;
+  }
+  .zone-dark .panel-back, .zone-dark .btn-ghost{ color:var(--muted); }
+  .role-leader{ --accent:#ffb020; --accent-dim:#3a2a10; }
+  .role-manager{ --accent:#2dd4bf; --accent-dim:#0f2e2a; }
+  .role-qa{ --accent:#c084fc; --accent-dim:#2a1f3d; }
+  .role-supervisor{ --accent:#f0653e; --accent-dim:#3a1810; }
+  .tl-tag{
+    display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace;
+    font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent);
+    background:var(--accent-dim); border:1px solid rgba(255,255,255,0.15);
+    padding:5px 14px; border-radius:20px; margin-bottom:18px;
+  }
+
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .loading{
+    text-align:center; padding:40px; font-family:'JetBrains Mono',monospace; font-size:13px;
+    display:flex; flex-direction:column; align-items:center; gap:12px;
+  }
+  .loading-text{
+    background:linear-gradient(90deg, var(--muted), var(--accent), var(--muted));
+    background-size:200% auto; -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:shimmer 1.8s linear infinite;
+  }
+  .spinner{
+    width:26px; height:26px; border-radius:50%;
+    border:3px solid var(--line); border-top-color:var(--accent);
+    animation:spinDots .7s linear infinite;
+  }
+
+  .lightbox{
+    display:none; position:fixed; inset:0; background:rgba(10,14,24,0.85); z-index:100;
+    align-items:center; justify-content:center; padding:24px; cursor:zoom-out;
+  }
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:100%; max-height:100%; border-radius:8px;}
+</style>
+</head>
+<body>
+
+<div class="bg-blob b1"></div>
+<div class="bg-blob b2"></div>
+<div class="bg-blob b3"></div>
+<div class="bg-particles" id="bg-particles"></div>
+
+<div class="topstrip">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-name">ডিসপ্যাচ বোর্ড · টিম কমিউনিকেশন</div>
+  </div>
+  <div class="topstrip-right">
+    <div class="datetime-box">
+      <div class="date-text mono" id="date-text">--</div>
+      <div class="clock mono" id="clock">--:--:--</div>
+    </div>
+    <div class="theme-wrap">
+      <button class="theme-btn wiggle-hover" id="theme-btn" onclick="toggleThemePanel()" title="রঙ পরিবর্তন করুন">🎨</button>
+      <div class="theme-panel" id="theme-panel">
+        <div class="theme-panel-title">পেজের রঙ বেছে নিন</div>
+        <div class="swatches" id="swatches"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="storage-warning" style="display:none; background:var(--red-dim); color:var(--red); border-bottom:1px solid var(--red); padding:10px 20px; font-size:13px; text-align:center; position:relative; z-index:15;">
+  ⚠️ Google Sheet API URL এখনো সেট করা হয়নি। HTML ফাইলের একদম শুরুতে <span class="mono">window.SHEET_API_URL</span>-এর জায়গায় আপনার Apps Script Web App-এর URL বসান, তারপর ডেটা-সেভিং কাজ করবে।
+</div>
+
+<div class="wrap">
+
+  <!-- SCREEN 1: DEPARTMENT SELECT -->
+  <div class="screen active" id="screen-gate">
+    <div class="gate-head">
+      <div class="gate-eyebrow">বিভাগ বেছে নিন</div>
+      <div class="gate-title">কোন বিভাগে প্রবেশ করবেন?</div>
+      <div class="gate-sub">প্রতিটি বিভাগের তথ্য আলাদা — CATV, BB TECH ও BB RENEWAL এর আপডেট আলাদাভাবে দেখানো হয়।</div>
+    </div>
+    <div class="gate-cards">
+      <div class="gate-card dept-catv" data-code="DPT-01" onclick="openDept('catv')" tabindex="0">
+        <div class="gate-card-icon">📺</div>
+        <h3>CATV</h3>
+        <p>CATV বিভাগের টিম লিডার ও এজেন্টদের জন্য তথ্য ও নোটিশ।</p>
+        <div class="go">প্রবেশ করুন</div>
+      </div>
+      <div class="gate-card dept-bbtech" data-code="DPT-02" onclick="openDept('bbtech')" tabindex="0">
+        <div class="gate-card-icon">🛠️</div>
+        <h3>BB TECH</h3>
+        <p>BB TECH বিভাগের টিম লিডার ও এজেন্টদের জন্য তথ্য ও নোটিশ।</p>
+        <div class="go">প্রবেশ করুন</div>
+      </div>
+      <div class="gate-card dept-bbrenewal" data-code="DPT-03" onclick="openDept('bbrenewal')" tabindex="0">
+        <div class="gate-card-icon">🔄</div>
+        <h3>BB RENEWAL</h3>
+        <p>BB RENEWAL বিভাগের টিম লিডার ও এজেন্টদের জন্য তথ্য ও নোটিশ।</p>
+        <div class="go">প্রবেশ করুন</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: ROLE SELECT WITHIN DEPARTMENT -->
+  <div class="screen" id="screen-role">
+    <span class="panel-back" onclick="goToGate()">← বিভাগ বদলান</span>
+    <div class="gate-head">
+      <div class="gate-eyebrow" id="role-dept-tag">CATV</div>
+      <div class="gate-title" id="role-title">আপনি কে হিসেবে ঢুকবেন?</div>
+      <div class="gate-sub">টিম লিডার/ম্যানেজার/QA লগইন করে দেখতে ও কাজ করতে পারবেন, এজেন্ট সরাসরি (লগইন ছাড়াই) সব তথ্য দেখতে পারবে।</div>
+    </div>
+    <div class="role-cards">
+      <div class="gate-card agent-hero rc-agent" data-code="AG" onclick="openAgentView()" tabindex="0">
+        <div class="agent-hero-icon">👁️</div>
+        <h3>এজেন্ট</h3>
+        <p>কোনো লগইন লাগবে না — সরাসরি সব তথ্য দেখুন।</p>
+        <div class="go">তথ্য দেখুন</div>
+      </div>
+      <div class="small-roles">
+        <div class="gate-card small rc-leader" data-code="TL" onclick="openAuth('leader')" tabindex="0">
+          <h3>টিম লিডার</h3>
+          <div class="go">লিডার লগইন</div>
+        </div>
+        <div class="gate-card small rc-manager" data-code="MG" onclick="openAuth('manager')" tabindex="0">
+          <h3>ম্যানেজার</h3>
+          <div class="go">ম্যানেজার লগইন</div>
+        </div>
+        <div class="gate-card small rc-qa" data-code="QA" onclick="openAuth('qa')" tabindex="0">
+          <h3>QA</h3>
+          <div class="go">QA লগইন</div>
+        </div>
+        <div class="gate-card small rc-supervisor" id="card-supervisor" data-code="SV" onclick="openAuth('supervisor')" tabindex="0" style="display:none;">
+          <h3>সুপারভাইজার</h3>
+          <div class="go">সুপারভাইজার লগইন</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: TL AUTH -->
+  <div class="screen" id="screen-auth">
+    <span class="panel-back" onclick="goToRole()">← পেছনে যান</span>
+    <div class="tl-tag" id="auth-zone-tag">🔒 টিম লিডার জোন</div>
+    <div class="panel">
+      <div class="panel-tag" id="auth-role-tag">CATV · টিম লিডার</div>
+      <div class="panel-title" id="auth-title">লগইন করুন</div>
+
+      <div class="tabs">
+        <div class="tab active" id="tab-login" onclick="switchAuthTab('login')">লগইন</div>
+        <div class="tab" id="tab-register" onclick="switchAuthTab('register')">নতুন অ্যাকাউন্ট</div>
+      </div>
+
+      <div class="error-msg" id="auth-error"></div>
+
+      <div id="auth-fields-name" style="display:none;" class="field">
+        <label>পুরো নাম</label>
+        <input type="text" id="auth-name" placeholder="যেমন: রাহুল আহমেদ">
+      </div>
+      <div class="field">
+        <label>ইউজারনেম</label>
+        <input type="text" id="auth-username" placeholder="যেমন: rahul.tl">
+      </div>
+      <div class="field">
+        <label>পাসওয়ার্ড</label>
+        <input type="password" id="auth-password" placeholder="••••••••">
+      </div>
+      <div id="auth-fields-code" style="display:none;" class="field">
+        <label>রেজিস্ট্রেশন কোড</label>
+        <input type="text" id="auth-code" placeholder="আপনার সুপারভাইজারের কাছ থেকে নিন">
+      </div>
+
+      <button class="btn" id="auth-submit" onclick="submitAuth()">প্রবেশ করুন</button>
+      <div class="hint">রেজিস্ট্রেশন কোড ছাড়া নতুন অ্যাকাউন্ট তৈরি করা যাবে না — শুধু যাদের কোড দেওয়া হয়েছে তারাই টিম লিডার/ম্যানেজার/QA/সুপারভাইজার হিসেবে রেজিস্টার করতে পারবে।</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: LEADER DASHBOARD (FULL ACCESS) -->
+  <div class="screen zone-dark role-leader" id="screen-leader">
+    <div class="tl-tag">🔒 টিম লিডার জোন</div>
+    <div class="dash-header">
+      <div>
+        <div class="dash-role">টিম লিডার প্যানেল · সম্পূর্ণ অ্যাক্সেস</div>
+        <div class="dash-name" id="leader-name">—</div>
+        <div class="dept-pill" id="leader-dept-pill">CATV</div>
+      </div>
+      <div class="dash-actions">
+        <button class="btn btn-ghost btn-sm" onclick="logout()">লগআউট</button>
+      </div>
+    </div>
+
+    <div class="panel-2card">
+      <h3>📢 এজেন্ট স্ক্রল বার্তা</h3>
+      <div class="ticker-edit-box">
+        <input type="text" id="leader-ticker-input" placeholder="এজেন্ট পেজের উপরে ভেসে চলা বার্তা লিখুন...">
+        <button class="btn btn-sm" style="width:auto;" onclick="submitTicker('leader-ticker-input')">আপডেট করুন</button>
+      </div>
+      <div class="hint">এই বার্তা এজেন্ট ভিউয়ের উপরে ক্রমাগত ভেসে যাবে। টিম লিডার, ম্যানেজার, QA ও সুপারভাইজার — যে কেউ এটা বদলাতে পারবেন। খালি রেখে আপডেট করলে বার্তাটি সরে যাবে।</div>
+    </div>
+
+    <div class="panel-2card">
+      <h3>নতুন তথ্য পাঠান</h3>
+      <div class="field">
+        <label>শিরোনাম</label>
+        <input type="text" id="post-title" placeholder="যেমন: শিফট পরিবর্তন — সোমবার">
+      </div>
+      <div class="field">
+        <label>বিস্তারিত বার্তা</label>
+        <div class="fmt-toolbar">
+          <button type="button" class="fmt-btn b" onclick="wrapSelection('**')" title="বোল্ড">B</button>
+          <button type="button" class="fmt-btn i" onclick="wrapSelection('*')" title="ইটালিক">I</button>
+          <button type="button" class="fmt-btn u" onclick="wrapSelection('__')" title="আন্ডারলাইন">U</button>
+        </div>
+        <textarea id="post-body" placeholder="এজেন্টদের জন্য বিস্তারিত তথ্য লিখুন... (বোল্ড করতে টেক্সট সিলেক্ট করে B চাপুন)"></textarea>
+      </div>
+      <div class="field">
+        <label>ছবি (ঐচ্ছিক)</label>
+        <label class="image-field" for="post-image">
+          <div class="image-field-label">📷 ছবি বেছে নিতে এখানে ট্যাপ করুন</div>
+          <input type="file" id="post-image" accept="image/*" onchange="handleImageSelect(event)">
+        </label>
+        <div id="image-preview"></div>
+      </div>
+      <div class="field">
+        <label>গুরুত্ব</label>
+        <select id="post-priority">
+          <option value="normal">সাধারণ</option>
+          <option value="urgent">জরুরি</option>
+        </select>
+      </div>
+      <button class="btn" id="post-submit-btn" onclick="createPost()">পোস্ট করুন</button>
+    </div>
+
+    <div class="feed-toolbar">
+      <h3 id="leader-feed-title">এই বিভাগের সব তথ্য</h3>
+    </div>
+    <div class="bulk-bar">
+      <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this.checked)"> সব সিলেক্ট করুন</label>
+      <span class="bulk-count" id="bulk-count">0টি সিলেক্ট করা</span>
+      <button class="btn btn-outline btn-sm" onclick="bulkDeleteSelected()">সিলেক্ট করা মুছুন</button>
+      <button class="btn btn-danger-outline btn-sm" onclick="deleteAllInDept()">এই বিভাগের সব মুছুন</button>
+    </div>
+    <div id="leader-feed"><div class="loading">লোড হচ্ছে...</div></div>
+  </div>
+
+  <!-- SCREEN 5: AGENT VIEW (NO LOGIN) -->
+  <div class="screen" id="screen-agent">
+    <div class="dash-header">
+      <div>
+        <div class="dash-role">এজেন্ট ভিউ</div>
+        <div class="dash-name" id="agent-dept-name">CATV</div>
+      </div>
+      <div class="dash-actions">
+        <button class="btn btn-ghost btn-sm" onclick="goToRole()">← বিভাগে ফিরুন</button>
+      </div>
+    </div>
+
+    <div class="ticker-bar" id="agent-ticker-bar" style="display:none;">
+      <span class="ticker-icon">📢</span>
+      <div class="ticker-viewport">
+        <div class="ticker-track" id="agent-ticker-track"></div>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="agent-search" placeholder="খুঁজুন (শিরোনাম, বার্তা বা পাঠানোর নাম দিয়ে)..." oninput="handleAgentSearch(this.value)">
+    </div>
+    <div class="date-filter-row">
+      <label for="agent-date">📅 তারিখ:</label>
+      <input type="date" id="agent-date" onchange="handleAgentDateFilter(this.value)">
+      <button type="button" class="btn-ghost btn-sm" id="agent-date-clear" onclick="clearAgentDateFilter()" style="display:none;">✕ তারিখ মুছুন</button>
+    </div>
+
+    <div class="feed-toolbar">
+      <h3>process information</h3>
+      <div class="filter-chips">
+        <div class="chip active" data-f="all" onclick="setAgentFilter('all')">সব</div>
+        <div class="chip" data-f="urgent" onclick="setAgentFilter('urgent')">শুধু জরুরি</div>
+      </div>
+    </div>
+    <div id="agent-feed"><div class="loading">লোড হচ্ছে...</div></div>
+  </div>
+
+  <!-- SCREEN 6: MANAGER / QA OVERSIGHT DASHBOARD (VIEW-ONLY, LOGIN REQUIRED) -->
+  <div class="screen zone-dark" id="screen-oversight">
+    <div class="tl-tag" id="oversight-zone-tag">📊 ম্যানেজার জোন</div>
+    <div class="dash-header">
+      <div>
+        <div class="dash-role" id="oversight-role-label">ম্যানেজার প্যানেল · ভিউ ও ডিলিট অ্যাক্সেস</div>
+        <div class="dash-name" id="oversight-name">—</div>
+        <div class="dept-pill" id="oversight-dept-pill">CATV</div>
+      </div>
+      <div class="dash-actions">
+        <button class="btn btn-ghost btn-sm" onclick="logout()">লগআউট</button>
+      </div>
+    </div>
+
+    <div class="panel-2card">
+      <h3>📢 এজেন্ট স্ক্রল বার্তা</h3>
+      <div class="ticker-edit-box">
+        <input type="text" id="oversight-ticker-input" placeholder="এজেন্ট পেজের উপরে ভেসে চলা বার্তা লিখুন...">
+        <button class="btn btn-sm" style="width:auto;" onclick="submitTicker('oversight-ticker-input')">আপডেট করুন</button>
+      </div>
+      <div class="hint">এই বার্তা এজেন্ট ভিউয়ের উপরে ক্রমাগত ভেসে যাবে। টিম লিডার, ম্যানেজার, QA ও সুপারভাইজার — যে কেউ এটা বদলাতে পারবেন। খালি রেখে আপডেট করলে বার্তাটি সরে যাবে।</div>
+    </div>
+
+    <div class="feed-toolbar">
+      <h3>এই বিভাগের সব তথ্য</h3>
+      <div class="filter-chips">
+        <div class="chip active" data-f="all" onclick="setOversightFilter('all')">সব</div>
+        <div class="chip" data-f="urgent" onclick="setOversightFilter('urgent')">শুধু জরুরি</div>
+      </div>
+    </div>
+    <div id="oversight-feed"><div class="loading">লোড হচ্ছে...</div></div>
+  </div>
+
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="">
+</div>
+
+<script>
+/* ================================================================
+   এখানে আপনার Google Apps Script Web App-এর ডিপ্লয় করা URL বসান।
+   (Deploy > New deployment > Web app করার পর যে URL পাবেন, সেটা এখানে বসান)
+   ================================================================ */
+window.SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbx9VZrL9rW5s1AJap1zvLdYEpzR9mXfjYILj30a1BXoMblW-maOhBzXYz-JPku2-CZ5/exec';
+
+/* ---------------- Clock ---------------- */
+function tickClock(){
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  const dateEl = document.getElementById('date-text');
+  if(dateEl){
+    dateEl.textContent = d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  }
+}
+setInterval(tickClock, 1000); tickClock();
+
+/* ---------------- Storage availability check ---------------- */
+if(!window.SHEET_API_URL || window.SHEET_API_URL.indexOf('PASTE_YOUR') !== -1){
+  const w = document.getElementById('storage-warning');
+  if(w) w.style.display = 'block';
+}
+
+/* ---------------- Rising background particles ---------------- */
+(function initParticles(){
+  const wrap = document.getElementById('bg-particles');
+  if(!wrap) return;
+  const colors = ['var(--accent)', 'var(--amber)', 'var(--pink)', 'var(--blue, #3d8bfd)', 'var(--green)'];
+  const count = 26;
+  for(let i = 0; i < count; i++){
+    const p = document.createElement('div');
+    p.className = 'bg-particle';
+    const size = 4 + Math.random() * 10;
+    const left = Math.random() * 100;
+    const duration = 9 + Math.random() * 12;
+    const delay = Math.random() * 16;
+    const drift = (Math.random() * 80 - 40) + 'px';
+    const color = colors[i % colors.length];
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.left = left + '%';
+    p.style.background = color;
+    p.style.filter = 'blur(0.5px)';
+    p.style.setProperty('--drift', drift);
+    p.style.animationDuration = duration + 's';
+    p.style.animationDelay = '-' + delay + 's';
+    wrap.appendChild(p);
+  }
+})();
+
+/* ---------------- Theme system ---------------- */
+const THEMES = [
+  { name:'violet', accent:'#6c5ce7', dim:'#eae7fd' },
+  { name:'blue',   accent:'#3d8bfd', dim:'#e3edff' },
+  { name:'emerald',accent:'#16a679', dim:'#e3f9f1' },
+  { name:'rose',   accent:'#ef5b6f', dim:'#fdeaee' },
+  { name:'amber',  accent:'#ff9f43', dim:'#fff1e0' },
+  { name:'slate',  accent:'#475569', dim:'#e2e8f0' },
+];
+
+function buildSwatches(){
+  const wrap = document.getElementById('swatches');
+  wrap.innerHTML = THEMES.map(t =>
+    `<div class="swatch" data-theme="${t.name}" style="background:${t.accent}" onclick="applyTheme('${t.name}')" title="${t.name}"></div>`
+  ).join('');
+  wrap.querySelectorAll('.swatch').forEach(s => attachRipple(s));
+}
+buildSwatches();
+
+function applyTheme(name){
+  const t = THEMES.find(x => x.name === name) || THEMES[0];
+  document.documentElement.style.setProperty('--accent', t.accent);
+  document.documentElement.style.setProperty('--accent-dim', t.dim);
+  document.querySelectorAll('.swatch').forEach(s => {
+    const isActive = s.dataset.theme === name;
+    s.classList.toggle('active', isActive);
+    if(isActive){
+      s.style.animation = 'none';
+      void s.offsetWidth;
+      s.style.animation = 'bounceIn .3s ease both';
+    }
+  });
+  sheetSet('theme-pref', name).catch(()=>{});
+}
+
+async function loadThemePref(){
+  try{
+    const r = await sheetGet('theme-pref');
+    if(r && r.value) applyTheme(r.value); else applyTheme('violet');
+  }catch(e){ applyTheme('violet'); }
+}
+loadThemePref();
+
+function toggleThemePanel(){
+  document.getElementById('theme-panel').classList.toggle('open');
+}
+document.addEventListener('click', (e)=>{
+  const wrap = document.querySelector('.theme-wrap');
+  if(wrap && !wrap.contains(e.target)){
+    document.getElementById('theme-panel').classList.remove('open');
+  }
+});
+
+/* ---------------- Department config ---------------- */
+const DEPT_LABELS = { catv: 'CATV', bbtech: 'BB TECH', bbrenewal: 'BB RENEWAL' };
+const ROLE_LABELS = { leader: 'টিম লিডার', manager: 'ম্যানেজার', qa: 'কোয়ালিটি অ্যানালাইসিস (QA)', supervisor: 'সুপারভাইজার' };
+const ROLE_TAGS = { leader: '🔒 টিম লিডার জোন', manager: '📊 ম্যানেজার জোন', qa: '🧪 QA জোন', supervisor: '🧭 সুপারভাইজার জোন' };
+
+/* ---------------- State ---------------- */
+let authMode = 'login';
+let authTargetRole = 'leader';   // 'leader' | 'manager' | 'qa'
+let currentDept = 'catv';
+let session = null;              // {username, name, department, role}
+let agentFilter = 'all';
+let agentSearchQuery = '';
+let agentDateFilter = '';
+let oversightFilter = 'all';
+let pendingImageData = null;
+let selectedIds = new Set();
+let leaderPostsCache = [];
+
+/* ---------------- Google Sheet backend ---------------- */
+const SHEET_API_URL = window.SHEET_API_URL;
+
+async function sheetGet(key){
+  try{
+    const res = await fetch(SHEET_API_URL + '?action=get&key=' + encodeURIComponent(key));
+    const data = await res.json();
+    if(data && data.value !== null && data.value !== undefined && data.value !== '') return {key: data.key, value: data.value};
+    return null;
+  }catch(e){ console.error('sheetGet failed:', e); return null; }
+}
+async function sheetSet(key, value){
+  try{
+    await fetch(SHEET_API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'}, // text/plain avoids a CORS preflight
+      body: JSON.stringify({ action: 'set', key: key, value: value })
+    });
+    return { key, value };
+  }catch(e){ console.error('sheetSet failed:', e); throw e; }
+}
+async function sheetDelete(key){
+  try{
+    await fetch(SHEET_API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action: 'delete', key: key })
+    });
+  }catch(e){ console.error('sheetDelete failed:', e); }
+}
+async function sheetList(prefix){
+  try{
+    const res = await fetch(SHEET_API_URL + '?action=list&prefix=' + encodeURIComponent(prefix || ''));
+    const data = await res.json();
+    return { keys: (data && data.keys) ? data.keys : [] };
+  }catch(e){ console.error('sheetList failed:', e); return { keys: [] }; }
+}
+// dataUrl হলো "data:image/jpeg;base64,...." ফরম্যাটের স্ট্রিং — এখান থেকে
+// শুধু base64 অংশটা আলাদা করে Drive-এ আপলোড করা হয়, শিটে শুধু URL থাকে।
+async function sheetUploadImage(dataUrl, filename){
+  const commaIdx = dataUrl.indexOf(',');
+  const meta = dataUrl.slice(5, commaIdx); // e.g. "image/jpeg;base64"
+  const mimeType = meta.split(';')[0];
+  const base64Data = dataUrl.slice(commaIdx + 1);
+  const res = await fetch(SHEET_API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action: 'uploadImage', data: base64Data, mimeType: mimeType, filename: filename })
+  });
+  const data = await res.json();
+  if(!data || !data.url) throw new Error('image upload failed');
+  return data.url;
+}
+
+async function sheetRegister(payload){
+  const res = await fetch(SHEET_API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify(Object.assign({ action: 'register' }, payload))
+  });
+  return await res.json();
+}
+async function getUsers(){
+  try{
+    const r = await sheetGet('users');
+    return r ? JSON.parse(r.value) : {};
+  }catch(e){ return {}; }
+}
+async function saveUsers(users){
+  await sheetSet('users', JSON.stringify(users));
+}
+
+// Each post is stored under its own key so images don't blow up one giant row.
+async function savePostRecord(post){
+  await sheetSet('post:' + post.id, JSON.stringify(post));
+}
+async function deletePostRecord(id){
+  try{ await sheetDelete('post:' + id); }catch(e){}
+}
+async function getAllPosts(){
+  try{
+    const listRes = await sheetList('post:');
+    const keys = (listRes && listRes.keys) ? listRes.keys : [];
+    const posts = [];
+    for(const k of keys){
+      try{
+        const r = await sheetGet(k);
+        if(r && r.value) posts.push(JSON.parse(r.value));
+      }catch(e){ /* skip broken record */ }
+    }
+    posts.sort((a,b) => b.ts - a.ts);
+    return posts;
+  }catch(e){ return []; }
+}
+
+// Ticker (scrolling banner) text is shared per department, editable by TL/Manager/QA/Supervisor.
+async function getTicker(dept){
+  try{
+    const r = await sheetGet('ticker:' + dept);
+    return r && r.value ? r.value : '';
+  }catch(e){ return ''; }
+}
+async function saveTicker(dept, text){
+  await sheetSet('ticker:' + dept, text);
+}
+
+/* ---------------- Navigation ---------------- */
+let agentPollTimer = null;
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id === 'screen-agent'){
+    if(agentPollTimer) clearInterval(agentPollTimer);
+    // এজেন্ট ভিউতে থাকা অবস্থায় প্রতি ১৫ সেকেন্ডে নতুন পোস্ট/ছবি/টিকার
+    // অটোমেটিক লোড হবে, যাতে TL পোস্ট করার সাথে সাথে এজেন্ট তা দেখতে পায়।
+    agentPollTimer = setInterval(() => {
+      renderAgentFeed();
+      updateAgentTickerDisplay();
+    }, 15000);
+  } else if(agentPollTimer){
+    clearInterval(agentPollTimer);
+    agentPollTimer = null;
+  }
+}
+
+function goToGate(){ showScreen('screen-gate'); clearAuthForm(); }
+
+function openDept(dept){
+  currentDept = dept;
+  document.getElementById('role-dept-tag').textContent = DEPT_LABELS[dept];
+  document.getElementById('role-title').textContent = DEPT_LABELS[dept] + ' — আপনি কে হিসেবে ঢুকবেন?';
+  const supervisorCard = document.getElementById('card-supervisor');
+  if(supervisorCard) supervisorCard.style.display = (dept === 'catv') ? '' : 'none';
+  showScreen('screen-role');
+}
+
+function goToRole(){
+  showScreen('screen-role');
+  clearAuthForm();
+}
+
+function openAuth(role){
+  authTargetRole = role || 'leader';
+  if(authTargetRole === 'supervisor' && currentDept !== 'catv'){ return; } // supervisor is CATV-only
+  authMode = 'login';
+  document.getElementById('auth-role-tag').textContent = DEPT_LABELS[currentDept] + ' · ' + ROLE_LABELS[authTargetRole];
+  const zoneTag = document.getElementById('auth-zone-tag');
+  if(zoneTag) zoneTag.textContent = ROLE_TAGS[authTargetRole];
+  const authScreen = document.getElementById('screen-auth');
+  authScreen.classList.remove('role-leader', 'role-manager', 'role-qa', 'role-supervisor');
+  authScreen.classList.add('zone-dark', 'role-' + authTargetRole);
+  switchAuthTab('login');
+  showScreen('screen-auth');
+}
+
+async function openAgentView(){
+  document.getElementById('agent-dept-name').textContent = DEPT_LABELS[currentDept];
+  agentFilter = 'all';
+  agentSearchQuery = '';
+  agentDateFilter = '';
+  const searchBox = document.getElementById('agent-search');
+  if(searchBox) searchBox.value = '';
+  const dateBox = document.getElementById('agent-date');
+  if(dateBox) dateBox.value = '';
+  const clearBtn = document.getElementById('agent-date-clear');
+  if(clearBtn) clearBtn.style.display = 'none';
+  document.querySelectorAll('#screen-agent .chip').forEach(c => c.classList.toggle('active', c.dataset.f === 'all'));
+  showScreen('screen-agent');
+  await updateAgentTickerDisplay();
+  await renderAgentFeed();
+}
+
+function handleAgentSearch(value){
+  agentSearchQuery = value.trim().toLowerCase();
+  renderAgentFeed();
+}
+
+function handleAgentDateFilter(value){
+  agentDateFilter = value;
+  const clearBtn = document.getElementById('agent-date-clear');
+  if(clearBtn) clearBtn.style.display = value ? 'inline-block' : 'none';
+  renderAgentFeed();
+}
+
+function clearAgentDateFilter(){
+  agentDateFilter = '';
+  const dateBox = document.getElementById('agent-date');
+  if(dateBox) dateBox.value = '';
+  const clearBtn = document.getElementById('agent-date-clear');
+  if(clearBtn) clearBtn.style.display = 'none';
+  renderAgentFeed();
+}
+
+function switchAuthTab(mode){
+  authMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode==='login');
+  document.getElementById('tab-register').classList.toggle('active', mode==='register');
+  document.getElementById('auth-title').textContent = mode === 'login' ? 'লগইন করুন' : 'নতুন অ্যাকাউন্ট তৈরি করুন';
+  document.getElementById('auth-submit').textContent = mode === 'login' ? 'প্রবেশ করুন' : 'অ্যাকাউন্ট তৈরি করুন';
+  document.getElementById('auth-fields-name').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('auth-fields-code').style.display = mode === 'register' ? 'block' : 'none';
+  clearAuthError();
+}
+
+function clearAuthForm(){
+  document.getElementById('auth-name').value = '';
+  document.getElementById('auth-username').value = '';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-code').value = '';
+  clearAuthError();
+}
+function clearAuthError(){
+  const e = document.getElementById('auth-error');
+  e.style.display = 'none'; e.textContent = '';
+}
+function showAuthError(msg){
+  const e = document.getElementById('auth-error');
+  e.textContent = msg; e.style.display = 'block';
+}
+
+/* ---------------- Auth submit (Team Leader / Manager / QA) ---------------- */
+async function submitAuth(){
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const name = document.getElementById('auth-name').value.trim();
+  const code = document.getElementById('auth-code').value.trim();
+
+  if(!username || !password){
+    showAuthError('ইউজারনেম ও পাসওয়ার্ড দিন।'); return;
+  }
+
+  try{
+    if(authMode === 'register'){
+      if(!name){ showAuthError('আপনার নাম দিন।'); return; }
+      if(!code){ showAuthError('রেজিস্ট্রেশন কোড দিন।'); return; }
+      const result = await sheetRegister({ username, password, name, department: currentDept, role: authTargetRole, code });
+      if(result.error === 'invalid_code'){ showAuthError('রেজিস্ট্রেশন কোড সঠিক নয়।'); return; }
+      if(result.error === 'username_taken'){ showAuthError('এই ইউজারনেম আগে থেকেই আছে। লগইন করুন।'); return; }
+      if(!result.ok){ showAuthError('অ্যাকাউন্ট তৈরি করা যায়নি, আবার চেষ্টা করুন।'); return; }
+      session = { username, name, department: currentDept, role: authTargetRole };
+      await routeToDashboard();
+    } else {
+      const users = await getUsers();
+      const u = users[username];
+      if(!u || u.password !== password){ showAuthError('ইউজারনেম বা পাসওয়ার্ড ভুল।'); return; }
+      const userRole = u.role || 'leader';
+      if(u.department !== currentDept){
+        showAuthError('এই অ্যাকাউন্টটি ' + DEPT_LABELS[u.department] + ' বিভাগের। সঠিক বিভাগ থেকে লগইন করুন।');
+        return;
+      }
+      if(userRole !== authTargetRole){
+        showAuthError('এই অ্যাকাউন্টটি ' + ROLE_LABELS[userRole] + ' হিসেবে নিবন্ধিত। সঠিক জোন থেকে লগইন করুন।');
+        return;
+      }
+      session = { username, name: u.name, department: u.department, role: userRole };
+      await routeToDashboard();
+    }
+  }catch(err){
+    showAuthError('একটি সমস্যা হয়েছে (স্টোরেজ সংযোগ কাজ করছে না)। ব্রাউজার রিফ্রেশ করে আবার চেষ্টা করুন। বিস্তারিত: ' + (err && err.message ? err.message : err));
+    console.error('submitAuth failed:', err);
+  }
+}
+
+function routeToDashboard(){
+  if(session.role === 'leader') return enterLeaderDashboard();
+  return enterOversightDashboard();
+}
+
+function logout(){
+  session = null;
+  clearAuthForm();
+  clearImage();
+  selectedIds.clear();
+  showScreen('screen-gate');
+}
+
+/* ---------------- Leader dashboard ---------------- */
+async function enterLeaderDashboard(){
+  clearAuthForm();
+  document.getElementById('leader-name').textContent = session.name;
+  const pill = document.getElementById('leader-dept-pill');
+  pill.textContent = DEPT_LABELS[session.department];
+  pill.className = 'dept-pill ' + session.department;
+  document.getElementById('leader-feed-title').textContent = DEPT_LABELS[session.department] + ' বিভাগের সব তথ্য';
+  const tickerInput = document.getElementById('leader-ticker-input');
+  if(tickerInput) tickerInput.value = await getTicker(session.department);
+  showScreen('screen-leader');
+  await renderLeaderFeed();
+}
+
+/* ---------------- Manager / QA oversight dashboard (view-only) ---------------- */
+async function enterOversightDashboard(){
+  clearAuthForm();
+  const screen = document.getElementById('screen-oversight');
+  screen.classList.remove('role-leader', 'role-manager', 'role-qa', 'role-supervisor');
+  screen.classList.add('role-' + session.role);
+
+  document.getElementById('oversight-zone-tag').textContent = ROLE_TAGS[session.role];
+  document.getElementById('oversight-role-label').textContent = ROLE_LABELS[session.role] + ' প্যানেল · ভিউ ও ডিলিট অ্যাক্সেস';
+  document.getElementById('oversight-name').textContent = session.name;
+  const pill = document.getElementById('oversight-dept-pill');
+  pill.textContent = DEPT_LABELS[session.department];
+  pill.className = 'dept-pill ' + session.department;
+
+  oversightFilter = 'all';
+  const chips = screen.querySelectorAll('.chip');
+  chips.forEach(c => c.classList.toggle('active', c.dataset.f === 'all'));
+
+  const tickerInput = document.getElementById('oversight-ticker-input');
+  if(tickerInput) tickerInput.value = await getTicker(session.department);
+
+  showScreen('screen-oversight');
+  await renderOversightFeed();
+}
+
+function setOversightFilter(f){
+  oversightFilter = f;
+  document.querySelectorAll('#screen-oversight .chip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  renderOversightFeed();
+}
+
+async function renderOversightFeed(){
+  const posts = await getAllPosts();
+  let visible = posts.filter(p => p.department === session.department);
+  if(oversightFilter === 'urgent') visible = visible.filter(p => p.priority === 'urgent');
+  const el = document.getElementById('oversight-feed');
+  if(visible.length === 0){
+    el.innerHTML = `<div class="empty"><div class="big">📭</div>এখনো কোনো তথ্য নেই।</div>`;
+    return;
+  }
+  el.innerHTML = visible.map(p => postCard(p, {deletable:true, selectable:false})).join('');
+  el.querySelectorAll('.del-btn').forEach(b => attachRipple(b));
+}
+
+/* ---------------- Rich text formatting ---------------- */
+function wrapSelection(marker){
+  const ta = document.getElementById('post-body');
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const text = ta.value;
+  const selected = text.slice(start, end) || 'টেক্সট';
+  const before = text.slice(0, start), after = text.slice(end);
+  ta.value = before + marker + selected + marker + after;
+  ta.focus();
+  ta.selectionStart = start + marker.length;
+  ta.selectionEnd = start + marker.length + selected.length;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function formatMessage(raw){
+  let s = escapeHtml(raw);
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/__(.+?)__/g, '<u>$1</u>');
+  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  return s;
+}
+
+/* ---------------- Image handling ---------------- */
+function handleImageSelect(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      const maxW = 1000;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      pendingImageData = canvas.toDataURL('image/jpeg', 0.75);
+      renderImagePreview();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderImagePreview(){
+  const prev = document.getElementById('image-preview');
+  if(!pendingImageData){ prev.innerHTML = ''; return; }
+  prev.innerHTML = `<img src="${pendingImageData}"><button type="button" class="del-btn" onclick="clearImage()">✕ ছবি সরান</button>`;
+}
+
+function clearImage(){
+  pendingImageData = null;
+  const fi = document.getElementById('post-image');
+  if(fi) fi.value = '';
+  renderImagePreview();
+}
+
+function openLightbox(src){
+  const img = document.getElementById('lightbox-img');
+  img.src = src;
+  img.style.animation = 'none';
+  void img.offsetWidth;
+  img.style.animation = 'bounceIn .35s ease both';
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+/* ---------------- Posts ---------------- */
+async function createPost(){
+  const title = document.getElementById('post-title').value.trim();
+  const body = document.getElementById('post-body').value.trim();
+  const priority = document.getElementById('post-priority').value;
+
+  if(!title || !body){ alert('শিরোনাম ও বার্তা দুটোই লিখুন।'); return; }
+
+  const btn = document.getElementById('post-submit-btn');
+  const id = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  let imageUrl = null;
+
+  try{
+    if(pendingImageData){
+      if(btn){ btn.disabled = true; btn.textContent = 'ছবি আপলোড হচ্ছে...'; }
+      imageUrl = await sheetUploadImage(pendingImageData, id + '.jpg');
+    }
+
+    if(btn){ btn.disabled = true; btn.textContent = 'পোস্ট হচ্ছে...'; }
+    const post = {
+      id,
+      title, body, priority,
+      image: imageUrl,
+      department: session.department,
+      author: session.name,
+      authorUsername: session.username,
+      ts: Date.now()
+    };
+    await savePostRecord(post);
+
+    document.getElementById('post-title').value = '';
+    document.getElementById('post-body').value = '';
+    document.getElementById('post-priority').value = 'normal';
+    clearImage();
+  }catch(err){
+    alert('পোস্ট করা যায়নি, আবার চেষ্টা করুন।');
+    console.error('createPost failed:', err);
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'পোস্ট করুন'; }
+  }
+
+  await renderLeaderFeed();
+}
+
+// TL has FULL ACCESS: can delete any post in their department, any time.
+async function deleteOne(id){
+  if(!confirm('এই তথ্যটি মুছে ফেলতে চান?')) return;
+  await deletePostRecord(id);
+  selectedIds.delete(id);
+  if(session && session.role === 'leader'){
+    await renderLeaderFeed();
+  } else {
+    await renderOversightFeed();
+  }
+}
+
+async function bulkDeleteSelected(){
+  if(selectedIds.size === 0){ alert('মুছে ফেলার জন্য কিছু সিলেক্ট করুন।'); return; }
+  if(!confirm(selectedIds.size + 'টি তথ্য মুছে ফেলতে চান?')) return;
+  for(const id of Array.from(selectedIds)){
+    await deletePostRecord(id);
+  }
+  selectedIds.clear();
+  await renderLeaderFeed();
+}
+
+async function deleteAllInDept(){
+  if(leaderPostsCache.length === 0){ alert('মুছে ফেলার মতো কোনো তথ্য নেই।'); return; }
+  if(!confirm(DEPT_LABELS[session.department] + ' বিভাগের সব (' + leaderPostsCache.length + 'টি) তথ্য মুছে ফেলতে চান? এটি ফেরানো যাবে না।')) return;
+  for(const p of leaderPostsCache){
+    await deletePostRecord(p.id);
+  }
+  selectedIds.clear();
+  await renderLeaderFeed();
+}
+
+function toggleSelectAll(checked){
+  selectedIds.clear();
+  if(checked){
+    leaderPostsCache.forEach(p => selectedIds.add(p.id));
+  }
+  document.querySelectorAll('.post-check').forEach(cb => cb.checked = checked);
+  updateBulkCount();
+}
+
+function toggleSelectOne(id, checked){
+  if(checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateBulkCount();
+  const allBox = document.getElementById('select-all-box');
+  if(allBox) allBox.checked = leaderPostsCache.length > 0 && selectedIds.size === leaderPostsCache.length;
+}
+
+function updateBulkCount(){
+  document.getElementById('bulk-count').textContent = selectedIds.size + 'টি সিলেক্ট করা';
+}
+
+async function submitTicker(inputId){
+  if(!session) return;
+  const input = document.getElementById(inputId);
+  const text = input.value.trim();
+  try{
+    await saveTicker(session.department, text);
+    alert(text ? 'স্ক্রল বার্তা আপডেট হয়েছে।' : 'স্ক্রল বার্তা মুছে ফেলা হয়েছে।');
+  }catch(err){
+    alert('আপডেট করা যায়নি, আবার চেষ্টা করুন।');
+    console.error('submitTicker failed:', err);
+  }
+}
+
+async function updateAgentTickerDisplay(){
+  const bar = document.getElementById('agent-ticker-bar');
+  const track = document.getElementById('agent-ticker-track');
+  if(!bar || !track) return;
+  const text = await getTicker(currentDept);
+  if(text){
+    track.textContent = text;
+    bar.style.display = 'flex';
+    const seconds = Math.max(10, Math.min(30, text.length * 0.22));
+    track.style.animationDuration = seconds + 's';
+  } else {
+    bar.style.display = 'none';
+    track.textContent = '';
+  }
+}
+
+function postDateKey(ts){
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+
+function formatTime(ts){
+  return new Date(ts).toLocaleString('bn-BD', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+
+function postCard(p, opts){
+  opts = opts || {};
+  const urgentClass = p.priority === 'urgent' ? ' urgent' : '';
+  const badges = [
+    p.priority === 'urgent'
+      ? '<span class="badge urgent">জরুরি</span>'
+      : '<span class="badge normal">সাধারণ</span>'
+  ];
+  const checkbox = opts.selectable
+    ? `<input type="checkbox" class="post-check" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleSelectOne('${p.id}', this.checked)">`
+    : '';
+  const delBtn = opts.deletable
+    ? `<button class="del-btn" onclick="deleteOne('${p.id}')">মুছুন</button>`
+    : '';
+  const imgHtml = p.image
+    ? `<img class="post-img" src="${p.image}" onclick="openLightbox('${p.image}')">`
+    : '';
+  return `
+    <div class="post${urgentClass}">
+      ${checkbox}
+      <div class="post-content">
+        <div class="post-meta">
+          <div class="post-badges">${badges.join('')}</div>
+        </div>
+        <div class="post-title">${escapeHtml(p.title)}</div>
+        <div class="post-body">${formatMessage(p.body)}</div>
+        ${imgHtml}
+        <div class="post-foot">
+          <span class="post-author">— ${escapeHtml(p.author)}</span>
+          <span style="display:flex; align-items:center; gap:14px;">
+            <span class="post-time">${formatTime(p.ts)}</span>
+            ${delBtn}
+          </span>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function renderLeaderFeed(){
+  const posts = await getAllPosts();
+  // FULL ACCESS: leader sees every post in their department, not just their own.
+  leaderPostsCache = posts.filter(p => p.department === session.department);
+  selectedIds = new Set(Array.from(selectedIds).filter(id => leaderPostsCache.some(p => p.id === id)));
+  const el = document.getElementById('leader-feed');
+  const allBox = document.getElementById('select-all-box');
+  if(allBox) allBox.checked = leaderPostsCache.length > 0 && selectedIds.size === leaderPostsCache.length;
+  updateBulkCount();
+  if(leaderPostsCache.length === 0){
+    el.innerHTML = `<div class="empty"><div class="big">🗂️</div>এখনো কোনো তথ্য পাঠানো হয়নি। উপরের ফর্ম থেকে প্রথম আপডেট পাঠান।</div>`;
+    return;
+  }
+  el.innerHTML = leaderPostsCache.map(p => postCard(p, {deletable:true, selectable:true})).join('');
+  el.querySelectorAll('.del-btn').forEach(b => attachRipple(b));
+}
+
+async function renderAgentFeed(){
+  const posts = await getAllPosts();
+  let visible = posts.filter(p => p.department === currentDept);
+  if(agentFilter === 'urgent') visible = visible.filter(p => p.priority === 'urgent');
+  if(agentDateFilter){
+    visible = visible.filter(p => postDateKey(p.ts) === agentDateFilter);
+  }
+  if(agentSearchQuery){
+    visible = visible.filter(p =>
+      p.title.toLowerCase().includes(agentSearchQuery) ||
+      p.body.toLowerCase().includes(agentSearchQuery) ||
+      (p.author && p.author.toLowerCase().includes(agentSearchQuery))
+    );
+  }
+  const el = document.getElementById('agent-feed');
+  if(visible.length === 0){
+    const filtering = agentSearchQuery || agentDateFilter;
+    const msg = filtering ? 'কোনো ফলাফল পাওয়া যায়নি।' : 'এখনো কোনো তথ্য নেই।';
+    el.innerHTML = `<div class="empty"><div class="big">${filtering ? '🔍' : '📭'}</div>${msg}</div>`;
+    return;
+  }
+  el.innerHTML = visible.map(p => postCard(p, {deletable:false, selectable:false})).join('');
+}
+
+function setAgentFilter(f){
+  agentFilter = f;
+  document.querySelectorAll('#screen-agent .chip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  renderAgentFeed();
+}
+
+/* keyboard support for cards */
+document.querySelectorAll('.gate-card').forEach(card=>{
+  card.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); card.click(); }
+  });
+});
+
+/* ---------------- Deep 3D tilt for first-screen department cards ---------------- */
+document.querySelectorAll('#screen-gate .gate-card').forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2, cy = rect.height / 2;
+    const rotateX = ((y - cy) / cy) * -7;
+    const rotateY = ((x - cx) / cx) * 7;
+    card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px) scale(1.02)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+});
+
+/* ---------------- Ripple click effect ---------------- */
+function attachRipple(el){
+  el.addEventListener('click', function(e){
+    const rect = el.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const span = document.createElement('span');
+    span.className = 'ripple-el';
+    span.style.width = span.style.height = size + 'px';
+    span.style.left = (e.clientX - rect.left - size/2) + 'px';
+    span.style.top = (e.clientY - rect.top - size/2) + 'px';
+    el.appendChild(span);
+    setTimeout(()=> span.remove(), 550);
+  });
+}
+document.querySelectorAll('.btn, .gate-card, .tab, .chip, .theme-btn, .fmt-btn').forEach(attachRipple);
+</script>
+</body>
+</html>
