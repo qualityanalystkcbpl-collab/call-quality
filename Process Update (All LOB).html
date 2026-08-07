@@ -163,13 +163,65 @@
   .gate-cards .gate-card:nth-child(1){ animation:slideInLeft .7s cubic-bezier(.34,1.56,.64,1) both; }
   .gate-cards .gate-card:nth-child(2){ animation:dropInTop .7s cubic-bezier(.34,1.56,.64,1) both; animation-delay:.1s; }
   .gate-cards .gate-card:nth-child(3){ animation:slideInScale .7s cubic-bezier(.34,1.56,.64,1) both; animation-delay:.2s; }
-  .gate-card.dept-catv{ border-top:3px solid var(--dept-catv); }
-  .gate-card.dept-bbtech{ border-top:3px solid var(--dept-bbtech); }
-  .gate-card.dept-bbrenewal{ border-top:3px solid var(--dept-bbrenewal); }
-  /* Deep always-on glow pulse, independent of transform so entrance/tilt still work */
-  .gate-cards .gate-card.dept-catv{ animation:slideInLeft .7s cubic-bezier(.34,1.56,.64,1) both, glowCatv 2.6s ease-in-out infinite 1s; }
-  .gate-cards .gate-card.dept-bbtech{ animation:dropInTop .7s cubic-bezier(.34,1.56,.64,1) both .1s, glowBbtech 2.6s ease-in-out infinite 1.3s; }
-  .gate-cards .gate-card.dept-bbrenewal{ animation:slideInScale .7s cubic-bezier(.34,1.56,.64,1) both .2s, glowBbrenewal 2.6s ease-in-out infinite 1.6s; }
+/* ===========================
+   DEPARTMENT COLORS
+=========================== */
+
+/* CATV */
+.gate-card.dept-catv{
+    background:linear-gradient(135deg,#7C5CFF,#5A3FE0);
+    color:#fff;
+    border:none;
+    animation:slideInLeft .7s cubic-bezier(.34,1.56,.64,1) both,
+              glowCatv 2.6s ease-in-out infinite 1s;
+}
+
+/* BB TECH */
+.gate-card.dept-bbtech{
+    background:linear-gradient(135deg,#2196F3,#00BCD4);
+    color:#fff;
+    border:none;
+    animation:dropInTop .7s cubic-bezier(.34,1.56,.64,1) both .1s,
+              glowBbtech 2.6s ease-in-out infinite 1.3s;
+}
+
+/* BB RENEWAL */
+.gate-card.dept-bbrenewal{
+    background:linear-gradient(135deg,#00B894,#00CEC9);
+    color:#fff;
+    border:none;
+    animation:slideInScale .7s cubic-bezier(.34,1.56,.64,1) both .2s,
+              glowBbrenewal 2.6s ease-in-out infinite 1.6s;
+}
+
+/* Text White */
+.gate-card.dept-catv h3,
+.gate-card.dept-catv p,
+.gate-card.dept-catv .go,
+.gate-card.dept-catv::before,
+
+.gate-card.dept-bbtech h3,
+.gate-card.dept-bbtech p,
+.gate-card.dept-bbtech .go,
+.gate-card.dept-bbtech::before,
+
+.gate-card.dept-bbrenewal h3,
+.gate-card.dept-bbrenewal p,
+.gate-card.dept-bbrenewal .go,
+.gate-card.dept-bbrenewal::before{
+    color:#fff !important;
+}
+
+/* Hover */
+.gate-card.dept-catv:hover{
+    box-shadow:0 20px 40px rgba(108,92,231,.45);
+}
+.gate-card.dept-bbtech:hover{
+    box-shadow:0 20px 40px rgba(33,150,243,.45);
+}
+.gate-card.dept-bbrenewal:hover{
+    box-shadow:0 20px 40px rgba(0,184,148,.45);
+}
   .gate-card::before{
     content:attr(data-code); position:absolute; top:14px; right:18px;
     font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--line); letter-spacing:1px;
@@ -207,11 +259,46 @@
 
   /* Big highlighted Agent card */
   .agent-hero{
-    display:block; text-align:center; padding:44px 30px; margin-bottom:22px;
-    border-width:2px; border-style:solid; border-color:var(--dept-bbtech);
-    box-shadow:0 10px 34px rgba(61,139,253,0.18);
-    animation:bounceIn .55s ease both, glowBbtech 2.4s ease-in-out infinite .6s;
-  }
+    display:block;
+    text-align:center;
+    padding:44px 30px;
+    margin-bottom:22px;
+
+    background:linear-gradient(135deg,#2F80FF 0%,#00C6FF 100%);
+    color:#fff;
+
+    border:none;
+    border-radius:18px;
+
+    box-shadow:0 20px 45px rgba(47,128,255,.45);
+
+    animation:
+        bounceIn .55s ease both,
+        glowBbtech 2.4s ease-in-out infinite .6s;
+}
+
+.agent-hero h3,
+.agent-hero p,
+.agent-hero .go,
+.agent-hero::before{
+    color:#fff !important;
+}
+
+.agent-hero .go{
+    font-weight:700;
+    letter-spacing:1px;
+}
+
+.agent-hero:hover{
+    transform:translateY(-6px) scale(1.02);
+    box-shadow:0 30px 60px rgba(47,128,255,.55);
+}
+
+.agent-hero-icon{
+    font-size:56px;
+    margin-bottom:18px;
+    filter:drop-shadow(0 8px 20px rgba(0,0,0,.25));
+}
   .agent-hero-icon{ font-size:46px; margin-bottom:14px; display:block; animation:floatSlow 2.6s ease-in-out infinite; }
   .agent-hero h3{ font-size:26px; margin-bottom:10px; }
   .agent-hero p{ font-size:15px; margin-bottom:24px; }
@@ -276,9 +363,30 @@
   .btn:disabled{opacity:.5; cursor:not-allowed; transform:none;}
   .btn:focus-visible, .tab:focus-visible, .gate-card:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
   .btn-ghost{
-    background:transparent; border:1px solid var(--line); color:var(--text-soft); font-weight:600; box-shadow:none;
-  }
-  .btn-ghost:hover{border-color:var(--red); color:var(--red); background:var(--red-dim); transform:none; box-shadow:none;}
+    background:rgba(255,255,255,.88);
+    border:1px solid #dbe4ff;
+    color:#3f51b5;
+    font-weight:700;
+    border-radius:12px;
+    padding:10px 18px;
+
+    transition:.35s;
+    animation:floatingBtn 3s ease-in-out infinite,
+              pulseGlow 2.5s ease-in-out infinite;
+}
+  .btn-ghost:hover{
+    transform:translateY(-5px) scale(1.05);
+}
+
+.btn-ghost:hover::before{
+    display:inline-block;
+    animation:spin .7s linear;
+}
+
+@keyframes spin{
+    from{transform:rotate(0deg);}
+    to{transform:rotate(360deg);}
+}
   .btn-sm{width:auto; padding:8px 14px; font-size:13px;}
   .btn-outline{
     background:transparent; border:1px solid var(--accent); color:var(--accent); box-shadow:none; font-weight:700;
@@ -407,6 +515,23 @@
   .ticker-edit-box{
     display:flex; gap:10px; flex-wrap:wrap; align-items:center;
   }
+@keyframes floatingBtn{
+    0%,100%{
+        transform:translateY(0);
+    }
+    50%{
+        transform:translateY(-3px);
+    }
+}
+
+@keyframes pulseGlow{
+    0%,100%{
+        box-shadow:0 6px 15px rgba(108,92,231,.18);
+    }
+    50%{
+        box-shadow:0 10px 28px rgba(108,92,231,.45);
+    }
+}
   .ticker-edit-box input{ flex:1; min-width:180px; }
 
   .feed-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;}
@@ -572,9 +697,58 @@
     font-family:'JetBrains Mono',monospace; font-size:13px; background:rgba(0,0,0,0.45);
     padding:5px 14px; border-radius:20px; display:none; font-weight:600;
   }
+/* ===== Global Logo ===== */
+
+.page-logo{
+    position:fixed;
+    top:70px;
+    left:25px;
+    z-index:999;
+
+    background:rgba(255,255,255,.9);
+    backdrop-filter:blur(10px);
+
+    padding:10px 14px;
+    border-radius:16px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.12);
+
+    animation:logoFloat 4s ease-in-out infinite;
+}
+
+.page-logo img{
+    width:170px;
+    display:block;
+}
+
+@keyframes logoFloat{
+    0%,100%{
+        transform:translateY(0);
+    }
+    50%{
+        transform:translateY(-6px);
+    }
+}
+
+@media(max-width:768px){
+
+.page-logo{
+    left:10px;
+    top:65px;
+    padding:8px;
+}
+
+.page-logo img{
+    width:120px;
+}
+
+}
 </style>
 </head>
 <body>
+<div class="page-logo">
+    <img src="logo2.png" alt="GTPL KCBPL">
+</div>
 
 <div class="bg-blob b1"></div>
 <div class="bg-blob b2"></div>
