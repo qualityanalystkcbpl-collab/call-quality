@@ -319,8 +319,13 @@
     box-shadow:0 2px 10px rgba(28,35,51,0.04);
     animation:fadeUp .4s ease both;
   }
-  .panel-2card h3{font-size:16px; margin-bottom:18px; display:flex; align-items:center; gap:8px; font-weight:700;}
-  .panel-2card h3::before{content:""; width:8px; height:8px; background:linear-gradient(135deg, var(--amber), var(--pink)); border-radius:50%;}
+  .panel-2card h3{
+    font-size:14px; margin-bottom:18px; display:inline-flex; align-items:center; gap:8px; font-weight:700;
+    color:#fff; letter-spacing:0.3px;
+    background:linear-gradient(135deg, var(--accent), var(--pink));
+    padding:8px 16px; border-radius:8px;
+  }
+  .panel-2card h3::before{content:""; width:8px; height:8px; background:#fff; opacity:0.85; border-radius:50%;}
 
   .fmt-toolbar{display:flex; gap:6px; margin-bottom:8px;}
   .fmt-btn{
@@ -726,19 +731,20 @@
       <h3>📢 Agent Scroll Message 1</h3>
       <div class="ticker-edit-box">
         <input type="text" id="dash-ticker-input" placeholder="Type the scrolling message shown at the top of the Agent page...">
-        <button class="btn btn-sm" style="width:auto;" onclick="submitTicker('dash-ticker-input', 1)">Update</button>
+        <button class="btn btn-sm" style="width:auto;" id="dash-ticker-btn" onclick="submitTicker('dash-ticker-input', 1, 'dash-ticker-btn', 'dash-ticker-status')">Update</button>
       </div>
-      <div class="hint">This message scrolls continuously at the top of the Agent view. Team Leader, Manager, QA, and Supervisor can all change it. Update with an empty field to remove the message.</div>
+      <div class="hint" id="dash-ticker-status">This message scrolls continuously at the top of the Agent view. Team Leader, Manager, QA, and Supervisor can all change it. Update with an empty field to remove the message.</div>
     </div>
 
     <div class="panel-2card">
       <h3>📢 Agent Scroll Message 2</h3>
       <div class="ticker-edit-box">
         <input type="text" id="dash-ticker-input-2" placeholder="Type a second scrolling message shown below the first on the Agent page...">
-        <button class="btn btn-sm" style="width:auto;" onclick="submitTicker('dash-ticker-input-2', 2)">Update</button>
+        <button class="btn btn-sm" style="width:auto;" id="dash-ticker-btn-2" onclick="submitTicker('dash-ticker-input-2', 2, 'dash-ticker-btn-2', 'dash-ticker-status-2')">Update</button>
       </div>
-      <div class="hint">This is a second, independent scroll line shown below the first one on the Agent view. Update with an empty field to remove it.</div>
+      <div class="hint" id="dash-ticker-status-2">This is a second, independent scroll line shown below the first one on the Agent view. Update with an empty field to remove it.</div>
     </div>
+
 
     <div class="panel-2card">
       <h3>Post New Update</h3>
@@ -1573,17 +1579,38 @@ function updateBulkCount(){
   document.getElementById('bulk-count').textContent = selectedIds.size + ' selected';
 }
 
-async function submitTicker(inputId, num){
+async function submitTicker(inputId, num, btnId, statusId){
   if(!session) return;
   const input = document.getElementById(inputId);
   const text = input.value.trim();
+  const btn = document.getElementById(btnId);
+  const statusEl = document.getElementById(statusId);
+  const originalHint = statusEl ? statusEl.textContent : '';
+  const originalBtnLabel = btn ? btn.textContent : 'Update';
+
+  if(btn){ btn.disabled = true; btn.textContent = 'Updating...'; }
+  if(statusEl){ statusEl.textContent = 'Please wait...'; statusEl.style.color = 'var(--accent)'; }
+
   try{
     await saveTicker(session.department, text, num, session.name);
-    alert(text ? 'Scroll message updated.' : 'Scroll message removed.');
+    if(btn) btn.textContent = 'Updated ✓';
+    if(statusEl){
+      statusEl.textContent = text ? 'Update successful.' : 'Message removed.';
+      statusEl.style.color = 'var(--green)';
+    }
   }catch(err){
-    alert('Could not update, please try again.');
+    if(btn) btn.textContent = originalBtnLabel;
+    if(statusEl){ statusEl.textContent = 'Could not update, please try again.'; statusEl.style.color = 'var(--red)'; }
     console.error('submitTicker failed:', err);
+    if(btn) btn.disabled = false;
+    return;
   }
+
+  // কিছুক্ষণ পর বাটন ও নিচের লেখাটা আগের অবস্থায় ফিরে আসবে।
+  setTimeout(() => {
+    if(btn){ btn.disabled = false; btn.textContent = originalBtnLabel; }
+    if(statusEl){ statusEl.textContent = originalHint; statusEl.style.color = ''; }
+  }, 2200);
 }
 
 async function manualAgentRefresh(){
