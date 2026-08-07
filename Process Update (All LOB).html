@@ -1,9 +1,9 @@
-<!DOCTYPE html> 
-<html lang="bn">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ডিসপ্যাচ বোর্ড — CATV / BB TECH / BB RENEWAL পোর্টাল</title>
+<title>Dispatch Board — CATV / BB TECH / BB RENEWAL Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -12,9 +12,9 @@
     --panel: #ffffff;
     --panel-2: #f1f3fb;
     --line: #e3e6f2;
-    --text: #1c2333;
-    --text-soft: #3a4257;
-    --muted: #7681a0;
+    --text: #0a0e1a;
+    --text-soft: #1d253d;
+    --muted: #566085;
     --accent: #6c5ce7;
     --accent-dim: #eae7fd;
     --amber: #ff9f43;
@@ -70,7 +70,7 @@
     position:absolute; border-radius:50%; background:rgba(255,255,255,0.55); pointer-events:none;
     animation:ripple .55s ease-out forwards; transform:scale(0);
   }
-  .btn, .gate-card, .tab, .chip, .theme-btn, .fmt-btn{ position:relative; overflow:hidden; }
+  .btn, .gate-card, .tab, .chip, .theme-btn, .fmt-btn, .page-btn{ position:relative; overflow:hidden; }
 
   .wiggle-hover:hover{ animation:wiggle .4s ease; display:inline-block; }
 
@@ -110,7 +110,7 @@
     background:linear-gradient(135deg, var(--accent), var(--pink));
     animation:pulseDot 2.2s ease-in-out infinite;
   }
-  .brand-name{font-family:'JetBrains Mono',monospace; letter-spacing:2px; font-size:13px; color:var(--muted); text-transform:uppercase;}
+  .brand-name{font-family:'JetBrains Mono',monospace; letter-spacing:2px; font-size:13px; color:var(--muted); text-transform:uppercase; font-weight:600;}
   .topstrip-right{display:flex; align-items:center; gap:14px;}
   .clock{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); font-weight:600;}
   .datetime-box{ display:flex; flex-direction:column; align-items:flex-end; line-height:1.35; }
@@ -142,7 +142,7 @@
   .gate-eyebrow{
     display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:3px;
     color:var(--accent); text-transform:uppercase; margin-bottom:14px; padding:5px 14px;
-    background:var(--accent-dim); border-radius:20px;
+    background:var(--accent-dim); border-radius:20px; font-weight:700;
   }
   .gate-title{font-size:34px; font-weight:700; margin-bottom:10px;}
   .gate-sub{color:var(--muted); font-size:15px;}
@@ -192,10 +192,10 @@
   .gate-cards .gate-card:nth-child(1)::after{ animation-delay:.3s; }
   .gate-cards .gate-card:nth-child(2)::after{ animation-delay:1.1s; }
   .gate-cards .gate-card:nth-child(3)::after{ animation-delay:1.9s; }
-  .gate-card h3{font-size:20px; margin-bottom:8px;}
-  .gate-card p{color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:20px;}
+  .gate-card h3{font-size:20px; margin-bottom:8px; font-weight:700;}
+  .gate-card p{color:var(--text-soft); font-size:14px; line-height:1.6; margin-bottom:20px;}
   .gate-card .go{
-    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:1px; display:flex; align-items:center; gap:6px;
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:1px; display:flex; align-items:center; gap:6px; font-weight:700;
   }
   .dept-catv .go{ color:var(--dept-catv); }
   .dept-bbtech .go{ color:var(--dept-bbtech); }
@@ -217,7 +217,7 @@
   .agent-hero p{ font-size:15px; margin-bottom:24px; }
   .agent-hero .go{ justify-content:center; font-size:13px; }
 
-  /* Small TL / Manager / QA row */
+  /* Small TL / Manager / QA / Supervisor row */
   .small-roles{ display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:12px; }
   @media (max-width:560px){ .small-roles{ grid-template-columns:1fr; } }
   .gate-card.small{ padding:16px 14px; text-align:center; }
@@ -246,18 +246,18 @@
   }
   .panel-back{
     font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);
-    cursor:pointer; margin-bottom:22px; display:inline-block;
+    cursor:pointer; margin-bottom:22px; display:inline-block; font-weight:600;
   }
   .panel-back:hover{color:var(--accent);}
-  .panel-tag{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:6px;}
+  .panel-tag{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:6px; font-weight:700;}
   .panel-title{font-size:22px; font-weight:700; margin-bottom:22px;}
 
   .tabs{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:22px;}
-  .tab{flex:1; text-align:center; padding:10px; font-size:13px; cursor:pointer; color:var(--muted); background:var(--panel-2); transition:all .15s ease;}
-  .tab.active{background:linear-gradient(135deg, var(--accent), var(--pink)); color:#fff; font-weight:600; animation:tabPop .22s ease;}
+  .tab{flex:1; text-align:center; padding:10px; font-size:13px; cursor:pointer; color:var(--muted); background:var(--panel-2); transition:all .15s ease; font-weight:600;}
+  .tab.active{background:linear-gradient(135deg, var(--accent), var(--pink)); color:#fff; font-weight:700; animation:tabPop .22s ease;}
 
   .field{margin-bottom:16px;}
-  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-family:'JetBrains Mono',monospace; letter-spacing:.5px;}
+  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-family:'JetBrains Mono',monospace; letter-spacing:.5px; font-weight:600;}
   .field input, .field select{
     width:100%; padding:11px 12px; background:var(--panel-2); border:1px solid var(--line);
     border-radius:var(--radius); color:var(--text); font-family:'Hind Siliguri',sans-serif; font-size:15px;
@@ -276,37 +276,39 @@
   .btn:disabled{opacity:.5; cursor:not-allowed; transform:none;}
   .btn:focus-visible, .tab:focus-visible, .gate-card:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
   .btn-ghost{
-    background:transparent; border:1px solid var(--line); color:var(--muted); font-weight:500; box-shadow:none;
+    background:transparent; border:1px solid var(--line); color:var(--text-soft); font-weight:600; box-shadow:none;
   }
   .btn-ghost:hover{border-color:var(--red); color:var(--red); background:var(--red-dim); transform:none; box-shadow:none;}
   .btn-sm{width:auto; padding:8px 14px; font-size:13px;}
   .btn-outline{
-    background:transparent; border:1px solid var(--accent); color:var(--accent); box-shadow:none; font-weight:600;
+    background:transparent; border:1px solid var(--accent); color:var(--accent); box-shadow:none; font-weight:700;
   }
   .btn-outline:hover{background:var(--accent-dim); transform:none; box-shadow:none;}
   .btn-danger-outline{
-    background:transparent; border:1px solid var(--red); color:var(--red); box-shadow:none; font-weight:600;
+    background:transparent; border:1px solid var(--red); color:var(--red); box-shadow:none; font-weight:700;
   }
   .btn-danger-outline:hover{background:var(--red-dim); transform:none; box-shadow:none;}
 
   .error-msg{
     background:var(--red-dim); border:1px solid var(--red); color:var(--red);
     padding:10px 12px; border-radius:var(--radius); font-size:13px; margin-bottom:16px; display:none;
-    animation:fadeUp .2s ease both;
+    animation:fadeUp .2s ease both; font-weight:600;
   }
   .hint{font-size:12px; color:var(--muted); margin-top:14px; line-height:1.6;}
+  .show-pass-row{ display:flex; align-items:center; gap:8px; margin-top:8px; font-size:13px; color:var(--text-soft); font-weight:400; cursor:pointer; }
+  .show-pass-row input[type=checkbox]{ width:auto; accent-color:var(--accent); cursor:pointer; }
 
   .dash-header{
     display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;
     padding-bottom:18px; border-bottom:1px solid var(--line);
     animation:fadeUp .4s ease both; flex-wrap:wrap; gap:14px;
   }
-  .dash-role{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase;}
+  .dash-role{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase; font-weight:700;}
   .dash-name{font-size:22px; font-weight:700; margin-top:4px;}
   .dash-actions{display:flex; gap:10px; align-items:center;}
   .dept-pill{
     display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1px;
-    padding:4px 12px; border-radius:20px; margin-top:6px; font-weight:600;
+    padding:4px 12px; border-radius:20px; margin-top:6px; font-weight:700;
   }
   .dept-pill.catv{ background:#eae7fd; color:var(--dept-catv); }
   .dept-pill.bbtech{ background:#e3edff; color:var(--dept-bbtech); }
@@ -317,7 +319,7 @@
     box-shadow:0 2px 10px rgba(28,35,51,0.04);
     animation:fadeUp .4s ease both;
   }
-  .panel-2card h3{font-size:16px; margin-bottom:18px; display:flex; align-items:center; gap:8px;}
+  .panel-2card h3{font-size:16px; margin-bottom:18px; display:flex; align-items:center; gap:8px; font-weight:700;}
   .panel-2card h3::before{content:""; width:8px; height:8px; background:linear-gradient(135deg, var(--amber), var(--pink)); border-radius:50%;}
 
   .fmt-toolbar{display:flex; gap:6px; margin-bottom:8px;}
@@ -343,16 +345,29 @@
   }
   .image-field:hover{border-color:var(--accent);}
   .image-field input[type=file]{display:none;}
-  .image-field-label{font-size:13px; color:var(--muted);}
-  #image-preview{margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-  #image-preview img{max-width:110px; border-radius:8px; border:1px solid var(--line);}
+  .image-field-label{font-size:13px; color:var(--text-soft); font-weight:600;}
+  #image-preview{margin-top:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .preview-thumb{position:relative; width:76px; height:76px; border-radius:10px; overflow:hidden; border:1px solid var(--line); flex-shrink:0; animation:popIn .2s ease both;}
+  .preview-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .preview-thumb .remove-thumb{
+    position:absolute; top:3px; right:3px; width:20px; height:20px; border-radius:50%;
+    background:rgba(10,14,24,0.72); color:#fff; border:none; font-size:11px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+  }
+  .preview-thumb .remove-thumb:hover{ background:var(--red); }
+  .preview-add{
+    width:76px; height:76px; border-radius:10px; border:1.5px dashed var(--line); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted);
+    font-size:26px; background:var(--panel-2); transition:border-color .15s ease, color .15s ease;
+  }
+  .preview-add:hover{ border-color:var(--accent); color:var(--accent); }
 
   .search-box{
     position:relative; margin-bottom:16px;
   }
   .search-box .search-icon{
     position:absolute; left:14px; top:50%; transform:translateY(-50%);
-    font-size:14px; opacity:.6; pointer-events:none;
+    font-size:14px; opacity:.7; pointer-events:none;
   }
   .search-box input{
     width:100%; padding:12px 14px 12px 40px; background:var(--panel); border:1px solid var(--line);
@@ -364,7 +379,7 @@
   .date-filter-row{
     display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;
   }
-  .date-filter-row label{ font-size:13px; color:var(--muted); }
+  .date-filter-row label{ font-size:13px; color:var(--text-soft); font-weight:600; }
   .date-filter-row input[type=date]{
     padding:9px 12px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
     color:var(--text); font-family:'Hind Siliguri',sans-serif; font-size:14px;
@@ -381,7 +396,7 @@
   .ticker-viewport{ flex:1; overflow:hidden; white-space:nowrap; position:relative; }
   .ticker-track{
     display:inline-block; padding-left:100%; font-weight:700; color:var(--text);
-    animation:tickerScroll 16s linear infinite;
+    animation:tickerScroll linear infinite;
   }
   @keyframes tickerScroll{ 0%{ transform:translateX(0); } 100%{ transform:translateX(-100%); } }
   .ticker-edit-box{
@@ -390,11 +405,11 @@
   .ticker-edit-box input{ flex:1; min-width:180px; }
 
   .feed-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;}
-  .feed-toolbar h3{font-size:16px;}
+  .feed-toolbar h3{font-size:16px; font-weight:700;}
   .filter-chips{display:flex; gap:8px;}
   .chip{
     font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 12px; border:1px solid var(--line);
-    border-radius:20px; cursor:pointer; color:var(--muted); letter-spacing:.5px; transition:all .15s ease; background:var(--panel);
+    border-radius:20px; cursor:pointer; color:var(--text-soft); letter-spacing:.5px; transition:all .15s ease; background:var(--panel); font-weight:600;
   }
   .chip.active{border-color:var(--accent); color:#fff; background:linear-gradient(135deg, var(--accent), var(--pink)); animation:chipPop .25s ease;}
 
@@ -402,8 +417,8 @@
     display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; padding:10px 14px;
     background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius); font-size:13px;
   }
-  .bulk-bar label{display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--muted);}
-  .bulk-count{font-family:'JetBrains Mono',monospace; color:var(--accent); font-weight:600;}
+  .bulk-bar label{display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--text-soft); font-weight:600;}
+  .bulk-count{font-family:'JetBrains Mono',monospace; color:var(--accent); font-weight:700;}
 
   .post{
     background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--dept-bbtech);
@@ -414,12 +429,12 @@
     display:flex; gap:12px;
   }
   .post:hover{ transform:translateY(-2px); box-shadow:0 10px 22px rgba(28,35,51,0.08); }
-  #leader-feed .post:nth-child(1),#agent-feed .post:nth-child(1){animation-delay:.02s;}
-  #leader-feed .post:nth-child(2),#agent-feed .post:nth-child(2){animation-delay:.06s;}
-  #leader-feed .post:nth-child(3),#agent-feed .post:nth-child(3){animation-delay:.10s;}
-  #leader-feed .post:nth-child(4),#agent-feed .post:nth-child(4){animation-delay:.14s;}
-  #leader-feed .post:nth-child(5),#agent-feed .post:nth-child(5){animation-delay:.18s;}
-  #leader-feed .post:nth-child(n+6),#agent-feed .post:nth-child(n+6){animation-delay:.22s;}
+  #dashboard-feed .post:nth-child(1),#agent-feed .post:nth-child(1){animation-delay:.02s;}
+  #dashboard-feed .post:nth-child(2),#agent-feed .post:nth-child(2){animation-delay:.06s;}
+  #dashboard-feed .post:nth-child(3),#agent-feed .post:nth-child(3){animation-delay:.10s;}
+  #dashboard-feed .post:nth-child(4),#agent-feed .post:nth-child(4){animation-delay:.14s;}
+  #dashboard-feed .post:nth-child(5),#agent-feed .post:nth-child(5){animation-delay:.18s;}
+  #dashboard-feed .post:nth-child(n+6),#agent-feed .post:nth-child(n+6){animation-delay:.22s;}
   .post.urgent{border-left-color:var(--red);}
   .post-check{margin-top:4px; width:16px; height:16px; accent-color:var(--accent); cursor:pointer; flex-shrink:0;}
   .post-content{flex:1; min-width:0;}
@@ -427,40 +442,72 @@
   .post-badges{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
   .badge{
     font-family:'JetBrains Mono',monospace; font-size:10px; padding:3px 9px; border-radius:10px;
-    letter-spacing:.5px; text-transform:uppercase; font-weight:600;
+    letter-spacing:.5px; text-transform:uppercase; font-weight:700;
   }
   .badge.urgent{background:var(--red-dim); color:var(--red); animation:badgePulse 1.8s ease-in-out infinite;}
   .badge.normal{background:var(--green-dim); color:var(--green);}
-  .post-title{font-size:16px; font-weight:700; margin-bottom:6px;}
-  .post-body{color:var(--text-soft); font-size:14px; line-height:1.7; white-space:pre-wrap; word-break:break-word;}
+  .post-title{font-size:16px; font-weight:700; margin-bottom:6px; color:var(--text);}
+  .post-body{color:var(--text-soft); font-size:14px; line-height:1.7; white-space:pre-wrap; word-break:break-word; font-weight:500;}
   .post-img{
     margin-top:12px; max-width:100%; border-radius:8px; display:block; border:1px solid var(--line); cursor:zoom-in;
     transition:transform .25s ease, box-shadow .25s ease;
   }
   .post-img:hover{ transform:scale(1.015); box-shadow:0 10px 24px rgba(28,35,51,0.15); }
+
+  /* WhatsApp-style photo gallery for posts with multiple images */
+  .post-gallery{ display:grid; gap:6px; margin-top:12px; }
+  .post-gallery.g1{ grid-template-columns:1fr; }
+  .post-gallery.g2{ grid-template-columns:1fr 1fr; }
+  .post-gallery.g3{ grid-template-columns:1fr 1fr; }
+  .post-gallery.g3 .gallery-tile:first-child{ grid-row:span 2; }
+  .post-gallery.g4{ grid-template-columns:1fr 1fr; }
+  .gallery-tile{
+    position:relative; overflow:hidden; border-radius:8px; cursor:zoom-in;
+    aspect-ratio:1/1; border:1px solid var(--line);
+  }
+  .post-gallery.g1 .gallery-tile{ aspect-ratio:16/10; }
+  .gallery-tile img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .25s ease; }
+  .gallery-tile:hover img{ transform:scale(1.05); }
+  .gallery-more{
+    position:absolute; inset:0; background:rgba(10,14,24,0.58); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700;
+    font-family:'JetBrains Mono',monospace;
+  }
+
   .post-foot{display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); flex-wrap:wrap; gap:8px;}
-  .post-author{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); font-weight:600;}
-  .post-time{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted);}
+  .post-author{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); font-weight:700;}
+  .post-time{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); font-weight:600;}
   .del-btn{
     background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:13px;
-    font-family:'JetBrains Mono',monospace; transition:color .15s ease;
+    font-family:'JetBrains Mono',monospace; transition:color .15s ease; font-weight:600;
   }
   .del-btn:hover{color:var(--red);}
 
   .empty{
-    text-align:center; padding:50px 20px; color:var(--muted); border:1px dashed var(--line); border-radius:var(--radius);
-    background:var(--panel);
+    text-align:center; padding:50px 20px; color:var(--text-soft); border:1px dashed var(--line); border-radius:var(--radius);
+    background:var(--panel); font-weight:500;
   }
   .empty .big{font-size:28px; margin-bottom:10px; display:inline-block; animation:floatSlow 3s ease-in-out infinite;}
 
-  /* ---------------- Login-based zones (TL / Manager / QA): visually separated, distinct per role ---------------- */
+  /* Pagination controls (agent view) */
+  .pagination{ display:flex; justify-content:center; align-items:center; gap:8px; margin-top:22px; flex-wrap:wrap; }
+  .page-btn{
+    font-family:'JetBrains Mono',monospace; font-size:13px; padding:8px 13px; border-radius:8px;
+    border:1px solid var(--line); background:var(--panel); color:var(--text-soft); cursor:pointer;
+    transition:all .15s ease; font-weight:700;
+  }
+  .page-btn:hover:not(:disabled){ border-color:var(--accent); color:var(--accent); }
+  .page-btn.active{ background:linear-gradient(135deg, var(--accent), var(--pink)); color:#fff; border-color:transparent; }
+  .page-btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  /* ---------------- Login-based zones (TL / Manager / QA / Supervisor): visually separated, distinct per role ---------------- */
   .zone-dark{
     --panel: #151b2c;
     --panel-2: #1d2540;
     --line: #2b3352;
-    --text: #f1f3f9;
-    --text-soft: #c7cfe6;
-    --muted: #93a0c4;
+    --text: #ffffff;
+    --text-soft: #e2e7fb;
+    --muted: #a8b3da;
     background:
       radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 45%),
       radial-gradient(circle at 100% 100%, rgba(108,92,231,0.12), transparent 45%),
@@ -480,7 +527,7 @@
     display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace;
     font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent);
     background:var(--accent-dim); border:1px solid rgba(255,255,255,0.15);
-    padding:5px 14px; border-radius:20px; margin-bottom:18px;
+    padding:5px 14px; border-radius:20px; margin-bottom:18px; font-weight:700;
   }
 
   .screen{display:none;}
@@ -502,11 +549,24 @@
   }
 
   .lightbox{
-    display:none; position:fixed; inset:0; background:rgba(10,14,24,0.85); z-index:100;
+    display:none; position:fixed; inset:0; background:rgba(8,10,18,0.9); z-index:100;
     align-items:center; justify-content:center; padding:24px; cursor:zoom-out;
   }
   .lightbox.open{display:flex;}
   .lightbox img{max-width:100%; max-height:100%; border-radius:8px;}
+  .lightbox-nav{
+    position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%;
+    background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.25); color:#fff; font-size:20px;
+    cursor:pointer; display:none; align-items:center; justify-content:center; transition:background .15s ease;
+  }
+  .lightbox-nav:hover{ background:rgba(255,255,255,0.3); }
+  .lightbox-prev{ left:20px; }
+  .lightbox-next{ right:20px; }
+  .lightbox-counter{
+    position:absolute; bottom:24px; left:50%; transform:translateX(-50%); color:#fff;
+    font-family:'JetBrains Mono',monospace; font-size:13px; background:rgba(0,0,0,0.45);
+    padding:5px 14px; border-radius:20px; display:none; font-weight:600;
+  }
 </style>
 </head>
 <body>
@@ -519,7 +579,7 @@
 <div class="topstrip">
   <div class="brand">
     <div class="brand-mark"></div>
-    <div class="brand-name">ডিসপ্যাচ বোর্ড · টিম কমিউনিকেশন</div>
+    <div class="brand-name">Dispatch Board · Team Communication</div>
   </div>
   <div class="topstrip-right">
     <div class="datetime-box">
@@ -527,17 +587,17 @@
       <div class="clock mono" id="clock">--:--:--</div>
     </div>
     <div class="theme-wrap">
-      <button class="theme-btn wiggle-hover" id="theme-btn" onclick="toggleThemePanel()" title="রঙ পরিবর্তন করুন">🎨</button>
+      <button class="theme-btn wiggle-hover" id="theme-btn" onclick="toggleThemePanel()" title="Change color">🎨</button>
       <div class="theme-panel" id="theme-panel">
-        <div class="theme-panel-title">পেজের রঙ বেছে নিন</div>
+        <div class="theme-panel-title">Choose page color</div>
         <div class="swatches" id="swatches"></div>
       </div>
     </div>
   </div>
 </div>
 
-<div id="storage-warning" style="display:none; background:var(--red-dim); color:var(--red); border-bottom:1px solid var(--red); padding:10px 20px; font-size:13px; text-align:center; position:relative; z-index:15;">
-  ⚠️ Google Sheet API URL এখনো সেট করা হয়নি। HTML ফাইলের একদম শুরুতে <span class="mono">window.SHEET_API_URL</span>-এর জায়গায় আপনার Apps Script Web App-এর URL বসান, তারপর ডেটা-সেভিং কাজ করবে।
+<div id="storage-warning" style="display:none; background:var(--red-dim); color:var(--red); border-bottom:1px solid var(--red); padding:10px 20px; font-size:13px; text-align:center; position:relative; z-index:15; font-weight:600;">
+  ⚠️ The Google Sheet API URL has not been set yet. Near the very top of this HTML file, replace the value of <span class="mono">window.SHEET_API_URL</span> with your deployed Apps Script Web App URL, and data-saving will start working.
 </div>
 
 <div class="wrap">
@@ -545,182 +605,196 @@
   <!-- SCREEN 1: DEPARTMENT SELECT -->
   <div class="screen active" id="screen-gate">
     <div class="gate-head">
-      <div class="gate-eyebrow">বিভাগ বেছে নিন</div>
-      <div class="gate-title">কোন বিভাগে প্রবেশ করবেন?</div>
-      <div class="gate-sub">প্রতিটি বিভাগের তথ্য আলাদা — CATV, BB TECH ও BB RENEWAL এর আপডেট আলাদাভাবে দেখানো হয়।</div>
+      <div class="gate-eyebrow">Select Department</div>
+      <div class="gate-title">Which department would you like to enter?</div>
+      <div class="gate-sub">Each department's information is kept separate — CATV, BB TECH, and BB RENEWAL updates are shown individually.</div>
     </div>
     <div class="gate-cards">
       <div class="gate-card dept-catv" data-code="DPT-01" onclick="openDept('catv')" tabindex="0">
         <div class="gate-card-icon">📺</div>
         <h3>CATV</h3>
-        <p>CATV বিভাগের টিম লিডার ও এজেন্টদের জন্য তথ্য ও নোটিশ।</p>
-        <div class="go">প্রবেশ করুন</div>
+        <p>Updates and notices for CATV department team leaders and agents.</p>
+        <div class="go">Enter</div>
       </div>
       <div class="gate-card dept-bbtech" data-code="DPT-02" onclick="openDept('bbtech')" tabindex="0">
         <div class="gate-card-icon">🛠️</div>
         <h3>BB TECH</h3>
-        <p>BB TECH বিভাগের টিম লিডার ও এজেন্টদের জন্য তথ্য ও নোটিশ।</p>
-        <div class="go">প্রবেশ করুন</div>
+        <p>Updates and notices for BB TECH department team leaders and agents.</p>
+        <div class="go">Enter</div>
       </div>
       <div class="gate-card dept-bbrenewal" data-code="DPT-03" onclick="openDept('bbrenewal')" tabindex="0">
         <div class="gate-card-icon">🔄</div>
         <h3>BB RENEWAL</h3>
-        <p>BB RENEWAL বিভাগের টিম লিডার ও এজেন্টদের জন্য তথ্য ও নোটিশ।</p>
-        <div class="go">প্রবেশ করুন</div>
+        <p>Updates and notices for BB RENEWAL department team leaders and agents.</p>
+        <div class="go">Enter</div>
       </div>
     </div>
   </div>
 
   <!-- SCREEN 2: ROLE SELECT WITHIN DEPARTMENT -->
   <div class="screen" id="screen-role">
-    <span class="panel-back" onclick="goToGate()">← বিভাগ বদলান</span>
+    <span class="panel-back" onclick="goToGate()">← Change Department</span>
     <div class="gate-head">
       <div class="gate-eyebrow" id="role-dept-tag">CATV</div>
-      <div class="gate-title" id="role-title">আপনি কে হিসেবে ঢুকবেন?</div>
-      <div class="gate-sub">টিম লিডার/ম্যানেজার/QA লগইন করে দেখতে ও কাজ করতে পারবেন, এজেন্ট সরাসরি (লগইন ছাড়াই) সব তথ্য দেখতে পারবে।</div>
+      <div class="gate-title" id="role-title">Which role will you enter as?</div>
+      <div class="gate-sub">Team Leader / Manager / QA / Supervisor can log in to view and post updates. Agents can view everything directly, with no login required.</div>
     </div>
     <div class="role-cards">
       <div class="gate-card agent-hero rc-agent" data-code="AG" onclick="openAgentView()" tabindex="0">
         <div class="agent-hero-icon">👁️</div>
-        <h3>এজেন্ট</h3>
-        <p>কোনো লগইন লাগবে না — সরাসরি সব তথ্য দেখুন।</p>
-        <div class="go">তথ্য দেখুন</div>
+        <h3>Agent</h3>
+        <p>No login needed — view all updates directly.</p>
+        <div class="go">View Updates</div>
       </div>
       <div class="small-roles">
         <div class="gate-card small rc-leader" data-code="TL" onclick="openAuth('leader')" tabindex="0">
-          <h3>টিম লিডার</h3>
-          <div class="go">লিডার লগইন</div>
+          <h3>Team Leader</h3>
+          <div class="go">Leader Login</div>
         </div>
         <div class="gate-card small rc-manager" data-code="MG" onclick="openAuth('manager')" tabindex="0">
-          <h3>ম্যানেজার</h3>
-          <div class="go">ম্যানেজার লগইন</div>
+          <h3>Manager</h3>
+          <div class="go">Manager Login</div>
         </div>
         <div class="gate-card small rc-qa" data-code="QA" onclick="openAuth('qa')" tabindex="0">
           <h3>QA</h3>
-          <div class="go">QA লগইন</div>
+          <div class="go">QA Login</div>
         </div>
         <div class="gate-card small rc-supervisor" id="card-supervisor" data-code="SV" onclick="openAuth('supervisor')" tabindex="0" style="display:none;">
-          <h3>সুপারভাইজার</h3>
-          <div class="go">সুপারভাইজার লগইন</div>
+          <h3>Supervisor</h3>
+          <div class="go">Supervisor Login</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCREEN 3: TL AUTH -->
+  <!-- SCREEN 3: AUTH (Team Leader / Manager / QA / Supervisor) -->
   <div class="screen" id="screen-auth">
-    <span class="panel-back" onclick="goToRole()">← পেছনে যান</span>
-    <div class="tl-tag" id="auth-zone-tag">🔒 টিম লিডার জোন</div>
+    <span class="panel-back" onclick="goToRole()">← Go Back</span>
+    <div class="tl-tag" id="auth-zone-tag">🔒 Team Leader Zone</div>
     <div class="panel">
-      <div class="panel-tag" id="auth-role-tag">CATV · টিম লিডার</div>
-      <div class="panel-title" id="auth-title">লগইন করুন</div>
+      <div class="panel-tag" id="auth-role-tag">CATV · Team Leader</div>
+      <div class="panel-title" id="auth-title">Log In</div>
 
       <div class="tabs">
-        <div class="tab active" id="tab-login" onclick="switchAuthTab('login')">লগইন</div>
-        <div class="tab" id="tab-register" onclick="switchAuthTab('register')">নতুন অ্যাকাউন্ট</div>
+        <div class="tab active" id="tab-login" onclick="switchAuthTab('login')">Log In</div>
+        <div class="tab" id="tab-register" onclick="switchAuthTab('register')">New Account</div>
       </div>
 
       <div class="error-msg" id="auth-error"></div>
 
       <div id="auth-fields-name" style="display:none;" class="field">
-        <label>পুরো নাম</label>
-        <input type="text" id="auth-name" placeholder="যেমন: রাহুল আহমেদ">
+        <label>Full Name</label>
+        <input type="text" id="auth-name" placeholder="e.g., John Smith">
       </div>
       <div class="field">
-        <label>ইউজারনেম</label>
-        <input type="text" id="auth-username" placeholder="যেমন: rahul.tl">
+        <label>Username</label>
+        <input type="text" id="auth-username" placeholder="e.g., john.tl" onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('auth-password').focus(); }">
       </div>
       <div class="field">
-        <label>পাসওয়ার্ড</label>
-        <input type="password" id="auth-password" placeholder="••••••••">
+        <label>Password</label>
+        <input type="password" id="auth-password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitAuth(); }">
+        <label class="show-pass-row">
+          <input type="checkbox" id="auth-show-password" onchange="toggleShowPassword()">
+          <span>Show password</span>
+        </label>
       </div>
       <div id="auth-fields-code" style="display:none;" class="field">
-        <label>রেজিস্ট্রেশন কোড</label>
-        <input type="text" id="auth-code" placeholder="আপনার সুপারভাইজারের কাছ থেকে নিন">
+        <label>Registration Code</label>
+        <input type="text" id="auth-code" placeholder="Get this from your supervisor">
       </div>
 
-      <button class="btn" id="auth-submit" onclick="submitAuth()">প্রবেশ করুন</button>
-      <div class="hint">রেজিস্ট্রেশন কোড ছাড়া নতুন অ্যাকাউন্ট তৈরি করা যাবে না — শুধু যাদের কোড দেওয়া হয়েছে তারাই টিম লিডার/ম্যানেজার/QA/সুপারভাইজার হিসেবে রেজিস্টার করতে পারবে।</div>
+      <button class="btn" id="auth-submit" onclick="submitAuth()">Log In</button>
+      <div class="hint">You can't create a new account without a registration code — only people who have been given a code can register as Team Leader / Manager / QA / Supervisor.</div>
     </div>
   </div>
 
-  <!-- SCREEN 4: LEADER DASHBOARD (FULL ACCESS) -->
-  <div class="screen zone-dark role-leader" id="screen-leader">
-    <div class="tl-tag">🔒 টিম লিডার জোন</div>
+  <!-- SCREEN 4: DASHBOARD (Team Leader / Manager / QA / Supervisor — all have full posting access) -->
+  <div class="screen zone-dark role-leader" id="screen-dashboard">
+    <div class="tl-tag" id="dash-zone-tag">🔒 Team Leader Zone</div>
     <div class="dash-header">
       <div>
-        <div class="dash-role">টিম লিডার প্যানেল · সম্পূর্ণ অ্যাক্সেস</div>
-        <div class="dash-name" id="leader-name">—</div>
-        <div class="dept-pill" id="leader-dept-pill">CATV</div>
+        <div class="dash-role" id="dash-role-label">Team Leader Panel · Full Access</div>
+        <div class="dash-name" id="dash-name">—</div>
+        <div class="dept-pill" id="dash-dept-pill">CATV</div>
       </div>
       <div class="dash-actions">
-        <button class="btn btn-ghost btn-sm" onclick="logout()">লগআউট</button>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">Log Out</button>
       </div>
     </div>
 
     <div class="panel-2card">
-      <h3>📢 এজেন্ট স্ক্রল বার্তা</h3>
+      <h3>📢 Agent Scroll Message 1</h3>
       <div class="ticker-edit-box">
-        <input type="text" id="leader-ticker-input" placeholder="এজেন্ট পেজের উপরে ভেসে চলা বার্তা লিখুন...">
-        <button class="btn btn-sm" style="width:auto;" onclick="submitTicker('leader-ticker-input')">আপডেট করুন</button>
+        <input type="text" id="dash-ticker-input" placeholder="Type the scrolling message shown at the top of the Agent page...">
+        <button class="btn btn-sm" style="width:auto;" onclick="submitTicker('dash-ticker-input', 1)">Update</button>
       </div>
-      <div class="hint">এই বার্তা এজেন্ট ভিউয়ের উপরে ক্রমাগত ভেসে যাবে। টিম লিডার, ম্যানেজার, QA ও সুপারভাইজার — যে কেউ এটা বদলাতে পারবেন। খালি রেখে আপডেট করলে বার্তাটি সরে যাবে।</div>
+      <div class="hint">This message scrolls continuously at the top of the Agent view. Team Leader, Manager, QA, and Supervisor can all change it. Update with an empty field to remove the message.</div>
     </div>
 
     <div class="panel-2card">
-      <h3>নতুন তথ্য পাঠান</h3>
+      <h3>📢 Agent Scroll Message 2</h3>
+      <div class="ticker-edit-box">
+        <input type="text" id="dash-ticker-input-2" placeholder="Type a second scrolling message shown below the first on the Agent page...">
+        <button class="btn btn-sm" style="width:auto;" onclick="submitTicker('dash-ticker-input-2', 2)">Update</button>
+      </div>
+      <div class="hint">This is a second, independent scroll line shown below the first one on the Agent view. Update with an empty field to remove it.</div>
+    </div>
+
+    <div class="panel-2card">
+      <h3>Post New Update</h3>
       <div class="field">
-        <label>শিরোনাম</label>
-        <input type="text" id="post-title" placeholder="যেমন: শিফট পরিবর্তন — সোমবার">
+        <label>Title</label>
+        <input type="text" id="post-title" placeholder="e.g., Shift Change — Monday">
       </div>
       <div class="field">
-        <label>বিস্তারিত বার্তা</label>
+        <label>Detailed Message</label>
         <div class="fmt-toolbar">
-          <button type="button" class="fmt-btn b" onclick="wrapSelection('**')" title="বোল্ড">B</button>
-          <button type="button" class="fmt-btn i" onclick="wrapSelection('*')" title="ইটালিক">I</button>
-          <button type="button" class="fmt-btn u" onclick="wrapSelection('__')" title="আন্ডারলাইন">U</button>
+          <button type="button" class="fmt-btn b" onclick="wrapSelection('**')" title="Bold">B</button>
+          <button type="button" class="fmt-btn i" onclick="wrapSelection('*')" title="Italic">I</button>
+          <button type="button" class="fmt-btn u" onclick="wrapSelection('__')" title="Underline">U</button>
         </div>
-        <textarea id="post-body" placeholder="এজেন্টদের জন্য বিস্তারিত তথ্য লিখুন... (বোল্ড করতে টেক্সট সিলেক্ট করে B চাপুন)"></textarea>
+        <textarea id="post-body" placeholder="Write detailed information for agents... (select text and press B to bold)"></textarea>
       </div>
       <div class="field">
-        <label>ছবি (ঐচ্ছিক)</label>
-        <label class="image-field" for="post-image">
-          <div class="image-field-label">📷 ছবি বেছে নিতে এখানে ট্যাপ করুন</div>
-          <input type="file" id="post-image" accept="image/*" onchange="handleImageSelect(event)">
+        <label>Photos (optional)</label>
+        <label class="image-field" for="post-images">
+          <div class="image-field-label">📷 Tap here to select photos — you can pick multiple at once, just like WhatsApp</div>
+          <input type="file" id="post-images" accept="image/*" multiple onchange="handleImageSelect(event)">
         </label>
         <div id="image-preview"></div>
       </div>
       <div class="field">
-        <label>গুরুত্ব</label>
+        <label>Priority</label>
         <select id="post-priority">
-          <option value="normal">সাধারণ</option>
-          <option value="urgent">জরুরি</option>
+          <option value="normal">Normal</option>
+          <option value="urgent">Urgent</option>
         </select>
       </div>
-      <button class="btn" id="post-submit-btn" onclick="createPost()">পোস্ট করুন</button>
+      <button class="btn" id="post-submit-btn" onclick="createPost()">Post Update</button>
     </div>
 
     <div class="feed-toolbar">
-      <h3 id="leader-feed-title">এই বিভাগের সব তথ্য</h3>
+      <h3 id="dash-feed-title">All updates in this department</h3>
     </div>
     <div class="bulk-bar">
-      <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this.checked)"> সব সিলেক্ট করুন</label>
-      <span class="bulk-count" id="bulk-count">0টি সিলেক্ট করা</span>
-      <button class="btn btn-outline btn-sm" onclick="bulkDeleteSelected()">সিলেক্ট করা মুছুন</button>
-      <button class="btn btn-danger-outline btn-sm" onclick="deleteAllInDept()">এই বিভাগের সব মুছুন</button>
+      <label><input type="checkbox" id="select-all-box" onchange="toggleSelectAll(this.checked)"> Select All</label>
+      <span class="bulk-count" id="bulk-count">0 selected</span>
+      <button class="btn btn-outline btn-sm" onclick="bulkDeleteSelected()">Delete Selected</button>
+      <button class="btn btn-danger-outline btn-sm" onclick="deleteAllInDept()">Delete All in Department</button>
     </div>
-    <div id="leader-feed"><div class="loading">লোড হচ্ছে...</div></div>
+    <div id="dashboard-feed"><div class="loading">Loading...</div></div>
   </div>
 
   <!-- SCREEN 5: AGENT VIEW (NO LOGIN) -->
   <div class="screen" id="screen-agent">
     <div class="dash-header">
       <div>
-        <div class="dash-role">এজেন্ট ভিউ</div>
+        <div class="dash-role">Agent View</div>
         <div class="dash-name" id="agent-dept-name">CATV</div>
       </div>
       <div class="dash-actions">
-        <button class="btn btn-ghost btn-sm" onclick="goToRole()">← বিভাগে ফিরুন</button>
+        <button class="btn btn-ghost btn-sm" id="agent-refresh-btn" onclick="manualAgentRefresh()">🔄 Refresh</button>
+        <button class="btn btn-ghost btn-sm" onclick="goToRole()">← Back to Departments</button>
       </div>
     </div>
 
@@ -731,69 +805,47 @@
       </div>
     </div>
 
+    <div class="ticker-bar" id="agent-ticker-bar-2" style="display:none;">
+      <span class="ticker-icon">📢</span>
+      <div class="ticker-viewport">
+        <div class="ticker-track" id="agent-ticker-track-2"></div>
+      </div>
+    </div>
+
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" id="agent-search" placeholder="খুঁজুন (শিরোনাম, বার্তা বা পাঠানোর নাম দিয়ে)..." oninput="handleAgentSearch(this.value)">
+      <input type="text" id="agent-search" placeholder="Search (by title, message, or sender name)..." oninput="handleAgentSearch(this.value)">
     </div>
     <div class="date-filter-row">
-      <label for="agent-date">📅 তারিখ:</label>
+      <label for="agent-date">📅 Date:</label>
       <input type="date" id="agent-date" onchange="handleAgentDateFilter(this.value)">
-      <button type="button" class="btn-ghost btn-sm" id="agent-date-clear" onclick="clearAgentDateFilter()" style="display:none;">✕ তারিখ মুছুন</button>
+      <button type="button" class="btn-ghost btn-sm" id="agent-date-clear" onclick="clearAgentDateFilter()" style="display:none;">✕ Clear Date</button>
     </div>
 
     <div class="feed-toolbar">
-      <h3>process information</h3>
+      <h3>Process Information</h3>
       <div class="filter-chips">
-        <div class="chip active" data-f="all" onclick="setAgentFilter('all')">সব</div>
-        <div class="chip" data-f="urgent" onclick="setAgentFilter('urgent')">শুধু জরুরি</div>
+        <div class="chip active" data-f="all" onclick="setAgentFilter('all')">All</div>
+        <div class="chip" data-f="urgent" onclick="setAgentFilter('urgent')">Urgent Only</div>
       </div>
     </div>
-    <div id="agent-feed"><div class="loading">লোড হচ্ছে...</div></div>
-  </div>
-
-  <!-- SCREEN 6: MANAGER / QA OVERSIGHT DASHBOARD (VIEW-ONLY, LOGIN REQUIRED) -->
-  <div class="screen zone-dark" id="screen-oversight">
-    <div class="tl-tag" id="oversight-zone-tag">📊 ম্যানেজার জোন</div>
-    <div class="dash-header">
-      <div>
-        <div class="dash-role" id="oversight-role-label">ম্যানেজার প্যানেল · ভিউ ও ডিলিট অ্যাক্সেস</div>
-        <div class="dash-name" id="oversight-name">—</div>
-        <div class="dept-pill" id="oversight-dept-pill">CATV</div>
-      </div>
-      <div class="dash-actions">
-        <button class="btn btn-ghost btn-sm" onclick="logout()">লগআউট</button>
-      </div>
-    </div>
-
-    <div class="panel-2card">
-      <h3>📢 এজেন্ট স্ক্রল বার্তা</h3>
-      <div class="ticker-edit-box">
-        <input type="text" id="oversight-ticker-input" placeholder="এজেন্ট পেজের উপরে ভেসে চলা বার্তা লিখুন...">
-        <button class="btn btn-sm" style="width:auto;" onclick="submitTicker('oversight-ticker-input')">আপডেট করুন</button>
-      </div>
-      <div class="hint">এই বার্তা এজেন্ট ভিউয়ের উপরে ক্রমাগত ভেসে যাবে। টিম লিডার, ম্যানেজার, QA ও সুপারভাইজার — যে কেউ এটা বদলাতে পারবেন। খালি রেখে আপডেট করলে বার্তাটি সরে যাবে।</div>
-    </div>
-
-    <div class="feed-toolbar">
-      <h3>এই বিভাগের সব তথ্য</h3>
-      <div class="filter-chips">
-        <div class="chip active" data-f="all" onclick="setOversightFilter('all')">সব</div>
-        <div class="chip" data-f="urgent" onclick="setOversightFilter('urgent')">শুধু জরুরি</div>
-      </div>
-    </div>
-    <div id="oversight-feed"><div class="loading">লোড হচ্ছে...</div></div>
+    <div id="agent-feed"><div class="loading">Loading...</div></div>
+    <div class="pagination" id="agent-pagination"></div>
   </div>
 
 </div>
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-nav lightbox-prev" id="lightbox-prev" onclick="lightboxNav(-1, event)">‹</button>
   <img id="lightbox-img" src="">
+  <button class="lightbox-nav lightbox-next" id="lightbox-next" onclick="lightboxNav(1, event)">›</button>
+  <div class="lightbox-counter" id="lightbox-counter"></div>
 </div>
 
 <script>
 /* ================================================================
-   এখানে আপনার Google Apps Script Web App-এর ডিপ্লয় করা URL বসান।
-   (Deploy > New deployment > Web app করার পর যে URL পাবেন, সেটা এখানে বসান)
+   Paste your deployed Google Apps Script Web App URL here.
+   (Deploy > New deployment > Web app — paste the resulting URL below)
    ================================================================ */
 window.SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbx9VZrL9rW5s1AJap1zvLdYEpzR9mXfjYILj30a1BXoMblW-maOhBzXYz-JPku2-CZ5/exec';
 
@@ -894,26 +946,42 @@ document.addEventListener('click', (e)=>{
   }
 });
 
-/* ---------------- Department config ---------------- */
+/* ---------------- Department / role config ---------------- */
 const DEPT_LABELS = { catv: 'CATV', bbtech: 'BB TECH', bbrenewal: 'BB RENEWAL' };
-const ROLE_LABELS = { leader: 'টিম লিডার', manager: 'ম্যানেজার', qa: 'কোয়ালিটি অ্যানালাইসিস (QA)', supervisor: 'সুপারভাইজার' };
-const ROLE_TAGS = { leader: '🔒 টিম লিডার জোন', manager: '📊 ম্যানেজার জোন', qa: '🧪 QA জোন', supervisor: '🧭 সুপারভাইজার জোন' };
+const ROLE_LABELS = { leader: 'Team Leader', manager: 'Manager', qa: 'Quality Analyst (QA)', supervisor: 'Supervisor' };
+const ROLE_TAGS = { leader: '🔒 Team Leader Zone', manager: '📊 Manager Zone', qa: '🧪 QA Zone', supervisor: '🧭 Supervisor Zone' };
 
 /* ---------------- State ---------------- */
 let authMode = 'login';
-let authTargetRole = 'leader';   // 'leader' | 'manager' | 'qa'
+let authTargetRole = 'leader';   // 'leader' | 'manager' | 'qa' | 'supervisor'
 let currentDept = 'catv';
 let session = null;              // {username, name, department, role}
 let agentFilter = 'all';
 let agentSearchQuery = '';
 let agentDateFilter = '';
-let oversightFilter = 'all';
-let pendingImageData = null;
+let agentPage = 1;
+const AGENT_PAGE_SIZE = 5;
+let pendingImages = [];          // array of compressed dataURLs waiting to be uploaded
 let selectedIds = new Set();
-let leaderPostsCache = [];
+let dashboardPostsCache = [];
+let postImagesCache = {};        // postId -> images[] (for lightbox lookups)
+let lightboxImages = [];
+let lightboxIndex = 0;
 
 /* ---------------- Google Sheet backend ---------------- */
 const SHEET_API_URL = window.SHEET_API_URL;
+
+// ব্রাউজার cache (localStorage) — পেজ খুললেই সাথে সাথে শেষবার দেখা ডেটা দেখানো
+// হয় (নেটওয়ার্কের জন্য অপেক্ষা না করে), তারপর নতুন ডেটা এলে auto-update হয়ে যায়।
+function cacheGet(key){
+  try{
+    const raw = localStorage.getItem('cache:' + key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function cacheSet(key, value){
+  try{ localStorage.setItem('cache:' + key, JSON.stringify(value)); }catch(e){ /* storage full/unavailable, ignore */ }
+}
 
 async function sheetGet(key){
   try{
@@ -949,8 +1017,19 @@ async function sheetList(prefix){
     return { keys: (data && data.keys) ? data.keys : [] };
   }catch(e){ console.error('sheetList failed:', e); return { keys: [] }; }
 }
-// dataUrl হলো "data:image/jpeg;base64,...." ফরম্যাটের স্ট্রিং — এখান থেকে
-// শুধু base64 অংশটা আলাদা করে Drive-এ আপলোড করা হয়, শিটে শুধু URL থাকে।
+// একবারে সব key+value ফিরিয়ে দেয় (একটামাত্র নেটওয়ার্ক কল) — অনেক পোস্ট থাকলে
+// প্রতিটার জন্য আলাদা sheetGet কল করার চেয়ে অনেক দ্রুত। ব্যাকএন্ড আপডেট করা না
+// থাকলে (পুরনো Apps Script) null ফেরত দেয়, তখন কলার পুরনো পদ্ধতিতে ফলব্যাক করে।
+async function sheetListValues(prefix){
+  try{
+    const res = await fetch(SHEET_API_URL + '?action=listValues&prefix=' + encodeURIComponent(prefix || ''));
+    const data = await res.json();
+    if(!data || data.error || !Array.isArray(data.items)) return null;
+    return data.items; // [{key, value}, ...]
+  }catch(e){ console.error('sheetListValues failed:', e); return null; }
+}
+// dataUrl looks like "data:image/jpeg;base64,...." — we split off the base64
+// portion and upload it to Drive; only the resulting URL is stored in the sheet.
 async function sheetUploadImage(dataUrl, filename){
   const commaIdx = dataUrl.indexOf(',');
   const meta = dataUrl.slice(5, commaIdx); // e.g. "image/jpeg;base64"
@@ -993,6 +1072,17 @@ async function deletePostRecord(id){
 }
 async function getAllPosts(){
   try{
+    // দ্রুত পথ: একবারে সব পোস্ট আনার চেষ্টা করা হয়।
+    const bulk = await sheetListValues('post:');
+    if(bulk){
+      const posts = [];
+      for(const item of bulk){
+        try{ if(item && item.value) posts.push(JSON.parse(item.value)); }catch(e){ /* skip broken record */ }
+      }
+      posts.sort((a,b) => b.ts - a.ts);
+      return posts;
+    }
+    // ফলব্যাক (পুরনো Apps Script ব্যাকএন্ড, listValues অ্যাকশন নেই): একটা একটা করে আনা হচ্ছে।
     const listRes = await sheetList('post:');
     const keys = (listRes && listRes.keys) ? listRes.keys : [];
     const posts = [];
@@ -1008,14 +1098,21 @@ async function getAllPosts(){
 }
 
 // Ticker (scrolling banner) text is shared per department, editable by TL/Manager/QA/Supervisor.
-async function getTicker(dept){
+// num: 1 or 2 — there are two independent scroll lines. Stored as {text, author} so we know who set it.
+function tickerKey(dept, num){ return (num === 2 ? 'ticker2:' : 'ticker:') + dept; }
+async function getTicker(dept, num){
   try{
-    const r = await sheetGet('ticker:' + dept);
-    return r && r.value ? r.value : '';
-  }catch(e){ return ''; }
+    const r = await sheetGet(tickerKey(dept, num));
+    if(!r || !r.value) return { text: '', author: '' };
+    try{
+      const parsed = JSON.parse(r.value);
+      if(parsed && typeof parsed === 'object') return { text: parsed.text || '', author: parsed.author || '' };
+    }catch(e){ /* older plain-text ticker value, fall through */ }
+    return { text: r.value, author: '' };
+  }catch(e){ return { text: '', author: '' }; }
 }
-async function saveTicker(dept, text){
-  await sheetSet('ticker:' + dept, text);
+async function saveTicker(dept, text, num, author){
+  await sheetSet(tickerKey(dept, num), JSON.stringify({ text, author: author || '' }));
 }
 
 /* ---------------- Navigation ---------------- */
@@ -1025,8 +1122,8 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
   if(id === 'screen-agent'){
     if(agentPollTimer) clearInterval(agentPollTimer);
-    // এজেন্ট ভিউতে থাকা অবস্থায় প্রতি ১৫ সেকেন্ডে নতুন পোস্ট/ছবি/টিকার
-    // অটোমেটিক লোড হবে, যাতে TL পোস্ট করার সাথে সাথে এজেন্ট তা দেখতে পায়।
+    // While on the Agent view, new posts/photos/ticker refresh automatically
+    // every 15 seconds so agents see updates as soon as they're posted.
     agentPollTimer = setInterval(() => {
       renderAgentFeed();
       updateAgentTickerDisplay();
@@ -1042,7 +1139,7 @@ function goToGate(){ showScreen('screen-gate'); clearAuthForm(); }
 function openDept(dept){
   currentDept = dept;
   document.getElementById('role-dept-tag').textContent = DEPT_LABELS[dept];
-  document.getElementById('role-title').textContent = DEPT_LABELS[dept] + ' — আপনি কে হিসেবে ঢুকবেন?';
+  document.getElementById('role-title').textContent = DEPT_LABELS[dept] + ' — Which role will you enter as?';
   const supervisorCard = document.getElementById('card-supervisor');
   if(supervisorCard) supervisorCard.style.display = (dept === 'catv') ? '' : 'none';
   showScreen('screen-role');
@@ -1072,6 +1169,7 @@ async function openAgentView(){
   agentFilter = 'all';
   agentSearchQuery = '';
   agentDateFilter = '';
+  agentPage = 1;
   const searchBox = document.getElementById('agent-search');
   if(searchBox) searchBox.value = '';
   const dateBox = document.getElementById('agent-date');
@@ -1086,11 +1184,13 @@ async function openAgentView(){
 
 function handleAgentSearch(value){
   agentSearchQuery = value.trim().toLowerCase();
+  agentPage = 1;
   renderAgentFeed();
 }
 
 function handleAgentDateFilter(value){
   agentDateFilter = value;
+  agentPage = 1;
   const clearBtn = document.getElementById('agent-date-clear');
   if(clearBtn) clearBtn.style.display = value ? 'inline-block' : 'none';
   renderAgentFeed();
@@ -1098,6 +1198,7 @@ function handleAgentDateFilter(value){
 
 function clearAgentDateFilter(){
   agentDateFilter = '';
+  agentPage = 1;
   const dateBox = document.getElementById('agent-date');
   if(dateBox) dateBox.value = '';
   const clearBtn = document.getElementById('agent-date-clear');
@@ -1109,8 +1210,8 @@ function switchAuthTab(mode){
   authMode = mode;
   document.getElementById('tab-login').classList.toggle('active', mode==='login');
   document.getElementById('tab-register').classList.toggle('active', mode==='register');
-  document.getElementById('auth-title').textContent = mode === 'login' ? 'লগইন করুন' : 'নতুন অ্যাকাউন্ট তৈরি করুন';
-  document.getElementById('auth-submit').textContent = mode === 'login' ? 'প্রবেশ করুন' : 'অ্যাকাউন্ট তৈরি করুন';
+  document.getElementById('auth-title').textContent = mode === 'login' ? 'Log In' : 'Create New Account';
+  document.getElementById('auth-submit').textContent = mode === 'login' ? 'Log In' : 'Create Account';
   document.getElementById('auth-fields-name').style.display = mode === 'register' ? 'block' : 'none';
   document.getElementById('auth-fields-code').style.display = mode === 'register' ? 'block' : 'none';
   clearAuthError();
@@ -1121,6 +1222,8 @@ function clearAuthForm(){
   document.getElementById('auth-username').value = '';
   document.getElementById('auth-password').value = '';
   document.getElementById('auth-code').value = '';
+  const showBox = document.getElementById('auth-show-password');
+  if(showBox){ showBox.checked = false; document.getElementById('auth-password').type = 'password'; }
   clearAuthError();
 }
 function clearAuthError(){
@@ -1132,7 +1235,13 @@ function showAuthError(msg){
   e.textContent = msg; e.style.display = 'block';
 }
 
-/* ---------------- Auth submit (Team Leader / Manager / QA) ---------------- */
+/* ---------------- Auth submit (Team Leader / Manager / QA / Supervisor) ---------------- */
+function toggleShowPassword(){
+  const pwd = document.getElementById('auth-password');
+  const box = document.getElementById('auth-show-password');
+  if(pwd && box) pwd.type = box.checked ? 'text' : 'password';
+}
+
 async function submitAuth(){
   const username = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
@@ -1140,44 +1249,49 @@ async function submitAuth(){
   const code = document.getElementById('auth-code').value.trim();
 
   if(!username || !password){
-    showAuthError('ইউজারনেম ও পাসওয়ার্ড দিন।'); return;
+    showAuthError('Please enter both username and password.'); return;
   }
+
+  const btn = document.getElementById('auth-submit');
+  const originalLabel = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Please wait...'; }
 
   try{
     if(authMode === 'register'){
-      if(!name){ showAuthError('আপনার নাম দিন।'); return; }
-      if(!code){ showAuthError('রেজিস্ট্রেশন কোড দিন।'); return; }
+      if(!name){ showAuthError('Please enter your name.'); return; }
+      if(!code){ showAuthError('Please enter the registration code.'); return; }
       const result = await sheetRegister({ username, password, name, department: currentDept, role: authTargetRole, code });
-      if(result.error === 'invalid_code'){ showAuthError('রেজিস্ট্রেশন কোড সঠিক নয়।'); return; }
-      if(result.error === 'username_taken'){ showAuthError('এই ইউজারনেম আগে থেকেই আছে। লগইন করুন।'); return; }
-      if(!result.ok){ showAuthError('অ্যাকাউন্ট তৈরি করা যায়নি, আবার চেষ্টা করুন।'); return; }
+      if(result.error === 'invalid_code'){ showAuthError('Registration code is not correct.'); return; }
+      if(result.error === 'username_taken'){ showAuthError('This username already exists. Please log in instead.'); return; }
+      if(!result.ok){ showAuthError('Could not create account, please try again.'); return; }
       session = { username, name, department: currentDept, role: authTargetRole };
       await routeToDashboard();
     } else {
       const users = await getUsers();
       const u = users[username];
-      if(!u || u.password !== password){ showAuthError('ইউজারনেম বা পাসওয়ার্ড ভুল।'); return; }
+      if(!u || u.password !== password){ showAuthError('Incorrect username or password.'); return; }
       const userRole = u.role || 'leader';
       if(u.department !== currentDept){
-        showAuthError('এই অ্যাকাউন্টটি ' + DEPT_LABELS[u.department] + ' বিভাগের। সঠিক বিভাগ থেকে লগইন করুন।');
+        showAuthError('This account belongs to the ' + DEPT_LABELS[u.department] + ' department. Please log in from the correct department.');
         return;
       }
       if(userRole !== authTargetRole){
-        showAuthError('এই অ্যাকাউন্টটি ' + ROLE_LABELS[userRole] + ' হিসেবে নিবন্ধিত। সঠিক জোন থেকে লগইন করুন।');
+        showAuthError('This account is registered as ' + ROLE_LABELS[userRole] + '. Please log in from the correct zone.');
         return;
       }
       session = { username, name: u.name, department: u.department, role: userRole };
       await routeToDashboard();
     }
   }catch(err){
-    showAuthError('একটি সমস্যা হয়েছে (স্টোরেজ সংযোগ কাজ করছে না)। ব্রাউজার রিফ্রেশ করে আবার চেষ্টা করুন। বিস্তারিত: ' + (err && err.message ? err.message : err));
+    showAuthError('Something went wrong (storage connection is not working). Please refresh the browser and try again. Details: ' + (err && err.message ? err.message : err));
     console.error('submitAuth failed:', err);
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = originalLabel; }
   }
 }
 
 function routeToDashboard(){
-  if(session.role === 'leader') return enterLeaderDashboard();
-  return enterOversightDashboard();
+  return enterDashboard();
 }
 
 function logout(){
@@ -1188,62 +1302,28 @@ function logout(){
   showScreen('screen-gate');
 }
 
-/* ---------------- Leader dashboard ---------------- */
-async function enterLeaderDashboard(){
+/* ---------------- Dashboard (Team Leader / Manager / QA / Supervisor share the same full-access panel) ---------------- */
+async function enterDashboard(){
   clearAuthForm();
-  document.getElementById('leader-name').textContent = session.name;
-  const pill = document.getElementById('leader-dept-pill');
-  pill.textContent = DEPT_LABELS[session.department];
-  pill.className = 'dept-pill ' + session.department;
-  document.getElementById('leader-feed-title').textContent = DEPT_LABELS[session.department] + ' বিভাগের সব তথ্য';
-  const tickerInput = document.getElementById('leader-ticker-input');
-  if(tickerInput) tickerInput.value = await getTicker(session.department);
-  showScreen('screen-leader');
-  await renderLeaderFeed();
-}
-
-/* ---------------- Manager / QA oversight dashboard (view-only) ---------------- */
-async function enterOversightDashboard(){
-  clearAuthForm();
-  const screen = document.getElementById('screen-oversight');
+  const screen = document.getElementById('screen-dashboard');
   screen.classList.remove('role-leader', 'role-manager', 'role-qa', 'role-supervisor');
   screen.classList.add('role-' + session.role);
 
-  document.getElementById('oversight-zone-tag').textContent = ROLE_TAGS[session.role];
-  document.getElementById('oversight-role-label').textContent = ROLE_LABELS[session.role] + ' প্যানেল · ভিউ ও ডিলিট অ্যাক্সেস';
-  document.getElementById('oversight-name').textContent = session.name;
-  const pill = document.getElementById('oversight-dept-pill');
+  document.getElementById('dash-zone-tag').textContent = ROLE_TAGS[session.role];
+  document.getElementById('dash-role-label').textContent = ROLE_LABELS[session.role] + ' Panel · Full Access';
+  document.getElementById('dash-name').textContent = session.name;
+  const pill = document.getElementById('dash-dept-pill');
   pill.textContent = DEPT_LABELS[session.department];
   pill.className = 'dept-pill ' + session.department;
+  document.getElementById('dash-feed-title').textContent = 'All updates — ' + DEPT_LABELS[session.department];
 
-  oversightFilter = 'all';
-  const chips = screen.querySelectorAll('.chip');
-  chips.forEach(c => c.classList.toggle('active', c.dataset.f === 'all'));
+  const tickerInput = document.getElementById('dash-ticker-input');
+  if(tickerInput) tickerInput.value = (await getTicker(session.department, 1)).text;
+  const tickerInput2 = document.getElementById('dash-ticker-input-2');
+  if(tickerInput2) tickerInput2.value = (await getTicker(session.department, 2)).text;
 
-  const tickerInput = document.getElementById('oversight-ticker-input');
-  if(tickerInput) tickerInput.value = await getTicker(session.department);
-
-  showScreen('screen-oversight');
-  await renderOversightFeed();
-}
-
-function setOversightFilter(f){
-  oversightFilter = f;
-  document.querySelectorAll('#screen-oversight .chip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
-  renderOversightFeed();
-}
-
-async function renderOversightFeed(){
-  const posts = await getAllPosts();
-  let visible = posts.filter(p => p.department === session.department);
-  if(oversightFilter === 'urgent') visible = visible.filter(p => p.priority === 'urgent');
-  const el = document.getElementById('oversight-feed');
-  if(visible.length === 0){
-    el.innerHTML = `<div class="empty"><div class="big">📭</div>এখনো কোনো তথ্য নেই।</div>`;
-    return;
-  }
-  el.innerHTML = visible.map(p => postCard(p, {deletable:true, selectable:false})).join('');
-  el.querySelectorAll('.del-btn').forEach(b => attachRipple(b));
+  showScreen('screen-dashboard');
+  await renderDashboardFeed();
 }
 
 /* ---------------- Rich text formatting ---------------- */
@@ -1251,7 +1331,7 @@ function wrapSelection(marker){
   const ta = document.getElementById('post-body');
   const start = ta.selectionStart, end = ta.selectionEnd;
   const text = ta.value;
-  const selected = text.slice(start, end) || 'টেক্সট';
+  const selected = text.slice(start, end) || 'text';
   const before = text.slice(0, start), after = text.slice(end);
   ta.value = before + marker + selected + marker + after;
   ta.focus();
@@ -1273,53 +1353,128 @@ function formatMessage(raw){
   return s;
 }
 
-/* ---------------- Image handling ---------------- */
-function handleImageSelect(evt){
-  const file = evt.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev){
-    const img = new Image();
-    img.onload = function(){
-      const maxW = 1000;
-      const scale = Math.min(1, maxW / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      pendingImageData = canvas.toDataURL('image/jpeg', 0.75);
-      renderImagePreview();
+/* ---------------- Image handling: multi-select + auto-compress (WhatsApp-style) ---------------- */
+const MAX_IMAGES_PER_POST = 10;
+const IMAGE_MAX_WIDTH = 1600;    // large photos are downscaled to this width
+const IMAGE_JPEG_QUALITY = 0.85; // kept high so quality doesn't visibly degrade
+
+function compressImage(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const img = new Image();
+      img.onload = function(){
+        const scale = Math.min(1, IMAGE_MAX_WIDTH / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', IMAGE_JPEG_QUALITY));
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
     };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleImageSelect(evt){
+  const files = Array.from(evt.target.files || []);
+  if(files.length === 0) return;
+  const remaining = MAX_IMAGES_PER_POST - pendingImages.length;
+  if(remaining <= 0){
+    alert('You can attach up to ' + MAX_IMAGES_PER_POST + ' photos per update.');
+    evt.target.value = '';
+    return;
+  }
+  const toProcess = files.slice(0, remaining);
+  if(files.length > toProcess.length){
+    alert('Only the first ' + remaining + ' photo(s) were added (limit: ' + MAX_IMAGES_PER_POST + ' photos per update).');
+  }
+  try{
+    const compressed = await Promise.all(toProcess.map(compressImage));
+    pendingImages.push(...compressed);
+    renderImagePreview();
+  }catch(e){
+    console.error('image processing failed:', e);
+    alert('One or more photos could not be processed, please try again.');
+  }
+  evt.target.value = '';
 }
 
 function renderImagePreview(){
   const prev = document.getElementById('image-preview');
-  if(!pendingImageData){ prev.innerHTML = ''; return; }
-  prev.innerHTML = `<img src="${pendingImageData}"><button type="button" class="del-btn" onclick="clearImage()">✕ ছবি সরান</button>`;
+  if(!prev) return;
+  let html = pendingImages.map((src, i) => `
+    <div class="preview-thumb">
+      <img src="${src}">
+      <button type="button" class="remove-thumb" onclick="removePendingImage(${i})" title="Remove">✕</button>
+    </div>`).join('');
+  if(pendingImages.length < MAX_IMAGES_PER_POST){
+    html += `<label class="preview-add" for="post-images" title="Add more photos">+</label>`;
+  }
+  prev.innerHTML = html;
+}
+
+function removePendingImage(i){
+  pendingImages.splice(i, 1);
+  renderImagePreview();
 }
 
 function clearImage(){
-  pendingImageData = null;
-  const fi = document.getElementById('post-image');
+  pendingImages = [];
+  const fi = document.getElementById('post-images');
   if(fi) fi.value = '';
   renderImagePreview();
 }
 
-function openLightbox(src){
-  const img = document.getElementById('lightbox-img');
-  img.src = src;
-  img.style.animation = 'none';
-  void img.offsetWidth;
-  img.style.animation = 'bounceIn .35s ease both';
+/* ---------------- Lightbox (supports multiple photos with prev/next navigation) ---------------- */
+function openLightboxFor(postId, index){
+  const images = postImagesCache[postId] || [];
+  if(images.length === 0) return;
+  lightboxImages = images;
+  lightboxIndex = index || 0;
+  renderLightbox();
   document.getElementById('lightbox').classList.add('open');
 }
+
+function renderLightbox(){
+  document.getElementById('lightbox-img').src = lightboxImages[lightboxIndex];
+  const img = document.getElementById('lightbox-img');
+  img.style.animation = 'none';
+  void img.offsetWidth;
+  img.style.animation = 'bounceIn .3s ease both';
+  const counter = document.getElementById('lightbox-counter');
+  const multi = lightboxImages.length > 1;
+  if(counter){
+    counter.style.display = multi ? 'block' : 'none';
+    counter.textContent = (lightboxIndex + 1) + ' / ' + lightboxImages.length;
+  }
+  document.getElementById('lightbox-prev').style.display = multi ? 'flex' : 'none';
+  document.getElementById('lightbox-next').style.display = multi ? 'flex' : 'none';
+}
+
+function lightboxNav(dir, evt){
+  if(evt) evt.stopPropagation();
+  if(lightboxImages.length === 0) return;
+  lightboxIndex = (lightboxIndex + dir + lightboxImages.length) % lightboxImages.length;
+  renderLightbox();
+}
+
 function closeLightbox(){
   document.getElementById('lightbox').classList.remove('open');
 }
+
+// Esc চাপলে লাইটবক্স (ছবি জুম ভিউ) বন্ধ হয়ে যাবে; ←/→ দিয়ে ছবি বদলানো যাবে।
+document.addEventListener('keydown', function(e){
+  const lb = document.getElementById('lightbox');
+  if(!lb || !lb.classList.contains('open')) return;
+  if(e.key === 'Escape'){ closeLightbox(); }
+  else if(e.key === 'ArrowLeft'){ lightboxNav(-1); }
+  else if(e.key === 'ArrowRight'){ lightboxNav(1); }
+});
 
 /* ---------------- Posts ---------------- */
 async function createPost(){
@@ -1327,26 +1482,30 @@ async function createPost(){
   const body = document.getElementById('post-body').value.trim();
   const priority = document.getElementById('post-priority').value;
 
-  if(!title || !body){ alert('শিরোনাম ও বার্তা দুটোই লিখুন।'); return; }
+  if(!title || !body){ alert('Please enter both title and message.'); return; }
 
   const btn = document.getElementById('post-submit-btn');
   const id = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-  let imageUrl = null;
+  const imageUrls = [];
 
   try{
-    if(pendingImageData){
-      if(btn){ btn.disabled = true; btn.textContent = 'ছবি আপলোড হচ্ছে...'; }
-      imageUrl = await sheetUploadImage(pendingImageData, id + '.jpg');
+    if(pendingImages.length){
+      for(let i = 0; i < pendingImages.length; i++){
+        if(btn){ btn.disabled = true; btn.textContent = 'Uploading photo ' + (i+1) + ' of ' + pendingImages.length + '...'; }
+        const url = await sheetUploadImage(pendingImages[i], id + '_' + i + '.jpg');
+        imageUrls.push(url);
+      }
     }
 
-    if(btn){ btn.disabled = true; btn.textContent = 'পোস্ট হচ্ছে...'; }
+    if(btn){ btn.disabled = true; btn.textContent = 'Posting...'; }
     const post = {
       id,
       title, body, priority,
-      image: imageUrl,
+      images: imageUrls,
       department: session.department,
       author: session.name,
       authorUsername: session.username,
+      authorRole: session.role,
       ts: Date.now()
     };
     await savePostRecord(post);
@@ -1356,51 +1515,48 @@ async function createPost(){
     document.getElementById('post-priority').value = 'normal';
     clearImage();
   }catch(err){
-    alert('পোস্ট করা যায়নি, আবার চেষ্টা করুন।');
+    alert('Could not post, please try again.');
     console.error('createPost failed:', err);
   }finally{
-    if(btn){ btn.disabled = false; btn.textContent = 'পোস্ট করুন'; }
+    if(btn){ btn.disabled = false; btn.textContent = 'Post Update'; }
   }
 
-  await renderLeaderFeed();
+  await renderDashboardFeed();
 }
 
-// TL has FULL ACCESS: can delete any post in their department, any time.
+// Team Leader / Manager / QA / Supervisor all have FULL ACCESS: any of them can
+// delete any post in their department, at any time.
 async function deleteOne(id){
-  if(!confirm('এই তথ্যটি মুছে ফেলতে চান?')) return;
+  if(!confirm('Delete this update?')) return;
   await deletePostRecord(id);
   selectedIds.delete(id);
-  if(session && session.role === 'leader'){
-    await renderLeaderFeed();
-  } else {
-    await renderOversightFeed();
-  }
+  await renderDashboardFeed();
 }
 
 async function bulkDeleteSelected(){
-  if(selectedIds.size === 0){ alert('মুছে ফেলার জন্য কিছু সিলেক্ট করুন।'); return; }
-  if(!confirm(selectedIds.size + 'টি তথ্য মুছে ফেলতে চান?')) return;
+  if(selectedIds.size === 0){ alert('Select something to delete first.'); return; }
+  if(!confirm('Delete ' + selectedIds.size + ' selected update(s)?')) return;
   for(const id of Array.from(selectedIds)){
     await deletePostRecord(id);
   }
   selectedIds.clear();
-  await renderLeaderFeed();
+  await renderDashboardFeed();
 }
 
 async function deleteAllInDept(){
-  if(leaderPostsCache.length === 0){ alert('মুছে ফেলার মতো কোনো তথ্য নেই।'); return; }
-  if(!confirm(DEPT_LABELS[session.department] + ' বিভাগের সব (' + leaderPostsCache.length + 'টি) তথ্য মুছে ফেলতে চান? এটি ফেরানো যাবে না।')) return;
-  for(const p of leaderPostsCache){
+  if(dashboardPostsCache.length === 0){ alert('There is nothing to delete.'); return; }
+  if(!confirm('Delete all (' + dashboardPostsCache.length + ') updates in ' + DEPT_LABELS[session.department] + '? This cannot be undone.')) return;
+  for(const p of dashboardPostsCache){
     await deletePostRecord(p.id);
   }
   selectedIds.clear();
-  await renderLeaderFeed();
+  await renderDashboardFeed();
 }
 
 function toggleSelectAll(checked){
   selectedIds.clear();
   if(checked){
-    leaderPostsCache.forEach(p => selectedIds.add(p.id));
+    dashboardPostsCache.forEach(p => selectedIds.add(p.id));
   }
   document.querySelectorAll('.post-check').forEach(cb => cb.checked = checked);
   updateBulkCount();
@@ -1410,39 +1566,73 @@ function toggleSelectOne(id, checked){
   if(checked) selectedIds.add(id); else selectedIds.delete(id);
   updateBulkCount();
   const allBox = document.getElementById('select-all-box');
-  if(allBox) allBox.checked = leaderPostsCache.length > 0 && selectedIds.size === leaderPostsCache.length;
+  if(allBox) allBox.checked = dashboardPostsCache.length > 0 && selectedIds.size === dashboardPostsCache.length;
 }
 
 function updateBulkCount(){
-  document.getElementById('bulk-count').textContent = selectedIds.size + 'টি সিলেক্ট করা';
+  document.getElementById('bulk-count').textContent = selectedIds.size + ' selected';
 }
 
-async function submitTicker(inputId){
+async function submitTicker(inputId, num){
   if(!session) return;
   const input = document.getElementById(inputId);
   const text = input.value.trim();
   try{
-    await saveTicker(session.department, text);
-    alert(text ? 'স্ক্রল বার্তা আপডেট হয়েছে।' : 'স্ক্রল বার্তা মুছে ফেলা হয়েছে।');
+    await saveTicker(session.department, text, num, session.name);
+    alert(text ? 'Scroll message updated.' : 'Scroll message removed.');
   }catch(err){
-    alert('আপডেট করা যায়নি, আবার চেষ্টা করুন।');
+    alert('Could not update, please try again.');
     console.error('submitTicker failed:', err);
   }
 }
 
+async function manualAgentRefresh(){
+  const btn = document.getElementById('agent-refresh-btn');
+  if(btn){ btn.disabled = true; btn.textContent = '🔄 Refreshing...'; }
+  try{
+    await renderAgentFeed();
+    await updateAgentTickerDisplay();
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '🔄 Refresh'; }
+  }
+}
+
 async function updateAgentTickerDisplay(){
-  const bar = document.getElementById('agent-ticker-bar');
-  const track = document.getElementById('agent-ticker-track');
-  if(!bar || !track) return;
-  const text = await getTicker(currentDept);
+  await updateOneAgentTicker('agent-ticker-bar', 'agent-ticker-track', 1);
+  await updateOneAgentTicker('agent-ticker-bar-2', 'agent-ticker-track-2', 2);
+}
+
+function showTickerFromData(bar, track, data){
+  const { text, author } = data;
   if(text){
-    track.textContent = text;
+    // টেক্সটের শেষে কে এই মেসেজ দিয়েছে তার নাম যোগ হচ্ছে। একটামাত্র কপি —
+    // পুরো লেখাটা স্ক্রিন থেকে সম্পূর্ণ বেরিয়ে যাওয়ার পর আবার নতুন করে শুরু হয়।
+    const full = author ? `${text}  —  ${author}` : text;
+    track.textContent = full;
     bar.style.display = 'flex';
-    const seconds = Math.max(10, Math.min(30, text.length * 0.22));
+    // ধীর গতি — কম সংখ্যা মানেই দ্রুত।
+    const seconds = Math.max(18, Math.min(60, full.length * 0.45));
     track.style.animationDuration = seconds + 's';
   } else {
     bar.style.display = 'none';
     track.textContent = '';
+  }
+}
+
+async function updateOneAgentTicker(barId, trackId, num){
+  const bar = document.getElementById(barId);
+  const track = document.getElementById(trackId);
+  if(!bar || !track) return;
+  const cacheKey = 'ticker' + num + ':' + currentDept;
+  const cached = cacheGet(cacheKey);
+  if(cached) showTickerFromData(bar, track, cached); // সাথে সাথে পুরনো মেসেজ দেখানো হচ্ছে
+  try{
+    const data = await getTicker(currentDept, num);
+    cacheSet(cacheKey, data);
+    showTickerFromData(bar, track, data); // নতুন ডেটা এলে auto-update
+  }catch(e){
+    console.error('updateOneAgentTicker failed:', e);
+    // নেটওয়ার্ক ব্যর্থ হলে cache-এ যা ছিল সেটাই দেখানো থাকবে
   }
 }
 
@@ -1453,26 +1643,40 @@ function postDateKey(ts){
 }
 
 function formatTime(ts){
-  return new Date(ts).toLocaleString('bn-BD', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  return new Date(ts).toLocaleString('en-US', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+
+// Builds a WhatsApp-style photo grid: up to 4 tiles are shown; if there are
+// more than 4 photos, the 4th tile gets a "+N" overlay for the remaining count.
+function buildGallery(postId, images){
+  if(!images || images.length === 0) return '';
+  const shown = images.slice(0, 4);
+  const extra = images.length - 4;
+  const countClass = 'g' + shown.length;
+  const tiles = shown.map((src, i) => {
+    const overlay = (i === 3 && extra > 0) ? `<div class="gallery-more">+${extra}</div>` : '';
+    return `<div class="gallery-tile" onclick="openLightboxFor('${postId}', ${i})"><img src="${src}" loading="lazy">${overlay}</div>`;
+  }).join('');
+  return `<div class="post-gallery ${countClass}">${tiles}</div>`;
 }
 
 function postCard(p, opts){
   opts = opts || {};
+  const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+  postImagesCache[p.id] = images;
   const urgentClass = p.priority === 'urgent' ? ' urgent' : '';
   const badges = [
     p.priority === 'urgent'
-      ? '<span class="badge urgent">জরুরি</span>'
-      : '<span class="badge normal">সাধারণ</span>'
+      ? '<span class="badge urgent">Urgent</span>'
+      : '<span class="badge normal">Normal</span>'
   ];
   const checkbox = opts.selectable
     ? `<input type="checkbox" class="post-check" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleSelectOne('${p.id}', this.checked)">`
     : '';
   const delBtn = opts.deletable
-    ? `<button class="del-btn" onclick="deleteOne('${p.id}')">মুছুন</button>`
+    ? `<button class="del-btn" onclick="deleteOne('${p.id}')">Delete</button>`
     : '';
-  const imgHtml = p.image
-    ? `<img class="post-img" src="${p.image}" onclick="openLightbox('${p.image}')">`
-    : '';
+  const galleryHtml = buildGallery(p.id, images);
   return `
     <div class="post${urgentClass}">
       ${checkbox}
@@ -1482,7 +1686,7 @@ function postCard(p, opts){
         </div>
         <div class="post-title">${escapeHtml(p.title)}</div>
         <div class="post-body">${formatMessage(p.body)}</div>
-        ${imgHtml}
+        ${galleryHtml}
         <div class="post-foot">
           <span class="post-author">— ${escapeHtml(p.author)}</span>
           <span style="display:flex; align-items:center; gap:14px;">
@@ -1494,25 +1698,43 @@ function postCard(p, opts){
     </div>`;
 }
 
-async function renderLeaderFeed(){
-  const posts = await getAllPosts();
-  // FULL ACCESS: leader sees every post in their department, not just their own.
-  leaderPostsCache = posts.filter(p => p.department === session.department);
-  selectedIds = new Set(Array.from(selectedIds).filter(id => leaderPostsCache.some(p => p.id === id)));
-  const el = document.getElementById('leader-feed');
+function renderDashboardFeedFromPosts(posts){
+  const el = document.getElementById('dashboard-feed');
+  // FULL ACCESS: every logged-in role sees every post in their department, not just their own.
+  dashboardPostsCache = posts.filter(p => p.department === session.department);
+  selectedIds = new Set(Array.from(selectedIds).filter(id => dashboardPostsCache.some(p => p.id === id)));
   const allBox = document.getElementById('select-all-box');
-  if(allBox) allBox.checked = leaderPostsCache.length > 0 && selectedIds.size === leaderPostsCache.length;
+  if(allBox) allBox.checked = dashboardPostsCache.length > 0 && selectedIds.size === dashboardPostsCache.length;
   updateBulkCount();
-  if(leaderPostsCache.length === 0){
-    el.innerHTML = `<div class="empty"><div class="big">🗂️</div>এখনো কোনো তথ্য পাঠানো হয়নি। উপরের ফর্ম থেকে প্রথম আপডেট পাঠান।</div>`;
+  if(dashboardPostsCache.length === 0){
+    el.innerHTML = `<div class="empty"><div class="big">🗂️</div>No updates posted yet. Send the first update using the form above.</div>`;
     return;
   }
-  el.innerHTML = leaderPostsCache.map(p => postCard(p, {deletable:true, selectable:true})).join('');
+  el.innerHTML = dashboardPostsCache.map(p => postCard(p, {deletable:true, selectable:true})).join('');
   el.querySelectorAll('.del-btn').forEach(b => attachRipple(b));
 }
 
-async function renderAgentFeed(){
-  const posts = await getAllPosts();
+async function renderDashboardFeed(){
+  const el = document.getElementById('dashboard-feed');
+  const cacheKey = 'posts:' + session.department;
+  const cached = cacheGet(cacheKey);
+  if(cached) renderDashboardFeedFromPosts(cached); // সাথে সাথে পুরনো ডেটা দেখানো হচ্ছে
+  else el.innerHTML = `<div class="loading">Loading...</div>`;
+
+  let posts;
+  try{
+    posts = await getAllPosts();
+  }catch(e){
+    if(!cached) el.innerHTML = `<div class="empty"><div class="big">⚠️</div>Could not load updates. <button class="btn btn-sm" style="width:auto; margin-top:10px;" onclick="renderDashboardFeed()">Retry</button></div>`;
+    console.error('renderDashboardFeed failed:', e);
+    return;
+  }
+  cacheSet(cacheKey, posts);
+  renderDashboardFeedFromPosts(posts); // নতুন ডেটা এলে auto-update
+}
+
+function renderAgentFeedFromPosts(posts){
+  const el = document.getElementById('agent-feed');
   let visible = posts.filter(p => p.department === currentDept);
   if(agentFilter === 'urgent') visible = visible.filter(p => p.priority === 'urgent');
   if(agentDateFilter){
@@ -1525,18 +1747,66 @@ async function renderAgentFeed(){
       (p.author && p.author.toLowerCase().includes(agentSearchQuery))
     );
   }
-  const el = document.getElementById('agent-feed');
+  const pagWrap = document.getElementById('agent-pagination');
   if(visible.length === 0){
     const filtering = agentSearchQuery || agentDateFilter;
-    const msg = filtering ? 'কোনো ফলাফল পাওয়া যায়নি।' : 'এখনো কোনো তথ্য নেই।';
+    const msg = filtering ? 'No results found.' : 'No updates yet.';
     el.innerHTML = `<div class="empty"><div class="big">${filtering ? '🔍' : '📭'}</div>${msg}</div>`;
+    if(pagWrap) pagWrap.innerHTML = '';
     return;
   }
-  el.innerHTML = visible.map(p => postCard(p, {deletable:false, selectable:false})).join('');
+  // Agents see the 5 most recent updates at a time, with page numbers (1, 2, 3, 4 ...) below.
+  const totalPages = Math.max(1, Math.ceil(visible.length / AGENT_PAGE_SIZE));
+  if(agentPage > totalPages) agentPage = totalPages;
+  if(agentPage < 1) agentPage = 1;
+  const start = (agentPage - 1) * AGENT_PAGE_SIZE;
+  const pageItems = visible.slice(start, start + AGENT_PAGE_SIZE);
+  el.innerHTML = pageItems.map(p => postCard(p, {deletable:false, selectable:false})).join('');
+  renderAgentPagination(totalPages);
+}
+
+async function renderAgentFeed(){
+  const el = document.getElementById('agent-feed');
+  const cacheKey = 'posts:' + currentDept;
+  const cached = cacheGet(cacheKey);
+  if(cached) renderAgentFeedFromPosts(cached); // সাথে সাথে পুরনো ডেটা দেখানো হচ্ছে
+  else el.innerHTML = `<div class="loading">Loading...</div>`;
+
+  let posts;
+  try{
+    posts = await getAllPosts();
+  }catch(e){
+    if(!cached) el.innerHTML = `<div class="empty"><div class="big">⚠️</div>Could not load updates. <button class="btn btn-sm" style="width:auto; margin-top:10px;" onclick="renderAgentFeed()">Retry</button></div>`;
+    console.error('renderAgentFeed failed:', e);
+    return;
+  }
+  cacheSet(cacheKey, posts);
+  renderAgentFeedFromPosts(posts); // নতুন ডেটা এলে auto-update
+}
+
+function renderAgentPagination(totalPages){
+  const wrap = document.getElementById('agent-pagination');
+  if(!wrap) return;
+  if(totalPages <= 1){ wrap.innerHTML = ''; return; }
+  let html = `<button class="page-btn" onclick="goToAgentPage(${agentPage - 1})" ${agentPage === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+  for(let i = 1; i <= totalPages; i++){
+    html += `<button class="page-btn ${i === agentPage ? 'active' : ''}" onclick="goToAgentPage(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn" onclick="goToAgentPage(${agentPage + 1})" ${agentPage === totalPages ? 'disabled' : ''}>Next ›</button>`;
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.page-btn').forEach(b => attachRipple(b));
+}
+
+function goToAgentPage(n){
+  agentPage = n;
+  renderAgentFeed();
+  const feedEl = document.getElementById('agent-feed');
+  if(feedEl) feedEl.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function setAgentFilter(f){
   agentFilter = f;
+  agentPage = 1;
   document.querySelectorAll('#screen-agent .chip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
   renderAgentFeed();
 }
