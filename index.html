@@ -4042,6 +4042,7 @@ transform:translateY(0);
 <div class="nav-item" data-tab="AUDITPARAMETER" onclick="switchTab('AUDITPARAMETER')"><span class="dot"></span>Audit Parameter</div>
 <div class="nav-item" data-tab="DASHBOARDAPRMAR" onclick="switchTab('DASHBOARDAPRMAR')"><span class="dot"></span>Dashboard Apr'25-Mar'26</div>
 <div class="nav-item" data-tab="LOBDATA" onclick="switchTab('LOBDATA')"><span class="dot"></span>📈 LOB Wise Data</div>
+      <div class="nav-item" data-tab="LEADFORM" onclick="switchTab('LEADFORM')"><span class="dot"></span>📝 Lead Entry Form</div>
 
 <div class="nav-item"
      data-tab="UPDATES"
@@ -4168,6 +4169,7 @@ transform:translateY(0);
       <div class="panel" id="panel-MONTHDATA"></div>
       <!-- LOB Wise Data — one Google Sheet, three LOB tabs (CATV / BB Tech Support / BB Renewal), each with a chart -->
       <div class="panel" id="panel-LOBDATA"></div>
+      <div class="panel" id="panel-LEADFORM"></div>
       <!-- Updates panel -->
       <div class="panel" id="panel-UPDATES">
         <div class="panel-header">
@@ -6600,6 +6602,8 @@ async function switchTab(tab){
       await renderMonthDataPanel(monthDataSection);
     } else if (tab === 'LOBDATA') {
       await renderLobDataPanel();
+    } else if (tab === 'LEADFORM') {
+      renderLeadFormPanel();
     } else if (tab === 'HELP') {
       renderHelpPanel();
     } else if (tab === 'QUICKLINK') {
@@ -6613,6 +6617,210 @@ async function switchTab(tab){
     hidePageLoadOverlay();
   }
 }
+/* ===================== LEAD ENTRY FORM TAB ===================== */
+/* Replace this with your own deployed Apps Script Web App URL for the
+   "Call Centre Lead _ Sheet" spreadsheet (see the Code.gs shared alongside this file). */
+const LEAD_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyZEnp5Q8nULskBTcqERaoYQH-a2we7zr0NwkNSXtk1K8MePvFCyfJv-7vOzeOAATd-/exec";
+
+const LEAD_CONNECTION_TYPES = [
+  'NEW BROADBAND',
+  'NEW CABLE',
+  'INTERNET LEASE LINE',
+  'NEW BROADBAND OPERATOR',
+  'NEW CABLE OPERATOR'
+];
+
+function renderLeadFormPanel(){
+  const panel = document.getElementById('panel-LEADFORM');
+  if(!panel) return;
+
+  const typeOptions = LEAD_CONNECTION_TYPES
+    .map(t => `<option value="${escapeAttr(t)}">${escapeHtml(t)}</option>`).join('');
+
+  panel.innerHTML = `
+    <style>
+      .lead-form-box{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px; max-width:640px; }
+      .lead-form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+      .lead-form-grid .field.full{ grid-column:1 / -1; }
+      .lead-form-box .field label{ display:flex; align-items:center; gap:4px; }
+      .lead-form-box .field .req{ color:var(--need); }
+      .lead-form-box select{
+        width:100%; padding:10px 12px; background:var(--surface-2); border:1px solid var(--border);
+        border-radius:8px; color:var(--text); font-size:13px;
+      }
+      .lead-form-hint{ font-size:11px; color:var(--text-muted); margin-top:-10px; margin-bottom:14px; }
+      .lead-form-msg{ font-size:13px; margin-top:10px; min-height:18px; }
+      .lead-form-msg.err{ color:var(--need); }
+      .lead-form-msg.ok{ color:var(--excellent); }
+      .lead-search-box{ display:flex; gap:10px; align-items:flex-end; margin:26px 0 14px; flex-wrap:wrap; }
+      .lead-search-box .field{ margin-bottom:0; min-width:220px; }
+    </style>
+
+    <div class="panel-header">
+      <div><h1>📝 Lead Entry Form</h1><p>নতুন লিড এন্ট্রি করুন — সাবমিট করলে সরাসরি Google Sheet-এ যোগ হবে।</p></div>
+    </div>
+
+    <div class="lead-form-box">
+      <div class="lead-form-grid">
+        <div class="field full">
+          <label>Customer Name <span class="req">*</span></label>
+          <input type="text" id="leadCustomerName" placeholder="পুরো নাম লিখুন">
+        </div>
+
+        <div class="field">
+          <label>Mobile Number <span class="req">*</span></label>
+          <input type="tel" id="leadMobile" maxlength="10" placeholder="10 digit mobile number">
+        </div>
+        <div class="field">
+          <label>Alternate Number</label>
+          <input type="tel" id="leadAltMobile" maxlength="10" placeholder="10 digit (ঐচ্ছিক)">
+        </div>
+
+        <div class="field">
+          <label>Pincode <span class="req">*</span></label>
+          <input type="tel" id="leadPincode" maxlength="6" placeholder="6 digit pincode">
+        </div>
+        <div class="field">
+          <label>District <span class="req">*</span></label>
+          <input type="text" id="leadDistrict" placeholder="District লিখুন">
+        </div>
+
+        <div class="field full">
+          <label>Address <span class="req">*</span></label>
+          <input type="text" id="leadAddress" placeholder="সম্পূর্ণ ঠিকানা লিখুন">
+        </div>
+
+        <div class="field full">
+          <label>Type of Connection <span class="req">*</span></label>
+          <select id="leadConnectionType">
+            <option value="">-- বেছে নিন --</option>
+            ${typeOptions}
+          </select>
+        </div>
+      </div>
+
+      <button class="btn primary" onclick="submitLeadForm()" id="leadSubmitBtn" style="margin-top:6px;">Submit</button>
+      <div class="lead-form-msg" id="leadFormMsg"></div>
+    </div>
+
+    <div class="lead-search-box">
+      <div class="field">
+        <label>মোবাইল নম্বর দিয়ে খুঁজুন</label>
+        <input type="tel" id="leadSearchMobile" maxlength="10" placeholder="10 digit mobile number">
+      </div>
+      <button class="btn" onclick="searchLeadByMobile()">🔎 Search</button>
+    </div>
+    <div class="lead-form-hint">সাবমিট করার পর, এবং যেকোনো সময় মোবাইল নম্বর দিয়ে সার্চ করলে, শুধু সেই নম্বরের রো(গুলো) নিচে দেখাবে।</div>
+
+    <div id="leadResultWrap"></div>
+  `;
+
+  document.getElementById('leadMobile').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
+  document.getElementById('leadAltMobile').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
+  document.getElementById('leadPincode').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,6); });
+  document.getElementById('leadSearchMobile').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
+}
+
+function leadSetMsg(text, isError){
+  const box = document.getElementById('leadFormMsg');
+  if(!box) return;
+  box.textContent = text || '';
+  box.className = 'lead-form-msg' + (text ? (isError ? ' err' : ' ok') : '');
+}
+
+async function submitLeadForm(){
+  const customerName = document.getElementById('leadCustomerName').value.trim();
+  const mobile = document.getElementById('leadMobile').value.trim();
+  const altMobile = document.getElementById('leadAltMobile').value.trim();
+  const pincode = document.getElementById('leadPincode').value.trim();
+  const address = document.getElementById('leadAddress').value.trim();
+  const district = document.getElementById('leadDistrict').value.trim();
+  const connectionType = document.getElementById('leadConnectionType').value;
+
+  if(!customerName){ leadSetMsg('Customer Name আবশ্যক।', true); return; }
+  if(!/^\d{10}$/.test(mobile)){ leadSetMsg('সঠিক ১০ ডিজিটের Mobile Number দিন।', true); return; }
+  if(altMobile && !/^\d{10}$/.test(altMobile)){ leadSetMsg('Alternate Number ১০ ডিজিটের হতে হবে।', true); return; }
+  if(!/^\d{6}$/.test(pincode)){ leadSetMsg('সঠিক ৬ ডিজিটের Pincode দিন।', true); return; }
+  if(!address){ leadSetMsg('Address আবশ্যক।', true); return; }
+  if(!district){ leadSetMsg('District আবশ্যক।', true); return; }
+  if(!connectionType){ leadSetMsg('Type of Connection বেছে নিন।', true); return; }
+
+  const btn = document.getElementById('leadSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  leadSetMsg('', false);
+
+  try{
+    const res = await fetch(`${LEAD_WEB_APP_URL}?action=submitLead`, {
+      method: 'POST',
+      body: JSON.stringify({
+        customerName, mobile, altMobile, pincode, address, district,
+        agentName: empAgentName || localStorage.getItem('qa_emp_name') || '',
+        leadSource: empProcess || localStorage.getItem('qa_emp_process') || '',
+        connectionType
+      })
+    });
+    const data = await res.json();
+    btn.disabled = false; btn.textContent = 'Submit';
+
+    if(!data || data.ok !== true){
+      leadSetMsg((data && data.error) || 'Submit ব্যর্থ হয়েছে, আবার চেষ্টা করুন।', true);
+      return;
+    }
+
+    leadSetMsg('✅ লিড সফলভাবে সাবমিট হয়েছে।', false);
+    document.getElementById('leadCustomerName').value = '';
+    document.getElementById('leadAltMobile').value = '';
+    document.getElementById('leadPincode').value = '';
+    document.getElementById('leadAddress').value = '';
+    document.getElementById('leadDistrict').value = '';
+    document.getElementById('leadConnectionType').value = '';
+
+    document.getElementById('leadSearchMobile').value = mobile;
+    await searchLeadByMobile();
+    document.getElementById('leadMobile').value = '';
+  }catch(e){
+    console.error('Lead submit failed', e);
+    btn.disabled = false; btn.textContent = 'Submit';
+    leadSetMsg('Server সাময়িকভাবে unavailable, কিছুক্ষণ পর আবার চেষ্টা করুন।', true);
+  }
+}
+
+async function searchLeadByMobile(){
+  const mobile = document.getElementById('leadSearchMobile').value.trim();
+  const wrap = document.getElementById('leadResultWrap');
+  if(!/^\d{10}$/.test(mobile)){
+    wrap.innerHTML = '<div class="empty-state">সঠিক ১০ ডিজিটের মোবাইল নম্বর দিয়ে খুঁজুন।</div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="empty-state">খোঁজা হচ্ছে...</div>';
+  try{
+    const res = await fetch(`${LEAD_WEB_APP_URL}?action=byMobile&mobile=${encodeURIComponent(mobile)}`);
+    const data = await res.json();
+    if(!data || data.ok !== true){
+      wrap.innerHTML = `<div class="empty-state">${escapeHtml((data && data.error) || 'ডাটা পাওয়া যায়নি।')}</div>`;
+      return;
+    }
+    const rows = data.rows || [];
+    if(!rows.length){
+      wrap.innerHTML = '<div class="empty-state">এই নম্বরে কোনো লিড পাওয়া যায়নি।</div>';
+      return;
+    }
+    const headers = Object.keys(rows[0]);
+    wrap.innerHTML = `
+      <div class="table-wrapper" style="overflow:auto;">
+        <table class="ans3sec-table" id="leadResultTable">
+          <thead><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${rows.map(r => `<tr>${headers.map(h=>`<td>${escapeHtml(r[h] == null ? '' : r[h])}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }catch(e){
+    console.error('Lead search failed', e);
+    wrap.innerHTML = '<div class="empty-state">Server সাময়িকভাবে unavailable।</div>';
+  }
+}
+
 function statusFor(score){
   if(score>=99) return {cls:'top', label:'🏆 TOP PERFORMER'};
   if(score>=95) return {cls:'excellent', label:'🟢 EXCELLENT'};
@@ -10611,6 +10819,7 @@ const EMP_AUTO_LOGOUT_MS = 30 * 60 * 1000;
 let empSessionId = null;
 let empEmployeeId = null;
 let empAgentName = null;
+let empProcess = null;
 let empSessionStartEpoch = null;
 let empTodayPriorSeconds = 0;
 let empSessionTimerInterval = null;
@@ -10723,12 +10932,14 @@ function completeEmployeeLogin(data){
   empSessionId = data.sessionId;
   empEmployeeId = data.employeeId;
   empAgentName = data.agentName;
+  empProcess = data.process || data.team || '';
   empSessionStartEpoch = Date.now();
   empTodayPriorSeconds = Number(data.todayTotalSeconds) || 0;
 
   localStorage.setItem('qa_emp_session_id', empSessionId);
   localStorage.setItem('qa_emp_id', empEmployeeId);
   localStorage.setItem('qa_emp_name', empAgentName);
+  localStorage.setItem('qa_emp_process', empProcess);
   localStorage.setItem('qa_emp_session_start', empSessionStartEpoch);
   localStorage.setItem('qa_emp_today_prior', empTodayPriorSeconds);
   localStorage.setItem('qa_emp_login_time_display', data.loginTime || '');
@@ -10962,7 +11173,7 @@ function restoreEmployeeSessionIfAny(){
   if(!sid || !eid) return;
 
   if(Date.now() - sessionStart > EMP_AUTO_LOGOUT_MS){
-    ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity']
+    ['qa_emp_session_id','qa_emp_id','qa_emp_name','qa_emp_process','qa_emp_session_start','qa_emp_today_prior','qa_emp_login_time_display','qa_emp_prev_login','qa_emp_last_activity']
       .forEach(k=>localStorage.removeItem(k));
     return;
   }
@@ -10970,6 +11181,7 @@ function restoreEmployeeSessionIfAny(){
   empSessionId = sid;
   empEmployeeId = eid;
   empAgentName = localStorage.getItem('qa_emp_name');
+  empProcess = localStorage.getItem('qa_emp_process') || '';
   empSessionStartEpoch = sessionStart;
   empTodayPriorSeconds = Number(localStorage.getItem('qa_emp_today_prior') || 0);
 
