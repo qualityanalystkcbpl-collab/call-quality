@@ -337,7 +337,14 @@
   }
   .panel-back:hover{color:var(--accent);}
   .panel-tag{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:6px; font-weight:700;}
-  .panel-title{font-size:22px; font-weight:700; margin-bottom:22px;}
+  .panel-title{
+    font-size:22px; font-weight:700; margin-bottom:22px; color:#fff;
+    animation:authTitleFade .5s ease both;
+  }
+  @keyframes authTitleFade{
+    from{ opacity:0; transform:translateY(-8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
 
   .tabs{display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:22px;}
   .tab{flex:1; text-align:center; padding:10px; font-size:13px; cursor:pointer; color:var(--muted); background:var(--panel-2); transition:all .15s ease; font-weight:600;}
@@ -414,6 +421,12 @@
   .dash-role{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase; font-weight:700;}
   .dash-name{font-size:22px; font-weight:700; margin-top:4px;}
   .dash-actions{display:flex; gap:10px; align-items:center;}
+
+  /* Name for TL / Manager / QA / Supervisor — static, no scrolling */
+  .dash-name-scroll{ max-width:260px; margin-top:4px; }
+  @media (max-width:480px){
+    .dash-name-scroll{ max-width:170px; }
+  }
   .dept-pill{
     display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1px;
     padding:4px 12px; border-radius:20px; margin-top:6px; font-weight:700;
@@ -454,9 +467,10 @@
 
   .image-field{
     border:1.5px dashed var(--line); border-radius:var(--radius); padding:14px; text-align:center;
-    background:var(--panel-2); cursor:pointer;
+    background:var(--panel-2); cursor:pointer; transition:border-color .15s ease, background .15s ease;
   }
   .image-field:hover{border-color:var(--accent);}
+  .image-field.drag-over{ border-color:var(--accent); background:var(--accent-dim); }
   .image-field input[type=file]{display:none;}
   .image-field-label{font-size:13px; color:var(--text-soft); font-weight:600;}
   #image-preview{margin-top:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
@@ -550,6 +564,29 @@
   .bulk-bar label{display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--text-soft); font-weight:600;}
   .bulk-count{font-family:'JetBrains Mono',monospace; color:var(--accent); font-weight:700;}
 
+  /* Posts sit two side-by-side per row for every role's feed
+     (Agent, Dashboard/TL/Manager/QA/Supervisor). Agent can switch
+     to a single-column list view; Grid is the default. */
+  #agent-feed, #dashboard-feed{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start;
+  }
+  #agent-feed.list-view{ grid-template-columns:1fr; }
+  #agent-feed > .empty, #agent-feed > .loading,
+  #dashboard-feed > .empty, #dashboard-feed > .loading{
+    grid-column:1 / -1;
+  }
+  @media (max-width:760px){
+    #agent-feed, #dashboard-feed{ grid-template-columns:1fr; }
+  }
+
+  .view-toggle{ display:flex; gap:4px; background:var(--panel-2); border:1px solid var(--line); border-radius:20px; padding:3px; }
+  .view-btn{
+    font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 12px; border:none; border-radius:16px;
+    cursor:pointer; color:var(--text-soft); letter-spacing:.5px; font-weight:600; background:transparent; transition:all .15s ease;
+  }
+  .view-btn.active{ background:linear-gradient(135deg, var(--accent), var(--pink)); color:#fff; }
+  #screen-agent .view-btn.active{ background:linear-gradient(135deg, #25D366, #128C7E); }
+
   .post{
     background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--dept-bbtech);
     border-radius:var(--radius); padding:18px 20px; margin-bottom:12px; position:relative;
@@ -579,29 +616,30 @@
   .post-title{font-size:16px; font-weight:700; margin-bottom:6px; color:var(--text);}
   .post-body{color:var(--text-soft); font-size:14px; line-height:1.7; white-space:pre-wrap; word-break:break-word; font-weight:500;}
   .post-img{
-    margin-top:12px; max-width:100%; border-radius:8px; display:block; border:1px solid var(--line); cursor:zoom-in;
+    margin-top:12px; max-width:220px; width:100%; border-radius:8px; display:block; border:1px solid var(--line); cursor:zoom-in;
     transition:transform .25s ease, box-shadow .25s ease;
   }
   .post-img:hover{ transform:scale(1.015); box-shadow:0 10px 24px rgba(28,35,51,0.15); }
 
-  /* WhatsApp-style photo gallery for posts with multiple images */
-  .post-gallery{ display:grid; gap:6px; margin-top:12px; }
+  /* WhatsApp-style photo gallery for posts with multiple images.
+     Same compact, always-two-per-row grid for every role/view
+     (Agent, Dashboard/TL/Manager/QA/Supervisor). */
+  .post-gallery{ display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:12px; max-width:220px; }
   .post-gallery.g1{ grid-template-columns:1fr; }
-  .post-gallery.g2{ grid-template-columns:1fr 1fr; }
-  .post-gallery.g3{ grid-template-columns:1fr 1fr; }
-  .post-gallery.g3 .gallery-tile:first-child{ grid-row:span 2; }
-  .post-gallery.g4{ grid-template-columns:1fr 1fr; }
   .gallery-tile{
     position:relative; overflow:hidden; border-radius:8px; cursor:zoom-in;
     aspect-ratio:1/1; border:1px solid var(--line);
   }
-  .post-gallery.g1 .gallery-tile{ aspect-ratio:16/10; }
+  .post-gallery.g1 .gallery-tile{ aspect-ratio:4/3; }
   .gallery-tile img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .25s ease; }
   .gallery-tile:hover img{ transform:scale(1.05); }
   .gallery-more{
     position:absolute; inset:0; background:rgba(10,14,24,0.58); color:#fff;
-    display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700;
     font-family:'JetBrains Mono',monospace;
+  }
+  @media (max-width:480px){
+    .post-img, .post-gallery{ max-width:170px; }
   }
 
   .post-foot{display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); flex-wrap:wrap; gap:8px;}
@@ -658,7 +696,26 @@
     font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent);
     background:var(--accent-dim); border:1px solid rgba(255,255,255,0.15);
     padding:5px 14px; border-radius:20px; margin-bottom:18px; font-weight:700;
+    animation:dropInTop .4s ease both;
   }
+
+  /* ---------------- Animated login screen (Team Leader / Manager / QA / Supervisor) ---------------- */
+  #screen-auth .panel{
+    animation:popIn .35s ease both, authPanelGlow 3s ease-in-out infinite;
+  }
+  @keyframes authPanelGlow{
+    0%,100%{ box-shadow:0 8px 30px rgba(28,35,51,0.07); }
+    50%{ box-shadow:0 10px 34px color-mix(in srgb, var(--accent) 38%, transparent); }
+  }
+  #screen-auth .panel-tag{ animation:slideInLeft .4s ease both; }
+  #screen-auth .tabs{ animation:fadeUp .45s ease .06s both; }
+  #screen-auth .field{ animation:fadeUp .45s ease both; }
+  #screen-auth .field:nth-of-type(1){ animation-delay:.10s; }
+  #screen-auth .field:nth-of-type(2){ animation-delay:.15s; }
+  #screen-auth .field:nth-of-type(3){ animation-delay:.20s; }
+  #screen-auth .field:nth-of-type(4){ animation-delay:.25s; }
+  #screen-auth #auth-submit{ animation:fadeUp .45s ease .3s both; }
+  #screen-auth .hint{ animation:fadeUp .45s ease .35s both; }
 
   .screen{display:none;}
   .screen.active{display:block;}
@@ -692,6 +749,13 @@
   .lightbox-nav:hover{ background:rgba(255,255,255,0.3); }
   .lightbox-prev{ left:20px; }
   .lightbox-next{ right:20px; }
+  .lightbox-close{
+    position:absolute; top:18px; right:18px; width:40px; height:40px; border-radius:50%;
+    background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.25); color:#fff; font-size:18px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s ease, transform .15s ease;
+    z-index:2;
+  }
+  .lightbox-close:hover{ background:rgba(255,255,255,0.3); transform:scale(1.08); }
   .lightbox-counter{
     position:absolute; bottom:24px; left:50%; transform:translateX(-50%); color:#fff;
     font-family:'JetBrains Mono',monospace; font-size:13px; background:rgba(0,0,0,0.45);
@@ -743,6 +807,130 @@
 }
 
 }
+
+/* ==================================================================
+   AGENT PAGE — WhatsApp-style redesign (chat wallpaper, message
+   bubbles, compact photos). Scoped to #screen-agent only so every
+   other screen/role stays exactly as before.
+   ================================================================== */
+
+#screen-agent{
+  background:
+    radial-gradient(circle at 4px 4px, rgba(7,94,84,.05) 1.5px, transparent 1.5px),
+    #e9f2ec;
+  background-size: 26px 26px;
+  border-radius:20px;
+  padding:18px 16px 34px;
+  margin:-10px 0 0;
+  box-shadow: inset 0 0 0 1px rgba(7,94,84,.08);
+}
+
+/* Header styled like a WhatsApp chat top bar */
+#screen-agent .dash-header{
+  background:linear-gradient(135deg, #128C7E, #075E54);
+  border-radius:16px 16px 4px 4px;
+  padding:14px 18px;
+  margin-bottom:14px;
+  box-shadow:0 8px 20px rgba(7,94,84,.28);
+}
+#screen-agent .dash-role{ color:rgba(255,255,255,.72); }
+#screen-agent .dash-name{ color:#fff; }
+#screen-agent .dash-actions .btn-ghost{
+  color:#fff; border-color:rgba(255,255,255,.4); background:rgba(255,255,255,.08);
+}
+#screen-agent .dash-actions .btn-ghost:hover{ background:rgba(255,255,255,.22); }
+
+/* Search / date filter — rounder, chat-app style pills */
+#screen-agent .search-box{
+  border-radius:24px; background:#fff; box-shadow:0 2px 8px rgba(7,94,84,.08);
+}
+#screen-agent .date-filter-row input[type=date]{ border-radius:20px; }
+#screen-agent .feed-toolbar h3{ color:#075E54; }
+#screen-agent .chip.active{
+  background:linear-gradient(135deg, #25D366, #128C7E); border-color:transparent;
+}
+
+/* Message-bubble posts */
+#screen-agent #agent-feed .post{
+  background:#fff;
+  border:none;
+  border-left:none;
+  border-radius:14px 14px 14px 4px;
+  box-shadow:0 1px 3px rgba(7,64,57,.15);
+  max-width:100%;
+  padding:12px 14px 10px;
+  margin-bottom:0;
+  animation:fadeUp .3s ease both;
+}
+#screen-agent #agent-feed .post:hover{ transform:none; box-shadow:0 3px 10px rgba(7,64,57,.18); }
+#screen-agent #agent-feed .post.urgent{
+  background:#fff7f2; box-shadow:0 1px 3px rgba(200,60,60,.2);
+}
+#screen-agent #agent-feed .post-badges{ margin-bottom:2px; }
+#screen-agent #agent-feed .badge{ border-radius:8px; font-size:9px; padding:2px 8px; }
+#screen-agent #agent-feed .post-title{ font-size:14.5px; color:#075E54; }
+#screen-agent #agent-feed .post-body{ font-size:13.5px; line-height:1.55; }
+#screen-agent #agent-feed .post-foot{
+  border-top:none; margin-top:4px; padding-top:2px; justify-content:flex-end; gap:10px;
+}
+#screen-agent #agent-feed .post-author{
+  color:#128C7E; margin-right:auto; font-size:10px;
+}
+#screen-agent #agent-feed .post-time{
+  color:#8b9a95; font-size:10.5px;
+}
+
+/* Agent bubble corners tweak (sizing now shared globally with all roles) */
+#screen-agent #agent-feed .gallery-tile{ border-radius:6px; }
+
+/* ==================================================================
+   GLOBAL SITE FOOTER — shown at the bottom of every screen/page.
+   ================================================================== */
+.site-footer{
+  position:relative; z-index:1;
+  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  background:linear-gradient(135deg, #151b2c, #0d1220);
+  color:#e2e7fb; padding:16px 28px; margin-top:30px;
+  border-top:1px solid #2b3352;
+}
+.footer-brand{ min-width:220px; }
+.footer-title{ font-weight:700; font-size:14px; color:#fff; }
+.footer-subtitle{ font-size:12px; color:#7dd9c4; margin-top:2px; }
+
+.footer-contacts{ display:flex; gap:12px; flex-wrap:wrap; }
+.footer-pill{
+  display:flex; align-items:center; gap:8px; background:#1d2540; border:1px solid #2b3352;
+  border-radius:12px; padding:6px 12px;
+}
+.footer-icon{
+  width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:12px; flex-shrink:0; color:#fff;
+}
+.footer-icon.icon-mail{ background:#3d8bfd; }
+.footer-icon.icon-phone{ background:#ff6fa5; }
+.footer-icon.icon-browser{ background:#ff9f43; }
+.footer-pill-text{ display:flex; flex-direction:column; font-size:11.5px; line-height:1.35; color:#a8b3da; }
+.footer-pill-text strong{ color:#fff; font-size:12px; }
+
+.footer-meta{ text-align:right; min-width:220px; }
+.footer-copy{ font-size:12px; color:#a8b3da; }
+.footer-name{ color:#25D366; font-weight:700; }
+.footer-badges{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:8px; }
+.footer-badge{
+  font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:5px 10px; border-radius:20px;
+  background:#1d2540; border:1px solid #2b3352; color:#a8b3da; font-weight:600; white-space:nowrap;
+  text-decoration:none; display:inline-flex; align-items:center; gap:4px;
+}
+.footer-badge.role{ color:#2dd4bf; border-color:rgba(45,212,191,.35); }
+.live-tag{ color:#25D366; animation:pulseDot 1.6s ease-in-out infinite; }
+.footer-link{ cursor:pointer; }
+.footer-link:hover{ color:#fff; border-color:var(--accent); }
+
+@media (max-width:760px){
+  .site-footer{ flex-direction:column; align-items:flex-start; text-align:left; }
+  .footer-meta{ text-align:left; }
+  .footer-badges{ justify-content:flex-start; }
+}
 </style>
 </head>
 <body>
@@ -774,6 +962,7 @@
     </div>
   </div>
 </div>
+
 
 <div id="storage-warning" style="display:none; background:var(--red-dim); color:var(--red); border-bottom:1px solid var(--red); padding:10px 20px; font-size:13px; text-align:center; position:relative; z-index:15; font-weight:600;">
   ⚠️ The Google Sheet API URL has not been set yet. Near the very top of this HTML file, replace the value of <span class="mono">window.SHEET_API_URL</span> with your deployed Apps Script Web App URL, and data-saving will start working.
@@ -879,7 +1068,7 @@
       </div>
       <div id="auth-fields-code" style="display:none;" class="field">
         <label>Registration Code</label>
-        <input type="text" id="auth-code" placeholder="Get this from your supervisor">
+        <input type="text" id="auth-code" placeholder="Get code from Admin team">
       </div>
 
       <button class="btn" id="auth-submit" onclick="submitAuth()">Log In</button>
@@ -893,7 +1082,9 @@
     <div class="dash-header">
       <div>
         <div class="dash-role" id="dash-role-label">Team Leader Panel · Full Access</div>
-        <div class="dash-name" id="dash-name">—</div>
+        <div class="dash-name-scroll">
+          <div class="dash-name" id="dash-name">—</div>
+        </div>
         <div class="dept-pill" id="dash-dept-pill">CATV</div>
       </div>
       <div class="dash-actions">
@@ -938,7 +1129,7 @@
       <div class="field">
         <label>Photos (optional)</label>
         <label class="image-field" for="post-images">
-          <div class="image-field-label">📷 Tap here to select photos — you can pick multiple at once, just like WhatsApp</div>
+          <div class="image-field-label">📷 Tap to select, drag &amp; drop, or paste (Ctrl+V) photos — multiple at once, just like WhatsApp</div>
           <input type="file" id="post-images" accept="image/*" multiple onchange="handleImageSelect(event)">
         </label>
         <div id="image-preview"></div>
@@ -1008,6 +1199,10 @@
         <div class="chip active" data-f="all" onclick="setAgentFilter('all')">All</div>
         <div class="chip" data-f="urgent" onclick="setAgentFilter('urgent')">Urgent Only</div>
       </div>
+      <div class="view-toggle" id="agent-view-toggle">
+        <button type="button" class="view-btn active" data-v="grid" onclick="setAgentViewMode('grid')" title="Grid view">▦ Grid</button>
+        <button type="button" class="view-btn" data-v="list" onclick="setAgentViewMode('list')" title="List view">☰ List</button>
+      </div>
     </div>
     <div id="agent-feed"><div class="loading">Loading...</div></div>
     <div class="pagination" id="agent-pagination"></div>
@@ -1015,7 +1210,37 @@
 
 </div>
 
+<footer class="site-footer">
+  <div class="footer-brand">
+    <div class="footer-title">GTPL KCBPL · Call Quality Audit System</div>
+    <div class="footer-subtitle">Enterprise Quality Monitoring Platform</div>
+  </div>
+
+  <div class="footer-contacts">
+    <div class="footer-pill">
+      <span class="footer-icon icon-mail">✉</span>
+      <span class="footer-pill-text"><strong>Mail me</strong><span>kalyan.sarkar@gtplkcbpl.com</span></span>
+    </div>
+    <div class="footer-pill">
+      <span class="footer-icon icon-phone">☎</span>
+      <span class="footer-pill-text"><strong>Mobile/Whatsapp</strong><span>+91 6292232714</span></span>
+    </div>
+    <div class="footer-pill">
+      <span class="footer-icon icon-browser">🌐</span>
+      <span class="footer-pill-text"><strong>browser recommendation</strong><span>Google Chrome</span></span>
+    </div>
+  </div>
+
+  <div class="footer-meta">
+    <div class="footer-copy">© 2026 Developed &amp; Maintained by <span class="footer-name">Kalyan Sarkar</span></div>
+    <div class="footer-badges">
+      <span class="footer-badge role">👤 Quality Analyst | Version 1.0 <span class="live-tag">(Live)</span></span>
+    </div>
+  </div>
+</footer>
+
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" id="lightbox-close" onclick="closeLightbox(); event.stopPropagation();" title="Close">✕</button>
   <button class="lightbox-nav lightbox-prev" id="lightbox-prev" onclick="lightboxNav(-1, event)">‹</button>
   <img id="lightbox-img" src="">
   <button class="lightbox-nav lightbox-next" id="lightbox-next" onclick="lightboxNav(1, event)">›</button>
@@ -1140,6 +1365,7 @@ let agentFilter = 'all';
 let agentSearchQuery = '';
 let agentDateFilter = '';
 let agentPage = 1;
+let agentViewMode = 'grid'; // default view is Grid; can switch to 'list'
 const AGENT_PAGE_SIZE = 5;
 let pendingImages = [];          // array of compressed dataURLs waiting to be uploaded
 let selectedIds = new Set();
@@ -1350,6 +1576,7 @@ async function openAgentView(){
   agentSearchQuery = '';
   agentDateFilter = '';
   agentPage = 1;
+  agentViewMode = 'grid';
   const searchBox = document.getElementById('agent-search');
   if(searchBox) searchBox.value = '';
   const dateBox = document.getElementById('agent-date');
@@ -1357,6 +1584,9 @@ async function openAgentView(){
   const clearBtn = document.getElementById('agent-date-clear');
   if(clearBtn) clearBtn.style.display = 'none';
   document.querySelectorAll('#screen-agent .chip').forEach(c => c.classList.toggle('active', c.dataset.f === 'all'));
+  document.querySelectorAll('#agent-view-toggle .view-btn').forEach(b => b.classList.toggle('active', b.dataset.v === 'grid'));
+  const feedEl = document.getElementById('agent-feed');
+  if(feedEl) feedEl.classList.remove('list-view');
   showScreen('screen-agent');
   await updateAgentTickerDisplay();
   await renderAgentFeed();
@@ -1395,6 +1625,18 @@ function switchAuthTab(mode){
   document.getElementById('auth-fields-name').style.display = mode === 'register' ? 'block' : 'none';
   document.getElementById('auth-fields-code').style.display = mode === 'register' ? 'block' : 'none';
   clearAuthError();
+  replayAuthAnim();
+}
+
+// Restarts the entrance animations (title fade, staggered fields, button)
+// each time the login screen appears or the tab is switched.
+function replayAuthAnim(){
+  const els = document.querySelectorAll('#screen-auth .panel-title, #screen-auth .field, #screen-auth #auth-submit');
+  els.forEach(el => {
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+  });
 }
 
 function clearAuthForm(){
@@ -1560,13 +1802,12 @@ function compressImage(file){
   });
 }
 
-async function handleImageSelect(evt){
-  const files = Array.from(evt.target.files || []);
+async function addImageFiles(fileList){
+  const files = Array.from(fileList || []).filter(f => f.type && f.type.startsWith('image/'));
   if(files.length === 0) return;
   const remaining = MAX_IMAGES_PER_POST - pendingImages.length;
   if(remaining <= 0){
     alert('You can attach up to ' + MAX_IMAGES_PER_POST + ' photos per update.');
-    evt.target.value = '';
     return;
   }
   const toProcess = files.slice(0, remaining);
@@ -1581,8 +1822,53 @@ async function handleImageSelect(evt){
     console.error('image processing failed:', e);
     alert('One or more photos could not be processed, please try again.');
   }
+}
+
+async function handleImageSelect(evt){
+  await addImageFiles(evt.target.files);
   evt.target.value = '';
 }
+
+// Paste (Ctrl+V) support: copy an image anywhere and paste it into the
+// Post New Update form — works for TL / Manager / QA / Supervisor.
+document.addEventListener('paste', function(evt){
+  const panel = document.getElementById('image-preview');
+  if(!panel || !document.getElementById('screen-dashboard').classList.contains('active')) return;
+  const items = (evt.clipboardData && evt.clipboardData.items) || [];
+  const files = [];
+  for(const item of items){
+    if(item.kind === 'file' && item.type && item.type.startsWith('image/')){
+      const f = item.getAsFile();
+      if(f) files.push(f);
+    }
+  }
+  if(files.length){
+    evt.preventDefault();
+    addImageFiles(files);
+  }
+});
+
+// Drag-and-drop support on the photo upload box.
+(function setupImageDragDrop(){
+  const dropZone = document.querySelector('label.image-field');
+  if(!dropZone) return;
+  ['dragenter','dragover'].forEach(evtName => {
+    dropZone.addEventListener(evtName, function(e){
+      e.preventDefault(); e.stopPropagation();
+      dropZone.classList.add('drag-over');
+    });
+  });
+  ['dragleave','drop'].forEach(evtName => {
+    dropZone.addEventListener(evtName, function(e){
+      e.preventDefault(); e.stopPropagation();
+      dropZone.classList.remove('drag-over');
+    });
+  });
+  dropZone.addEventListener('drop', function(e){
+    const files = (e.dataTransfer && e.dataTransfer.files) || [];
+    if(files.length) addImageFiles(files);
+  });
+})();
 
 function renderImagePreview(){
   const prev = document.getElementById('image-preview');
@@ -2012,6 +2298,13 @@ function setAgentFilter(f){
   renderAgentFeed();
 }
 
+function setAgentViewMode(v){
+  agentViewMode = v;
+  const el = document.getElementById('agent-feed');
+  if(el) el.classList.toggle('list-view', v === 'list');
+  document.querySelectorAll('#agent-view-toggle .view-btn').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+}
+
 /* keyboard support for cards */
 document.querySelectorAll('.gate-card').forEach(card=>{
   card.addEventListener('keydown', e=>{
@@ -2049,7 +2342,7 @@ function attachRipple(el){
     setTimeout(()=> span.remove(), 550);
   });
 }
-document.querySelectorAll('.btn, .gate-card, .tab, .chip, .theme-btn, .fmt-btn').forEach(attachRipple);
+document.querySelectorAll('.btn, .gate-card, .tab, .chip, .theme-btn, .fmt-btn, .view-btn, .lightbox-close').forEach(attachRipple);
 </script>
 </body>
 </html>
