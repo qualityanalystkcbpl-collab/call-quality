@@ -6860,16 +6860,23 @@ function renderLeadFormPanel(){
       .lead-mobile-check.wait{ background:#EEF2F7; color:#5C6B80; --glow-c:rgba(92,107,128,.28); }
       .lead-mobile-check.locked{ background:#FDECEC; color:#B3261E; border:1px solid #F5C2C2; --glow-c:rgba(211,60,52,.35); }
       .lead-mobile-check.free{ background:#E9F8EF; color:#1C7A44; border:1px solid #BFE8D0; --glow-c:rgba(46,158,99,.35); }
-      .lead-mobile-check-table-wrap{ overflow:auto; max-height:260px; border-radius:10px; margin-top:10px; border:1px solid rgba(15,25,45,0.08); }
-      .lead-mobile-check table{ width:100%; border-collapse:collapse; font-size:12px; color:#182233; background:#FFFFFF; }
+      .lead-mobile-check-table-wrap{ overflow:auto; max-height:260px; border-radius:10px; margin-top:10px; border:1px solid rgba(15,25,45,0.08); box-shadow:0 6px 18px -12px rgba(15,25,45,0.18); }
+      .lead-mobile-check table{ width:auto; min-width:100%; border-collapse:collapse; font-size:12px; color:#182233; background:#FFFFFF; }
+      .lead-mobile-check th, .lead-mobile-check td{ border:1px solid #D9E1EA; }
       .lead-mobile-check thead th{
-        position:sticky; top:0; padding:8px 10px; text-align:left; font-weight:700;
+        position:sticky; top:0; padding:9px 12px; text-align:left; font-weight:700;
         font-size:10.5px; text-transform:uppercase; letter-spacing:.5px;
-        color:#182233; background:#F0F2F6; border-bottom:1px solid #E4E9F1; white-space:nowrap;
+        color:#FFFFFF; background:#2F6FED; border-color:#2358C9; white-space:nowrap;
       }
-      .lead-mobile-check tbody td{ padding:8px 10px; color:#182233; border-bottom:1px solid #EEF1F5; white-space:normal; max-width:280px; line-height:1.5; }
-      .lead-mobile-check tbody tr:last-child td{ border-bottom:none; }
-      .lead-mobile-check tbody tr:nth-child(even){ background:#FAFBFD; }
+      .lead-mobile-check tbody td{ padding:8px 12px; color:#182233; white-space:nowrap; line-height:1.5; }
+      .lead-mobile-check tbody tr:nth-child(even) td{ background:#F7F9FC; }
+      .lead-mobile-check tbody tr:hover td{ background:#EAF6EF; }
+      /* Same status-based coloring as the search-results table, so both tables match. */
+      .lead-mobile-check td.lead-remark-red{ background:#E0524A !important; color:#FFFFFF !important; border-color:#B3382F; font-weight:600; }
+      .lead-mobile-check td.lead-remark-deepred{ background:#7A1414 !important; color:#FFFFFF !important; border-color:#5C0F0F; font-weight:700; }
+      .lead-mobile-check td.lead-remark-green{ background:#14532D !important; color:#FFFFFF !important; border-color:#0D3B1F; font-weight:700; }
+      .lead-mobile-check td.lead-remark-amber{ background:#B4570A !important; color:#FFFFFF !important; border-color:#8A4208; font-weight:600; }
+      .lead-mobile-check td.lead-remark-purple{ background:#5B2A9E !important; color:#FFFFFF !important; border-color:#421F73; font-weight:600; }
 
       .lead-search-box{ display:flex; gap:14px; align-items:flex-end; margin:26px 0 14px; flex-wrap:wrap; padding:16px 18px; }
       .lead-search-box .field{ margin-bottom:0; min-width:220px; }
@@ -6884,19 +6891,39 @@ function renderLeadFormPanel(){
       .lead-page-card .btn:disabled{ opacity:.55; cursor:not-allowed; }
       .lead-page-card .empty-state{ color:#8A97A8; font-size:13px; }
 
-      .lead-result-table-wrap{ overflow:auto; max-height:420px; border-radius:12px; padding:0; }
-      .lead-result-table{ width:100%; border-collapse:collapse; font-size:12.5px; background:#FFFFFF; }
+      .lead-result-table-wrap{
+        overflow:auto; max-height:420px; border-radius:12px; padding:0;
+        border:1px solid #E4E9F1; box-shadow:0 6px 18px -12px rgba(15,25,45,0.18);
+      }
+      .lead-result-table{ width:auto; min-width:100%; border-collapse:collapse; font-size:12.5px; background:#FFFFFF; }
+      .lead-result-table th, .lead-result-table td{ border:1px solid #D9E1EA; }
       .lead-result-table thead th{
-        position:sticky; top:0; z-index:2; padding:11px 14px; font-size:11px;
-        text-transform:uppercase; letter-spacing:.5px; font-weight:700;
-        color:#182233; background:#F0F2F6; border-bottom:1px solid #E4E9F1; white-space:nowrap; text-align:left;
+        position:sticky; top:0; z-index:2; padding:12px 16px; font-size:10.5px;
+        text-transform:uppercase; letter-spacing:.6px; font-weight:700;
+        color:#FFFFFF; background:#2F6FED; border-color:#2358C9; white-space:nowrap; text-align:left;
       }
       .lead-result-table tbody td{
-        padding:10px 14px; color:#182233; border-bottom:1px solid #EEF1F5; white-space:normal; max-width:280px; line-height:1.5;
+        padding:10px 16px; color:#182233; white-space:nowrap; line-height:1.5;
       }
-      .lead-result-table tbody tr:last-child td{ border-bottom:none; }
-      .lead-result-table tbody tr:nth-child(even){ background:#FAFBFD; }
-      .lead-result-table tbody tr:hover{ background:#F0F7F3; }
+      .lead-result-table tbody tr:nth-child(even) td{ background:#F7F9FC; }
+      .lead-result-table tbody tr:hover td{ background:#EAF6EF; }
+      /* Final-remarks column: color reflects the lead's actual status, not a flat color. */
+      .lead-result-table td.lead-remark-red{ background:#E0524A !important; color:#FFFFFF !important; border-color:#B3382F; font-weight:600; }
+      .lead-result-table td.lead-remark-deepred{ background:#7A1414 !important; color:#FFFFFF !important; border-color:#5C0F0F; font-weight:700; }
+      .lead-result-table td.lead-remark-green{ background:#14532D !important; color:#FFFFFF !important; border-color:#0D3B1F; font-weight:700; }
+      .lead-result-table td.lead-remark-amber{ background:#B4570A !important; color:#FFFFFF !important; border-color:#8A4208; font-weight:600; }
+      .lead-result-table td.lead-remark-purple{ background:#5B2A9E !important; color:#FFFFFF !important; border-color:#421F73; font-weight:600; }
+
+      .lead-table-toolbar{ display:flex; align-items:center; justify-content:flex-end; margin:0 0 8px; }
+      .lead-refresh-btn{
+        display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:20px;
+        border:1px solid #D9E1EA; background:#F0F2F6; color:#182233; font-size:11.5px; font-weight:600;
+        cursor:pointer; transition:transform .15s, box-shadow .15s, background .15s;
+      }
+      .lead-refresh-btn:hover:not(:disabled){ background:#E4E9F1; transform:translateY(-1px); box-shadow:0 3px 8px rgba(15,25,45,0.12); }
+      .lead-refresh-btn:disabled{ opacity:.6; cursor:not-allowed; }
+      .lead-refresh-btn .spin{ display:inline-block; animation:leadRefreshSpin 0.8s linear infinite; }
+      @keyframes leadRefreshSpin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
       @media (prefers-reduced-motion: reduce){
         .lead-anim-box::before{ animation:none; }
         .lead-mobile-check{ animation:none; }
@@ -7196,6 +7223,51 @@ function formatLeadTableCellHtml(value){
   return parts.map(p => escapeHtml(p)).join('<br>');
 }
 
+/* Highlights the "Lead attended - Final remarks" column (red fill / white text) wherever it
+   appears in a lead table, regardless of exact spacing/casing in the sheet's header row. */
+function isLeadFinalRemarkHeader(h){
+  const norm = String(h||'').toLowerCase().replace(/[^a-z]/g, '');
+  return norm.includes('finalremark');
+}
+/* A separate "Lead Attended" (Yes/No) column, distinct from the combined
+   "Lead attended - Final remarks" text column above. */
+function isLeadAttendedYesNoHeader(h){
+  const norm = String(h||'').toLowerCase().replace(/[^a-z]/g, '');
+  return norm.includes('leadattended') && !norm.includes('finalremark');
+}
+function leadTableThClass(h){ return isLeadFinalRemarkHeader(h) ? ' class="lead-col-finalremark"' : ''; }
+function leadTableTdClass(h){ return isLeadFinalRemarkHeader(h) ? ' class="lead-col-finalremark"' : ''; }
+
+/* Search-results table: colors the "Lead attended - Final remarks" cell by its actual status
+   text (red for not-contactable/non-feasible, deep red for invalid, deep green for closed, etc.)
+   instead of a flat red for the whole column. Looks at the most recent "N) ..." entry if the
+   cell has accumulated several remarks over time. Also colors a separate "Lead Attended"
+   Yes/No column (deep green for Yes, deep red for No). */
+function leadRemarkStatusClass(header, rawValue){
+  if(isLeadAttendedYesNoHeader(header)){
+    const norm = String(rawValue == null ? '' : rawValue).trim().toUpperCase();
+    if(norm === 'YES' || norm === 'Y') return 'lead-remark-green';
+    if(norm === 'NO' || norm === 'N') return 'lead-remark-deepred';
+    return '';
+  }
+  if(!isLeadFinalRemarkHeader(header)) return '';
+  const str = String(rawValue == null ? '' : rawValue);
+  const parts = str.split(/(?=\d+\)\s)/).map(s => s.trim()).filter(Boolean);
+  const lastPart = parts.length ? parts[parts.length - 1] : str;
+  const norm = lastPart.toUpperCase();
+  const rules = [
+    ['NON CONTACTABLE BY TELECALLER', 'lead-remark-red'],
+    ['NON CONTACTABLE BY OPERATOR',   'lead-remark-red'],
+    ['NON FEASIBLE AREA',             'lead-remark-red'],
+    ['CLOSURE FOLLOWUP WITH SALES',   'lead-remark-amber'],
+    ['NEW LEAD',                      'lead-remark-purple'],
+    ['INVALID',                       'lead-remark-deepred'],
+    ['CLOSE',                         'lead-remark-green'],
+  ];
+  for(const [key, cls] of rules){ if(norm.includes(key)) return cls; }
+  return '';
+}
+
 /* Follow-up remark box — shown whenever a lead already exists for a mobile number and it's
    still within 90 days of that lead's Timestamp. Each submission appends "N) <remark>" to
    "Other Remarks (if 90 days have not been completed)" and "N) <agent name>" to "Agent2 Name"
@@ -7305,10 +7377,13 @@ async function checkLeadMobileHistory(mobile){
 
     const headers = Object.keys(rows[0]);
     const miniTable = `
+      <div class="lead-table-toolbar">
+        <button class="lead-refresh-btn" onclick="checkLeadMobileHistory('${mobile}')" title="Refresh table">⟳ Refresh</button>
+      </div>
       <div class="lead-mobile-check-table-wrap">
         <table>
           <thead><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
-          <tbody>${rows.map(r=>`<tr>${headers.map(h=>`<td>${formatLeadTableCellHtml(r[h])}</td>`).join('')}</tr>`).join('')}</tbody>
+          <tbody>${rows.map(r=>`<tr>${headers.map(h=>{ const cls = leadRemarkStatusClass(h, r[h]); return `<td${cls?` class="${cls}"`:''}>${formatLeadTableCellHtml(r[h])}</td>`; }).join('')}</tr>`).join('')}</tbody>
         </table>
       </div>`;
 
@@ -7422,6 +7497,11 @@ async function submitLeadForm(){
   }
 }
 
+async function refreshLeadSearchTable(btn){
+  if(btn){ btn.disabled = true; btn.innerHTML = '<span class="spin">⟳</span> Refreshing...'; }
+  await searchLeadByMobile();
+}
+
 async function searchLeadByMobile(){
   const mobile = document.getElementById('leadSearchMobile').value.trim();
   const wrap = document.getElementById('leadResultWrap');
@@ -7449,11 +7529,14 @@ async function searchLeadByMobile(){
       if(d && (!latestDate || d > latestDate)) latestDate = d;
     });
     wrap.innerHTML = `
+      <div class="lead-table-toolbar">
+        <button class="lead-refresh-btn" onclick="refreshLeadSearchTable(this)" title="Refresh table">⟳ Refresh</button>
+      </div>
       <div class="lead-result-table-wrap lead-anim-box">
         <table class="lead-result-table" id="leadResultTable">
           <thead><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
           <tbody>
-            ${rows.map(r => `<tr>${headers.map(h=>`<td>${formatLeadTableCellHtml(r[h])}</td>`).join('')}</tr>`).join('')}
+            ${rows.map(r => `<tr>${headers.map(h=>{ const cls = leadRemarkStatusClass(h, r[h]); return `<td${cls?` class="${cls}"`:''}>${formatLeadTableCellHtml(r[h])}</td>`; }).join('')}</tr>`).join('')}
           </tbody>
         </table>
       </div>
