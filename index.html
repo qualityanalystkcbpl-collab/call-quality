@@ -6660,6 +6660,15 @@ const LEAD_CONNECTION_TYPES = [
 let leadNetAutoTimer = null;
 let leadNetTestRunning = false;
 
+function setLeadNetVal(cls, text){
+  document.querySelectorAll('.' + cls).forEach(el => { el.textContent = text; });
+}
+function setLeadNetStatusClass(stateCls){ // 'st-online' | 'st-offline' | 'st-testing' | null
+  document.querySelectorAll('.lnv-status').forEach(el => {
+    el.classList.remove('st-online','st-offline','st-testing');
+    if(stateCls) el.classList.add(stateCls);
+  });
+}
 function setLeadNetDot(state){ // 'idle' | 'testing' | 'online' | 'offline'
   const dot = document.getElementById('leadNetDot');
   if(!dot) return;
@@ -6702,42 +6711,42 @@ async function measureLeadNetUpload(){
 
 async function runLeadNetSpeedTest(){
   if(leadNetTestRunning) return; // don't overlap overlapping auto runs
-  const dlEl = document.getElementById('leadNetDownload');
-  const upEl = document.getElementById('leadNetUpload');
-  const pingEl = document.getElementById('leadNetPing');
-  const statusEl = document.getElementById('leadNetStatus');
-  if(!dlEl || !upEl || !pingEl || !statusEl) return; // panel isn't on screen anymore
+  if(!document.getElementById('leadNetCard')) return; // panel isn't on screen anymore
 
   if(!navigator.onLine){
     setLeadNetDot('offline');
-    statusEl.textContent = 'Offline';
-    pingEl.textContent = '--'; dlEl.textContent = '--'; upEl.textContent = '--';
+    setLeadNetStatusClass('st-offline');
+    setLeadNetVal('lnv-status', 'Offline');
+    setLeadNetVal('lnv-ping', '--'); setLeadNetVal('lnv-download', '--'); setLeadNetVal('lnv-upload', '--');
     return;
   }
 
   leadNetTestRunning = true;
   setLeadNetDot('testing');
-  statusEl.textContent = 'Testing...';
-  pingEl.textContent = '...'; dlEl.textContent = '...'; upEl.textContent = '...';
+  setLeadNetStatusClass('st-testing');
+  setLeadNetVal('lnv-status', 'Testing...');
+  setLeadNetVal('lnv-ping', '...'); setLeadNetVal('lnv-download', '...'); setLeadNetVal('lnv-upload', '...');
 
   try{
     const ping = await measureLeadNetPing();
-    if(document.getElementById('leadNetPing')) pingEl.textContent = ping != null ? `${Math.round(ping)} ms` : '--';
+    setLeadNetVal('lnv-ping', ping != null ? `${Math.round(ping)} ms` : '--');
 
     const dlMbps = await measureLeadNetDownload();
-    if(document.getElementById('leadNetDownload')) dlEl.textContent = `${dlMbps.toFixed(1)} Mbps`;
+    setLeadNetVal('lnv-download', `${dlMbps.toFixed(1)} Mbps`);
 
     const upMbps = await measureLeadNetUpload();
-    if(document.getElementById('leadNetUpload')) upEl.textContent = `${upMbps.toFixed(1)} Mbps`;
+    setLeadNetVal('lnv-upload', `${upMbps.toFixed(1)} Mbps`);
 
-    if(document.getElementById('leadNetStatus')){
-      statusEl.textContent = 'Online';
+    if(document.getElementById('leadNetCard')){
+      setLeadNetVal('lnv-status', 'Online');
+      setLeadNetStatusClass('st-online');
       setLeadNetDot('online');
     }
   }catch(e){
     console.error('Speed test failed', e);
-    if(document.getElementById('leadNetStatus')){
-      statusEl.textContent = 'Test failed';
+    if(document.getElementById('leadNetCard')){
+      setLeadNetVal('lnv-status', 'Test failed');
+      setLeadNetStatusClass('st-offline');
       setLeadNetDot('offline');
     }
   }finally{
@@ -6755,11 +6764,29 @@ function startLeadNetAutoTest(){
   }, 60000);
 }
 
+/* Shows Download / Upload / Ping / Status one at a time, in order; once it reaches the
+   last one it loops back around to the first — rather than scrolling continuously. */
+let leadNetRotateTimer = null;
+let leadNetRotateIndex = 0;
+function startLeadNetRotator(){
+  if(leadNetRotateTimer){ clearInterval(leadNetRotateTimer); leadNetRotateTimer = null; }
+  leadNetRotateIndex = 0;
+  leadNetRotateTimer = setInterval(()=>{
+    const items = document.querySelectorAll('#leadNetRotator .lead-net-stat');
+    if(!items.length){ clearInterval(leadNetRotateTimer); leadNetRotateTimer = null; return; } // panel closed
+    items.forEach(it => it.classList.remove('active'));
+    leadNetRotateIndex = (leadNetRotateIndex + 1) % items.length;
+    items[leadNetRotateIndex].classList.add('active');
+  }, 2500);
+}
+
 function renderLeadFormPanel(){
   const panel = document.getElementById('panel-LEADFORM');
   if(!panel) return;
 
   if(leadNetAutoTimer){ clearInterval(leadNetAutoTimer); leadNetAutoTimer = null; } // avoid stacking timers on re-render
+  if(leadNetRotateTimer){ clearInterval(leadNetRotateTimer); leadNetRotateTimer = null; }
+  if(leadCheckAutoTimer){ clearTimeout(leadCheckAutoTimer); leadCheckAutoTimer = null; }
 
   // Pause auto-logout while this form is open — resumed on submit or when navigating away (switchTab()).
   leadFormAutoLogoutPaused = true;
@@ -6840,7 +6867,7 @@ function renderLeadFormPanel(){
         font-size:10.5px; text-transform:uppercase; letter-spacing:.5px;
         color:#182233; background:#F0F2F6; border-bottom:1px solid #E4E9F1; white-space:nowrap;
       }
-      .lead-mobile-check tbody td{ padding:8px 10px; color:#182233; border-bottom:1px solid #EEF1F5; white-space:nowrap; }
+      .lead-mobile-check tbody td{ padding:8px 10px; color:#182233; border-bottom:1px solid #EEF1F5; white-space:normal; max-width:280px; line-height:1.5; }
       .lead-mobile-check tbody tr:last-child td{ border-bottom:none; }
       .lead-mobile-check tbody tr:nth-child(even){ background:#FAFBFD; }
 
@@ -6865,7 +6892,7 @@ function renderLeadFormPanel(){
         color:#182233; background:#F0F2F6; border-bottom:1px solid #E4E9F1; white-space:nowrap; text-align:left;
       }
       .lead-result-table tbody td{
-        padding:10px 14px; color:#182233; border-bottom:1px solid #EEF1F5; white-space:nowrap;
+        padding:10px 14px; color:#182233; border-bottom:1px solid #EEF1F5; white-space:normal; max-width:280px; line-height:1.5;
       }
       .lead-result-table tbody tr:last-child td{ border-bottom:none; }
       .lead-result-table tbody tr:nth-child(even){ background:#FAFBFD; }
@@ -6873,22 +6900,32 @@ function renderLeadFormPanel(){
       @media (prefers-reduced-motion: reduce){
         .lead-anim-box::before{ animation:none; }
         .lead-mobile-check{ animation:none; }
+        .lead-net-stat{ transition:none; }
       }
 
       .lead-net-card{
-        display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+        display:flex; align-items:center; gap:10px;
         background:#F7F9FC; border:1px solid #E4E9F1; border-radius:9px;
         padding:5px 10px; margin-bottom:12px; font-size:11px;
       }
-      .lead-net-title{ font-weight:700; color:#182233; font-size:10.5px; white-space:nowrap; display:flex; align-items:center; gap:5px; }
-      .lead-net-stats{ display:flex; gap:12px; flex-wrap:wrap; flex:1; }
-      .lead-net-stat{ display:flex; flex-direction:row; align-items:baseline; gap:4px; min-width:0; }
+      .lead-net-title{ font-weight:700; color:#182233; font-size:10.5px; white-space:nowrap; display:flex; align-items:center; gap:5px; flex:0 0 auto; }
+      .lead-net-stats-viewport{ flex:1; min-width:0; overflow:hidden; }
+      .lead-net-stats-rotator{ position:relative; height:15px; }
+      .lead-net-stat{
+        position:absolute; left:0; top:0; display:flex; flex-direction:row; align-items:baseline; gap:4px;
+        white-space:nowrap; opacity:0; transform:translateY(6px); pointer-events:none;
+        transition:opacity .35s ease, transform .35s ease;
+      }
+      .lead-net-stat.active{ opacity:1; transform:translateY(0); pointer-events:auto; }
       .lead-net-stat .lbl{ font-size:8.5px; color:#8A97A8; text-transform:uppercase; letter-spacing:.3px; }
       .lead-net-stat .val{ font-size:11px; font-weight:700; color:#182233; }
+      .lead-net-stat .val.st-online{ color:#1C7A44; }
+      .lead-net-stat .val.st-offline{ color:#C93C34; }
+      .lead-net-stat .val.st-testing{ color:#2F6FED; }
       .lead-net-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; background:#9AA6B5; flex:0 0 auto; }
       .lead-net-dot.online{ background:#3FBF7F; box-shadow:0 0 0 2px rgba(63,191,127,.18); }
       .lead-net-dot.offline{ background:#E0524A; box-shadow:0 0 0 2px rgba(224,82,74,.18); }
-      .lead-net-dot.testing{ background:#E0C341; animation:leadGlowPulse 1s ease-in-out infinite; --glow-c:rgba(224,195,65,.4); }
+      .lead-net-dot.testing{ background:#2F6FED; animation:leadGlowPulse 1s ease-in-out infinite; --glow-c:rgba(47,111,237,.4); }
 
       .lead-remark-box{ margin-top:12px; padding:12px 14px; background:#FFFFFF; border:1px solid #E4E9F1; border-radius:10px; }
       .lead-remark-box label{ display:block; font-size:12px; color:#6B7A90; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
@@ -6902,11 +6939,13 @@ function renderLeadFormPanel(){
     <div class="lead-page-card">
       <div class="lead-net-card" id="leadNetCard">
         <div class="lead-net-title"><span class="lead-net-dot" id="leadNetDot"></span> Internet Speed</div>
-        <div class="lead-net-stats">
-          <div class="lead-net-stat"><span class="lbl">Download</span><span class="val" id="leadNetDownload">--</span></div>
-          <div class="lead-net-stat"><span class="lbl">Upload</span><span class="val" id="leadNetUpload">--</span></div>
-          <div class="lead-net-stat"><span class="lbl">Ping</span><span class="val" id="leadNetPing">--</span></div>
-          <div class="lead-net-stat"><span class="lbl">Status</span><span class="val" id="leadNetStatus">--</span></div>
+        <div class="lead-net-stats-viewport">
+          <div class="lead-net-stats-rotator" id="leadNetRotator">
+            <div class="lead-net-stat active"><span class="lbl">Download</span><span class="val lnv-download">--</span></div>
+            <div class="lead-net-stat"><span class="lbl">Upload</span><span class="val lnv-upload">--</span></div>
+            <div class="lead-net-stat"><span class="lbl">Ping</span><span class="val lnv-ping">--</span></div>
+            <div class="lead-net-stat"><span class="lbl">Status</span><span class="val lnv-status">--</span></div>
+          </div>
         </div>
       </div>
 
@@ -6942,7 +6981,7 @@ function renderLeadFormPanel(){
             <input type="text" id="leadDistrict" placeholder="Enter district">
           </div>
           <div class="field">
-            <label>Post Office</label>
+            <label>Post Office <span class="req">*</span></label>
             <select id="leadPostOffice">
               <option value="">-- Enter pincode first --</option>
             </select>
@@ -6995,6 +7034,7 @@ function renderLeadFormPanel(){
     }else{
       document.getElementById('leadMobileCheckWrap').innerHTML = '';
       setLeadFormLocked(false);
+      if(leadCheckAutoTimer){ clearTimeout(leadCheckAutoTimer); leadCheckAutoTimer = null; }
     }
   });
   document.getElementById('leadAltMobile').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
@@ -7028,6 +7068,7 @@ function renderLeadFormPanel(){
 
   runLeadNetSpeedTest(); // initial reading as soon as the panel opens
   startLeadNetAutoTest(); // then keep refreshing automatically every 1 minute
+  startLeadNetRotator(); // cycle through Download/Upload/Ping/Status one line at a time
 }
 
 /* Tracks the last auto-inserted "location suffix" appended to the Address field,
@@ -7148,6 +7189,15 @@ function findLeadRowDate(row){
   return isNaN(d.getTime()) ? null : d;
 }
 
+/* Sheet cells that accumulate remarks look like "1) foo 2) bar 3) baz" all on one line.
+   This puts each numbered item on its own line instead of letting them run together. */
+function formatLeadTableCellHtml(value){
+  const str = (value == null) ? '' : String(value);
+  const parts = str.split(/(?=\d+\)\s)/).map(s => s.trim()).filter(Boolean);
+  if(parts.length <= 1) return escapeHtml(str);
+  return parts.map(p => escapeHtml(p)).join('<br>');
+}
+
 /* Follow-up remark box — shown whenever a lead already exists for a mobile number and it's
    still within 90 days of that lead's Timestamp. Each submission appends "N) <remark>" to
    "Other Remarks (if 90 days have not been completed)" and "N) <agent name>" to "Agent2 Name"
@@ -7212,11 +7262,28 @@ async function submitLeadRemark(mobile, ctx){
 }
 
 let leadMobileCheckToken = 0;
+let leadCheckAutoTimer = null;
 async function checkLeadMobileHistory(mobile){
   const wrap = document.getElementById('leadMobileCheckWrap');
   const myToken = ++leadMobileCheckToken;
+  if(leadCheckAutoTimer){ clearTimeout(leadCheckAutoTimer); leadCheckAutoTimer = null; } // avoid stacking timers if a fresh check starts mid-cycle
+
+  // Don't wipe out a remark the agent is halfway through typing when this runs as a background refresh.
+  const draftEl = document.getElementById('leadRemarkText_check');
+  const draftText = draftEl ? draftEl.value : '';
+
   if(wrap) wrap.innerHTML = `<div class="lead-mobile-check wait">⏳ Please wait... checking previous entries.</div>`;
   setLeadFormLocked(true); // lock while checking, to avoid a submit racing the check
+
+  const scheduleNextAutoRefresh = () => {
+    leadCheckAutoTimer = setTimeout(()=>{
+      const mobileEl = document.getElementById('leadMobile');
+      // Only keep polling if the same number is still in the field and the panel is still open.
+      if(mobileEl && mobileEl.value.trim() === mobile && document.getElementById('leadMobileCheckWrap')){
+        checkLeadMobileHistory(mobile);
+      }
+    }, 30000);
+  };
 
   try{
     const res = await fetch(`${LEAD_WEB_APP_URL}?action=byMobile&mobile=${encodeURIComponent(mobile)}`);
@@ -7243,7 +7310,7 @@ async function checkLeadMobileHistory(mobile){
       <div class="lead-mobile-check-table-wrap">
         <table>
           <thead><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
-          <tbody>${rows.map(r=>`<tr>${headers.map(h=>`<td>${escapeHtml(r[h]==null?'':r[h])}</td>`).join('')}</tr>`).join('')}</tbody>
+          <tbody>${rows.map(r=>`<tr>${headers.map(h=>`<td>${formatLeadTableCellHtml(r[h])}</td>`).join('')}</tr>`).join('')}</tbody>
         </table>
       </div>`;
 
@@ -7262,6 +7329,8 @@ async function checkLeadMobileHistory(mobile){
       setLeadFormLocked(true);
       const daysLeft = Math.max(1, Math.ceil(LEAD_LOCK_DAYS - daysSince));
       if(wrap) wrap.innerHTML = `<div class="lead-mobile-check locked">⚠️ A lead was already entered for this number on ${dateStr}. A new entry cannot be made until ${LEAD_LOCK_DAYS} days have passed (${daysLeft} day${daysLeft===1?'':'s'} remaining).${miniTable}${buildLeadRemarkSectionHtml(mobile, latestDate, 'check')}</div>`;
+      const restoredDraftEl = document.getElementById('leadRemarkText_check');
+      if(restoredDraftEl && draftText) restoredDraftEl.value = draftText;
     }else{
       setLeadFormLocked(false);
       if(wrap) wrap.innerHTML = `<div class="lead-mobile-check free">✅ Previous entry was on ${dateStr} (more than ${LEAD_LOCK_DAYS} days ago) — so a new entry can be made.${miniTable}</div>`;
@@ -7271,6 +7340,8 @@ async function checkLeadMobileHistory(mobile){
     console.error('Lead mobile check failed', e);
     setLeadFormLocked(false); // don't block the agent if the check itself failed — just warn
     if(wrap) wrap.innerHTML = `<div class="lead-mobile-check wait">⚠️ Could not check previous entries (server issue). Proceed carefully or try again.</div>`;
+  }finally{
+    if(myToken === leadMobileCheckToken) scheduleNextAutoRefresh(); // keep polling every 30s only if we're still the latest check
   }
 }
 
@@ -7281,6 +7352,7 @@ async function submitLeadForm(){
   const mobile = document.getElementById('leadMobile').value.trim();
   const altMobile = document.getElementById('leadAltMobile').value.trim();
   const pincode = document.getElementById('leadPincode').value.trim();
+  const postOffice = document.getElementById('leadPostOffice').value.trim();
   const villageWard = document.getElementById('leadVillageWard').value.trim();
   const address = document.getElementById('leadAddress').value.trim();
   const district = document.getElementById('leadDistrict').value.trim();
@@ -7290,6 +7362,7 @@ async function submitLeadForm(){
   if(!/^\d{10}$/.test(mobile)){ leadSetMsg('Please enter a valid 10-digit Mobile Number.', true); return; }
   if(altMobile && !/^\d{10}$/.test(altMobile)){ leadSetMsg('Alternate Number must be 10 digits.', true); return; }
   if(!/^\d{6}$/.test(pincode)){ leadSetMsg('Please enter a valid 6-digit Pincode.', true); return; }
+  if(!postOffice){ leadSetMsg('Please select a Post Office.', true); return; }
   if(!villageWard){ leadSetMsg('Village/Area/Ward Number is required.', true); return; }
   if(!address){ leadSetMsg('Address is required.', true); return; }
   if(!district){ leadSetMsg('District is required.', true); return; }
@@ -7333,6 +7406,7 @@ async function submitLeadForm(){
     if(pcStatus) pcStatus.textContent = '';
     document.getElementById('leadMobileCheckWrap').innerHTML = '';
     setLeadFormLocked(false);
+    if(leadCheckAutoTimer){ clearTimeout(leadCheckAutoTimer); leadCheckAutoTimer = null; }
 
     // Submission is done — resume normal auto-logout enforcement (it was paused while this form was open).
     if(leadFormAutoLogoutPaused){
@@ -7381,7 +7455,7 @@ async function searchLeadByMobile(){
         <table class="lead-result-table" id="leadResultTable">
           <thead><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
           <tbody>
-            ${rows.map(r => `<tr>${headers.map(h=>`<td>${escapeHtml(r[h] == null ? '' : r[h])}</td>`).join('')}</tr>`).join('')}
+            ${rows.map(r => `<tr>${headers.map(h=>`<td>${formatLeadTableCellHtml(r[h])}</td>`).join('')}</tr>`).join('')}
           </tbody>
         </table>
       </div>
