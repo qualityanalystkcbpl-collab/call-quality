@@ -3426,6 +3426,12 @@ transform:translateY(0);
   animation: chatBadgeBlink 1s ease-in-out infinite;
 }
 @keyframes chatBadgeBlink{ 0%,100%{ opacity:1; background:var(--need); } 50%{ opacity:1; background:#ff2d2d; } }
+.nav-new-tag{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:1px 6px; border-radius:6px; box-sizing:border-box;
+  background:#E0524A; color:#fff; font-size:9.5px; font-weight:800;
+  letter-spacing:.5px; line-height:1.5; margin-left:6px; vertical-align:middle;
+}
 .nav-chat-badge{
   display:inline-flex; align-items:center; justify-content:center;
   min-width:18px; height:18px; padding:0 5px; border-radius:9px; box-sizing:border-box;
@@ -4017,6 +4023,11 @@ transform:translateY(0);
       <div class="nav-item" data-tab="AIINSIGHT" onclick="switchTab('AIINSIGHT')"><span class="dot"></span>🤖 Get feedback from AI Agent</div>
       </div>
 
+      <div class="nav-section">
+      <div class="nav-label">NEW LEAD</div>
+      <div class="nav-item" data-tab="LEADFORM" onclick="switchTab('LEADFORM')"><span class="dot"></span>📝 Lead Entry Form <span class="nav-new-tag">NEW</span></div>
+      </div>
+
 
       <div class="nav-section">
       <div class="nav-label">All Dashboards</div>
@@ -4042,7 +4053,6 @@ transform:translateY(0);
 <div class="nav-item" data-tab="AUDITPARAMETER" onclick="switchTab('AUDITPARAMETER')"><span class="dot"></span>Audit Parameter</div>
 <div class="nav-item" data-tab="DASHBOARDAPRMAR" onclick="switchTab('DASHBOARDAPRMAR')"><span class="dot"></span>Dashboard Apr'25-Mar'26</div>
 <div class="nav-item" data-tab="LOBDATA" onclick="switchTab('LOBDATA')"><span class="dot"></span>📈 LOB Wise Data</div>
-      <div class="nav-item" data-tab="LEADFORM" onclick="switchTab('LEADFORM')"><span class="dot"></span>📝 Lead Entry Form</div>
 
 <div class="nav-item"
      data-tab="UPDATES"
@@ -4572,6 +4582,13 @@ transform:translateY(0);
   <img src="logo2.png" alt="Logo" onerror="this.parentElement.style.display='none';">
 </div>
 <script>
+/* Declared here (top of the FIRST <script> block) rather than lower down with the other
+   emp-session variables, because switchTab() can run synchronously during the initial
+   session-restore on page load (checkLoginSession -> enterApp -> switchTab) — i.e. before
+   the LATER <script> block that used to declare this has even run, which threw
+   "ReferenceError: leadFormAutoLogoutPaused is not defined". */
+let leadFormAutoLogoutPaused = false; // true while the Lead Entry Form panel is open — see scheduleFixedAutoLogout()
+
 /* ===================== GOOGLE API CONFIG ===================== */
 // 
 
@@ -6195,7 +6212,10 @@ if(currentRole==="agent"){
   
   showToast('লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।...');
 
-  switchTab('HOME');
+  // Allow a URL like "...?tab=LEADFORM" to land directly on that tab after login (deep-link support).
+  const requestedTab = new URLSearchParams(window.location.search).get('tab');
+  const validRequestedTab = requestedTab && document.getElementById('panel-' + requestedTab) ? requestedTab : 'HOME';
+  switchTab(validRequestedTab);
   await Promise.all([
     loadTicker(),
     loadBanners(),
@@ -6565,6 +6585,10 @@ async function saveNewsTicker(){
 /* ===================== NAVIGATION & TABS ===================== */
 async function switchTab(tab){
   currentTab = tab;
+  if(leadFormAutoLogoutPaused && tab !== 'LEADFORM' && typeof scheduleFixedAutoLogout === 'function'){
+    leadFormAutoLogoutPaused = false;
+    scheduleFixedAutoLogout(); // resume normal auto-logout enforcement now that the Lead Entry Form is closed
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   const contentEl = document.querySelector('main.content');
   if (contentEl) contentEl.scrollTop = 0;
@@ -6620,7 +6644,7 @@ async function switchTab(tab){
 /* ===================== LEAD ENTRY FORM TAB ===================== */
 /* Replace this with your own deployed Apps Script Web App URL for the
    "Call Centre Lead _ Sheet" spreadsheet (see the Code.gs shared alongside this file). */
-const LEAD_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyZEnp5Q8nULskBTcqERaoYQH-a2we7zr0NwkNSXtk1K8MePvFCyfJv-7vOzeOAATd-/exec";
+const LEAD_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxnVbHfPiEQi42I466xPfrpQ2CXuPolwlwLHXyypilzXESY64SwOHJfD5clPJV4TztxRw/exec";
 
 const LEAD_CONNECTION_TYPES = [
   'NEW BROADBAND',
@@ -6630,95 +6654,466 @@ const LEAD_CONNECTION_TYPES = [
   'NEW CABLE OPERATOR'
 ];
 
+/* Opens the Lead Entry Form directly in a new tab. Relies on enterApp() reading
+   the "?tab=" query param after login/session-restore to land on this panel. */
+/* ===== Internet Speed card (uses Cloudflare's public speed-test endpoints) ===== */
+let leadNetAutoTimer = null;
+let leadNetTestRunning = false;
+
+function setLeadNetDot(state){ // 'idle' | 'testing' | 'online' | 'offline'
+  const dot = document.getElementById('leadNetDot');
+  if(!dot) return;
+  dot.className = 'lead-net-dot' + (state === 'idle' ? '' : ' ' + state);
+}
+
+async function measureLeadNetPing(){
+  const samples = [];
+  for(let i=0;i<4;i++){
+    const t0 = performance.now();
+    try{
+      await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache:'no-store' });
+      samples.push(performance.now() - t0);
+    }catch(e){ /* one failed sample is fine, we still average the rest */ }
+  }
+  if(!samples.length) return null;
+  samples.shift(); // drop the first sample (connection warm-up) if we have more than one
+  const pool = samples.length ? samples : [performance.now()];
+  return pool.reduce((a,b)=>a+b,0) / pool.length;
+}
+
+async function measureLeadNetDownload(){
+  const bytes = 5_000_000; // 5 MB
+  const t0 = performance.now();
+  const res = await fetch(`https://speed.cloudflare.com/__down?bytes=${bytes}`, { cache:'no-store' });
+  const buf = await res.arrayBuffer();
+  const seconds = (performance.now() - t0) / 1000;
+  const mbps = (buf.byteLength * 8) / seconds / 1_000_000;
+  return mbps;
+}
+
+async function measureLeadNetUpload(){
+  const bytes = 2_000_000; // 2 MB
+  const blob = new Blob([new Uint8Array(bytes)]);
+  const t0 = performance.now();
+  await fetch('https://speed.cloudflare.com/__up', { method:'POST', body: blob, cache:'no-store' });
+  const seconds = (performance.now() - t0) / 1000;
+  return (bytes * 8) / seconds / 1_000_000;
+}
+
+async function runLeadNetSpeedTest(){
+  if(leadNetTestRunning) return; // don't overlap overlapping auto runs
+  const dlEl = document.getElementById('leadNetDownload');
+  const upEl = document.getElementById('leadNetUpload');
+  const pingEl = document.getElementById('leadNetPing');
+  const statusEl = document.getElementById('leadNetStatus');
+  if(!dlEl || !upEl || !pingEl || !statusEl) return; // panel isn't on screen anymore
+
+  if(!navigator.onLine){
+    setLeadNetDot('offline');
+    statusEl.textContent = 'Offline';
+    pingEl.textContent = '--'; dlEl.textContent = '--'; upEl.textContent = '--';
+    return;
+  }
+
+  leadNetTestRunning = true;
+  setLeadNetDot('testing');
+  statusEl.textContent = 'Testing...';
+  pingEl.textContent = '...'; dlEl.textContent = '...'; upEl.textContent = '...';
+
+  try{
+    const ping = await measureLeadNetPing();
+    if(document.getElementById('leadNetPing')) pingEl.textContent = ping != null ? `${Math.round(ping)} ms` : '--';
+
+    const dlMbps = await measureLeadNetDownload();
+    if(document.getElementById('leadNetDownload')) dlEl.textContent = `${dlMbps.toFixed(1)} Mbps`;
+
+    const upMbps = await measureLeadNetUpload();
+    if(document.getElementById('leadNetUpload')) upEl.textContent = `${upMbps.toFixed(1)} Mbps`;
+
+    if(document.getElementById('leadNetStatus')){
+      statusEl.textContent = 'Online';
+      setLeadNetDot('online');
+    }
+  }catch(e){
+    console.error('Speed test failed', e);
+    if(document.getElementById('leadNetStatus')){
+      statusEl.textContent = 'Test failed';
+      setLeadNetDot('offline');
+    }
+  }finally{
+    leadNetTestRunning = false;
+  }
+}
+
+/* Always-on auto-refresh every 1 minute while the Lead Entry Form is open — no manual toggle needed. */
+function startLeadNetAutoTest(){
+  if(leadNetAutoTimer){ clearInterval(leadNetAutoTimer); leadNetAutoTimer = null; }
+  leadNetAutoTimer = setInterval(()=>{
+    // Stop auto-testing on its own if the panel has been navigated away from
+    if(!document.getElementById('leadNetCard')){ clearInterval(leadNetAutoTimer); leadNetAutoTimer = null; return; }
+    runLeadNetSpeedTest();
+  }, 60000);
+}
+
 function renderLeadFormPanel(){
   const panel = document.getElementById('panel-LEADFORM');
   if(!panel) return;
+
+  if(leadNetAutoTimer){ clearInterval(leadNetAutoTimer); leadNetAutoTimer = null; } // avoid stacking timers on re-render
+
+  // Pause auto-logout while this form is open — resumed on submit or when navigating away (switchTab()).
+  leadFormAutoLogoutPaused = true;
+  if(empInactivityTimeout){ clearTimeout(empInactivityTimeout); empInactivityTimeout = null; }
 
   const typeOptions = LEAD_CONNECTION_TYPES
     .map(t => `<option value="${escapeAttr(t)}">${escapeHtml(t)}</option>`).join('');
 
   panel.innerHTML = `
     <style>
-      .lead-form-box{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px; max-width:640px; }
+      @keyframes leadBorderFlow{
+        0%{ background-position:0% 50%; }
+        50%{ background-position:100% 50%; }
+        100%{ background-position:0% 50%; }
+      }
+      @keyframes leadGlowPulse{
+        0%,100%{ box-shadow:0 2px 8px rgba(15,25,45,0.05), 0 0 0 0 var(--glow-c, rgba(63,191,127,.35)); }
+        50%{ box-shadow:0 2px 8px rgba(15,25,45,0.05), 0 0 14px 2px var(--glow-c, rgba(63,191,127,.35)); }
+      }
+
+      .lead-page-card{
+        background:#FFFFFF; color:#182233; border-radius:18px;
+        box-shadow:0 12px 34px rgba(15,25,45,0.16), 0 2px 6px rgba(15,25,45,0.08);
+        padding:28px 30px 32px; max-width:700px; margin:0 auto;
+      }
+      .lead-page-card .panel-header{ margin-bottom:18px; }
+      .lead-page-card .panel-header h1{ color:#182233; }
+      .lead-page-card .panel-header p{ color:#6B7A90; }
+
+      /* Animated rainbow-flow gradient border, used on every "box" in the form */
+      .lead-anim-box{
+        position:relative; border-radius:14px; background:#F7F9FC;
+        padding:20px 22px; isolation:isolate;
+      }
+      .lead-anim-box::before{
+        content:''; position:absolute; inset:0; border-radius:inherit; padding:2px;
+        background:linear-gradient(120deg,#3FBF7F,#4FD1FF,#8B7CF6,#3FBF7F);
+        background-size:300% 300%; animation:leadBorderFlow 6s ease infinite;
+        -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite:xor; mask-composite:exclude;
+        z-index:-1; pointer-events:none;
+      }
+
+      .lead-form-box{ padding:20px 22px; }
       .lead-form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
       .lead-form-grid .field.full{ grid-column:1 / -1; }
-      .lead-form-box .field label{ display:flex; align-items:center; gap:4px; }
-      .lead-form-box .field .req{ color:var(--need); }
-      .lead-form-box select{
-        width:100%; padding:10px 12px; background:var(--surface-2); border:1px solid var(--border);
-        border-radius:8px; color:var(--text); font-size:13px;
+      .lead-page-card .field label{ display:flex; align-items:center; gap:4px; font-size:12px; color:#6B7A90; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+      .lead-page-card .field .req{ color:#E0524A; }
+      .lead-page-card .field input{
+        width:100%; padding:12px 14px; background:#FFFFFF; border:1px solid #D9E1EA;
+        border-radius:10px; color:#182233; font-size:14px; outline:none; box-sizing:border-box;
+        transition:border-color .2s, box-shadow .2s;
       }
-      .lead-form-hint{ font-size:11px; color:var(--text-muted); margin-top:-10px; margin-bottom:14px; }
+      .lead-page-card .field input:focus{ border-color:#3FBF7F; box-shadow:0 0 0 3px rgba(63,191,127,.18); }
+      .lead-page-card .field input:disabled{ background:#F0F2F6; color:#9AA6B5; cursor:not-allowed; }
+      .lead-page-card select{
+        width:100%; padding:10px 12px; background:#FFFFFF; border:1px solid #D9E1EA;
+        border-radius:10px; color:#182233; font-size:13px; transition:border-color .2s, box-shadow .2s;
+      }
+      .lead-page-card select:focus{ border-color:#3FBF7F; box-shadow:0 0 0 3px rgba(63,191,127,.18); }
+      .lead-page-card select:disabled{ background:#F0F2F6; color:#9AA6B5; cursor:not-allowed; }
+      .lead-form-hint{ font-size:11px; color:#8A97A8; margin-top:-10px; margin-bottom:14px; }
       .lead-form-msg{ font-size:13px; margin-top:10px; min-height:18px; }
-      .lead-form-msg.err{ color:var(--need); }
-      .lead-form-msg.ok{ color:var(--excellent); }
-      .lead-search-box{ display:flex; gap:10px; align-items:flex-end; margin:26px 0 14px; flex-wrap:wrap; }
+      .lead-form-msg.err{ color:#C93C34; }
+      .lead-form-msg.ok{ color:#2E9E63; }
+
+      .lead-mobile-check{
+        font-size:12.5px; border-radius:12px; padding:12px 14px; margin:-4px 0 14px;
+        animation:leadGlowPulse 2.4s ease-in-out infinite;
+      }
+      .lead-mobile-check.wait{ background:#EEF2F7; color:#5C6B80; --glow-c:rgba(92,107,128,.28); }
+      .lead-mobile-check.locked{ background:#FDECEC; color:#B3261E; border:1px solid #F5C2C2; --glow-c:rgba(211,60,52,.35); }
+      .lead-mobile-check.free{ background:#E9F8EF; color:#1C7A44; border:1px solid #BFE8D0; --glow-c:rgba(46,158,99,.35); }
+      .lead-mobile-check-table-wrap{ overflow:auto; max-height:260px; border-radius:10px; margin-top:10px; border:1px solid rgba(15,25,45,0.08); }
+      .lead-mobile-check table{ width:100%; border-collapse:collapse; font-size:12px; color:#182233; background:#FFFFFF; }
+      .lead-mobile-check thead th{
+        position:sticky; top:0; padding:8px 10px; text-align:left; font-weight:700;
+        font-size:10.5px; text-transform:uppercase; letter-spacing:.5px;
+        color:#182233; background:#F0F2F6; border-bottom:1px solid #E4E9F1; white-space:nowrap;
+      }
+      .lead-mobile-check tbody td{ padding:8px 10px; color:#182233; border-bottom:1px solid #EEF1F5; white-space:nowrap; }
+      .lead-mobile-check tbody tr:last-child td{ border-bottom:none; }
+      .lead-mobile-check tbody tr:nth-child(even){ background:#FAFBFD; }
+
+      .lead-search-box{ display:flex; gap:14px; align-items:flex-end; margin:26px 0 14px; flex-wrap:wrap; padding:16px 18px; }
       .lead-search-box .field{ margin-bottom:0; min-width:220px; }
+      .lead-search-box .field label{ font-size:12px; color:#6B7A90; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px; }
+      .lead-search-box .field input{ padding:10px 12px; border:1px solid #D9E1EA; border-radius:10px; background:#FFFFFF; color:#182233; }
+      .lead-page-card .btn{
+        padding:10px 20px; border-radius:9px; border:1px solid #D9E1EA; background:#F0F2F6;
+        color:#182233; font-size:13px; font-weight:600; cursor:pointer; transition:transform .15s, box-shadow .15s;
+      }
+      .lead-page-card .btn:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 4px 10px rgba(15,25,45,0.12); }
+      .lead-page-card .btn.primary{ background:#3FBF7F; color:#04211C; border-color:#3FBF7F; }
+      .lead-page-card .btn:disabled{ opacity:.55; cursor:not-allowed; }
+      .lead-page-card .empty-state{ color:#8A97A8; font-size:13px; }
+
+      .lead-result-table-wrap{ overflow:auto; max-height:420px; border-radius:12px; padding:0; }
+      .lead-result-table{ width:100%; border-collapse:collapse; font-size:12.5px; background:#FFFFFF; }
+      .lead-result-table thead th{
+        position:sticky; top:0; z-index:2; padding:11px 14px; font-size:11px;
+        text-transform:uppercase; letter-spacing:.5px; font-weight:700;
+        color:#182233; background:#F0F2F6; border-bottom:1px solid #E4E9F1; white-space:nowrap; text-align:left;
+      }
+      .lead-result-table tbody td{
+        padding:10px 14px; color:#182233; border-bottom:1px solid #EEF1F5; white-space:nowrap;
+      }
+      .lead-result-table tbody tr:last-child td{ border-bottom:none; }
+      .lead-result-table tbody tr:nth-child(even){ background:#FAFBFD; }
+      .lead-result-table tbody tr:hover{ background:#F0F7F3; }
+      @media (prefers-reduced-motion: reduce){
+        .lead-anim-box::before{ animation:none; }
+        .lead-mobile-check{ animation:none; }
+      }
+
+      .lead-net-card{
+        display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+        background:#F7F9FC; border:1px solid #E4E9F1; border-radius:9px;
+        padding:5px 10px; margin-bottom:12px; font-size:11px;
+      }
+      .lead-net-title{ font-weight:700; color:#182233; font-size:10.5px; white-space:nowrap; display:flex; align-items:center; gap:5px; }
+      .lead-net-stats{ display:flex; gap:12px; flex-wrap:wrap; flex:1; }
+      .lead-net-stat{ display:flex; flex-direction:row; align-items:baseline; gap:4px; min-width:0; }
+      .lead-net-stat .lbl{ font-size:8.5px; color:#8A97A8; text-transform:uppercase; letter-spacing:.3px; }
+      .lead-net-stat .val{ font-size:11px; font-weight:700; color:#182233; }
+      .lead-net-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; background:#9AA6B5; flex:0 0 auto; }
+      .lead-net-dot.online{ background:#3FBF7F; box-shadow:0 0 0 2px rgba(63,191,127,.18); }
+      .lead-net-dot.offline{ background:#E0524A; box-shadow:0 0 0 2px rgba(224,82,74,.18); }
+      .lead-net-dot.testing{ background:#E0C341; animation:leadGlowPulse 1s ease-in-out infinite; --glow-c:rgba(224,195,65,.4); }
+
+      .lead-remark-box{ margin-top:12px; padding:12px 14px; background:#FFFFFF; border:1px solid #E4E9F1; border-radius:10px; }
+      .lead-remark-box label{ display:block; font-size:12px; color:#6B7A90; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+      .lead-remark-box textarea{
+        width:100%; padding:10px 12px; border:1px solid #D9E1EA; border-radius:10px; font-size:13px;
+        box-sizing:border-box; resize:vertical; font-family:inherit; color:#182233; outline:none;
+      }
+      .lead-remark-box textarea:focus{ border-color:#3FBF7F; box-shadow:0 0 0 3px rgba(63,191,127,.18); }
     </style>
 
-    <div class="panel-header">
-      <div><h1>📝 Lead Entry Form</h1><p>নতুন লিড এন্ট্রি করুন — সাবমিট করলে সরাসরি Google Sheet-এ যোগ হবে।</p></div>
-    </div>
-
-    <div class="lead-form-box">
-      <div class="lead-form-grid">
-        <div class="field full">
-          <label>Customer Name <span class="req">*</span></label>
-          <input type="text" id="leadCustomerName" placeholder="পুরো নাম লিখুন">
-        </div>
-
-        <div class="field">
-          <label>Mobile Number <span class="req">*</span></label>
-          <input type="tel" id="leadMobile" maxlength="10" placeholder="10 digit mobile number">
-        </div>
-        <div class="field">
-          <label>Alternate Number</label>
-          <input type="tel" id="leadAltMobile" maxlength="10" placeholder="10 digit (ঐচ্ছিক)">
-        </div>
-
-        <div class="field">
-          <label>Pincode <span class="req">*</span></label>
-          <input type="tel" id="leadPincode" maxlength="6" placeholder="6 digit pincode">
-        </div>
-        <div class="field">
-          <label>District <span class="req">*</span></label>
-          <input type="text" id="leadDistrict" placeholder="District লিখুন">
-        </div>
-
-        <div class="field full">
-          <label>Address <span class="req">*</span></label>
-          <input type="text" id="leadAddress" placeholder="সম্পূর্ণ ঠিকানা লিখুন">
-        </div>
-
-        <div class="field full">
-          <label>Type of Connection <span class="req">*</span></label>
-          <select id="leadConnectionType">
-            <option value="">-- বেছে নিন --</option>
-            ${typeOptions}
-          </select>
+    <div class="lead-page-card">
+      <div class="lead-net-card" id="leadNetCard">
+        <div class="lead-net-title"><span class="lead-net-dot" id="leadNetDot"></span> Internet Speed</div>
+        <div class="lead-net-stats">
+          <div class="lead-net-stat"><span class="lbl">Download</span><span class="val" id="leadNetDownload">--</span></div>
+          <div class="lead-net-stat"><span class="lbl">Upload</span><span class="val" id="leadNetUpload">--</span></div>
+          <div class="lead-net-stat"><span class="lbl">Ping</span><span class="val" id="leadNetPing">--</span></div>
+          <div class="lead-net-stat"><span class="lbl">Status</span><span class="val" id="leadNetStatus">--</span></div>
         </div>
       </div>
 
-      <button class="btn primary" onclick="submitLeadForm()" id="leadSubmitBtn" style="margin-top:6px;">Submit</button>
-      <div class="lead-form-msg" id="leadFormMsg"></div>
-    </div>
-
-    <div class="lead-search-box">
-      <div class="field">
-        <label>মোবাইল নম্বর দিয়ে খুঁজুন</label>
-        <input type="tel" id="leadSearchMobile" maxlength="10" placeholder="10 digit mobile number">
+      <div class="panel-header" style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+        <div><h1>📝 Lead Entry Form</h1><p>Data entered here goes directly to the Business Development team.</p></div>
       </div>
-      <button class="btn" onclick="searchLeadByMobile()">🔎 Search</button>
-    </div>
-    <div class="lead-form-hint">সাবমিট করার পর, এবং যেকোনো সময় মোবাইল নম্বর দিয়ে সার্চ করলে, শুধু সেই নম্বরের রো(গুলো) নিচে দেখাবে।</div>
 
-    <div id="leadResultWrap"></div>
+      <div class="lead-form-box lead-anim-box">
+        <div class="lead-form-grid">
+          <div class="field full">
+            <label>Customer Name <span class="req">*</span></label>
+            <input type="text" id="leadCustomerName" placeholder="Enter full name">
+          </div>
+
+          <div class="field">
+            <label>Mobile Number <span class="req">*</span></label>
+            <input type="tel" id="leadMobile" maxlength="10" placeholder="10 digit mobile number">
+          </div>
+          <div class="field">
+            <label>Alternate Number</label>
+            <input type="tel" id="leadAltMobile" maxlength="10" placeholder="10 digit (optional)">
+          </div>
+
+          <div class="field full" id="leadMobileCheckWrap"></div>
+
+          <div class="field">
+            <label>Pincode <span class="req">*</span></label>
+            <input type="tel" id="leadPincode" maxlength="6" placeholder="6 digit pincode">
+            <div class="lead-pincode-status" id="leadPincodeStatus" style="font-size:11px; margin-top:4px; min-height:14px; color:#8A97A8;"></div>
+          </div>
+          <div class="field">
+            <label>District <span class="req">*</span></label>
+            <input type="text" id="leadDistrict" placeholder="Enter district">
+          </div>
+          <div class="field">
+            <label>Post Office</label>
+            <select id="leadPostOffice">
+              <option value="">-- Enter pincode first --</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Village/Area/Ward Number <span class="req">*</span></label>
+            <input type="text" id="leadVillageWard" placeholder="Enter village/area/ward number">
+          </div>
+          <div class="field">
+            <label>Nearest Landmark</label>
+            <input type="text" id="leadLandmark" placeholder="Enter nearest landmark (optional)">
+          </div>
+
+          <div class="field full">
+            <label>Address <span class="req">*</span></label>
+            <input type="text" id="leadAddress" placeholder="Enter house/street name, the rest will auto-fill (editable)">
+          </div>
+          <div class="lead-form-hint">👆 Village/Area/Ward Number, Landmark, Post Office, District, State are added to the Address automatically — fully editable.</div>
+
+          <div class="field full">
+            <label>Type of Connection <span class="req">*</span></label>
+            <select id="leadConnectionType">
+              <option value="">-- Select --</option>
+              ${typeOptions}
+            </select>
+          </div>
+        </div>
+
+        <button class="btn primary" onclick="submitLeadForm()" id="leadSubmitBtn" style="margin-top:6px;">Submit</button>
+        <div class="lead-form-msg" id="leadFormMsg"></div>
+      </div>
+
+      <div class="lead-search-box lead-anim-box">
+        <div class="field">
+          <label>Search by Mobile Number</label>
+          <input type="tel" id="leadSearchMobile" maxlength="10" placeholder="10 digit mobile number">
+        </div>
+        <button class="btn" onclick="searchLeadByMobile()">🔎 Search</button>
+      </div>
+      <div class="lead-form-hint">After submitting, and anytime you search by mobile number, only the row(s) for that number will show below.</div>
+
+      <div id="leadResultWrap"></div>
+    </div>
   `;
 
-  document.getElementById('leadMobile').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
+  document.getElementById('leadMobile').addEventListener('input', e=>{
+    e.target.value = e.target.value.replace(/\D/g,'').slice(0,10);
+    if(e.target.value.length === 10){
+      checkLeadMobileHistory(e.target.value);
+    }else{
+      document.getElementById('leadMobileCheckWrap').innerHTML = '';
+      setLeadFormLocked(false);
+    }
+  });
   document.getElementById('leadAltMobile').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
-  document.getElementById('leadPincode').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,6); });
+  document.getElementById('leadPincode').addEventListener('input', e=>{
+    e.target.value = e.target.value.replace(/\D/g,'').slice(0,6);
+    const statusEl = document.getElementById('leadPincodeStatus');
+    const poEl = document.getElementById('leadPostOffice');
+    if(statusEl) statusEl.textContent = '';
+    if(poEl) poEl.innerHTML = '<option value="">-- Enter pincode first --</option>';
+    leadLastLookup = null;
+    leadAddressParts.postOffice = '';
+    leadAddressParts.district = '';
+    leadAddressParts.state = '';
+    leadAddressParts.pincode = '';
+    rebuildLeadAddressSuffix();
+    if(e.target.value.length === 6){ lookupLeadPincode(e.target.value); }
+  });
+  document.getElementById('leadPostOffice').addEventListener('change', e=>{
+    leadAddressParts.postOffice = e.target.value || '';
+    rebuildLeadAddressSuffix();
+  });
+  document.getElementById('leadVillageWard').addEventListener('input', e=>{
+    leadAddressParts.villageWard = e.target.value.trim();
+    rebuildLeadAddressSuffix();
+  });
+  document.getElementById('leadLandmark').addEventListener('input', e=>{
+    leadAddressParts.landmark = e.target.value.trim();
+    rebuildLeadAddressSuffix();
+  });
   document.getElementById('leadSearchMobile').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
+
+  runLeadNetSpeedTest(); // initial reading as soon as the panel opens
+  startLeadNetAutoTest(); // then keep refreshing automatically every 1 minute
+}
+
+/* Tracks the last auto-inserted "location suffix" appended to the Address field,
+   so we can update/replace it without wiping out anything the agent typed manually. */
+let leadAddressAutoSuffix = '';
+function applyLeadAddressSuffix(newSuffix){
+  const addressEl = document.getElementById('leadAddress');
+  if(!addressEl) return;
+  let val = addressEl.value;
+  if(leadAddressAutoSuffix && val.endsWith(leadAddressAutoSuffix)){
+    val = val.slice(0, val.length - leadAddressAutoSuffix.length).replace(/,\s*$/,'');
+  }
+  val = val.trim();
+  addressEl.value = val ? (newSuffix ? `${val}, ${newSuffix}` : val) : newSuffix;
+  leadAddressAutoSuffix = newSuffix;
+}
+
+/* All the pieces that get composed into the Address field's auto-suffix.
+   Nothing here is sent to the sheet as a separate column — it's just folded
+   into the single Address text, so the sheet schema stays unchanged. */
+let leadAddressParts = { villageWard:'', landmark:'', postOffice:'', district:'', state:'', pincode:'' };
+function rebuildLeadAddressSuffix(){
+  const p = leadAddressParts;
+  const pieces = [];
+  if(p.landmark) pieces.push(`Near ${p.landmark}`);
+  if(p.villageWard) pieces.push(p.villageWard);
+  if(p.postOffice) pieces.push(p.postOffice);
+  if(p.district) pieces.push(p.district);
+  if(p.state) pieces.push(p.state);
+  let suffix = pieces.join(', ');
+  if(p.pincode) suffix = suffix ? `${suffix} - ${p.pincode}` : p.pincode;
+  applyLeadAddressSuffix(suffix);
+}
+
+/* India Post pincode API — free, no key required. Auto-fills District and
+   Post Office list, and appends Post Office/District/State into the Address
+   field itself (nothing new sent to the sheet — just a smarter Address). */
+let leadPincodeLookupToken = 0;
+let leadLastLookup = null; // {district, state, pincode}
+async function lookupLeadPincode(pincode){
+  const statusEl = document.getElementById('leadPincodeStatus');
+  const districtEl = document.getElementById('leadDistrict');
+  const poEl = document.getElementById('leadPostOffice');
+  const myToken = ++leadPincodeLookupToken; // guards against out-of-order responses if user edits fast
+  if(statusEl) statusEl.textContent = '🔎 Looking up pincode...';
+  if(poEl) poEl.innerHTML = '<option value="">-- Searching... --</option>';
+  try{
+    const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+    const data = await res.json();
+    if(myToken !== leadPincodeLookupToken) return; // a newer lookup superseded this one
+
+    const result = Array.isArray(data) ? data[0] : null;
+    if(!result || result.Status !== 'Success' || !result.PostOffice || !result.PostOffice.length){
+      if(statusEl) statusEl.textContent = '⚠️ No data found for this pincode, please enter manually.';
+      if(poEl) poEl.innerHTML = '<option value="">-- No post office found --</option>';
+      leadLastLookup = null;
+      return;
+    }
+
+    const po = result.PostOffice[0];
+    if(districtEl && !districtEl.value.trim()) districtEl.value = po.District || '';
+    leadLastLookup = { district: po.District || '', state: po.State || '', pincode };
+    leadAddressParts.district = po.District || '';
+    leadAddressParts.state = po.State || '';
+    leadAddressParts.pincode = pincode;
+
+    if(poEl){
+      const options = result.PostOffice
+        .map(o => `<option value="${o.Name}">${o.Name}${o.BranchType ? ' (' + o.BranchType + ')' : ''}</option>`)
+        .join('');
+      poEl.innerHTML = '<option value="">-- Select --</option>' + options;
+      if(result.PostOffice.length === 1){
+        poEl.value = po.Name;
+        leadAddressParts.postOffice = po.Name;
+      }
+    }
+    rebuildLeadAddressSuffix();
+
+    if(statusEl) statusEl.textContent = `✅ ${po.District}, ${po.State} — ${result.PostOffice.length} post office(s) found`;
+  }catch(e){
+    if(myToken !== leadPincodeLookupToken) return;
+    console.error('Pincode lookup failed', e);
+    if(statusEl) statusEl.textContent = '⚠️ Pincode lookup failed, please enter manually.';
+    if(poEl) poEl.innerHTML = '<option value="">-- No post office found --</option>';
+    leadLastLookup = null;
+  }
 }
 
 function leadSetMsg(text, isError){
@@ -6728,22 +7123,177 @@ function leadSetMsg(text, isError){
   box.className = 'lead-form-msg' + (text ? (isError ? ' err' : ' ok') : '');
 }
 
+/* Fields that get locked when a recent (within 90 days) lead already exists for this mobile.
+   Mobile Number itself is left editable so the agent can correct a mistyped number. */
+const LEAD_LOCKABLE_FIELD_IDS = [
+  'leadCustomerName','leadAltMobile','leadPincode','leadDistrict',
+  'leadPostOffice','leadVillageWard','leadLandmark','leadAddress','leadConnectionType'
+];
+function setLeadFormLocked(locked){
+  LEAD_LOCKABLE_FIELD_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.disabled = locked;
+  });
+  const btn = document.getElementById('leadSubmitBtn');
+  if(btn) btn.disabled = locked;
+}
+
+/* Tries to find a date/timestamp-looking column in the sheet row and parse it. */
+function findLeadRowDate(row){
+  const keys = Object.keys(row);
+  const dateKey = keys.find(k => /date|time/i.test(k)) || keys[0];
+  const raw = row[dateKey];
+  if(!raw) return null;
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+/* Follow-up remark box — shown whenever a lead already exists for a mobile number and it's
+   still within 90 days of that lead's Timestamp. Each submission appends "N) <remark>" to
+   "Other Remarks (if 90 days have not been completed)" and "N) <agent name>" to "Agent2 Name"
+   on that SAME row (no new row is created). ctx keeps two independent instances (the auto mobile
+   check, and the manual search box) from clashing on element ids. */
+const LEAD_REMARK_LOCK_DAYS = 90;
+function buildLeadRemarkSectionHtml(mobile, latestDate, ctx){
+  if(!latestDate) return '';
+  const daysSince = (Date.now() - latestDate.getTime()) / (1000*60*60*24);
+  if(daysSince >= LEAD_REMARK_LOCK_DAYS) return '';
+  return `
+    <div class="lead-remark-box">
+      <label>Other Remarks (customer কি বলছে লিখুন)</label>
+      <textarea id="leadRemarkText_${ctx}" rows="2" placeholder="Write what the customer said..."></textarea>
+      <button class="btn" id="leadRemarkBtn_${ctx}" style="margin-top:8px;" onclick="submitLeadRemark('${mobile}','${ctx}')">➕ Add Remark</button>
+      <div class="lead-form-msg" id="leadRemarkMsg_${ctx}"></div>
+    </div>`;
+}
+
+async function submitLeadRemark(mobile, ctx){
+  const textEl = document.getElementById(`leadRemarkText_${ctx}`);
+  const msgEl = document.getElementById(`leadRemarkMsg_${ctx}`);
+  const btn = document.getElementById(`leadRemarkBtn_${ctx}`);
+  if(!textEl) return;
+  const remark = textEl.value.trim();
+  const setMsg = (text, isError) => { if(msgEl){ msgEl.textContent = text || ''; msgEl.className = 'lead-form-msg' + (text ? (isError ? ' err' : ' ok') : ''); } };
+
+  if(!remark){ setMsg('Please write a remark first.', true); return; }
+
+  if(btn){ btn.disabled = true; btn.textContent = 'Remarks adding.......please wait'; }
+  setMsg('', false);
+
+  try{
+    const res = await fetch(`${LEAD_WEB_APP_URL}?action=addRemark`, {
+      method: 'POST',
+      body: JSON.stringify({
+        mobile,
+        remark,
+        agentName: empAgentName || localStorage.getItem('qa_emp_name') || ''
+      })
+    });
+    const data = await res.json();
+    if(btn){ btn.disabled = false; btn.textContent = '➕ Add Remark'; }
+
+    if(!data || data.ok !== true){
+      setMsg((data && data.error) || 'Could not save the remark, please try again.', true);
+      return;
+    }
+
+    setMsg('New remarks update successfull', false);
+    // Refresh whichever panel this came from so the new numbered remark shows immediately.
+    if(ctx === 'search'){
+      await searchLeadByMobile();
+    }else if(ctx === 'check'){
+      await checkLeadMobileHistory(mobile);
+    }
+  }catch(e){
+    console.error('Add remark failed', e);
+    if(btn){ btn.disabled = false; btn.textContent = '➕ Add Remark'; }
+    setMsg('Server is temporarily unavailable, please try again shortly.', true);
+  }
+}
+
+let leadMobileCheckToken = 0;
+async function checkLeadMobileHistory(mobile){
+  const wrap = document.getElementById('leadMobileCheckWrap');
+  const myToken = ++leadMobileCheckToken;
+  if(wrap) wrap.innerHTML = `<div class="lead-mobile-check wait">⏳ Please wait... checking previous entries.</div>`;
+  setLeadFormLocked(true); // lock while checking, to avoid a submit racing the check
+
+  try{
+    const res = await fetch(`${LEAD_WEB_APP_URL}?action=byMobile&mobile=${encodeURIComponent(mobile)}`);
+    const data = await res.json();
+    if(myToken !== leadMobileCheckToken) return; // superseded by a newer check
+
+    const rows = (data && data.ok === true) ? (data.rows || []) : [];
+
+    if(!rows.length){
+      setLeadFormLocked(false);
+      if(wrap) wrap.innerHTML = `<div class="lead-mobile-check free">✅ New number — no previous lead entry found. Please fill the form.</div>`;
+      return;
+    }
+
+    // Find the most recent entry date across all matching rows
+    let latestDate = null;
+    rows.forEach(r=>{
+      const d = findLeadRowDate(r);
+      if(d && (!latestDate || d > latestDate)) latestDate = d;
+    });
+
+    const headers = Object.keys(rows[0]);
+    const miniTable = `
+      <div class="lead-mobile-check-table-wrap">
+        <table>
+          <thead><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+          <tbody>${rows.map(r=>`<tr>${headers.map(h=>`<td>${escapeHtml(r[h]==null?'':r[h])}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+
+    if(!latestDate){
+      // Couldn't determine the date — play it safe and keep the form locked.
+      setLeadFormLocked(true);
+      if(wrap) wrap.innerHTML = `<div class="lead-mobile-check locked">⚠️ A previous entry was found for this number, but the date could not be read — so the form has been locked. Please check manually.${miniTable}</div>`;
+      return;
+    }
+
+    const LEAD_LOCK_DAYS = 90;
+    const daysSince = (Date.now() - latestDate.getTime()) / (1000*60*60*24);
+    const dateStr = latestDate.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+
+    if(daysSince < LEAD_LOCK_DAYS){
+      setLeadFormLocked(true);
+      const daysLeft = Math.max(1, Math.ceil(LEAD_LOCK_DAYS - daysSince));
+      if(wrap) wrap.innerHTML = `<div class="lead-mobile-check locked">⚠️ A lead was already entered for this number on ${dateStr}. A new entry cannot be made until ${LEAD_LOCK_DAYS} days have passed (${daysLeft} day${daysLeft===1?'':'s'} remaining).${miniTable}${buildLeadRemarkSectionHtml(mobile, latestDate, 'check')}</div>`;
+    }else{
+      setLeadFormLocked(false);
+      if(wrap) wrap.innerHTML = `<div class="lead-mobile-check free">✅ Previous entry was on ${dateStr} (more than ${LEAD_LOCK_DAYS} days ago) — so a new entry can be made.${miniTable}</div>`;
+    }
+  }catch(e){
+    if(myToken !== leadMobileCheckToken) return;
+    console.error('Lead mobile check failed', e);
+    setLeadFormLocked(false); // don't block the agent if the check itself failed — just warn
+    if(wrap) wrap.innerHTML = `<div class="lead-mobile-check wait">⚠️ Could not check previous entries (server issue). Proceed carefully or try again.</div>`;
+  }
+}
+
 async function submitLeadForm(){
+  const btnCheck = document.getElementById('leadSubmitBtn');
+  if(btnCheck && btnCheck.disabled){ leadSetMsg('Cannot submit until the previous-entry check is done, or until 90 days have passed.', true); return; }
   const customerName = document.getElementById('leadCustomerName').value.trim();
   const mobile = document.getElementById('leadMobile').value.trim();
   const altMobile = document.getElementById('leadAltMobile').value.trim();
   const pincode = document.getElementById('leadPincode').value.trim();
+  const villageWard = document.getElementById('leadVillageWard').value.trim();
   const address = document.getElementById('leadAddress').value.trim();
   const district = document.getElementById('leadDistrict').value.trim();
   const connectionType = document.getElementById('leadConnectionType').value;
 
-  if(!customerName){ leadSetMsg('Customer Name আবশ্যক।', true); return; }
-  if(!/^\d{10}$/.test(mobile)){ leadSetMsg('সঠিক ১০ ডিজিটের Mobile Number দিন।', true); return; }
-  if(altMobile && !/^\d{10}$/.test(altMobile)){ leadSetMsg('Alternate Number ১০ ডিজিটের হতে হবে।', true); return; }
-  if(!/^\d{6}$/.test(pincode)){ leadSetMsg('সঠিক ৬ ডিজিটের Pincode দিন।', true); return; }
-  if(!address){ leadSetMsg('Address আবশ্যক।', true); return; }
-  if(!district){ leadSetMsg('District আবশ্যক।', true); return; }
-  if(!connectionType){ leadSetMsg('Type of Connection বেছে নিন।', true); return; }
+  if(!customerName){ leadSetMsg('Customer Name is required.', true); return; }
+  if(!/^\d{10}$/.test(mobile)){ leadSetMsg('Please enter a valid 10-digit Mobile Number.', true); return; }
+  if(altMobile && !/^\d{10}$/.test(altMobile)){ leadSetMsg('Alternate Number must be 10 digits.', true); return; }
+  if(!/^\d{6}$/.test(pincode)){ leadSetMsg('Please enter a valid 6-digit Pincode.', true); return; }
+  if(!villageWard){ leadSetMsg('Village/Area/Ward Number is required.', true); return; }
+  if(!address){ leadSetMsg('Address is required.', true); return; }
+  if(!district){ leadSetMsg('District is required.', true); return; }
+  if(!connectionType){ leadSetMsg('Please select Type of Connection.', true); return; }
 
   const btn = document.getElementById('leadSubmitBtn');
   btn.disabled = true; btn.textContent = 'Submitting...';
@@ -6755,7 +7305,6 @@ async function submitLeadForm(){
       body: JSON.stringify({
         customerName, mobile, altMobile, pincode, address, district,
         agentName: empAgentName || localStorage.getItem('qa_emp_name') || '',
-        leadSource: empProcess || localStorage.getItem('qa_emp_process') || '',
         connectionType
       })
     });
@@ -6763,17 +7312,33 @@ async function submitLeadForm(){
     btn.disabled = false; btn.textContent = 'Submit';
 
     if(!data || data.ok !== true){
-      leadSetMsg((data && data.error) || 'Submit ব্যর্থ হয়েছে, আবার চেষ্টা করুন।', true);
+      leadSetMsg((data && data.error) || 'Submit failed, please try again.', true);
       return;
     }
 
-    leadSetMsg('✅ লিড সফলভাবে সাবমিট হয়েছে।', false);
+    leadSetMsg('✅ Lead submitted successfully.', false);
     document.getElementById('leadCustomerName').value = '';
     document.getElementById('leadAltMobile').value = '';
     document.getElementById('leadPincode').value = '';
+    document.getElementById('leadPostOffice').innerHTML = '<option value="">-- Enter pincode first --</option>';
+    document.getElementById('leadVillageWard').value = '';
+    document.getElementById('leadLandmark').value = '';
     document.getElementById('leadAddress').value = '';
     document.getElementById('leadDistrict').value = '';
     document.getElementById('leadConnectionType').value = '';
+    leadLastLookup = null;
+    leadAddressAutoSuffix = '';
+    leadAddressParts = { villageWard:'', landmark:'', postOffice:'', district:'', state:'', pincode:'' };
+    const pcStatus = document.getElementById('leadPincodeStatus');
+    if(pcStatus) pcStatus.textContent = '';
+    document.getElementById('leadMobileCheckWrap').innerHTML = '';
+    setLeadFormLocked(false);
+
+    // Submission is done — resume normal auto-logout enforcement (it was paused while this form was open).
+    if(leadFormAutoLogoutPaused){
+      leadFormAutoLogoutPaused = false;
+      if(typeof scheduleFixedAutoLogout === 'function') scheduleFixedAutoLogout();
+    }
 
     document.getElementById('leadSearchMobile').value = mobile;
     await searchLeadByMobile();
@@ -6781,7 +7346,7 @@ async function submitLeadForm(){
   }catch(e){
     console.error('Lead submit failed', e);
     btn.disabled = false; btn.textContent = 'Submit';
-    leadSetMsg('Server সাময়িকভাবে unavailable, কিছুক্ষণ পর আবার চেষ্টা করুন।', true);
+    leadSetMsg('Server is temporarily unavailable, please try again shortly.', true);
   }
 }
 
@@ -6789,35 +7354,41 @@ async function searchLeadByMobile(){
   const mobile = document.getElementById('leadSearchMobile').value.trim();
   const wrap = document.getElementById('leadResultWrap');
   if(!/^\d{10}$/.test(mobile)){
-    wrap.innerHTML = '<div class="empty-state">সঠিক ১০ ডিজিটের মোবাইল নম্বর দিয়ে খুঁজুন।</div>';
+    wrap.innerHTML = '<div class="empty-state">Please search with a valid 10-digit mobile number.</div>';
     return;
   }
-  wrap.innerHTML = '<div class="empty-state">খোঁজা হচ্ছে...</div>';
+  wrap.innerHTML = '<div class="empty-state">Searching...</div>';
   try{
     const res = await fetch(`${LEAD_WEB_APP_URL}?action=byMobile&mobile=${encodeURIComponent(mobile)}`);
     const data = await res.json();
     if(!data || data.ok !== true){
-      wrap.innerHTML = `<div class="empty-state">${escapeHtml((data && data.error) || 'ডাটা পাওয়া যায়নি।')}</div>`;
+      wrap.innerHTML = `<div class="empty-state">${escapeHtml((data && data.error) || 'No data found.')}</div>`;
       return;
     }
     const rows = data.rows || [];
     if(!rows.length){
-      wrap.innerHTML = '<div class="empty-state">এই নম্বরে কোনো লিড পাওয়া যায়নি।</div>';
+      wrap.innerHTML = '<div class="empty-state">No lead found for this number.</div>';
       return;
     }
     const headers = Object.keys(rows[0]);
+    let latestDate = null;
+    rows.forEach(r=>{
+      const d = findLeadRowDate(r);
+      if(d && (!latestDate || d > latestDate)) latestDate = d;
+    });
     wrap.innerHTML = `
-      <div class="table-wrapper" style="overflow:auto;">
-        <table class="ans3sec-table" id="leadResultTable">
+      <div class="lead-result-table-wrap lead-anim-box">
+        <table class="lead-result-table" id="leadResultTable">
           <thead><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
           <tbody>
             ${rows.map(r => `<tr>${headers.map(h=>`<td>${escapeHtml(r[h] == null ? '' : r[h])}</td>`).join('')}</tr>`).join('')}
           </tbody>
         </table>
-      </div>`;
+      </div>
+      ${buildLeadRemarkSectionHtml(mobile, latestDate, 'search')}`;
   }catch(e){
     console.error('Lead search failed', e);
-    wrap.innerHTML = '<div class="empty-state">Server সাময়িকভাবে unavailable।</div>';
+    wrap.innerHTML = '<div class="empty-state">Server is temporarily unavailable.</div>';
   }
 }
 
@@ -10932,7 +11503,9 @@ function completeEmployeeLogin(data){
   empSessionId = data.sessionId;
   empEmployeeId = data.employeeId;
   empAgentName = data.agentName;
-  empProcess = data.process || data.team || '';
+  empProcess = data.process || data.Process || data.team || data.Team || data.processName
+    || data.vertical || data.Vertical || data.department || data.lob || data.LOB || '';
+  console.log('[Lead source debug] employeeLogin response:', data, '→ detected process:', empProcess);
   empSessionStartEpoch = Date.now();
   empTodayPriorSeconds = Number(data.todayTotalSeconds) || 0;
 
@@ -11103,6 +11676,7 @@ function setupInactivityWatch(){
 
 function scheduleFixedAutoLogout(){
   if(empInactivityTimeout) clearTimeout(empInactivityTimeout);
+  if(leadFormAutoLogoutPaused){ tickAutoLogoutCountdown(); return; } // don't actually log out while the Lead Entry Form is open
   const remainingMs = Math.max(0, EMP_AUTO_LOGOUT_MS - (Date.now() - Number(empSessionStartEpoch)));
   empInactivityTimeout = setTimeout(()=> employeeLogout('Auto'), remainingMs);
   tickAutoLogoutCountdown();
@@ -11111,12 +11685,14 @@ function scheduleFixedAutoLogout(){
 function tickAutoLogoutCountdown(){
   const el = document.getElementById('empAutoLogoutCountdown');
   if(!el) return;
-  const remainingMs = Math.max(0, EMP_AUTO_LOGOUT_MS - (Date.now() - Number(empSessionStartEpoch)));
-  const remainingSec = Math.ceil(remainingMs / 1000);
+  const rawRemainingMs = EMP_AUTO_LOGOUT_MS - (Date.now() - Number(empSessionStartEpoch));
+  const remainingMs = leadFormAutoLogoutPaused ? rawRemainingMs : Math.max(0, rawRemainingMs);
+  const negative = remainingMs < 0;
+  const remainingSec = Math.ceil(Math.abs(remainingMs) / 1000);
   const m = String(Math.floor(remainingSec / 60)).padStart(2,'0');
   const s = String(remainingSec % 60).padStart(2,'0');
-  el.textContent = `Auto-logout in ${m}:${s}`;
-  el.classList.toggle('warn', remainingSec <= 60);
+  el.textContent = `Auto-logout in ${negative ? '-' : ''}${m}:${s}`;
+  el.classList.toggle('warn', remainingSec <= 60 || negative);
 }
 
 async function employeeLogout(logoutType){
