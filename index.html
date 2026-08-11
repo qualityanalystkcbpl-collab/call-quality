@@ -3863,7 +3863,7 @@ transform:translateY(0);
           <button class="emp-mini-btn" onclick="openChangePasswordModal()">Change Pass</button>
           <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
         </div>
-        <div class="emp-autologout-countdown" id="empAutoLogoutCountdown">Auto-logout in 30:00</div>
+        <div class="emp-autologout-countdown" id="empAutoLogoutCountdown">Auto-logout in 100:00</div>
       </div>
     </div>
     
@@ -7040,9 +7040,62 @@ function renderLeadFormPanel(){
 
       .lead-net-card{
         display:flex; align-items:center; gap:10px;
-        font-size:11px; flex:0 0 auto; margin-top:4px; margin-right:14px;
+        font-size:11px;
+        position:fixed;
+        bottom:34px;
+        right:22px;
+        z-index:10070;
+        padding:5px 12px 6px;
+        border-radius:20px;
+        background:linear-gradient(90deg,#EAF6EF,#E8F0FF,#FBEEDA,#EAF6EF);
+        background-size:300% 100%;
+        border:1px solid #E4E9F1;
+        box-shadow:0 10px 26px -10px rgba(15,25,45,0.35);
+        overflow:hidden;
+        animation: leadNetFlood 6s linear infinite, leadNetFloat 4.5s ease-in-out infinite;
       }
-      .lead-net-title{ font-weight:700; color:#182233; font-size:10.5px; white-space:nowrap; display:flex; align-items:center; gap:5px; flex:0 0 auto; }
+      @keyframes leadNetFlood{
+        0%{ background-position:0% 50%; }
+        100%{ background-position:300% 50%; }
+      }
+      @keyframes leadNetFloat{
+        0%,100%{ transform:translateY(0px) rotate(0deg); }
+        25%{ transform:translateY(-9px) rotate(0.6deg); }
+        50%{ transform:translateY(-3px) rotate(0deg); }
+        75%{ transform:translateY(-12px) rotate(-0.6deg); }
+      }
+      @media (max-width:900px){
+        .lead-net-card{ bottom:20px; right:14px; padding:4px 10px 5px; }
+        .lead-net-stats-viewport{ width:88px !important; }
+      }
+      .lead-net-card::after{
+        content:'';
+        position:absolute;
+        left:-30%; top:0; bottom:0; width:30%;
+        background:linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+        transform:skewX(-20deg);
+        animation: leadNetShine 3.2s ease-in-out infinite;
+        pointer-events:none;
+      }
+      @keyframes leadNetShine{
+        0%{ left:-30%; }
+        60%,100%{ left:130%; }
+      }
+      .lead-net-title{ font-weight:700; font-size:10.5px; white-space:nowrap; display:flex; align-items:center; gap:5px; flex:0 0 auto;
+        background:linear-gradient(90deg,#0E9C85,#2A6FE0,#A730D6,#C6821E,#0E9C85);
+        background-size:300% 100%;
+        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+        animation: leadNetTitleFlow 5s linear infinite;
+      }
+      @keyframes leadNetTitleFlow{
+        0%{ background-position:0% 50%; }
+        100%{ background-position:300% 50%; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        .lead-net-card{ animation:none; background-position:0% 50%; }
+        .lead-net-card::after{ display:none; }
+        .lead-net-title{ animation:none; background-position:0% 50%; }
+      }
       .lead-net-stats-viewport{ width:105px; flex:0 0 auto; min-width:0; overflow:visible; }
       .lead-net-stats-rotator{ position:relative; height:15px; }
       .lead-net-stat{
@@ -11673,7 +11726,7 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 const EMP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwktIZBumwKZM7z9rUZsT6vDoj1PBsMgcZL6VyH8HejBnBsx879O3Jy1dSLaGAiOLjr/exec";
 
 const EMP_HEARTBEAT_MS = 60 * 1000;
-const EMP_AUTO_LOGOUT_MS = 30 * 60 * 1000;
+const EMP_AUTO_LOGOUT_MS = 100 * 60 * 1000;
 
 let empSessionId = null;
 let empEmployeeId = null;
