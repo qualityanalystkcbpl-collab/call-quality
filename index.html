@@ -5803,6 +5803,13 @@ async function refreshAdminChatList(){
 }
 async function openAdminChatThread(employeeId){
   chatOpenEmployeeId = employeeId;
+
+  // নাম ক্লিক করার সাথে সাথে "Please wait......" দেখানো হচ্ছে, মেসেজ লোড হওয়া পর্যন্ত
+  const view = document.getElementById('adminChatThreadView');
+  if(view){
+    view.innerHTML = `<div class="chat-loading-state" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px;">Please wait......</div>`;
+  }
+
   const threads = await getChatThreads();
   const thread = threads[employeeId];
   if(!thread) return;
@@ -5811,7 +5818,6 @@ async function openAdminChatThread(employeeId){
   await saveChatThreads(threads);
   updateAdminChatNavBadge();
 
-  const view = document.getElementById('adminChatThreadView');
   const headerName = thread.employeeName||employeeId;
   view.innerHTML = `
     <div class="admin-chat-thread-header">
@@ -5820,8 +5826,8 @@ async function openAdminChatThread(employeeId){
     </div>
     <div id="adminChatMessages" class="chat-messages-box"></div>
     <div class="chat-input-row">
-      <input type="text" id="adminChatInput" placeholder="রিপ্লাই লিখুন..." onkeydown="if(event.key==='Enter') sendAdminChatReply()">
-      <button class="btn primary" onclick="sendAdminChatReply()">Send</button>
+      <input type="text" id="adminChatInput" placeholder="রিপ্লাই লিখুন..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendAdminChatReply(); }">
+      <button class="btn primary" id="adminChatSendBtn" onclick="sendAdminChatReply()">Send</button>
     </div>`;
   renderAdminChatMessages(thread);
   await refreshAdminChatList();
@@ -5871,6 +5877,15 @@ async function sendAdminChatReply(){
   if(!text) return;
   input.value='';
   input.disabled = true;
+
+  // Send বাটনে "Sending......." দেখানো হচ্ছে যতক্ষণ না মেসেজ পাঠানো শেষ হয়
+  const sendBtn = document.getElementById('adminChatSendBtn');
+  const originalBtnText = sendBtn ? sendBtn.textContent : 'Send';
+  if(sendBtn){
+    sendBtn.textContent = 'Sending.......';
+    sendBtn.disabled = true;
+  }
+
   try{
     const threads = await getChatThreads();
     const thread = threads[chatOpenEmployeeId];
@@ -5889,6 +5904,13 @@ async function sendAdminChatReply(){
   }finally{
     input.disabled = false;
     input.focus();
+    // sendAdminChatReply() call-এর পরে refreshAdminChatList() DOM নতুন করে re-render নাও করতে পারে,
+    // তাই বাটন এখনও DOM-এ থাকলে তার অবস্থা রিসেট করা হচ্ছে
+    const btnAfter = document.getElementById('adminChatSendBtn');
+    if(btnAfter){
+      btnAfter.textContent = originalBtnText;
+      btnAfter.disabled = false;
+    }
   }
 }
 
