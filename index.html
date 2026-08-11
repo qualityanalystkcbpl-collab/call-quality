@@ -7038,13 +7038,16 @@ function renderLeadFormPanel(){
         .lead-net-stat{ transition:none; }
       }
 
-      .lead-net-card{
-        display:flex; align-items:center; gap:10px;
-        font-size:11px;
+      .lead-net-spin-wrap{
         position:fixed;
         bottom:34px;
         right:22px;
         z-index:10070;
+        animation: leadNetSlide 20s ease-in-out infinite;
+      }
+      .lead-net-card{
+        display:flex; align-items:center; gap:10px;
+        font-size:11px;
         padding:5px 12px 6px;
         border-radius:20px;
         background:linear-gradient(90deg,#EAF6EF,#E8F0FF,#FBEEDA,#EAF6EF);
@@ -7053,6 +7056,13 @@ function renderLeadFormPanel(){
         box-shadow:0 10px 26px -10px rgba(15,25,45,0.35);
         overflow:hidden;
         animation: leadNetFlood 6s linear infinite, leadNetFloat 4.5s ease-in-out infinite;
+      }
+      @keyframes leadNetSlide{
+        0%{ transform:translateX(0%); }
+        70%{ transform:translateX(0%); }
+        80%{ transform:translateX(160%); }
+        90%{ transform:translateX(160%); }
+        100%{ transform:translateX(0%); }
       }
       @keyframes leadNetFlood{
         0%{ background-position:0% 50%; }
@@ -7065,7 +7075,8 @@ function renderLeadFormPanel(){
         75%{ transform:translateY(-12px) rotate(-0.6deg); }
       }
       @media (max-width:900px){
-        .lead-net-card{ bottom:20px; right:14px; padding:4px 10px 5px; }
+        .lead-net-spin-wrap{ bottom:20px; right:14px; }
+        .lead-net-card{ padding:4px 10px 5px; }
         .lead-net-stats-viewport{ width:88px !important; }
       }
       .lead-net-card::after{
@@ -7092,6 +7103,7 @@ function renderLeadFormPanel(){
         100%{ background-position:300% 50%; }
       }
       @media (prefers-reduced-motion: reduce){
+        .lead-net-spin-wrap{ animation:none; }
         .lead-net-card{ animation:none; background-position:0% 50%; }
         .lead-net-card::after{ display:none; }
         .lead-net-title{ animation:none; background-position:0% 50%; }
@@ -7128,6 +7140,7 @@ function renderLeadFormPanel(){
     <div class="lead-page-card">
       <div class="panel-header" style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
         <div><h1>📝 Lead Entry Form</h1><p>Data entered here goes directly to the Business Development team.</p></div>
+        <div class="lead-net-spin-wrap">
         <div class="lead-net-card" id="leadNetCard">
           <div class="lead-net-title"><span class="lead-net-dot" id="leadNetDot"></span> Internet Speed</div>
           <div class="lead-net-stats-viewport">
@@ -7138,6 +7151,7 @@ function renderLeadFormPanel(){
               <div class="lead-net-stat"><span class="lbl">Status</span><span class="val lnv-status">--</span></div>
             </div>
           </div>
+        </div>
         </div>
       </div>
 
