@@ -7068,6 +7068,8 @@ function renderLeadFormPanel(){
         box-sizing:border-box; resize:vertical; font-family:inherit; color:#182233; outline:none;
       }
       .lead-remark-box textarea:focus{ border-color:#3FBF7F; box-shadow:0 0 0 3px rgba(63,191,127,.18); }
+      .lead-remark-box.locked{ background:#FFF7EC; border-color:#F0DDBB; }
+      .lead-remark-box.locked .lead-form-msg{ margin:0; color:#B8722A; font-size:12.5px; font-weight:600; }
     </style>
 
     <div class="lead-page-card">
@@ -7380,15 +7382,34 @@ function leadRemarkStatusClass(header, rawValue){
    still within 90 days of that lead's Timestamp. Each submission appends "N) <remark>" to
    "Other Remarks (if 90 days have not been completed)" and "N) <agent name>" to "Agent2 Name"
    on that SAME row (no new row is created). ctx keeps two independent instances (the auto mobile
-   check, and the manual search box) from clashing on element ids. */
+   check, and the manual search box) from clashing on element ids.
+   A separate 2-hour cooldown (measured from the sheet's own latest Timestamp) also applies: right
+   after a lead/remark lands on the sheet, the box is locked with a countdown; once 2 hours have
+   passed since that timestamp, remarks can be added freely again (until the 90-day window ends). */
 const LEAD_REMARK_LOCK_DAYS = 90;
+const LEAD_REMARK_COOLDOWN_HOURS = 2;
+const LEAD_REMARK_LABEL = 'Other Remarks (customer কি বলছে লিখুন - সুধুমাত্র যদি customer repeat call করে তাহলে remarks লিখুন।)';
 function buildLeadRemarkSectionHtml(mobile, latestDate, ctx){
   if(!latestDate) return '';
   const daysSince = (Date.now() - latestDate.getTime()) / (1000*60*60*24);
   if(daysSince >= LEAD_REMARK_LOCK_DAYS) return '';
+
+  const hoursSince = (Date.now() - latestDate.getTime()) / (1000*60*60);
+  if(hoursSince < LEAD_REMARK_COOLDOWN_HOURS){
+    const minsLeft = Math.max(1, Math.ceil((LEAD_REMARK_COOLDOWN_HOURS - hoursSince) * 60));
+    const hrsLeft = Math.floor(minsLeft / 60);
+    const remMins = minsLeft % 60;
+    const waitLabel = hrsLeft > 0 ? `${hrsLeft} ঘন্টা ${remMins} মিনিট` : `${remMins} মিনিট`;
+    return `
+      <div class="lead-remark-box locked">
+        <label>${LEAD_REMARK_LABEL}</label>
+        <div class="lead-form-msg" style="display:block;">⏳ সর্বশেষ এন্ট্রির ${LEAD_REMARK_COOLDOWN_HOURS} ঘন্টার মধ্যে নতুন remark লেখা যাবে না। আরও ${waitLabel} অপেক্ষা করুন।</div>
+      </div>`;
+  }
+
   return `
     <div class="lead-remark-box">
-      <label>Other Remarks (customer কি বলছে লিখুন)</label>
+      <label>${LEAD_REMARK_LABEL}</label>
       <textarea id="leadRemarkText_${ctx}" rows="2" placeholder="Write what the customer said..."></textarea>
       <button class="btn" id="leadRemarkBtn_${ctx}" style="margin-top:8px;" onclick="submitLeadRemark('${mobile}','${ctx}')">➕ Add Remark</button>
       <div class="lead-form-msg" id="leadRemarkMsg_${ctx}"></div>
@@ -7405,6 +7426,10 @@ async function submitLeadRemark(mobile, ctx){
 
   if(!remark){ setMsg('Please write a remark first.', true); return; }
 
+  // Remark-এর পাশে স্বয়ংক্রিয়ভাবে বর্তমান তারিখ ও সময় জুড়ে দেওয়া হচ্ছে।
+  const nowLabel = new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true });
+  const remarkWithTime = `${remark} (${nowLabel})`;
+
   if(btn){ btn.disabled = true; btn.textContent = 'Remarks adding.......please wait'; }
   setMsg('', false);
 
@@ -7413,7 +7438,7 @@ async function submitLeadRemark(mobile, ctx){
       method: 'POST',
       body: JSON.stringify({
         mobile,
-        remark,
+        remark: remarkWithTime,
         agentName: empAgentName || localStorage.getItem('qa_emp_name') || ''
       })
     });
