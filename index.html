@@ -3565,6 +3565,22 @@ transform:translateY(0);
 }
 .chat-input-row input:focus{ outline:none; border-color:var(--agent); }
 .chat-input-row button{ border-radius:20px!important; }
+.chat-attach-btn{
+  flex:0 0 auto; width:36px; height:36px; border-radius:50%!important; border:1px solid var(--border);
+  background:var(--surface, #0F1D30); color:var(--text-muted); font-size:16px; display:flex;
+  align-items:center; justify-content:center; cursor:pointer; padding:0!important;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.chat-attach-btn:hover{ background:var(--agent-dim); color:var(--agent); border-color:var(--agent); }
+.chat-attach-btn:disabled{ opacity:.5; cursor:not-allowed; }
+.chat-bubble-image{
+  max-width:220px; max-height:220px; border-radius:10px; display:block; margin:2px 0 4px;
+  cursor:pointer; object-fit:cover; border:1px solid rgba(255,255,255,.08);
+}
+.chat-bubble-image-uploading{
+  width:120px; height:80px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  background:var(--surface-2, #14253D); color:var(--text-muted); font-size:11px; margin:2px 0 4px;
+}
 
 .total-audit-marquee-box{
   position:relative; overflow:hidden;
@@ -5544,7 +5560,8 @@ function renderEmployeeChatMessages(thread){
       <div class="chat-bubble ${isMe ? 'me' : 'them'} ${isDeleted ? 'deleted' : ''}">
         ${!isMe ? `<div class="chat-bubble-sender">${escapeHtml(m.senderName || 'Quality Team')}</div>` : ''}
         ${isBroadcast ? `<span class="chat-bubble-broadcast-tag">📢 Broadcast</span>` : ''}
-        <div class="chat-bubble-text">${isDeleted ? '🚫 এই মেসেজটি মুছে ফেলা হয়েছে' : escapeHtml(m.text)}</div>
+        ${!isDeleted && m.imageUrl ? `<img src="${escapeAttr(m.imageUrl)}" class="chat-bubble-image" onclick="window.open('${escapeAttr(m.imageUrl)}','_blank')" alt="attachment">` : ''}
+        ${isDeleted ? `<div class="chat-bubble-text">🚫 এই মেসেজটি মুছে ফেলা হয়েছে</div>` : (m.text ? `<div class="chat-bubble-text">${escapeHtml(m.text)}</div>` : '')}
         <div class="chat-bubble-time">${chatTimeLabel(m.ts)}${isMe && !isDeleted ? chatReadTick(m.ts <= readByAdminAt) : ''}</div>
         ${isMe && !isDeleted ? `<button class="chat-bubble-delete-btn" title="মেসেজ মুছুন" onclick="deleteEmployeeChatMessage('${m.id}')">🗑</button>` : ''}
       </div>
@@ -5790,7 +5807,7 @@ async function refreshAdminChatList(){
   listEl.innerHTML = entries.map(t=>{
     const last = t.messages[t.messages.length-1];
     const unread = !!t.adminUnread;
-    const previewText = last.deleted ? '🚫 মেসেজ মুছে ফেলা হয়েছে' : escapeHtml(String(last.text||'').slice(0,42));
+    const previewText = last.deleted ? '🚫 মেসেজ মুছে ফেলা হয়েছে' : (last.imageUrl && !last.text ? '📷 Photo' : escapeHtml(String(last.text||'').slice(0,42)));
     const dispName = t.employeeName||t.employeeId;
     return `<div class="admin-chat-thread-item ${chatOpenEmployeeId===t.employeeId?'active':''} ${unread?'unread':''}" onclick="openAdminChatThread('${escapeAttr(t.employeeId)}')">
       <div class="admin-chat-avatar" style="background:${avatarColorFor(dispName)};">${escapeHtml(avatarInitial(dispName))}</div>
@@ -5826,6 +5843,8 @@ async function openAdminChatThread(employeeId){
     </div>
     <div id="adminChatMessages" class="chat-messages-box"></div>
     <div class="chat-input-row">
+      <input type="file" id="adminChatImageInput" accept="image/*" style="display:none;" onchange="handleAdminChatImageAttach(this)">
+      <button type="button" class="chat-attach-btn" id="adminChatAttachBtn" title="ছবি পাঠান" onclick="document.getElementById('adminChatImageInput').click()">📎</button>
       <input type="text" id="adminChatInput" placeholder="রিপ্লাই লিখুন..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendAdminChatReply(); }">
       <button class="btn primary" id="adminChatSendBtn" onclick="sendAdminChatReply()">Send</button>
     </div>`;
@@ -5846,7 +5865,8 @@ function renderAdminChatMessages(thread){
       <div class="chat-bubble ${isMe ? 'me' : 'them'} ${isDeleted ? 'deleted' : ''}">
         ${m.from==='employee' ? `<div class="chat-bubble-sender">${escapeHtml(thread.employeeName||thread.employeeId)}</div>` : `<div class="chat-bubble-sender">${escapeHtml(m.senderName||'Quality Team')}</div>`}
         ${isBroadcast ? `<span class="chat-bubble-broadcast-tag">📢 Broadcast</span>` : ''}
-        <div class="chat-bubble-text">${isDeleted ? '🚫 এই মেসেজটি মুছে ফেলা হয়েছে' : escapeHtml(m.text)}</div>
+        ${!isDeleted && m.imageUrl ? `<img src="${escapeAttr(m.imageUrl)}" class="chat-bubble-image" onclick="window.open('${escapeAttr(m.imageUrl)}','_blank')" alt="attachment">` : ''}
+        ${isDeleted ? `<div class="chat-bubble-text">🚫 এই মেসেজটি মুছে ফেলা হয়েছে</div>` : (m.text ? `<div class="chat-bubble-text">${escapeHtml(m.text)}</div>` : '')}
         <div class="chat-bubble-time">${chatTimeLabel(m.ts)}${isMe && !isDeleted ? chatReadTick(m.ts <= readByEmployeeAt) : ''}</div>
         <button class="chat-bubble-delete-btn" title="স্থায়ীভাবে মুছে ফেলুন" onclick="deleteAdminChatMessage('${m.id}')">🗑</button>
       </div>
@@ -5911,6 +5931,72 @@ async function sendAdminChatReply(){
       btnAfter.textContent = originalBtnText;
       btnAfter.disabled = false;
     }
+  }
+}
+
+/* Admin/Super Admin থেকে এজেন্টকে ছবি পাঠানো — 📎 বাটনে ক্লিক করে ছবি বেছে নিলে সরাসরি
+   Supabase Storage-এ (banners bucket-এর ভেতরে chat/ ফোল্ডারে) আপলোড হয়ে, সেই পাবলিক URL-সহ
+   একটা ইমেজ মেসেজ হিসেবে থ্রেডে পাঠানো হয়। */
+const CHAT_IMAGE_MAX_MB = 5;
+async function handleAdminChatImageAttach(input){
+  const file = input.files && input.files[0];
+  if(!file || !chatOpenEmployeeId) { if(input) input.value=''; return; }
+
+  if(!file.type || !file.type.startsWith('image/')){
+    showToast('শুধু ছবি ফাইল (jpg/png/webp/gif) পাঠানো যাবে।');
+    input.value = '';
+    return;
+  }
+  const sizeMB = file.size / (1024*1024);
+  if(sizeMB > CHAT_IMAGE_MAX_MB){
+    showToast(`ছবি সর্বোচ্চ ${CHAT_IMAGE_MAX_MB}MB পর্যন্ত হতে পারে (এই ফাইলটা ${sizeMB.toFixed(1)}MB)।`);
+    input.value = '';
+    return;
+  }
+
+  const attachBtn = document.getElementById('adminChatAttachBtn');
+  const sendBtn = document.getElementById('adminChatSendBtn');
+  if(attachBtn) attachBtn.disabled = true;
+  if(sendBtn) sendBtn.disabled = true;
+  showToast('ছবি আপলোড হচ্ছে, একটু অপেক্ষা করুন...');
+
+  try{
+    const isGif = file.type === 'image/gif';
+    const { blob: uploadBlob, ext, type: uploadType } = isGif
+      ? { blob: file, ext: 'gif', type: file.type }
+      : await compressImageFile(file);
+    const path = `chat/${chatOpenEmployeeId}_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${BANNER_BUCKET}/${path}`, {
+      method:'POST',
+      headers:{
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': uploadType
+      },
+      body: uploadBlob
+    });
+    if(!uploadRes.ok){ throw new Error('Storage upload failed: ' + uploadRes.status); }
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}/${path}`;
+
+    const threads = await getChatThreads();
+    const thread = threads[chatOpenEmployeeId];
+    if(!thread) return;
+    const senderName = 'Quality Team';
+    thread.messages.push({ id: chatUid(), from:'admin', text:'', imageUrl: publicUrl, ts: Date.now(), senderName });
+    thread.employeeUnread = true;
+    thread.adminUnread = false;
+    trimThreadMessages(thread);
+    await saveChatThreads(threads);
+    renderAdminChatMessages(thread);
+    await refreshAdminChatList();
+    showToast('ছবি পাঠানো হয়েছে ✅');
+  }catch(e){
+    console.error(e);
+    showToast('ছবি পাঠাতে ব্যর্থ, আবার চেষ্টা করুন।');
+  }finally{
+    input.value = '';
+    if(attachBtn) attachBtn.disabled = false;
+    if(sendBtn) sendBtn.disabled = false;
   }
 }
 
