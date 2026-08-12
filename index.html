@@ -7035,7 +7035,6 @@ function renderLeadFormPanel(){
 
   if(leadNetAutoTimer){ clearInterval(leadNetAutoTimer); leadNetAutoTimer = null; } // avoid stacking timers on re-render
   if(leadNetRotateTimer){ clearInterval(leadNetRotateTimer); leadNetRotateTimer = null; }
-  if(leadCheckAutoTimer){ clearTimeout(leadCheckAutoTimer); leadCheckAutoTimer = null; }
 
   // Pause auto-logout while this form is open — resumed on submit or when navigating away (switchTab()).
   leadFormAutoLogoutPaused = true;
@@ -7409,7 +7408,17 @@ function renderLeadFormPanel(){
     }else{
       document.getElementById('leadMobileCheckWrap').innerHTML = '';
       setLeadFormLocked(false);
-      if(leadCheckAutoTimer){ clearTimeout(leadCheckAutoTimer); leadCheckAutoTimer = null; }
+    }
+  });
+  // Pressing Enter on the Mobile Number field re-runs the previous-entry check — handy for
+  // retrying right after a "Could not check previous entries (server issue)" error, without
+  // having to retype the number.
+  document.getElementById('leadMobile').addEventListener('keydown', e=>{
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    const val = e.target.value.trim();
+    if(/^\d{10}$/.test(val)){
+      checkLeadMobileHistory(val);
     }
   });
   document.getElementById('leadAltMobile').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
@@ -7483,6 +7492,7 @@ function rebuildLeadAddressSuffix(){
    field itself (nothing new sent to the sheet — just a smarter Address). */
 let leadPincodeLookupToken = 0;
 let leadLastLookup = null; // {district, state, pincode}
+let leadSubmitInFlight = false; // hard guard against a lead being submitted twice from a rapid double-click
 async function lookupLeadPincode(pincode){
   const statusEl = document.getElementById('leadPincodeStatus');
   const districtEl = document.getElementById('leadDistrict');
@@ -7623,29 +7633,14 @@ function leadRemarkStatusClass(header, rawValue){
    "Other Remarks (if 90 days have not been completed)" and "N) <agent name>" to "Agent2 Name"
    on that SAME row (no new row is created). ctx keeps two independent instances (the auto mobile
    check, and the manual search box) from clashing on element ids.
-   A separate 2-hour cooldown (measured from the sheet's own latest Timestamp) also applies: right
-   after a lead/remark lands on the sheet, the box is locked with a countdown; once 2 hours have
-   passed since that timestamp, remarks can be added freely again (until the 90-day window ends). */
+   (The earlier 2-hour cooldown between remarks has been removed — remarks can now be added
+   any time within the 90-day window, with no extra waiting period.) */
 const LEAD_REMARK_LOCK_DAYS = 90;
-const LEAD_REMARK_COOLDOWN_HOURS = 2;
 const LEAD_REMARK_LABEL = 'Other Remarks (customer কি বলছে লিখুন - সুধুমাত্র যদি customer repeat call করে তাহলে remarks লিখুন।)';
 function buildLeadRemarkSectionHtml(mobile, latestDate, ctx){
   if(!latestDate) return '';
   const daysSince = (Date.now() - latestDate.getTime()) / (1000*60*60*24);
   if(daysSince >= LEAD_REMARK_LOCK_DAYS) return '';
-
-  const hoursSince = (Date.now() - latestDate.getTime()) / (1000*60*60);
-  if(hoursSince < LEAD_REMARK_COOLDOWN_HOURS){
-    const minsLeft = Math.max(1, Math.ceil((LEAD_REMARK_COOLDOWN_HOURS - hoursSince) * 60));
-    const hrsLeft = Math.floor(minsLeft / 60);
-    const remMins = minsLeft % 60;
-    const waitLabel = hrsLeft > 0 ? `${hrsLeft} ঘন্টা ${remMins} মিনিট` : `${remMins} মিনিট`;
-    return `
-      <div class="lead-remark-box locked">
-        <label>${LEAD_REMARK_LABEL}</label>
-        <div class="lead-form-msg" style="display:block;">⏳ সর্বশেষ এন্ট্রির ${LEAD_REMARK_COOLDOWN_HOURS} ঘন্টার মধ্যে নতুন remark লেখা যাবে না। আরও ${waitLabel} অপেক্ষা করুন।</div>
-      </div>`;
-  }
 
   return `
     <div class="lead-remark-box">
@@ -7705,28 +7700,16 @@ async function submitLeadRemark(mobile, ctx){
 }
 
 let leadMobileCheckToken = 0;
-let leadCheckAutoTimer = null;
-async function checkLeadMobileHistory(mobile){
+async function checkLeadMobileHistory(mobile, isRetry){
   const wrap = document.getElementById('leadMobileCheckWrap');
   const myToken = ++leadMobileCheckToken;
-  if(leadCheckAutoTimer){ clearTimeout(leadCheckAutoTimer); leadCheckAutoTimer = null; } // avoid stacking timers if a fresh check starts mid-cycle
 
   // Don't wipe out a remark the agent is halfway through typing when this runs as a background refresh.
   const draftEl = document.getElementById('leadRemarkText_check');
   const draftText = draftEl ? draftEl.value : '';
 
-  if(wrap) wrap.innerHTML = `<div class="lead-mobile-check wait">⏳ Please wait... checking previous entries.</div>`;
+  if(!isRetry && wrap) wrap.innerHTML = `<div class="lead-mobile-check wait">⏳ Please wait... checking previous entries.</div>`;
   setLeadFormLocked(true); // lock while checking, to avoid a submit racing the check
-
-  const scheduleNextAutoRefresh = () => {
-    leadCheckAutoTimer = setTimeout(()=>{
-      const mobileEl = document.getElementById('leadMobile');
-      // Only keep polling if the same number is still in the field and the panel is still open.
-      if(mobileEl && mobileEl.value.trim() === mobile && document.getElementById('leadMobileCheckWrap')){
-        checkLeadMobileHistory(mobile);
-      }
-    }, 180000);
-  };
 
   try{
     const res = await fetch(`${LEAD_WEB_APP_URL}?action=byMobile&mobile=${encodeURIComponent(mobile)}`);
@@ -7783,15 +7766,27 @@ async function checkLeadMobileHistory(mobile){
     }
   }catch(e){
     if(myToken !== leadMobileCheckToken) return;
-    console.error('Lead mobile check failed', e);
+    console.error('Lead mobile check failed' + (isRetry ? ' (after 1 retry)' : ''), e);
+
+    // Transient network/server blips are common (e.g. a slow Apps Script cold-start) — silently
+    // retry once after a short pause before bothering the agent with an error message at all.
+    if(!isRetry){
+      setTimeout(()=>{
+        if(myToken === leadMobileCheckToken) checkLeadMobileHistory(mobile, true);
+      }, 1500);
+      return;
+    }
+
     setLeadFormLocked(false); // don't block the agent if the check itself failed — just warn
-    if(wrap) wrap.innerHTML = `<div class="lead-mobile-check wait">⚠️ Could not check previous entries (server issue). Proceed carefully or try again.</div>`;
-  }finally{
-    if(myToken === leadMobileCheckToken) scheduleNextAutoRefresh(); // keep polling every 30s only if we're still the latest check
+    if(wrap) wrap.innerHTML = `<div class="lead-mobile-check wait">⚠️ Could not check previous entries (server issue). Proceed carefully or try again.<br><button class="lead-refresh-btn" style="margin-top:8px;" onclick="checkLeadMobileHistory('${mobile}')">🔁 Try again</button></div>`;
   }
 }
 
 async function submitLeadForm(){
+  // Hard guard: if a submit is already in flight (e.g. from a rapid double-click), ignore
+  // this call completely rather than relying only on the button's disabled state.
+  if(leadSubmitInFlight){ return; }
+
   const btnCheck = document.getElementById('leadSubmitBtn');
   if(btnCheck && btnCheck.disabled){ leadSetMsg('Cannot submit until the previous-entry check is done, or until 90 days have passed.', true); return; }
   const customerName = document.getElementById('leadCustomerName').value.trim();
@@ -7814,6 +7809,7 @@ async function submitLeadForm(){
   if(!district){ leadSetMsg('District is required.', true); return; }
   if(!connectionType){ leadSetMsg('Please select Type of Connection.', true); return; }
 
+  leadSubmitInFlight = true;
   const btn = document.getElementById('leadSubmitBtn');
   btn.disabled = true; btn.textContent = 'Submitting...';
   leadSetMsg('', false);
@@ -7852,7 +7848,6 @@ async function submitLeadForm(){
     if(pcStatus) pcStatus.textContent = '';
     document.getElementById('leadMobileCheckWrap').innerHTML = '';
     setLeadFormLocked(false);
-    if(leadCheckAutoTimer){ clearTimeout(leadCheckAutoTimer); leadCheckAutoTimer = null; }
 
     // Submission is done — resume normal auto-logout enforcement (it was paused while this form was open).
     if(leadFormAutoLogoutPaused){
@@ -7867,6 +7862,8 @@ async function submitLeadForm(){
     console.error('Lead submit failed', e);
     btn.disabled = false; btn.textContent = 'Submit';
     leadSetMsg('Server is temporarily unavailable, please try again shortly.', true);
+  }finally{
+    leadSubmitInFlight = false;
   }
 }
 
