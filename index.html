@@ -3879,7 +3879,7 @@ transform:translateY(0);
           <button class="emp-mini-btn" onclick="openChangePasswordModal()">Change Pass</button>
           <button class="emp-mini-btn danger" onclick="handleLogoutClick()">⏻ Logout</button>
         </div>
-        <div class="emp-autologout-countdown" id="empAutoLogoutCountdown">Auto-logout in 100:00</div>
+        <div class="emp-autologout-countdown" id="empAutoLogoutCountdown">Auto-logout in 30:00</div>
       </div>
     </div>
     
@@ -4713,6 +4713,7 @@ let bannerIndex = 0;
 let newsTickerFlashTimer = null;
 let newsTickerAnimFrame = null;
 let newsTickerTimeoutId = null;
+let newsTickerRetryTimer = null; // নিউজ এখনো লোড না হলে ৩০ সেকেন্ড পর পর নিজে থেকে আবার লোড করার চেষ্টা করবে — স্ক্রলিং একবার শুরু হয়ে গেলে এই retry বন্ধ হয়ে যাবে।
 let topTickerAnimFrame = null;
 let topTickerTimeoutId = null;
 let chartInstances = {};
@@ -6682,14 +6683,23 @@ function renderNewsTicker(items){
   tag.className = 'news-ticker-tag';
   tag.innerHTML = `<span class="news-ticker-dot"></span> NOTICE`;
   if(!clean.length){
-    
+    // নিউজ এখনো লোড হয়নি / খালি — শুধু "Loading......" দেখানো হচ্ছে, "কোনো নিউজ যোগ করা হয়নি"
+    // মেসেজ আর সরাসরি দেখানো হবে না। প্রতি ৩০ সেকেন্ড পর পর নিজে থেকে আবার লোড করার চেষ্টা হবে।
     const track = document.createElement('div');
     track.className = 'news-ticker-track';
-    track.innerHTML = `<div class="news-ticker-empty">এখনো কোনো নিউজ যোগ করা হয়নি — Admin Panel থেকে যোগ করুন।</div>`;
+    track.innerHTML = `<div class="news-ticker-empty">Loading......</div>`;
     wrap.appendChild(tag);
     wrap.appendChild(track);
+    if(!newsTickerRetryTimer){
+      newsTickerRetryTimer = setTimeout(()=>{
+        newsTickerRetryTimer = null;
+        loadNewsTicker();
+      }, 30000);
+    }
     return;
   }
+  // নিউজ পাওয়া গেছে ও স্ক্রলিং শুরু হয়ে যাচ্ছে — এখন থেকে আর কোনো auto-retry লাগবে না।
+  if(newsTickerRetryTimer){ clearTimeout(newsTickerRetryTimer); newsTickerRetryTimer = null; }
   const track = document.createElement('div');
   track.className = 'news-ticker-track';
   const scroll = document.createElement('div');
@@ -11905,7 +11915,7 @@ body.has-emp-bar header .user-block .logout-btn{ display:none; }
 const EMP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwktIZBumwKZM7z9rUZsT6vDoj1PBsMgcZL6VyH8HejBnBsx879O3Jy1dSLaGAiOLjr/exec";
 
 const EMP_HEARTBEAT_MS = 60 * 1000;
-const EMP_AUTO_LOGOUT_MS = 100 * 60 * 1000;
+const EMP_AUTO_LOGOUT_MS = 30 * 60 * 1000;
 
 let empSessionId = null;
 let empEmployeeId = null;
