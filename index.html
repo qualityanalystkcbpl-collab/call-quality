@@ -1007,6 +1007,22 @@ width:max-content;
 }
 .role-pill.agent{background:var(--agent-dim);color:var(--agent);}
 .role-pill.admin{background:var(--admin-dim);color:var(--admin);}
+/* ===== Browser Notification bell (top bar) ===== */
+.notif-bell-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:32px; height:32px; border-radius:50%; border:1px solid var(--border,rgba(255,255,255,0.14));
+  background:var(--surface,rgba(255,255,255,0.06)); cursor:pointer; font-size:15px; line-height:1;
+  transition:transform .15s ease, box-shadow .2s ease, background .2s ease; flex:0 0 auto;
+}
+.notif-bell-btn:hover{ transform:translateY(-1px) scale(1.05); }
+.notif-bell-btn.notif-on{ background:rgba(63,191,127,0.18); border-color:rgba(63,191,127,0.5); box-shadow:0 0 0 3px rgba(63,191,127,0.12); }
+.notif-bell-btn.notif-off{ background:rgba(227,168,87,0.16); border-color:rgba(227,168,87,0.5); animation:notifBellPulse 1.8s ease-in-out infinite; }
+.notif-bell-btn.notif-blocked{ background:rgba(224,82,74,0.16); border-color:rgba(224,82,74,0.5); opacity:.75; }
+@keyframes notifBellPulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(227,168,87,0.35); }
+  50%{ box-shadow:0 0 0 6px rgba(227,168,87,0); }
+}
+body.light-theme .notif-bell-btn{ background:#F0F2F6; border-color:#D9E1EA; }
 /* =========================
    Premium Logout Button
 ========================= */
@@ -3986,6 +4002,7 @@ transform:translateY(0);
         </div>
       </div>
       <div class="user-block">
+        <button class="notif-bell-btn" id="notifBellBtn" onclick="toggleBrowserNotifications()" style="display:none;" title="Notification চালু করতে ক্লিক করুন">🔔</button>
         <span class="role-pill" id="rolePill">AGENT</span>
         <button class="logout-btn" onclick="handleLogoutClick()">⏻Logout</button>
       </div>
@@ -5435,6 +5452,90 @@ function showToast(msg){
   t._timer = setTimeout(()=> t.style.display='none', 2600);
 }
 
+/* ===================== BROWSER (OS-level) NOTIFICATIONS =====================
+   Real desktop/mobile "push"-style notifications via the standard Notification API —
+   works even when this tab is minimized / in the background / another tab is active.
+
+   Permission is asked AT MOST ONCE, ever, on this device/browser (tracked via
+   localStorage) — right on login click, since that's a genuine user-gesture the
+   browser will actually honor. Once the user grants it, the browser itself
+   remembers that choice forever and notifications keep firing on every future
+   login automatically, with zero extra prompts. If the user dismisses/denies it
+   once, we don't keep asking on every subsequent login (that would be annoying) —
+   they can still turn it on later anytime via the 🔔 bell in the top bar. */
+function browserNotifSupported(){
+  return typeof window !== 'undefined' && 'Notification' in window;
+}
+function requestBrowserNotificationPermission(){
+  if(!browserNotifSupported()) return;
+  updateNotifBellUI();
+  if(Notification.permission !== 'default') return; // already decided (granted or denied) earlier — browser remembers this permanently, nothing to do
+  if(localStorage.getItem('qa_notif_prompt_shown')) return; // already asked once on this device before — never auto-prompt again
+  localStorage.setItem('qa_notif_prompt_shown', '1');
+  Notification.requestPermission().then(updateNotifBellUI).catch(()=>{});
+}
+/* কেন্দ্রীয় ফাংশন — যেকোনো জায়গা থেকে ডেকে সত্যিকারের browser notification পাঠানো যাবে।
+   Tab-টা যদি এই মুহূর্তে খোলা/ফোকাসড থাকে, তাহলে আলাদা করে OS notification না দেখিয়ে
+   in-app toast/badge-ই যথেষ্ট ধরে নেওয়া হচ্ছে — duplicate alert এড়াতে। */
+function sendBrowserNotification(title, body, opts){
+  try{
+    if(!browserNotifSupported()) return false;
+    if(Notification.permission !== 'granted') return false;
+    if(document.visibilityState === 'visible' && document.hasFocus()) return false;
+    const n = new Notification(title, Object.assign({
+      body: body || '',
+      tag: (opts && opts.tag) || undefined,
+      renotify: !!(opts && opts.tag)
+    }, opts || {}));
+    n.onclick = function(){
+      window.focus();
+      if(opts && typeof opts.onFire === 'function'){ /* no-op guard */ }
+      if(opts && typeof opts.onClick === 'function') opts.onClick();
+      n.close();
+    };
+    return true;
+  }catch(e){ console.error('Browser notification failed', e); return false; }
+}
+/* Small bell icon (top bar, added below) reflects current permission state and lets
+   the user (re)enable notifications any time, not just at login. */
+function updateNotifBellUI(){
+  const bell = document.getElementById('notifBellBtn');
+  if(!bell) return;
+  if(!browserNotifSupported()){ bell.style.display = 'none'; return; }
+  bell.style.display = 'inline-flex';
+  bell.classList.remove('notif-on','notif-off','notif-blocked');
+  if(Notification.permission === 'granted'){
+    bell.classList.add('notif-on');
+    bell.title = 'Browser notification চালু আছে';
+  }else if(Notification.permission === 'denied'){
+    bell.classList.add('notif-blocked');
+    bell.title = 'Browser notification ব্লক করা আছে — ব্রাউজারের সাইট সেটিংস থেকে চালু করুন';
+  }else{
+    bell.classList.add('notif-off');
+    bell.title = 'Notification চালু করতে ক্লিক করুন';
+  }
+}
+function toggleBrowserNotifications(){
+  if(!browserNotifSupported()){ showToast('এই ব্রাউজারে Notification সাপোর্ট নেই।'); return; }
+  if(Notification.permission === 'granted'){
+    showToast('Notification আগে থেকেই চালু আছে ✅');
+  }else if(Notification.permission === 'denied'){
+    showToast('Notification ব্লক করা আছে — ব্রাউজারের অ্যাড্রেসবারের পাশে সাইট সেটিংস থেকে Allow করুন।');
+  }else{
+    Notification.requestPermission().then(perm=>{
+      updateNotifBellUI();
+      if(perm === 'granted'){
+        showToast('Notification চালু হয়েছে ✅');
+        sendBrowserNotification('QA Control Room', 'নোটিফিকেশন সফলভাবে চালু হয়েছে।');
+      }else{
+        showToast('Notification অনুমতি দেওয়া হয়নি।');
+      }
+    }).catch(()=>{});
+  }
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') updateNotifBellUI(); });
+window.addEventListener('DOMContentLoaded', updateNotifBellUI);
+
 const CHAT_POLL_MS = 15 * 1000;
 let chatPollInterval = null;
 let chatOpenEmployeeId = null;
@@ -5618,13 +5719,25 @@ async function refreshEmployeeChat(){
   const floatLabel = document.getElementById('empChatNewMsgFloatLabel');
   if(badge){
     const seenTs = Number(localStorage.getItem('qa_emp_chat_seen_ts')||0);
-    const unreadCount = (thread && Array.isArray(thread.messages))
-      ? thread.messages.filter(m => m.from==='admin' && !m.deleted && m.ts > seenTs).length
-      : 0;
+    const unreadMsgs = (thread && Array.isArray(thread.messages))
+      ? thread.messages.filter(m => m.from==='admin' && !m.deleted && m.ts > seenTs)
+      : [];
+    const unreadCount = unreadMsgs.length;
     if(!isOpen && unreadCount > 0){
       badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
       badge.style.display = 'flex';
       if(floatLabel) floatLabel.style.display = 'block';
+      // চ্যাট প্যানেল বন্ধ থাকা অবস্থায় Admin/Quality Team থেকে নতুন মেসেজ এলে
+      // সত্যিকারের browser notification পাঠানো হচ্ছে — একই মেসেজ বারবার notify হবে না।
+      const latest = unreadMsgs[unreadMsgs.length - 1];
+      if(latest && latest.id !== window._empChatLastNotifiedMsgId){
+        window._empChatLastNotifiedMsgId = latest.id;
+        sendBrowserNotification(
+          `💬 নতুন মেসেজ — ${latest.senderName || 'Quality Team'}`,
+          (latest.text || '').slice(0, 140),
+          { tag:'emp-chat-msg', onClick: ()=>{ toggleEmployeeChatPanel(); } }
+        );
+      }
     }else{
       badge.style.display = 'none';
       if(floatLabel) floatLabel.style.display = 'none';
@@ -5781,7 +5894,8 @@ async function updateAdminChatNavBadge(){
   if(!badge) return;
   try{
     const threads = await getChatThreads();
-    const count = Object.values(threads||{}).filter(t => t && t.adminUnread).length;
+    const unreadThreads = Object.values(threads||{}).filter(t => t && t.adminUnread);
+    const count = unreadThreads.length;
     if(count > 0){
       badge.textContent = count > 9 ? '9+' : String(count);
       badge.style.display = 'inline-flex';
@@ -5790,6 +5904,22 @@ async function updateAdminChatNavBadge(){
       badge.style.display = 'none';
       if(newLabel) newLabel.style.display = 'none';
     }
+    // Admin/Quality Team প্যানেলে না থাকলে (বা অন্য এজেন্টের থ্রেড খোলা থাকলে) এজেন্টদের
+    // থেকে আসা নতুন মেসেজের জন্য সত্যিকারের browser notification পাঠানো হচ্ছে।
+    if(!window._adminChatNotified) window._adminChatNotified = {};
+    unreadThreads.forEach(t=>{
+      if(chatOpenEmployeeId === t.employeeId) return; // থ্রেড এখনই খোলা আছে, আলাদা করে notify দরকার নেই
+      const msgs = Array.isArray(t.messages) ? t.messages : [];
+      const lastFromEmp = [...msgs].reverse().find(m => m.from !== 'admin' && !m.deleted);
+      if(!lastFromEmp) return;
+      if(window._adminChatNotified[t.employeeId] === lastFromEmp.id) return;
+      window._adminChatNotified[t.employeeId] = lastFromEmp.id;
+      sendBrowserNotification(
+        `💬 নতুন মেসেজ — ${t.employeeName || t.employeeId}`,
+        (lastFromEmp.text || '').slice(0, 140),
+        { tag:'admin-chat-msg-'+t.employeeId, onClick: ()=>{ switchTab('EMPCHAT'); openAdminChatThread(t.employeeId); } }
+      );
+    });
   }catch(e){ /* ব্যাকগ্রাউন্ড আপডেট, চুপচাপ ইগনোর করা হলো */ }
 }
 async function refreshAdminChatList(){
@@ -6186,6 +6316,7 @@ function selectRole(role){
   document.getElementById('loginError').textContent = '';
 }
 function submitStaffLogin(){
+  requestBrowserNotificationPermission(); // login click = real user gesture, best moment to ask
   if(selectedRole === 'superadmin'){
     superAdminLogin();
   }else{
@@ -6916,9 +7047,25 @@ function renderLeadFormPanel(){
       }
 
       .lead-page-card{
-        background:#FFFFFF; color:#182233; border-radius:18px;
+        background:#E3EEFD; color:#182233; border-radius:18px;
         box-shadow:0 12px 34px rgba(15,25,45,0.16), 0 2px 6px rgba(15,25,45,0.08);
         padding:28px 30px 32px; max-width:700px; margin:0 auto;
+        animation: leadCardColorShift 360s ease-in-out infinite;
+      }
+      /* Slow, gradual background color cycle — each tone holds for ~1 minute before
+         gently blending into the next. Only mid/light tones are used so the existing
+         dark text colors (#182233, #6B7A90 etc.) stay perfectly readable throughout. */
+      @keyframes leadCardColorShift{
+        0%,   4%  { background:#E3EEFD; } /* soft blue   */
+        16%,  20% { background:#E6F5EC; } /* soft mint   */
+        33%,  37% { background:#FBEBD8; } /* soft peach  */
+        50%,  54% { background:#F3E8FB; } /* soft lilac  */
+        66%,  70% { background:#FDECEC; } /* soft rose   */
+        83%,  87% { background:#E8F0E3; } /* soft sage   */
+        100%      { background:#E3EEFD; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        .lead-page-card{ animation:none; background:#E3EEFD; }
       }
       .lead-page-card .panel-header{ margin-bottom:18px; }
       .lead-page-card .panel-header h1{ color:#182233; }
@@ -6926,8 +7073,24 @@ function renderLeadFormPanel(){
 
       /* Animated rainbow-flow gradient border, used on every "box" in the form */
       .lead-anim-box{
-        position:relative; border-radius:14px; background:#F7F9FC;
+        position:relative; border-radius:14px; background:#DCE9FC;
         padding:20px 22px; isolation:isolate;
+        animation: leadInnerBoxColorShift 360s ease-in-out infinite;
+      }
+      /* Same slow 1-min-per-tone cycle as the outer card, but one shade deeper so the
+         field area reads as a distinct, richer panel. Labels/inputs keep their own
+         fixed colors, so legibility is unaffected as the tones shift. */
+      @keyframes leadInnerBoxColorShift{
+        0%,   4%  { background:#DCE9FC; } /* soft blue   */
+        16%,  20% { background:#DCF3E4; } /* soft mint   */
+        33%,  37% { background:#FBE7CE; } /* soft peach  */
+        50%,  54% { background:#EDDCF9; } /* soft lilac  */
+        66%,  70% { background:#FCDEDE; } /* soft rose   */
+        83%,  87% { background:#DEEAD5; } /* soft sage   */
+        100%      { background:#DCE9FC; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        .lead-anim-box{ animation:none; background:#DCE9FC; }
       }
       .lead-anim-box::before{
         content:''; position:absolute; inset:0; border-radius:inherit; padding:2px;
@@ -11818,6 +11981,7 @@ function toggleEmpPasswordVisibility(){
 }
 /* ---------- Employee Login ---------- */
 async function employeeLogin(){
+  requestBrowserNotificationPermission(); // login click = real user gesture, best moment to ask
   const empId = document.getElementById('empId').value.trim();
   const pass = document.getElementById('empPassword').value;
   const errBox = document.getElementById('empLoginError');
