@@ -1007,22 +1007,6 @@ width:max-content;
 }
 .role-pill.agent{background:var(--agent-dim);color:var(--agent);}
 .role-pill.admin{background:var(--admin-dim);color:var(--admin);}
-/* ===== Browser Notification bell (top bar) ===== */
-.notif-bell-btn{
-  display:inline-flex; align-items:center; justify-content:center;
-  width:32px; height:32px; border-radius:50%; border:1px solid var(--border,rgba(255,255,255,0.14));
-  background:var(--surface,rgba(255,255,255,0.06)); cursor:pointer; font-size:15px; line-height:1;
-  transition:transform .15s ease, box-shadow .2s ease, background .2s ease; flex:0 0 auto;
-}
-.notif-bell-btn:hover{ transform:translateY(-1px) scale(1.05); }
-.notif-bell-btn.notif-on{ background:rgba(63,191,127,0.18); border-color:rgba(63,191,127,0.5); box-shadow:0 0 0 3px rgba(63,191,127,0.12); }
-.notif-bell-btn.notif-off{ background:rgba(227,168,87,0.16); border-color:rgba(227,168,87,0.5); animation:notifBellPulse 1.8s ease-in-out infinite; }
-.notif-bell-btn.notif-blocked{ background:rgba(224,82,74,0.16); border-color:rgba(224,82,74,0.5); opacity:.75; }
-@keyframes notifBellPulse{
-  0%,100%{ box-shadow:0 0 0 0 rgba(227,168,87,0.35); }
-  50%{ box-shadow:0 0 0 6px rgba(227,168,87,0); }
-}
-body.light-theme .notif-bell-btn{ background:#F0F2F6; border-color:#D9E1EA; }
 /* =========================
    Premium Logout Button
 ========================= */
@@ -4002,7 +3986,6 @@ transform:translateY(0);
         </div>
       </div>
       <div class="user-block">
-        <button class="notif-bell-btn" id="notifBellBtn" onclick="toggleBrowserNotifications()" style="display:none;" title="Notification চালু করতে ক্লিক করুন">🔔</button>
         <span class="role-pill" id="rolePill">AGENT</span>
         <button class="logout-btn" onclick="handleLogoutClick()">⏻Logout</button>
       </div>
@@ -5453,90 +5436,6 @@ function showToast(msg){
   t._timer = setTimeout(()=> t.style.display='none', 2600);
 }
 
-/* ===================== BROWSER (OS-level) NOTIFICATIONS =====================
-   Real desktop/mobile "push"-style notifications via the standard Notification API —
-   works even when this tab is minimized / in the background / another tab is active.
-
-   Permission is asked AT MOST ONCE, ever, on this device/browser (tracked via
-   localStorage) — right on login click, since that's a genuine user-gesture the
-   browser will actually honor. Once the user grants it, the browser itself
-   remembers that choice forever and notifications keep firing on every future
-   login automatically, with zero extra prompts. If the user dismisses/denies it
-   once, we don't keep asking on every subsequent login (that would be annoying) —
-   they can still turn it on later anytime via the 🔔 bell in the top bar. */
-function browserNotifSupported(){
-  return typeof window !== 'undefined' && 'Notification' in window;
-}
-function requestBrowserNotificationPermission(){
-  if(!browserNotifSupported()) return;
-  updateNotifBellUI();
-  if(Notification.permission !== 'default') return; // already decided (granted or denied) earlier — browser remembers this permanently, nothing to do
-  if(localStorage.getItem('qa_notif_prompt_shown')) return; // already asked once on this device before — never auto-prompt again
-  localStorage.setItem('qa_notif_prompt_shown', '1');
-  Notification.requestPermission().then(updateNotifBellUI).catch(()=>{});
-}
-/* কেন্দ্রীয় ফাংশন — যেকোনো জায়গা থেকে ডেকে সত্যিকারের browser notification পাঠানো যাবে।
-   Tab-টা যদি এই মুহূর্তে খোলা/ফোকাসড থাকে, তাহলে আলাদা করে OS notification না দেখিয়ে
-   in-app toast/badge-ই যথেষ্ট ধরে নেওয়া হচ্ছে — duplicate alert এড়াতে। */
-function sendBrowserNotification(title, body, opts){
-  try{
-    if(!browserNotifSupported()) return false;
-    if(Notification.permission !== 'granted') return false;
-    if(document.visibilityState === 'visible' && document.hasFocus()) return false;
-    const n = new Notification(title, Object.assign({
-      body: body || '',
-      tag: (opts && opts.tag) || undefined,
-      renotify: !!(opts && opts.tag)
-    }, opts || {}));
-    n.onclick = function(){
-      window.focus();
-      if(opts && typeof opts.onFire === 'function'){ /* no-op guard */ }
-      if(opts && typeof opts.onClick === 'function') opts.onClick();
-      n.close();
-    };
-    return true;
-  }catch(e){ console.error('Browser notification failed', e); return false; }
-}
-/* Small bell icon (top bar, added below) reflects current permission state and lets
-   the user (re)enable notifications any time, not just at login. */
-function updateNotifBellUI(){
-  const bell = document.getElementById('notifBellBtn');
-  if(!bell) return;
-  if(!browserNotifSupported()){ bell.style.display = 'none'; return; }
-  bell.style.display = 'inline-flex';
-  bell.classList.remove('notif-on','notif-off','notif-blocked');
-  if(Notification.permission === 'granted'){
-    bell.classList.add('notif-on');
-    bell.title = 'Browser notification চালু আছে';
-  }else if(Notification.permission === 'denied'){
-    bell.classList.add('notif-blocked');
-    bell.title = 'Browser notification ব্লক করা আছে — ব্রাউজারের সাইট সেটিংস থেকে চালু করুন';
-  }else{
-    bell.classList.add('notif-off');
-    bell.title = 'Notification চালু করতে ক্লিক করুন';
-  }
-}
-function toggleBrowserNotifications(){
-  if(!browserNotifSupported()){ showToast('এই ব্রাউজারে Notification সাপোর্ট নেই।'); return; }
-  if(Notification.permission === 'granted'){
-    showToast('Notification আগে থেকেই চালু আছে ✅');
-  }else if(Notification.permission === 'denied'){
-    showToast('Notification ব্লক করা আছে — ব্রাউজারের অ্যাড্রেসবারের পাশে সাইট সেটিংস থেকে Allow করুন।');
-  }else{
-    Notification.requestPermission().then(perm=>{
-      updateNotifBellUI();
-      if(perm === 'granted'){
-        showToast('Notification চালু হয়েছে ✅');
-        sendBrowserNotification('QA Control Room', 'নোটিফিকেশন সফলভাবে চালু হয়েছে।');
-      }else{
-        showToast('Notification অনুমতি দেওয়া হয়নি।');
-      }
-    }).catch(()=>{});
-  }
-}
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') updateNotifBellUI(); });
-window.addEventListener('DOMContentLoaded', updateNotifBellUI);
-
 const CHAT_POLL_MS = 15 * 1000;
 let chatPollInterval = null;
 let chatOpenEmployeeId = null;
@@ -5720,25 +5619,13 @@ async function refreshEmployeeChat(){
   const floatLabel = document.getElementById('empChatNewMsgFloatLabel');
   if(badge){
     const seenTs = Number(localStorage.getItem('qa_emp_chat_seen_ts')||0);
-    const unreadMsgs = (thread && Array.isArray(thread.messages))
-      ? thread.messages.filter(m => m.from==='admin' && !m.deleted && m.ts > seenTs)
-      : [];
-    const unreadCount = unreadMsgs.length;
+    const unreadCount = (thread && Array.isArray(thread.messages))
+      ? thread.messages.filter(m => m.from==='admin' && !m.deleted && m.ts > seenTs).length
+      : 0;
     if(!isOpen && unreadCount > 0){
       badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
       badge.style.display = 'flex';
       if(floatLabel) floatLabel.style.display = 'block';
-      // চ্যাট প্যানেল বন্ধ থাকা অবস্থায় Admin/Quality Team থেকে নতুন মেসেজ এলে
-      // সত্যিকারের browser notification পাঠানো হচ্ছে — একই মেসেজ বারবার notify হবে না।
-      const latest = unreadMsgs[unreadMsgs.length - 1];
-      if(latest && latest.id !== window._empChatLastNotifiedMsgId){
-        window._empChatLastNotifiedMsgId = latest.id;
-        sendBrowserNotification(
-          `💬 নতুন মেসেজ — ${latest.senderName || 'Quality Team'}`,
-          (latest.text || '').slice(0, 140),
-          { tag:'emp-chat-msg', onClick: ()=>{ toggleEmployeeChatPanel(); } }
-        );
-      }
     }else{
       badge.style.display = 'none';
       if(floatLabel) floatLabel.style.display = 'none';
@@ -5895,8 +5782,7 @@ async function updateAdminChatNavBadge(){
   if(!badge) return;
   try{
     const threads = await getChatThreads();
-    const unreadThreads = Object.values(threads||{}).filter(t => t && t.adminUnread);
-    const count = unreadThreads.length;
+    const count = Object.values(threads||{}).filter(t => t && t.adminUnread).length;
     if(count > 0){
       badge.textContent = count > 9 ? '9+' : String(count);
       badge.style.display = 'inline-flex';
@@ -5905,22 +5791,6 @@ async function updateAdminChatNavBadge(){
       badge.style.display = 'none';
       if(newLabel) newLabel.style.display = 'none';
     }
-    // Admin/Quality Team প্যানেলে না থাকলে (বা অন্য এজেন্টের থ্রেড খোলা থাকলে) এজেন্টদের
-    // থেকে আসা নতুন মেসেজের জন্য সত্যিকারের browser notification পাঠানো হচ্ছে।
-    if(!window._adminChatNotified) window._adminChatNotified = {};
-    unreadThreads.forEach(t=>{
-      if(chatOpenEmployeeId === t.employeeId) return; // থ্রেড এখনই খোলা আছে, আলাদা করে notify দরকার নেই
-      const msgs = Array.isArray(t.messages) ? t.messages : [];
-      const lastFromEmp = [...msgs].reverse().find(m => m.from !== 'admin' && !m.deleted);
-      if(!lastFromEmp) return;
-      if(window._adminChatNotified[t.employeeId] === lastFromEmp.id) return;
-      window._adminChatNotified[t.employeeId] = lastFromEmp.id;
-      sendBrowserNotification(
-        `💬 নতুন মেসেজ — ${t.employeeName || t.employeeId}`,
-        (lastFromEmp.text || '').slice(0, 140),
-        { tag:'admin-chat-msg-'+t.employeeId, onClick: ()=>{ switchTab('EMPCHAT'); openAdminChatThread(t.employeeId); } }
-      );
-    });
   }catch(e){ /* ব্যাকগ্রাউন্ড আপডেট, চুপচাপ ইগনোর করা হলো */ }
 }
 async function refreshAdminChatList(){
@@ -6317,7 +6187,6 @@ function selectRole(role){
   document.getElementById('loginError').textContent = '';
 }
 function submitStaffLogin(){
-  requestBrowserNotificationPermission(); // login click = real user gesture, best moment to ask
   if(selectedRole === 'superadmin'){
     superAdminLogin();
   }else{
@@ -7300,6 +7169,12 @@ function renderLeadFormPanel(){
 
       .lead-remark-box{ margin-top:12px; padding:12px 14px; background:#FFFFFF; border:1px solid #E4E9F1; border-radius:10px; }
       .lead-remark-box label{ display:block; font-size:12px; color:#6B7A90; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+      /* "Other Remarks (customer কি বলছে...)" label — deliberately called out in a bold red box
+         with white text so agents notice it's ONLY for repeat-call remarks. */
+      .lead-remark-box label.remark-warning-label{
+        background:#E0524A; color:#FFFFFF; font-weight:700; text-transform:none;
+        letter-spacing:normal; padding:10px 12px; border-radius:8px; font-size:13px; line-height:1.5;
+      }
       .lead-remark-box textarea{
         width:100%; padding:10px 12px; border:1px solid #D9E1EA; border-radius:10px; font-size:13px;
         box-sizing:border-box; resize:vertical; font-family:inherit; color:#182233; outline:none;
@@ -7449,6 +7324,12 @@ function renderLeadFormPanel(){
     rebuildLeadAddressSuffix();
   });
   document.getElementById('leadSearchMobile').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
+  // Pressing Enter in the search box also triggers the search — same as clicking 🔎 Search.
+  document.getElementById('leadSearchMobile').addEventListener('keydown', e=>{
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    searchLeadByMobile();
+  });
 
   runLeadNetSpeedTest(); // initial reading as soon as the panel opens
   startLeadNetAutoTest(); // then keep refreshing automatically every 1 minute
@@ -7644,7 +7525,7 @@ function buildLeadRemarkSectionHtml(mobile, latestDate, ctx){
 
   return `
     <div class="lead-remark-box">
-      <label>${LEAD_REMARK_LABEL}</label>
+      <label class="remark-warning-label">${LEAD_REMARK_LABEL}</label>
       <textarea id="leadRemarkText_${ctx}" rows="2" placeholder="Write what the customer said..."></textarea>
       <button class="btn" id="leadRemarkBtn_${ctx}" style="margin-top:8px;" onclick="submitLeadRemark('${mobile}','${ctx}')">➕ Add Remark</button>
       <div class="lead-form-msg" id="leadRemarkMsg_${ctx}"></div>
@@ -7848,6 +7729,8 @@ async function submitLeadForm(){
     if(pcStatus) pcStatus.textContent = '';
     document.getElementById('leadMobileCheckWrap').innerHTML = '';
     setLeadFormLocked(false);
+    document.getElementById('leadSearchMobile').value = '';
+    document.getElementById('leadResultWrap').innerHTML = '';
 
     // Submission is done — resume normal auto-logout enforcement (it was paused while this form was open).
     if(leadFormAutoLogoutPaused){
@@ -7855,8 +7738,6 @@ async function submitLeadForm(){
       if(typeof scheduleFixedAutoLogout === 'function') scheduleFixedAutoLogout();
     }
 
-    document.getElementById('leadSearchMobile').value = mobile;
-    await searchLeadByMobile();
     document.getElementById('leadMobile').value = '';
   }catch(e){
     console.error('Lead submit failed', e);
@@ -7872,14 +7753,14 @@ async function refreshLeadSearchTable(btn){
   await searchLeadByMobile();
 }
 
-async function searchLeadByMobile(){
+async function searchLeadByMobile(isRetry){
   const mobile = document.getElementById('leadSearchMobile').value.trim();
   const wrap = document.getElementById('leadResultWrap');
   if(!/^\d{10}$/.test(mobile)){
     wrap.innerHTML = '<div class="empty-state">Please search with a valid 10-digit mobile number.</div>';
     return;
   }
-  wrap.innerHTML = '<div class="empty-state">Searching...</div>';
+  if(!isRetry) wrap.innerHTML = '<div class="empty-state">Searching...</div>';
   try{
     const res = await fetch(`${LEAD_WEB_APP_URL}?action=byMobile&mobile=${encodeURIComponent(mobile)}`);
     const data = await res.json();
@@ -7912,8 +7793,16 @@ async function searchLeadByMobile(){
       </div>
       ${buildLeadRemarkSectionHtml(mobile, latestDate, 'search')}`;
   }catch(e){
-    console.error('Lead search failed', e);
-    wrap.innerHTML = '<div class="empty-state">Server is temporarily unavailable.</div>';
+    console.error('Lead search failed' + (isRetry ? ' (after 1 retry)' : ''), e);
+
+    // Transient network/server blips are common (e.g. a slow Apps Script cold-start) — silently
+    // retry once after a short pause before showing the agent any error at all.
+    if(!isRetry){
+      setTimeout(()=> searchLeadByMobile(true), 1500);
+      return;
+    }
+
+    wrap.innerHTML = `<div class="empty-state">Server is temporarily unavailable.<br><button class="lead-refresh-btn" style="margin-top:8px;" onclick="searchLeadByMobile()">🔁 Try again</button></div>`;
   }
 }
 
@@ -11990,7 +11879,6 @@ function toggleEmpPasswordVisibility(){
 }
 /* ---------- Employee Login ---------- */
 async function employeeLogin(){
-  requestBrowserNotificationPermission(); // login click = real user gesture, best moment to ask
   const empId = document.getElementById('empId').value.trim();
   const pass = document.getElementById('empPassword').value;
   const errBox = document.getElementById('empLoginError');
