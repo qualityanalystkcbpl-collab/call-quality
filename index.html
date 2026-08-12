@@ -9483,7 +9483,7 @@ function chartGridColor(){
   return document.body.classList.contains('light-theme') ? '#D9E1EA' : '#203859';
 }
 
-async function renderHomePage(){
+async function renderHomePage(isManualRefresh){
   const panel = document.getElementById('panel-HOME');
   if(!panel) return;
 
@@ -9492,7 +9492,9 @@ async function renderHomePage(){
       <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
       <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
     </div>
-    <div class="empty-state"><b>লাইভ ডাটা লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b></div>`;
+    <div class="empty-state">${isManualRefresh
+      ? `<b>Refreshing...... Please wait...</b><br>Data is being synced from the Quality Server.`
+      : `<b>লাইভ ডাটা লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b>`}</div>`;
 
   const vKeys = Object.keys(VERTICALS); // CATV, BBTECH, BBRENEWAL
 
@@ -9774,7 +9776,7 @@ async function renderHomePage(){
 
   }catch(err){
     console.error(err);
-    panel.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।</div>`;
+    panel.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা সিঙ্ক করতে ব্যর্থ!</b><br> কানেকশন বা URL পরীক্ষা করুন।<br><button class="btn primary" style="margin-top:14px;" onclick="renderHomePage(true)">↻ Refresh</button></div>`;
   }
 }
 
@@ -12676,6 +12678,10 @@ doLogout = function(){
 
   async function checkForUpdate(){
     try{
+      // 📝 Lead Entry Form খোলা থাকা অবস্থায় auto-reload একদম বন্ধ রাখা হচ্ছে —
+      // ফর্ম পূরণ করার মাঝখানে কখনোই পেজ নিজে থেকে রিফ্রেশ হয়ে ডাটা মুছে যাবে না।
+      if(currentTab === 'LEADFORM'){ return; }
+
       var res = await fetch(API_URL + '?_=' + Date.now(), {
         cache: 'no-store',
         headers: { 'Accept': 'application/vnd.github+json' }
