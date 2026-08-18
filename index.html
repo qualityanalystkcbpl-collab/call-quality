@@ -6765,6 +6765,14 @@ async function switchTab(tab){
    "Call Centre Lead _ Sheet" spreadsheet (see the Code.gs shared alongside this file). */
 const LEAD_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxnVbHfPiEQi42I466xPfrpQ2CXuPolwlwLHXyypilzXESY64SwOHJfD5clPJV4TztxRw/exec";
 
+/* "ENTITY LIST" data (existing LCO/LBO network data: NETWORK_NAME, TECHNOLOGY_TYPE, MOBILE_PHONE,
+   ADDRESS, PIN CODE) is served through a dedicated Google Apps Script Web App — same pattern as
+   LEAD_WEB_APP_URL above — so the spreadsheet itself stays private (no "anyone with the link" sharing).
+   The script only ever returns the rows matching the requested pincode, nothing else.
+   Deploy the Code.gs shared alongside this file to the ENTITY LIST spreadsheet and paste its
+   /exec URL below. */
+const ENTITY_LIST_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxCpB3_XoYeodx0Yd_B_Wc9pjyO3IOLvc5BZK4-ztfaCjcecjaVGNT_yUQ6_vm3Wtu1/exec";
+
 const LEAD_CONNECTION_TYPES = [
   'NEW BROADBAND',
   'NEW CABLE',
@@ -7065,6 +7073,51 @@ function renderLeadFormPanel(){
       .lead-result-table td.lead-remark-purple{ background:#5B2A9E !important; color:#FFFFFF !important; border-color:#421F73; font-weight:600; }
 
       .lead-table-toolbar{ display:flex; align-items:center; justify-content:flex-end; margin:0 0 8px; }
+
+      /* ===== LCO/LBO Lookup panel — deliberately dark & colorful, separate look from the rest of the
+         page, and the table content is locked against copy/select (renders like a picture, not text). ===== */
+      .lco-lookup-card{
+        background:linear-gradient(155deg, #0A0F1F 0%, #131033 55%, #1B0F2E 100%);
+        border:1px solid #34205A; border-radius:16px; box-shadow:0 18px 40px -20px rgba(0,0,0,0.6);
+      }
+      .lco-lookup-card .panel-header h1{
+        font-size:22px; font-weight:800;
+        background:linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857, #33C9B0);
+        background-size:300% 100%; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+        animation: lcoHeaderGlow 6s linear infinite;
+      }
+      @keyframes lcoHeaderGlow{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
+      .lco-lookup-card .panel-header p{ color:#9AA8C7; }
+      .lco-lookup-card .empty-state{ color:#8391B5; font-size:13px; padding:6px 2px; }
+      .lco-found-label{
+        display:inline-block; font-size:19px; font-weight:800; letter-spacing:.4px; margin-bottom:12px; text-transform:uppercase;
+        color:#000000; background:#FFFFFF; padding:8px 16px; border-radius:8px;
+        box-shadow:0 0 14px rgba(51,201,176,.45), 0 0 28px rgba(185,74,224,.3);
+      }
+      .lco-table-wrap{
+        overflow:auto; max-height:460px; border-radius:14px; padding:0;
+        border:1px solid #3A2A63; box-shadow:0 10px 26px -14px rgba(0,0,0,0.65);
+        /* Locks the whole block against copy/select/right-click — behaves like a picture, not text. */
+        -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
+      }
+      .lco-table{ width:auto; min-width:100%; border-collapse:collapse; font-size:12.5px; background:#12112A; }
+      .lco-table th, .lco-table td{ border:1px solid #2E2555; }
+      .lco-table thead th{
+        position:sticky; top:0; z-index:2; padding:12px 16px; font-size:10.5px;
+        text-transform:uppercase; letter-spacing:.6px; font-weight:800; white-space:nowrap; text-align:left;
+        color:#0B0F1E;
+        background:linear-gradient(90deg, #33C9B0, #4A7FE0, #B94AE0, #E3A857);
+      }
+      .lco-table tbody td{ padding:10px 16px; color:#F1F0FF; white-space:nowrap; line-height:1.5; }
+      .lco-table tbody tr:nth-child(4n+1) td{ background:#161331; }
+      .lco-table tbody tr:nth-child(4n+2) td{ background:#1B1240; }
+      .lco-table tbody tr:nth-child(4n+3) td{ background:#101A33; }
+      .lco-table tbody tr:nth-child(4n+4) td{ background:#1C1024; }
+      .lco-table tbody tr:hover td{ background:#2A1F52; }
+      .lco-table td:first-child{ color:#5FE3C6; font-weight:700; }
+      .lco-table td:nth-child(2){ color:#8FB2FF; }
+      .lco-table td:nth-child(3){ color:#F2C572; }
+      .lco-table td:last-child{ color:#E38FE0; font-weight:700; }
       .lead-refresh-btn{
         display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:20px;
         border:1px solid #D9E1EA; background:#F0F2F6; color:#182233; font-size:11.5px; font-weight:600;
@@ -7275,6 +7328,12 @@ function renderLeadFormPanel(){
 
       <div id="leadResultWrap"></div>
     </div>
+
+    <!-- Completely separate from the Lead Entry Form above — purely a read-only reference panel.
+         It auto-updates from the Pincode field but never affects form layout, validation, or submit. -->
+    <div class="lead-page-card lco-lookup-card lead-anim-box" id="leadLcoLookupCard" style="margin-top:65vh; display:none;">
+      <div id="leadPincodeEntityWrap" oncontextmenu="return false;"></div>
+    </div>
   `;
 
   document.getElementById('leadMobile').addEventListener('input', e=>{
@@ -7310,7 +7369,15 @@ function renderLeadFormPanel(){
     leadAddressParts.state = '';
     leadAddressParts.pincode = '';
     rebuildLeadAddressSuffix();
-    if(e.target.value.length === 6){ lookupLeadPincode(e.target.value); }
+    if(e.target.value.length === 6){
+      lookupLeadPincode(e.target.value);
+      lookupEntityListByPincode(e.target.value);
+    }else{
+      const entWrap = document.getElementById('leadPincodeEntityWrap');
+      if(entWrap) entWrap.innerHTML = '';
+      const lcoCard = document.getElementById('leadLcoLookupCard');
+      if(lcoCard) lcoCard.style.display = 'none';
+    }
   });
   document.getElementById('leadPostOffice').addEventListener('change', e=>{
     leadAddressParts.postOffice = e.target.value || '';
@@ -7421,6 +7488,64 @@ async function lookupLeadPincode(pincode){
     if(statusEl) statusEl.textContent = '⚠️ Pincode lookup failed, please enter manually.';
     if(poEl) poEl.innerHTML = '<option value="">-- No post office found --</option>';
     leadLastLookup = null;
+  }
+}
+
+/* ===================== ENTITY LIST (existing LCO/LBO network data) — pincode match ===================== */
+/* Talks to the dedicated ENTITY LIST Apps Script Web App (private spreadsheet, server-side filtered —
+   only rows matching the requested pincode are ever returned, so no data is exposed publicly). */
+
+let leadPincodeEntityToken = 0; // guards against a stale (out-of-order) lookup overwriting a newer one
+
+/* Checks the ENTITY LIST for rows matching the entered pincode and renders them as a table in the
+   standalone lookup panel below the form. This never touches the form itself — it only reads the
+   Pincode field's value, so it can't affect form fields, validation, or submit in any way.
+   The whole panel stays completely blank/hidden except when a real match is found. */
+async function lookupEntityListByPincode(pincode){
+  const wrap = document.getElementById('leadPincodeEntityWrap');
+  const lcoCard = document.getElementById('leadLcoLookupCard');
+  if(!wrap) return;
+  if(!/^\d{6}$/.test(pincode)){
+    wrap.innerHTML = '';
+    if(lcoCard) lcoCard.style.display = 'none';
+    return;
+  }
+  const myToken = ++leadPincodeEntityToken;
+  wrap.innerHTML = '';
+  if(lcoCard) lcoCard.style.display = 'none';
+  try{
+    const res = await fetch(`${ENTITY_LIST_WEB_APP_URL}?action=byPincode&pincode=${encodeURIComponent(pincode)}`);
+    const data = await res.json();
+    if(myToken !== leadPincodeEntityToken) return;
+    if(!data || data.ok !== true){
+      wrap.innerHTML = '';
+      if(lcoCard) lcoCard.style.display = 'none';
+      return;
+    }
+    const rows = data.rows || [];
+    if(!rows.length){
+      wrap.innerHTML = '';
+      if(lcoCard) lcoCard.style.display = 'none';
+      return;
+    }
+    wrap.innerHTML = `
+      <div class="lco-table-wrap lead-anim-box" style="margin-top:2px;" oncopy="return false;" oncut="return false;" ondragstart="return false;">
+        <div class="lco-found-label">🔥 NEW LCO/LBO FOUND IN ABOVE PIN CODE</div>
+        <table class="lco-table" onselectstart="return false;">
+          <thead>
+            <tr><th>NETWORK_NAME</th><th>TECHNOLOGY_TYPE</th><th>MOBILE_PHONE</th><th>ADDRESS</th><th>PIN CODE</th></tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `<tr><td>${escapeHtml(r.NETWORK_NAME)}</td><td>${escapeHtml(r.TECHNOLOGY_TYPE)}</td><td>${escapeHtml(r.MOBILE_PHONE)}</td><td>${escapeHtml(r.ADDRESS)}</td><td>${escapeHtml(r['PIN CODE'])}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    if(lcoCard) lcoCard.style.display = '';
+  }catch(e){
+    if(myToken !== leadPincodeEntityToken) return;
+    console.error('ENTITY LIST lookup failed', e);
+    wrap.innerHTML = '';
+    if(lcoCard) lcoCard.style.display = 'none';
   }
 }
 
@@ -7728,6 +7853,10 @@ async function submitLeadForm(){
     leadAddressParts = { villageWard:'', landmark:'', postOffice:'', district:'', state:'', pincode:'' };
     const pcStatus = document.getElementById('leadPincodeStatus');
     if(pcStatus) pcStatus.textContent = '';
+    const entWrap = document.getElementById('leadPincodeEntityWrap');
+    if(entWrap) entWrap.innerHTML = '';
+    const lcoCard = document.getElementById('leadLcoLookupCard');
+    if(lcoCard) lcoCard.style.display = 'none';
     document.getElementById('leadMobileCheckWrap').innerHTML = '';
     setLeadFormLocked(false);
     document.getElementById('leadSearchMobile').value = '';
