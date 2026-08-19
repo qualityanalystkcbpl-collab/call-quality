@@ -301,11 +301,21 @@
 
   .block-label{ display:flex; align-items:center; gap:8px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; color:var(--text-primary); }
   .block-label .swatch{ width:9px; height:9px; border-radius:2px; background:var(--accent); }
+  .block-label button.btn{ padding:7px 12px; font-size:11.5px; }
   .embed-box{ border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#0B111F; }
   .embed-box iframe{ width:100%; height:320px; border:0; display:block; }
   .empty-state{ padding:30px 20px; text-align:center; color:var(--text-faint); font-size:13px; line-height:1.7; }
   .empty-state .ico{ font-size:20px; display:block; margin-bottom:6px; opacity:.6; }
   .empty-state code{ font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.05); padding:2px 6px; border-radius:6px; color:var(--text-muted); }
+
+  .day-pills{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .day-pill{
+    border:1px solid var(--line); background:var(--bg-panel-2); color:var(--text-muted);
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:12px;
+    padding:7px 14px; border-radius:999px; cursor:pointer; transition:all .15s ease;
+  }
+  .day-pill:hover{ border-color:var(--accent); color:var(--text-primary); }
+  .day-pill.active{ color:#fff; background:var(--accent); border-color:var(--accent); }
 
   .material-card{
     display:flex; align-items:center; gap:14px; text-decoration:none;
@@ -725,20 +735,11 @@
         <div class="lbl">Purpose</div>
         <div class="val" id="modalPurpose">—</div>
       </div>
-      <div id="materialsStaffBlock">
-        <div>
-          <div class="block-label"><span class="swatch"></span> Google Sheet reference</div>
-          <div class="embed-box" id="sheetBox" style="margin-top:10px;"></div>
-        </div>
-        <div>
-          <div class="block-label"><span class="swatch"></span> Google Drive (PPT / Slides)</div>
-          <div class="embed-box" id="driveBox" style="margin-top:10px;"></div>
-        </div>
+      <div class="block-label" style="justify-content:space-between;">
+        <span><span class="swatch"></span> Training Materials</span>
+        <button class="btn" id="manageMaterialsBtn" style="display:none;">⚙ Manage Materials</button>
       </div>
-      <div id="materialsAgentBlock" style="display:none;">
-        <div class="block-label"><span class="swatch"></span> Training Material</div>
-        <div id="agentMaterialCards" style="margin-top:10px;"></div>
-      </div>
+      <div id="materialsViewArea" style="margin-top:10px;"></div>
       <div class="assess-box">
         <div class="assess-status">
           <div class="pill" id="assessStatusPill">Assessment</div>
@@ -778,17 +779,32 @@
         <label for="sePurpose">Purpose</label>
         <textarea id="sePurpose" rows="3" placeholder="What this stage covers…"></textarea>
       </div>
-      <div class="field">
-        <label for="seSheetId">Google Sheet ID</label>
-        <input id="seSheetId" type="text" placeholder="Paste the Sheet ID from its share link" />
-      </div>
-      <div class="field">
-        <label for="seDriveId">Google Drive File ID (PPT)</label>
-        <input id="seDriveId" type="text" placeholder="Paste the Drive file ID from its share link" />
-      </div>
       <div class="modal-actions">
         <button class="btn" data-close>Cancel</button>
         <button class="btn primary" id="stageEditSaveBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Materials builder modal (QA / Team Leader / HR / HOD) -->
+<div class="modal-overlay" id="matOverlay">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-head">
+      <button class="modal-close" data-close>✕</button>
+      <div class="tag" id="matTag">Manage Materials</div>
+      <h3 id="matStageTitle">Training Materials</h3>
+    </div>
+    <div class="modal-body">
+      <div class="auth-note" style="text-align:left; margin:0 0 16px;">Add PPTs, Google Sheets, Docs, videos, or images — grouped by Day (e.g. "Day 1", "Day 2"). Paste either the file's share link or just its file ID.</div>
+      <div id="matLoading" class="empty-state">Loading…</div>
+      <div id="matBuilder" style="display:none;">
+        <div id="matRows"></div>
+        <button type="button" class="qb-add-btn" id="matAddBtn">+ Add Material</button>
+        <div class="modal-actions">
+          <button class="btn" data-close>Cancel</button>
+          <button class="btn primary" id="matSaveBtn">Save Materials</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1344,44 +1360,90 @@ const qbOverlay = document.getElementById('qbOverlay');
 const certListOverlay = document.getElementById('certListOverlay');
 const agentsOverlay = document.getElementById('agentsOverlay');
 const stageEditOverlay = document.getElementById('stageEditOverlay');
-const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, agentsOverlay, stageEditOverlay];
+const matOverlay = document.getElementById('matOverlay');
+const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, agentsOverlay, stageEditOverlay, matOverlay];
 
-function embedOrEmpty(kind, id, tabKey, stageIdx){
-  if(id && id.trim()){
-    const src = kind==='sheet'
-      ? `https://docs.google.com/spreadsheets/d/${id}/preview`
-      : `https://drive.google.com/file/d/${id}/preview`;
-    return `<iframe src="${src}" loading="lazy" allow="autoplay"></iframe>`;
-  }
-  const label = kind==='sheet' ? 'Google Sheet' : 'Google Drive file (PPT)';
-  const field = kind==='sheet' ? 'sheetId' : 'driveId';
-  return `<div class="empty-state"><span class="ico">${kind==='sheet'?'▦':'▤'}</span>
-    No ${label} has been added for this stage yet.<br/>
-    Add the ID at <code>JOURNEY_CONFIG.${tabKey}[${stageIdx}].${field}</code>.</div>`;
+const MATERIAL_TYPE_META = {
+  ppt:   { icon:'🎞️', label:'Presentation' },
+  sheet: { icon:'📊', label:'Google Sheet' },
+  doc:   { icon:'📝', label:'Google Doc' },
+  video: { icon:'🎬', label:'Video' },
+  image: { icon:'🖼️', label:'Image' },
+};
+
+function materialUrl(type, id){
+  const clean = encodeURIComponent(String(id||'').trim());
+  if(type==='sheet') return `https://docs.google.com/spreadsheets/d/${clean}/edit`;
+  if(type==='doc')   return `https://docs.google.com/document/d/${clean}/edit`;
+  if(type==='ppt')   return `https://docs.google.com/presentation/d/${clean}/edit`;
+  return `https://drive.google.com/file/d/${clean}/view`; // video / image / fallback
 }
 
-// Agent-facing materials view: friendly, clean cards instead of the
-// technical "Google Sheet reference" / "Google Drive" embed panels staff see.
-function renderAgentMaterialCards(stage){
-  const container = document.getElementById('agentMaterialCards');
-  const cards = [];
-  if(stage.sheetId && stage.sheetId.trim()){
-    cards.push(`
-      <a class="material-card" href="https://docs.google.com/spreadsheets/d/${encodeURIComponent(stage.sheetId.trim())}/edit" target="_blank" rel="noopener">
-        <div class="ico">📊</div>
-        <div class="txt"><div class="t">Reference Material</div><div class="s">Open in a new tab ↗</div></div>
-      </a>`);
+// Accepts either a bare Drive/Sheet/Doc file ID or a full share link and
+// returns just the ID, so staff can paste whichever is easiest.
+function extractResourceId(input){
+  input = String(input||'').trim();
+  let m = input.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+  if(m) return m[1];
+  m = input.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+  if(m) return m[1];
+  return input;
+}
+
+function materialCardHtml(m){
+  const meta = MATERIAL_TYPE_META[m.type] || { icon:'📄', label:'File' };
+  return `
+    <a class="material-card" href="${materialUrl(m.type, m.resourceId)}" target="_blank" rel="noopener">
+      <div class="ico">${meta.icon}</div>
+      <div class="txt"><div class="t">${escapeHtml(m.title || meta.label)}</div><div class="s">${meta.label} · Open in a new tab ↗</div></div>
+    </a>`;
+}
+
+// Renders the Day-pills + material cards for whichever day is selected.
+// Used for both agents (view-only) and staff (view, plus a Manage button
+// elsewhere in the modal).
+function renderMaterialsView(materials){
+  const area = document.getElementById('materialsViewArea');
+  if(!materials || materials.length === 0){
+    area.innerHTML = `<div class="empty-state"><span class="ico">📚</span>No materials added for this stage yet.</div>`;
+    return;
   }
-  if(stage.driveId && stage.driveId.trim()){
-    cards.push(`
-      <a class="material-card" href="https://drive.google.com/file/d/${encodeURIComponent(stage.driveId.trim())}/view" target="_blank" rel="noopener">
-        <div class="ico">🎞️</div>
-        <div class="txt"><div class="t">Presentation / Slides</div><div class="s">Open in a new tab ↗</div></div>
-      </a>`);
+  const byDay = {};
+  const dayKeys = [];
+  materials.forEach(m=>{
+    const key = m.dayLabel || 'Materials';
+    if(!byDay[key]){ byDay[key] = { order: m.dayOrder || 0, items: [] }; dayKeys.push(key); }
+    byDay[key].items.push(m);
+  });
+  dayKeys.sort((a,b)=> byDay[a].order - byDay[b].order);
+
+  let activeDay = dayKeys[0];
+  function paint(){
+    const pillsHtml = dayKeys.length > 1
+      ? `<div class="day-pills">${dayKeys.map(k=> `<button type="button" class="day-pill ${k===activeDay?'active':''}" data-day="${escapeHtml(k)}">${escapeHtml(k)}</button>`).join('')}</div>`
+      : '';
+    const itemsHtml = byDay[activeDay].items.map(materialCardHtml).join('');
+    area.innerHTML = pillsHtml + itemsHtml;
+    area.querySelectorAll('.day-pill').forEach(p=>{
+      p.addEventListener('click', ()=>{ activeDay = p.dataset.day; paint(); });
+    });
   }
-  container.innerHTML = cards.length
-    ? cards.join('')
-    : `<div class="empty-state"><span class="ico">📚</span>Materials for this stage will be added soon. Please check with your trainer.</div>`;
+  paint();
+}
+
+async function loadAndRenderMaterials(tab, idx){
+  const area = document.getElementById('materialsViewArea');
+  area.innerHTML = `<div class="empty-state">Loading materials…</div>`;
+  try{
+    const res = await callBackend({ action:'getMaterials', tab, stageIndex: idx });
+    if(!res.success){
+      area.innerHTML = `<div class="empty-state">${escapeHtml(res.message || 'Could not load materials.')}</div>`;
+      return;
+    }
+    renderMaterialsView(res.materials || []);
+  } catch(err){
+    area.innerHTML = `<div class="empty-state">${escapeHtml(err.message || 'Could not reach the server.')}</div>`;
+  }
 }
 
 function openStage(idx){
@@ -1400,15 +1462,10 @@ function openStage(idx){
   document.getElementById('purposeBox').style.display = stage.purpose ? '' : 'none';
 
   const isAgentRole = currentUser.role === 'agent';
-  document.getElementById('materialsStaffBlock').style.display = isAgentRole ? 'none' : '';
-  document.getElementById('materialsAgentBlock').style.display = isAgentRole ? '' : 'none';
-
-  if(isAgentRole){
-    renderAgentMaterialCards(stage);
-  } else {
-    document.getElementById('sheetBox').innerHTML = embedOrEmpty('sheet', stage.sheetId, activeTab, idx);
-    document.getElementById('driveBox').innerHTML = embedOrEmpty('drive', stage.driveId, activeTab, idx);
-  }
+  const manageMatBtn = document.getElementById('manageMaterialsBtn');
+  manageMatBtn.style.display = isAgentRole ? 'none' : '';
+  manageMatBtn.onclick = ()=> openMaterialsBuilder(activeTab, idx, stage);
+  loadAndRenderMaterials(activeTab, idx);
 
   const key = `${activeTab}-${idx}`;
   const doneBtn = document.getElementById('markDoneBtn');
@@ -1613,8 +1670,6 @@ function openStageEditor(tab, idx, stage){
   document.getElementById('seTimeline').value = stage.timeline || '';
   document.getElementById('seAccountability').value = stage.accountability || '';
   document.getElementById('sePurpose').value = stage.purpose || '';
-  document.getElementById('seSheetId').value = stage.sheetId || '';
-  document.getElementById('seDriveId').value = stage.driveId || '';
   stageEditOverlay.classList.add('open');
 }
 
@@ -1626,9 +1681,7 @@ document.getElementById('stageEditSaveBtn').addEventListener('click', async ()=>
     title: document.getElementById('seTitle').value.trim(),
     timeline: document.getElementById('seTimeline').value.trim(),
     accountability: document.getElementById('seAccountability').value.trim(),
-    purpose: document.getElementById('sePurpose').value.trim(),
-    sheetId: document.getElementById('seSheetId').value.trim(),
-    driveId: document.getElementById('seDriveId').value.trim()
+    purpose: document.getElementById('sePurpose').value.trim()
   };
   const btn = document.getElementById('stageEditSaveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
@@ -1636,9 +1689,10 @@ document.getElementById('stageEditSaveBtn').addEventListener('click', async ()=>
     const res = await callBackend(payload);
     if(res.success){
       // Update local config immediately so the change reflects without a reload.
+      const existing = JOURNEY_CONFIG[tab][idx];
       JOURNEY_CONFIG[tab][idx] = {
         title: payload.title, timeline: payload.timeline, purpose: payload.purpose,
-        accountability: payload.accountability, sheetId: payload.sheetId, driveId: payload.driveId
+        accountability: payload.accountability, sheetId: existing.sheetId, driveId: existing.driveId
       };
       showToast('Stage info saved.');
       stageEditOverlay.classList.remove('open');
@@ -1653,6 +1707,112 @@ document.getElementById('stageEditSaveBtn').addEventListener('click', async ()=>
     showToast(err.message || 'Could not reach the server.');
   } finally {
     btn.disabled = false; btn.textContent = 'Save Changes';
+  }
+});
+
+/* -------------------- MATERIALS BUILDER (QA/TL/HR/HOD) -------------------- */
+let matState = { tab:null, idx:null, stage:null, materials:[] };
+
+async function openMaterialsBuilder(tab, idx, stage){
+  matState = { tab, idx, stage, materials: [] };
+  const t = TABS.find(x=>x.key===tab) || { label: tab };
+  document.getElementById('matTag').textContent = `${t.label} · STAGE ${idx+1}`;
+  document.getElementById('matStageTitle').textContent = (stage.title || `Stage ${idx+1}`) + ' — Materials';
+  document.getElementById('matLoading').style.display = '';
+  document.getElementById('matLoading').textContent = 'Loading…';
+  document.getElementById('matBuilder').style.display = 'none';
+  matOverlay.classList.add('open');
+
+  try{
+    const res = await callBackend({ action:'getMaterials', tab, stageIndex: idx });
+    if(!res.success){
+      document.getElementById('matLoading').textContent = res.message || 'Could not load materials.';
+      return;
+    }
+    matState.materials = res.materials || [];
+    renderMatBuilder();
+  } catch(err){
+    document.getElementById('matLoading').textContent = err.message || 'Could not reach the server.';
+  }
+}
+
+function renderMatBuilder(){
+  document.getElementById('matLoading').style.display = 'none';
+  document.getElementById('matBuilder').style.display = '';
+  const container = document.getElementById('matRows');
+  container.innerHTML = '';
+  matState.materials.forEach((m, i)=> container.appendChild(buildMatRow(m, i)));
+}
+
+function buildMatRow(m, i){
+  const div = document.createElement('div');
+  div.className = 'qb-row';
+  div.innerHTML = `
+    <div class="qb-num"><span>Material ${i+1}</span><button type="button" class="qb-remove">Remove</button></div>
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <input type="text" class="mat-day" placeholder="Day label (e.g., Day 1)" value="${escapeHtml(m.dayLabel||'')}" style="flex:1;" />
+      <select class="mat-type" style="flex:0 0 165px; padding:10px 12px; border-radius:9px; border:1px solid var(--line); background:#EDEFF5; color:#0A0F1C; font-family:'Inter',sans-serif; font-size:13.5px;">
+        <option value="ppt" ${m.type==='ppt'?'selected':''}>Presentation (PPT)</option>
+        <option value="sheet" ${m.type==='sheet'?'selected':''}>Google Sheet</option>
+        <option value="doc" ${m.type==='doc'?'selected':''}>Google Doc</option>
+        <option value="video" ${m.type==='video'?'selected':''}>Video</option>
+        <option value="image" ${m.type==='image'?'selected':''}>Image</option>
+      </select>
+    </div>
+    <input type="text" class="mat-title" placeholder="Title (e.g., Package Pricing Sheet)" value="${escapeHtml(m.title||'')}" />
+    <input type="text" class="mat-resource" placeholder="Paste the Drive/Sheet/Doc share link or file ID" value="${escapeHtml(m.resourceId||'')}" />
+  `;
+  div.querySelector('.qb-remove').addEventListener('click', ()=>{
+    matState.materials.splice(i, 1);
+    renderMatBuilder();
+  });
+  return div;
+}
+
+document.getElementById('matAddBtn').addEventListener('click', ()=>{
+  matState.materials.push({ dayLabel: matState.materials.length ? matState.materials[matState.materials.length-1].dayLabel : 'Day 1', dayOrder:0, type:'ppt', title:'', resourceId:'' });
+  renderMatBuilder();
+});
+
+document.getElementById('matSaveBtn').addEventListener('click', async ()=>{
+  const rows = document.querySelectorAll('#matRows .qb-row');
+  const materials = [];
+  const dayOrderMap = {};
+  let orderCounter = 0;
+  let valid = rows.length > 0;
+
+  rows.forEach(row=>{
+    const dayLabel = row.querySelector('.mat-day').value.trim() || 'Materials';
+    const type = row.querySelector('.mat-type').value;
+    const title = row.querySelector('.mat-title').value.trim();
+    const resourceId = extractResourceId(row.querySelector('.mat-resource').value);
+    if(!resourceId) valid = false;
+    if(!(dayLabel in dayOrderMap)) dayOrderMap[dayLabel] = orderCounter++;
+    materials.push({ dayLabel, dayOrder: dayOrderMap[dayLabel], type, title, resourceId });
+  });
+
+  if(!valid){ showToast('Every material needs at least a Day label and a file link or ID.'); return; }
+
+  const btn = document.getElementById('matSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try{
+    const res = await callBackend({
+      action:'saveMaterials', role: currentUser.role, username: currentUser.username,
+      tab: matState.tab, stageIndex: matState.idx, materials
+    });
+    if(res.success){
+      showToast(`Saved ${res.count} material(s).`);
+      matOverlay.classList.remove('open');
+      if(currentModalRef && currentModalRef.tab === matState.tab && currentModalRef.idx === matState.idx){
+        loadAndRenderMaterials(matState.tab, matState.idx);
+      }
+    } else {
+      showToast(res.message || 'Could not save materials.');
+    }
+  } catch(err){
+    showToast(err.message || 'Could not reach the server.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Materials';
   }
 });
 
