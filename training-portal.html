@@ -307,6 +307,20 @@
   .empty-state .ico{ font-size:20px; display:block; margin-bottom:6px; opacity:.6; }
   .empty-state code{ font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.05); padding:2px 6px; border-radius:6px; color:var(--text-muted); }
 
+  .material-card{
+    display:flex; align-items:center; gap:14px; text-decoration:none;
+    background:var(--bg-panel-2); border:1px solid var(--line); border-radius:14px;
+    padding:15px 18px; margin-bottom:10px; transition:all .2s ease;
+  }
+  .material-card:hover{ border-color:var(--accent); transform:translateY(-2px); box-shadow:0 10px 24px -12px rgba(0,0,0,.5); }
+  .material-card .ico{
+    width:42px; height:42px; border-radius:11px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:19px;
+    background:rgba(255,255,255,.05); border:1px solid var(--line);
+  }
+  .material-card .txt .t{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; color:var(--text-primary); }
+  .material-card .txt .s{ font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+
   .modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
   .btn{
     font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px;
@@ -711,13 +725,19 @@
         <div class="lbl">Purpose</div>
         <div class="val" id="modalPurpose">—</div>
       </div>
-      <div>
-        <div class="block-label"><span class="swatch"></span> Google Sheet reference</div>
-        <div class="embed-box" id="sheetBox" style="margin-top:10px;"></div>
+      <div id="materialsStaffBlock">
+        <div>
+          <div class="block-label"><span class="swatch"></span> Google Sheet reference</div>
+          <div class="embed-box" id="sheetBox" style="margin-top:10px;"></div>
+        </div>
+        <div>
+          <div class="block-label"><span class="swatch"></span> Google Drive (PPT / Slides)</div>
+          <div class="embed-box" id="driveBox" style="margin-top:10px;"></div>
+        </div>
       </div>
-      <div>
-        <div class="block-label"><span class="swatch"></span> Google Drive (PPT / Slides)</div>
-        <div class="embed-box" id="driveBox" style="margin-top:10px;"></div>
+      <div id="materialsAgentBlock" style="display:none;">
+        <div class="block-label"><span class="swatch"></span> Training Material</div>
+        <div id="agentMaterialCards" style="margin-top:10px;"></div>
       </div>
       <div class="assess-box">
         <div class="assess-status">
@@ -1340,6 +1360,30 @@ function embedOrEmpty(kind, id, tabKey, stageIdx){
     Add the ID at <code>JOURNEY_CONFIG.${tabKey}[${stageIdx}].${field}</code>.</div>`;
 }
 
+// Agent-facing materials view: friendly, clean cards instead of the
+// technical "Google Sheet reference" / "Google Drive" embed panels staff see.
+function renderAgentMaterialCards(stage){
+  const container = document.getElementById('agentMaterialCards');
+  const cards = [];
+  if(stage.sheetId && stage.sheetId.trim()){
+    cards.push(`
+      <a class="material-card" href="https://docs.google.com/spreadsheets/d/${encodeURIComponent(stage.sheetId.trim())}/edit" target="_blank" rel="noopener">
+        <div class="ico">📊</div>
+        <div class="txt"><div class="t">Reference Material</div><div class="s">Open in a new tab ↗</div></div>
+      </a>`);
+  }
+  if(stage.driveId && stage.driveId.trim()){
+    cards.push(`
+      <a class="material-card" href="https://drive.google.com/file/d/${encodeURIComponent(stage.driveId.trim())}/view" target="_blank" rel="noopener">
+        <div class="ico">🎞️</div>
+        <div class="txt"><div class="t">Presentation / Slides</div><div class="s">Open in a new tab ↗</div></div>
+      </a>`);
+  }
+  container.innerHTML = cards.length
+    ? cards.join('')
+    : `<div class="empty-state"><span class="ico">📚</span>Materials for this stage will be added soon. Please check with your trainer.</div>`;
+}
+
 function openStage(idx){
   const t = TABS.find(x=>x.key===activeTab);
   const stage = JOURNEY_CONFIG[activeTab][idx];
@@ -1355,8 +1399,16 @@ function openStage(idx){
   document.getElementById('infoGrid').style.display = hasInfo ? '' : 'none';
   document.getElementById('purposeBox').style.display = stage.purpose ? '' : 'none';
 
-  document.getElementById('sheetBox').innerHTML = embedOrEmpty('sheet', stage.sheetId, activeTab, idx);
-  document.getElementById('driveBox').innerHTML = embedOrEmpty('drive', stage.driveId, activeTab, idx);
+  const isAgentRole = currentUser.role === 'agent';
+  document.getElementById('materialsStaffBlock').style.display = isAgentRole ? 'none' : '';
+  document.getElementById('materialsAgentBlock').style.display = isAgentRole ? '' : 'none';
+
+  if(isAgentRole){
+    renderAgentMaterialCards(stage);
+  } else {
+    document.getElementById('sheetBox').innerHTML = embedOrEmpty('sheet', stage.sheetId, activeTab, idx);
+    document.getElementById('driveBox').innerHTML = embedOrEmpty('drive', stage.driveId, activeTab, idx);
+  }
 
   const key = `${activeTab}-${idx}`;
   const doneBtn = document.getElementById('markDoneBtn');
