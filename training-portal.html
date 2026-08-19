@@ -29,6 +29,28 @@
     --accent-glow: var(--catv-glow);
   }
 
+  /* Light mode — toggled via the sun/moon switch next to the live clock.
+     Kept in-memory only (resets on refresh) since this file has no
+     server-side per-user preference storage. */
+  [data-theme="light"]{
+    --bg-deep:#EEF1F8;
+    --bg-panel:#FFFFFF;
+    --bg-panel-2:#F3F5FA;
+    --line:rgba(15,23,42,0.12);
+    --text-primary:#0F172A;
+    --text-muted:#4B5875;
+    --text-faint:#7C87A0;
+  }
+  [data-theme="light"] .bg-fx{
+    background:
+      radial-gradient(600px 400px at 15% 10%, var(--accent-glow) 0%, transparent 60%),
+      radial-gradient(500px 350px at 85% 85%, var(--accent-glow) 0%, transparent 60%),
+      linear-gradient(180deg, #F7F9FD 0%, #EEF1F8 100%);
+    opacity:.6;
+  }
+  [data-theme="light"] .bg-fx::before{ opacity:.5; }
+  [data-theme="light"] ::-webkit-scrollbar-thumb{ background:#D7DCE8; }
+
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
@@ -38,6 +60,7 @@
     min-height:100vh;
     overflow-x:hidden;
     position:relative;
+    transition:background-color .35s ease, color .35s ease;
   }
 
   .bg-fx{
@@ -59,7 +82,7 @@
     mask-image:radial-gradient(circle at 50% 30%, black 0%, transparent 75%);
   }
 
-  header{ position:relative; z-index:2; padding:56px 24px 28px; text-align:center; }
+  header{ position:relative; z-index:2; padding:76px 24px 28px; text-align:center; }
   .eyebrow{
     display:inline-flex; align-items:center; gap:8px;
     font-family:'JetBrains Mono',monospace;
@@ -137,13 +160,26 @@
     box-shadow:0 0 0 6px var(--accent-glow);
     transform:translateX(-50%) scale(1.08);
   }
-  .stage.done .stage-badge{ background:var(--accent); color:#0A0F1C; border-color:var(--accent); }
+  /* Locked = red, Done (not yet assessed/passed) = yellow, Assessment passed = green.
+     .passed always wins over .done since passing also marks the stage done. */
+  .stage.locked .stage-badge{
+    color:#ff6b6b; border-color:rgba(255,90,90,.55); background:rgba(255,90,90,.1);
+  }
+  .stage.done .stage-badge{ background:#f5c518; color:#2b2200; border-color:#f5c518; }
   .stage.done .stage-badge::after{
     content:'✓'; position:absolute; top:-6px; right:-6px;
-    width:18px; height:18px; border-radius:50%; background:#0A0F1C; color:var(--accent);
-    font-size:10px; display:flex; align-items:center; justify-content:center; border:2px solid var(--accent);
+    width:18px; height:18px; border-radius:50%; background:#0A0F1C; color:#f5c518;
+    font-size:10px; display:flex; align-items:center; justify-content:center; border:2px solid #f5c518;
   }
-  .stage.locked .stage-badge{ color:var(--text-faint); }
+  .stage.passed .stage-badge{
+    background:#22c55e; color:#062b13; border-color:#22c55e;
+    box-shadow:0 0 0 5px rgba(34,197,94,.22);
+  }
+  .stage.passed .stage-badge::after{
+    content:'✓'; position:absolute; top:-6px; right:-6px;
+    width:18px; height:18px; border-radius:50%; background:#0A0F1C; color:#22c55e;
+    font-size:10px; display:flex; align-items:center; justify-content:center; border:2px solid #22c55e;
+  }
   .stage.locked .stage-card{ opacity:.5; cursor:not-allowed; }
   .stage.locked .stage-card:hover{ transform:none; border-color:var(--line); box-shadow:none; }
 
@@ -252,9 +288,9 @@
     font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.04em;
     padding:3px 9px; border-radius:999px; white-space:nowrap;
   }
-  .st-status.pass{ background:rgba(62,230,168,.12); color:#3ee6a8; }
-  .st-status.fail{ background:rgba(255,155,155,.12); color:#ff9b9b; }
-  .st-status.pending{ background:rgba(255,255,255,.06); color:var(--text-faint); }
+  .st-status.pass{ background:rgba(34,197,94,.14); color:#22c55e; }
+  .st-status.fail{ background:rgba(255,90,90,.14); color:#ff6b6b; }
+  .st-status.pending{ background:rgba(255,90,90,.08); color:#ff9b9b; }
   @media (max-width:720px){
     .agents-layout{ flex-direction:column; }
     .agents-sidebar{ width:100%; }
@@ -321,6 +357,7 @@
     display:flex; align-items:center; gap:14px; text-decoration:none;
     background:var(--bg-panel-2); border:1px solid var(--line); border-radius:14px;
     padding:15px 18px; margin-bottom:10px; transition:all .2s ease;
+    width:100%; text-align:left; font-family:inherit; cursor:pointer;
   }
   .material-card:hover{ border-color:var(--accent); transform:translateY(-2px); box-shadow:0 10px 24px -12px rgba(0,0,0,.5); }
   .material-card .ico{
@@ -330,6 +367,15 @@
   }
   .material-card .txt .t{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; color:var(--text-primary); }
   .material-card .txt .s{ font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+
+  /* ---------- media viewer — best-view embeds ---------- */
+  .mv-frame-wrap{ position:relative; width:100%; height:0; border-radius:12px; overflow:hidden; background:#000; }
+  .mv-frame-wrap iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .mv-image-wrap{
+    display:flex; align-items:center; justify-content:center;
+    background:#0B111F; border-radius:12px; max-height:78vh; overflow:auto; padding:12px;
+  }
+  .mv-image-wrap img{ max-width:100%; max-height:74vh; display:block; border-radius:6px; }
 
   .modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
   .btn{
@@ -347,6 +393,32 @@
     font-family:'JetBrains Mono',monospace; font-size:12px; color:#9FD8CE; overflow-x:auto; line-height:1.7;
   }
 
+  /* ---------- global clock + theme toggle (visible on every screen) ---------- */
+  .clock-bar{
+    position:fixed; top:16px; left:16px; z-index:200;
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:999px;
+    padding:8px 8px 8px 16px; box-shadow:0 10px 26px -12px rgba(0,0,0,.5);
+    cursor:grab; touch-action:none;
+  }
+  .clock-bar.dragging{ cursor:grabbing; box-shadow:0 16px 34px -10px rgba(0,0,0,.65); }
+  .clock-bar .cb-text{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-primary); white-space:nowrap; }
+  .clock-bar .cb-text .cb-date{ color:var(--text-faint); margin-right:8px; }
+  .theme-toggle{
+    display:flex; align-items:center; background:var(--bg-panel-2); border:1px solid var(--line);
+    border-radius:999px; padding:3px; cursor:pointer; gap:2px;
+  }
+  .theme-toggle .seg{
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:13px; color:var(--text-faint); transition:all .2s ease;
+  }
+  .theme-toggle .seg.active{ background:var(--accent); color:#0A0F1C; }
+  @media (max-width:640px){
+    .clock-bar{ top:10px; padding:6px 6px 6px 10px; gap:6px; }
+    .clock-bar .cb-text{ font-size:10px; }
+    .clock-bar .cb-date{ display:none; } /* keep it compact on small phones — time only */
+    .theme-toggle .seg{ width:22px; height:22px; font-size:11px; }
+  }
   ::-webkit-scrollbar{ width:9px; height:9px; }
   ::-webkit-scrollbar-thumb{ background:var(--bg-panel-2); border-radius:8px; }
 
@@ -359,7 +431,77 @@
   }
   .toast.show{ opacity:1; transform:translate(-50%, 0); }
 
+  /* =========================================================
+     COLOR + MOTION POLISH
+     Tab-colored, animated treatment applied everywhere: the
+     process tabs, the stage timeline cards, and every row-style
+     "table" in the app (certificate records, agent progress rows,
+     the agent picker, question/material builder rows) — so status
+     and selection read instantly and the whole app feels alive.
+  ========================================================= */
+
+  /* Tab buttons: light sweep on hover, soft breathing glow when active */
+  .tab-btn{ overflow:hidden; }
+  .tab-btn::before{
+    content:''; position:absolute; inset:0; border-radius:inherit;
+    background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%);
+    background-size:220% 100%; background-position:150% 0;
+    opacity:0; transition:opacity .3s ease; pointer-events:none;
+  }
+  .tab-btn:hover::before{ opacity:1; animation:tabSweep 1.1s ease forwards; }
+  @keyframes tabSweep{ from{ background-position:150% 0; } to{ background-position:-50% 0; } }
+  .tab-btn.active{ animation:tabGlow 2.6s ease-in-out infinite; }
+  @keyframes tabGlow{ 0%,100%{ box-shadow:0 8px 24px -6px var(--g); } 50%{ box-shadow:0 8px 34px -3px var(--g); } }
+
+  /* Stage cards: colored top accent bar that fills in on hover/completion */
+  .stage-card{ position:relative; overflow:hidden; }
+  .stage-card::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--accent), transparent);
+    transform:scaleX(0); transform-origin:left; transition:transform .4s ease;
+  }
+  .stage-card:hover::before{ transform:scaleX(1); }
+  .stage.done .stage-card::before{ transform:scaleX(1); background:linear-gradient(90deg, #f5c518, transparent); }
+  .stage.passed .stage-card::before{ transform:scaleX(1); background:linear-gradient(90deg, #22c55e, transparent); }
+
+  /* Shared "table row" treatment — colored left accent, staggered
+     entrance, and a colored hover glow — for every list-style table:
+     certificate records, agent progress rows, the agent picker, and
+     the question/material builder rows. */
+  .cert-row, .agent-stage-row, .agent-chip, .qb-row{
+    border-left:3px solid transparent;
+    transition:border-color .25s ease, background-color .25s ease, transform .2s ease, box-shadow .25s ease;
+    animation:rowIn .45s ease both;
+  }
+  .cert-row:hover, .agent-stage-row:hover, .agent-chip:hover, .qb-row:hover{
+    border-left-color:var(--accent); background-color:rgba(255,255,255,.025);
+    transform:translateX(3px); box-shadow:0 10px 22px -14px var(--accent-glow);
+  }
+  .agent-chip.active{ border-left-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset, 0 10px 22px -14px var(--accent-glow); }
+  .material-card{ animation:rowIn .45s ease both; }
+  @keyframes rowIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+  .cert-row:nth-child(1),.agent-stage-row:nth-child(1),.agent-chip:nth-child(1),.qb-row:nth-child(1),.material-card:nth-child(1){ animation-delay:.02s; }
+  .cert-row:nth-child(2),.agent-stage-row:nth-child(2),.agent-chip:nth-child(2),.qb-row:nth-child(2),.material-card:nth-child(2){ animation-delay:.06s; }
+  .cert-row:nth-child(3),.agent-stage-row:nth-child(3),.agent-chip:nth-child(3),.qb-row:nth-child(3),.material-card:nth-child(3){ animation-delay:.10s; }
+  .cert-row:nth-child(4),.agent-stage-row:nth-child(4),.agent-chip:nth-child(4),.qb-row:nth-child(4),.material-card:nth-child(4){ animation-delay:.14s; }
+  .cert-row:nth-child(5),.agent-stage-row:nth-child(5),.agent-chip:nth-child(5),.qb-row:nth-child(5),.material-card:nth-child(5){ animation-delay:.18s; }
+  .cert-row:nth-child(6),.agent-stage-row:nth-child(6),.agent-chip:nth-child(6),.qb-row:nth-child(6),.material-card:nth-child(6){ animation-delay:.22s; }
+  .cert-row:nth-child(n+7),.agent-stage-row:nth-child(n+7),.agent-chip:nth-child(n+7),.qb-row:nth-child(n+7),.material-card:nth-child(n+7){ animation-delay:.26s; }
+
+  /* Status pills breathe with color so pass/fail/pending reads at a glance */
+  .st-status.pass, .assess-status .pill.pass{ animation:glowPass 2.2s ease-in-out infinite; }
+  .st-status.fail, .st-status.pending, .assess-status .pill.fail{ animation:glowFail 2.2s ease-in-out infinite; }
+  @keyframes glowPass{ 0%,100%{ box-shadow:0 0 0 0 rgba(62,230,168,0); } 50%{ box-shadow:0 0 12px 1px rgba(62,230,168,.35); } }
+  @keyframes glowFail{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,90,90,0); } 50%{ box-shadow:0 0 12px 1px rgba(255,90,90,.3); } }
+
+  /* Day pills pop in when switched, material icons glow on hover to invite the click */
+  .day-pill.active{ animation:pillPop .3s ease; }
+  @keyframes pillPop{ from{ transform:scale(.92); } to{ transform:scale(1); } }
+  .material-card .ico{ transition:transform .25s ease, box-shadow .25s ease; }
+  .material-card:hover .ico{ transform:scale(1.08) rotate(-4deg); box-shadow:0 0 0 3px var(--accent-glow); }
+
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+
 
   /* =========================================================
      AUTH SCREEN (Log In / Create Account)
@@ -370,15 +512,59 @@
   }
   #authScreen{
     position:fixed; inset:0; z-index:100;
-    display:flex; align-items:center; justify-content:center;
-    background:var(--bg-deep); padding:24px; overflow-y:auto;
+    display:flex; background:var(--bg-deep); overflow-y:auto;
   }
-  #authScreen .bg-fx{ opacity:.4; }
+  .auth-welcome{
+    flex:1.35; min-width:0; position:relative; overflow:hidden;
+    background:linear-gradient(150deg, #1a0f2b 0%, #2a1140 45%, #3a1230 100%);
+    padding:56px 64px; display:flex; flex-direction:column; justify-content:center;
+  }
+  .auth-welcome .bg-fx{
+    opacity:.7;
+    background:
+      radial-gradient(560px 420px at 10% 15%, rgba(168,85,247,.35) 0%, transparent 60%),
+      radial-gradient(520px 380px at 95% 90%, rgba(236,72,153,.3) 0%, transparent 60%);
+  }
+  .auth-welcome-inner{ position:relative; z-index:2; max-width:580px; margin-top:64px; }
+  .auth-welcome .cert-logo-plate{ display:inline-flex; padding:10px 18px; }
+  .auth-greeting{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px;
+    color:#f0abfc; letter-spacing:.03em; margin:22px 0 10px;
+  }
+  .auth-welcome h1{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(24px,2.6vw,32px);
+    color:#fff; margin:0 0 16px; line-height:1.3;
+  }
+  .auth-welcome p{ color:rgba(255,255,255,.82); font-size:14.5px; line-height:1.75; margin:0 0 16px; }
+  .auth-welcome p.closing{ color:#fff; font-weight:600; }
+  .expect-block{ margin:6px 0 20px; }
+  .expect-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:#fff; margin-bottom:10px; }
+  .expect-list{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; }
+  .expect-list li{
+    color:rgba(255,255,255,.85); font-size:13.5px; padding:8px 12px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:10px;
+  }
+  .goal-line{
+    font-family:'Space Grotesk',sans-serif; font-size:14.5px; color:#fff;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    border-radius:12px; padding:12px 16px; margin:4px 0 16px; display:inline-block;
+  }
+  .auth-side{
+    flex:1; min-width:360px; max-width:440px;
+    display:flex; align-items:center; justify-content:center;
+    padding:32px 28px;
+  }
   .auth-card{
-    position:relative; z-index:2; width:100%; max-width:400px;
+    position:relative; z-index:2; width:100%; max-width:340px;
     background:var(--bg-panel); border:1px solid var(--line); border-radius:20px;
-    padding:28px 26px 26px; box-shadow:0 30px 80px -20px rgba(0,0,0,.6);
+    padding:24px 22px 22px; box-shadow:0 30px 80px -20px rgba(0,0,0,.6);
     animation:modalIn .32s cubic-bezier(.2,.9,.25,1);
+  }
+  @media (max-width:960px){
+    #authScreen{ flex-direction:column; }
+    .auth-welcome{ padding:44px 28px 36px; flex:none; }
+    .auth-side{ flex:none; max-width:100%; padding:28px; }
+    .expect-list{ grid-template-columns:1fr; }
   }
   .brand-logo-wrap{ display:flex; justify-content:center; margin-bottom:16px; }
   .brand-logo{ height:42px; width:auto; display:block; }
@@ -443,23 +629,45 @@
   /* top-right user bar once logged in */
   .user-bar{
     position:fixed; top:16px; right:16px; z-index:20;
-    display:flex; align-items:center; gap:10px;
+    display:flex; flex-direction:column; align-items:flex-end; gap:0;
+  }
+  .user-bar-pill{
+    display:flex; align-items:center; gap:10px; cursor:pointer;
     background:var(--bg-panel); border:1px solid var(--line); border-radius:999px;
     padding:6px 8px 6px 14px; box-shadow:0 10px 24px -10px rgba(0,0,0,.5);
   }
   .user-bar .who{ font-family:'Space Grotesk',sans-serif; font-size:12.5px; line-height:1.3; text-align:right; }
   .user-bar .who .name{ color:var(--text-primary); font-weight:600; }
   .user-bar .who .role{ color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
-  .user-bar button{
+  .user-bar-pill .chevron{ color:var(--text-faint); font-size:10px; transition:transform .2s ease; }
+  .user-bar-pill.open .chevron{ transform:rotate(180deg); }
+  .user-bar button.logout-btn{
     border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--text-muted);
     font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:11.5px;
     padding:8px 12px; border-radius:999px; cursor:pointer; transition:all .2s ease;
   }
-  .user-bar button:hover{ color:#fff; border-color:#ff6b8b; background:#ff6b8b; }
+  .user-bar button.logout-btn:hover{ color:#fff; border-color:#ff6b8b; background:#ff6b8b; }
+
+  .user-profile-panel{
+    display:none; margin-top:8px; width:260px;
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px; box-shadow:0 16px 32px -12px rgba(0,0,0,.55);
+  }
+  .user-profile-panel.open{ display:block; }
+  .user-profile-panel .row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:7px 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:12.5px;
+  }
+  .user-profile-panel .row:last-child{ border-bottom:0; }
+  .user-profile-panel .row .k{ color:var(--text-faint); font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; }
+  .user-profile-panel .row .v{ color:var(--text-primary); font-weight:600; font-family:'Space Grotesk',sans-serif; text-align:right; }
+  .user-profile-panel .row .v.status-active{ color:#3ee6a8; }
 
   @media (max-width:520px){
-    .user-bar{ top:10px; right:10px; padding:5px 6px 5px 10px; }
+    .user-bar{ top:10px; right:10px; }
+    .user-bar-pill{ padding:5px 6px 5px 10px; }
     .user-bar .who{ font-size:11px; }
+    .user-profile-panel{ width:220px; }
   }
 
   /* =========================================================
@@ -587,6 +795,15 @@
 </head>
 <body>
 
+<!-- Live date/time + light/dark toggle — visible on every screen -->
+<div class="clock-bar" id="clockBar">
+  <span class="cb-text"><span class="cb-date" id="cbDate">—</span><span id="cbTime">—</span></span>
+  <div class="theme-toggle" id="themeToggle" title="Switch between light and dark view">
+    <span class="seg" id="segLight">☀️</span>
+    <span class="seg" id="segDark">🌙</span>
+  </div>
+</div>
+
 <!-- =========================================================
      AUTH SCREEN — Log In / Create Account
      Roles: Agent, QA, Team Leader, HR, HOD
@@ -594,9 +811,35 @@
      Registration Code (issued by Admin/HR) to register.
 ========================================================= -->
 <div id="authScreen">
-  <div class="bg-fx"></div>
+  <div class="auth-welcome">
+    <div class="bg-fx"></div>
+    <div class="auth-welcome-inner">
+      <div class="brand-logo-wrap" style="justify-content:flex-start;">
+        <div class="cert-logo-plate" style="margin-bottom:0;"><img class="brand-logo" id="authLogo" alt="GTPL KCBPL" style="height:40px;" /></div>
+      </div>
+      <div class="auth-greeting" id="authGreeting">Hi, Good Morning! 👋</div>
+      <h1>🎉 Welcome to Your 45-Day Training Journey!</h1>
+      <p>Welcome to the team! 👋 We're excited to have you with us — over the next 45 days you'll learn, practice, and build the skills to deliver a great customer experience.</p>
+
+      <div class="expect-block">
+        <div class="expect-title">🚀 What to Expect</div>
+        <ul class="expect-list">
+          <li>📚 Product &amp; Process Knowledge</li>
+          <li>🎧 Call Handling &amp; Communication Skills</li>
+          <li>💬 Customer Engagement</li>
+          <li>🛠️ System &amp; Process Training</li>
+          <li>📊 Regular Assessments &amp; Feedback</li>
+          <li>⭐ Performance Improvement &amp; Coaching</li>
+        </ul>
+      </div>
+
+      <div class="goal-line">🌟 Your Goal &nbsp;—&nbsp; <b>Learn → Practice → Improve → Perform</b></div>
+      <p class="closing">💙 Stay curious, keep practicing, and welcome aboard!</p>
+    </div>
+  </div>
+
+  <div class="auth-side">
   <div class="auth-card">
-    <div class="brand-logo-wrap"><img class="brand-logo" id="authLogo" alt="GTPL KCBPL" /></div>
     <div class="auth-eyebrow">45-Day Training Portal</div>
 
     <div class="auth-switch">
@@ -676,6 +919,7 @@
       <div class="auth-note">You can't create a new account without a registration code — only people who have been given a code can register as QA / Team Leader / HR / HOD.</div>
     </form>
   </div>
+  </div>
 </div>
 
 <!-- =========================================================
@@ -684,8 +928,19 @@
 <div id="appScreen" style="display:none;">
 
 <div class="user-bar" id="userBar">
-  <div class="who"><div class="name" id="userBarName">—</div><div class="role" id="userBarRole">—</div></div>
-  <button type="button" id="logoutBtn">Log Out</button>
+  <div class="user-bar-pill" id="userBarToggle">
+    <div class="who"><div class="name" id="userBarName">—</div><div class="role" id="userBarRole">—</div></div>
+    <span class="chevron">▾</span>
+    <button type="button" class="logout-btn" id="logoutBtn">Log Out</button>
+  </div>
+  <div class="user-profile-panel" id="userProfilePanel">
+    <div class="row"><span class="k">Full Name</span><span class="v" id="upFullName">—</span></div>
+    <div class="row"><span class="k">Username</span><span class="v" id="upUsername">—</span></div>
+    <div class="row"><span class="k">Role</span><span class="v" id="upRole">—</span></div>
+    <div class="row"><span class="k">Status</span><span class="v status-active" id="upStatus">—</span></div>
+    <div class="row"><span class="k">Employee ID</span><span class="v" id="upEmployeeId">—</span></div>
+    <div class="row"><span class="k">Department</span><span class="v" id="upDepartment">—</span></div>
+  </div>
 </div>
 
 <div class="bg-fx"></div>
@@ -926,6 +1181,24 @@
   </div>
 </div>
 
+<!-- Media Viewer — best-view in-page rendering for PPT / Sheet / Doc / Video / Image -->
+<div class="modal-overlay" id="mediaViewerOverlay">
+  <div class="modal" id="mediaViewerModal" style="max-width:1040px;">
+    <div class="modal-head">
+      <button class="modal-close" data-close>✕</button>
+      <div class="tag" id="mvTag">Material</div>
+      <h3 id="mvTitle">Untitled</h3>
+    </div>
+    <div class="modal-body" style="padding-top:16px;">
+      <div id="mediaViewerBody"></div>
+      <div class="modal-actions">
+        <a class="btn" id="mvOpenExternal" href="#" target="_blank" rel="noopener">Open in a new tab ↗</a>
+        <button class="btn" data-close>Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Hidden certificate template used to render the downloadable PDF -->
 <div id="certTemplateHost">
   <div class="cert-sheet" id="certSheet">
@@ -979,9 +1252,124 @@ const LOGO_URL = "https://raw.githubusercontent.com/qualityanalystkcbpl-collab/c
 });
 
 const ROLE_LABELS = { agent:"Agent", qa:"Quality Analyst (QA)", tl:"Team Leader", hr:"HR", hod:"HOD" };
+
+/* =========================================================
+   0b) LIVE CLOCK + LIGHT/DARK TOGGLE — shown on every screen
+========================================================= */
+function tickClock(){
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  document.getElementById('cbDate').textContent = dateStr;
+  document.getElementById('cbTime').textContent = timeStr;
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+function getGreeting(){
+  const h = new Date().getHours();
+  if(h >= 5 && h < 12) return 'Good Morning';
+  if(h >= 12 && h < 17) return 'Good Afternoon';
+  if(h >= 17 && h < 21) return 'Good Evening';
+  return 'Good Night';
+}
+const authGreetingEl = document.getElementById('authGreeting');
+if(authGreetingEl) authGreetingEl.textContent = `Hi, ${getGreeting()}! 👋`;
+
+let currentTheme = 'dark';
+function applyTheme(theme){
+  currentTheme = theme;
+  if(theme === 'light'){ document.documentElement.setAttribute('data-theme', 'light'); }
+  else{ document.documentElement.removeAttribute('data-theme'); }
+  document.getElementById('segLight').classList.toggle('active', theme==='light');
+  document.getElementById('segDark').classList.toggle('active', theme==='dark');
+}
+applyTheme('dark');
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+});
+
+/* Make the clock bar draggable so it can be moved anywhere on screen,
+   in case it ever sits over other content. Position resets on refresh
+   since it's kept in memory only. */
+(function makeClockBarDraggable(){
+  const bar = document.getElementById('clockBar');
+  let dragging = false, offsetX = 0, offsetY = 0;
+
+  function clampAndSet(x, y){
+    const maxX = window.innerWidth - bar.offsetWidth - 4;
+    const maxY = window.innerHeight - bar.offsetHeight - 4;
+    x = Math.max(4, Math.min(maxX, x));
+    y = Math.max(4, Math.min(maxY, y));
+    bar.style.left = x + 'px';
+    bar.style.top = y + 'px';
+    bar.style.right = 'auto';
+    bar.style.bottom = 'auto';
+    bar.style.transform = 'none';
+  }
+
+  function startDrag(clientX, clientY, target){
+    if(target.closest('#themeToggle')) return false; // don't drag when clicking the toggle
+    const rect = bar.getBoundingClientRect();
+    offsetX = clientX - rect.left;
+    offsetY = clientY - rect.top;
+    dragging = true;
+    bar.classList.add('dragging');
+    return true;
+  }
+
+  bar.addEventListener('mousedown', (e)=>{
+    if(startDrag(e.clientX, e.clientY, e.target)) e.preventDefault();
+  });
+  document.addEventListener('mousemove', (e)=>{
+    if(!dragging) return;
+    clampAndSet(e.clientX - offsetX, e.clientY - offsetY);
+  });
+  document.addEventListener('mouseup', ()=>{
+    if(dragging){ dragging = false; bar.classList.remove('dragging'); }
+  });
+
+  bar.addEventListener('touchstart', (e)=>{
+    const t = e.touches[0];
+    if(startDrag(t.clientX, t.clientY, e.target)) e.preventDefault();
+  }, { passive:false });
+  document.addEventListener('touchmove', (e)=>{
+    if(!dragging) return;
+    const t = e.touches[0];
+    clampAndSet(t.clientX - offsetX, t.clientY - offsetY);
+    e.preventDefault();
+  }, { passive:false });
+  document.addEventListener('touchend', ()=>{
+    if(dragging){ dragging = false; bar.classList.remove('dragging'); }
+  });
+
+  // Keep it on-screen if the window is resized after being dragged.
+  window.addEventListener('resize', ()=>{
+    const rect = bar.getBoundingClientRect();
+    clampAndSet(rect.left, rect.top);
+  });
+})();
+
 const CODE_REQUIRED_ROLES = ["qa","tl","hr","hod"]; // Agent can self-register without a code
 
-let currentUser = null; // { fullName, username, role } — kept in memory only (cleared on refresh)
+let currentUser = null; // { fullName, username, role, employeeId, department, status }
+
+// Keeps the logged-in user signed in across a hard refresh, using
+// localStorage (no password is ever stored — just the profile fields
+// already returned by the server on login/register).
+const SESSION_KEY = 'catv_training_portal_session_v1';
+function saveSession(user){
+  try{ localStorage.setItem(SESSION_KEY, JSON.stringify(user)); } catch(e){ /* storage unavailable — session just won't persist */ }
+}
+function loadSession(){
+  try{
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e){ return null; }
+}
+function clearSession(){
+  try{ localStorage.removeItem(SESSION_KEY); } catch(e){ /* ignore */ }
+}
 
 const authScreen   = document.getElementById('authScreen');
 const appScreen    = document.getElementById('appScreen');
@@ -1066,7 +1454,7 @@ loginForm.addEventListener('submit', async (e)=>{
   try{
     const data = await callBackend({ action:'login', username, password });
     if(data.success){
-      currentUser = { fullName: data.fullName, username: data.username || username, role: data.role, employeeId: data.employeeId || '', department: data.department || '' };
+      currentUser = { fullName: data.fullName, username: data.username || username, role: data.role, employeeId: data.employeeId || '', department: data.department || '', status: 'active' };
       enterApp();
     } else {
       showAuthError(data.message || 'Incorrect username or password.');
@@ -1107,7 +1495,7 @@ registerForm.addEventListener('submit', async (e)=>{
   try{
     const data = await callBackend({ action:'register', fullName, username, password, role, code, employeeId, department });
     if(data.success){
-      currentUser = { fullName, username, role, employeeId, department: data.department || department };
+      currentUser = { fullName, username, role, employeeId, department: data.department || department, status: 'active' };
       enterApp();
     } else {
       showAuthError(data.message || 'Could not create the account.');
@@ -1119,8 +1507,12 @@ registerForm.addEventListener('submit', async (e)=>{
   }
 });
 
-document.getElementById('logoutBtn').addEventListener('click', ()=>{
+document.getElementById('logoutBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
   currentUser = null;
+  clearSession();
+  document.getElementById('userProfilePanel').classList.remove('open');
+  document.getElementById('userBarToggle').classList.remove('open');
   appScreen.style.display = 'none';
   authScreen.style.display = 'flex';
   loginForm.reset();
@@ -1128,9 +1520,25 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
   authTabLogin.click();
 });
 
+document.getElementById('userBarToggle').addEventListener('click', ()=>{
+  document.getElementById('userProfilePanel').classList.toggle('open');
+  document.getElementById('userBarToggle').classList.toggle('open');
+});
+
+function renderUserProfilePanel(){
+  document.getElementById('upFullName').textContent = currentUser.fullName || currentUser.username || '—';
+  document.getElementById('upUsername').textContent = '@' + (currentUser.username || '—');
+  document.getElementById('upRole').textContent = ROLE_LABELS[currentUser.role] || currentUser.role || '—';
+  document.getElementById('upStatus').textContent = currentUser.status ? (currentUser.status.charAt(0).toUpperCase() + currentUser.status.slice(1)) : 'Active';
+  document.getElementById('upEmployeeId').textContent = currentUser.employeeId || '—';
+  document.getElementById('upDepartment').textContent = currentUser.department ? (TABS.find(t=>t.key===currentUser.department) || {label:currentUser.department}).label : '—';
+}
+
 async function enterApp(){
   document.getElementById('userBarName').textContent = currentUser.fullName || currentUser.username;
   document.getElementById('userBarRole').textContent = ROLE_LABELS[currentUser.role] || currentUser.role;
+  renderUserProfilePanel();
+  saveSession(currentUser);
   authScreen.style.display = 'none';
   appScreen.style.display = 'block';
   applyRolePermissions();
@@ -1146,6 +1554,8 @@ async function enterApp(){
         renderTimeline();
       }
     } catch(err){ /* non-critical — timeline still works without it */ }
+
+    loadMyPassedStages().then(()=> renderTimeline()).catch(()=>{}); // fire-and-forget, greens in once loaded
   } else {
     // QA / Team Leader / HR / HOD land on the Agent Progress dashboard
     // first (master access) — see every registered agent and drill into
@@ -1242,6 +1652,26 @@ const JOURNEY_CONFIG = {
 ========================================================= */
 let activeTab = 'catv';
 const doneMap = {};
+const passedMap = {}; // {tab-stageIndex: true} — stages this agent has passed the assessment for (shows green)
+
+// Self-service check using the existing getCertificate action (no new
+// backend endpoint needed) — pulls pass/fail for every stage in every
+// tab this agent can see, so the timeline badges can go green.
+async function loadMyPassedStages(){
+  if(!currentUser || currentUser.role !== 'agent') return;
+  const visible = visibleTabsForCurrentUser();
+  const calls = [];
+  visible.forEach(t=>{
+    (JOURNEY_CONFIG[t.key] || []).forEach((_, idx)=>{
+      calls.push(
+        callBackend({ action:'getCertificate', username: currentUser.username, tab: t.key, stageIndex: idx })
+          .then(res=>{ if(res && res.success) passedMap[`${t.key}-${idx}`] = true; })
+          .catch(()=>{})
+      );
+    });
+  });
+  await Promise.all(calls);
+}
 let currentModalRef = null;
 
 /* =========================================================
@@ -1292,6 +1722,7 @@ function switchTab(key){
 const timelineEl = document.getElementById('timeline');
 
 function isUnlocked(tabKey, idx){
+  if(!currentUser || currentUser.role !== 'agent') return true; // staff manage every stage freely
   if(idx === 0) return true;
   return !!doneMap[`${tabKey}-${idx-1}`];
 }
@@ -1319,11 +1750,13 @@ function renderTimeline(){
   stages.forEach((stage, idx)=>{
     const key = `${activeTab}-${idx}`;
     const isDone = !!doneMap[key];
+    const isPassed = !!passedMap[key];
     const unlocked = isUnlocked(activeTab, idx);
     if(isDone) doneCount++;
 
     const row = document.createElement('div');
-    row.className = 'stage ' + (idx%2===0 ? 'left' : 'right') + (isDone ? ' done' : '') + (!unlocked ? ' locked' : '');
+    row.className = 'stage ' + (idx%2===0 ? 'left' : 'right')
+      + (isDone ? ' done' : '') + (isPassed ? ' passed' : '') + (!unlocked ? ' locked' : '');
     row.style.setProperty('--i', idx);
 
     row.innerHTML = `
@@ -1361,7 +1794,8 @@ const certListOverlay = document.getElementById('certListOverlay');
 const agentsOverlay = document.getElementById('agentsOverlay');
 const stageEditOverlay = document.getElementById('stageEditOverlay');
 const matOverlay = document.getElementById('matOverlay');
-const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, agentsOverlay, stageEditOverlay, matOverlay];
+const mediaViewerOverlay = document.getElementById('mediaViewerOverlay');
+const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, agentsOverlay, stageEditOverlay, matOverlay, mediaViewerOverlay];
 
 const MATERIAL_TYPE_META = {
   ppt:   { icon:'🎞️', label:'Presentation' },
@@ -1371,32 +1805,95 @@ const MATERIAL_TYPE_META = {
   image: { icon:'🖼️', label:'Image' },
 };
 
-function materialUrl(type, id){
-  const clean = encodeURIComponent(String(id||'').trim());
-  if(type==='sheet') return `https://docs.google.com/spreadsheets/d/${clean}/edit`;
-  if(type==='doc')   return `https://docs.google.com/document/d/${clean}/edit`;
-  if(type==='ppt')   return `https://docs.google.com/presentation/d/${clean}/edit`;
-  return `https://drive.google.com/file/d/${clean}/view`; // video / image / fallback
-}
-
-// Accepts either a bare Drive/Sheet/Doc file ID or a full share link and
-// returns just the ID, so staff can paste whichever is easiest.
+// Accepts either a bare Drive/Sheet/Doc/YouTube file ID or a full share
+// link and returns just the ID, so staff can paste whichever is easiest.
 function extractResourceId(input){
   input = String(input||'').trim();
-  let m = input.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+  let m = input.match(/\/d\/([a-zA-Z0-9_-]{10,})/);           // Drive/Sheets/Docs/Slides share links
   if(m) return m[1];
-  m = input.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+  m = input.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);              // ...?id=FILEID style links
+  if(m) return m[1];
+  m = input.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);           // youtu.be/VIDEOID
+  if(m) return m[1];
+  m = input.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);                // youtube.com/watch?v=VIDEOID
+  if(m) return m[1];
+  m = input.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{6,})/); // youtube.com/embed/VIDEOID
   if(m) return m[1];
   return input;
 }
 
-function materialCardHtml(m){
+function isYouTubeId(id){
+  // YouTube IDs are exactly 11 chars; Drive file IDs are much longer.
+  return /^[a-zA-Z0-9_-]{11}$/.test(String(id||'').trim());
+}
+
+// Returns the best-view embed configuration for each material type, so
+// PPTs/Sheets/Docs render natively in-page, video autoplays, and images
+// load full-size — instead of just linking out.
+function mediaEmbedInfo(type, id){
+  const clean = encodeURIComponent(String(id||'').trim());
+  if(type === 'ppt'){
+    return { kind:'iframe', src:`https://docs.google.com/presentation/d/${clean}/embed?start=true&loop=false&delayms=3000`, ratio:'56.25%' };
+  }
+  if(type === 'sheet'){
+    return { kind:'iframe', src:`https://docs.google.com/spreadsheets/d/${clean}/preview`, ratio:'75%' };
+  }
+  if(type === 'doc'){
+    return { kind:'iframe', src:`https://docs.google.com/document/d/${clean}/preview`, ratio:'90%' };
+  }
+  if(type === 'video'){
+    if(isYouTubeId(id)){
+      return { kind:'iframe', src:`https://www.youtube.com/embed/${clean}?autoplay=1&rel=0`, ratio:'56.25%', allow:'autoplay; encrypted-media; picture-in-picture' };
+    }
+    return { kind:'iframe', src:`https://drive.google.com/file/d/${clean}/preview`, ratio:'56.25%', allow:'autoplay' };
+  }
+  if(type === 'image'){
+    return { kind:'image', src:`https://drive.google.com/thumbnail?id=${clean}&sz=w2000` };
+  }
+  return { kind:'iframe', src:`https://drive.google.com/file/d/${clean}/preview`, ratio:'75%' };
+}
+
+function openMediaViewer(m){
+  if(!m) return;
   const meta = MATERIAL_TYPE_META[m.type] || { icon:'📄', label:'File' };
+  document.getElementById('mvTag').textContent = meta.label;
+  document.getElementById('mvTitle').textContent = `${meta.icon} ${m.title || meta.label}`;
+
+  const info = mediaEmbedInfo(m.type, m.resourceId);
+  // "Open in a new tab" reuses the exact same clean preview/embed URL shown
+  // in-page — never the raw Drive/Docs edit or view page — so agents never
+  // land on Google Drive's own site.
+  document.getElementById('mvOpenExternal').href = info.src;
+
+  const body = document.getElementById('mediaViewerBody');
+  const modal = document.getElementById('mediaViewerModal');
+
+  if(info.kind === 'image'){
+    modal.style.maxWidth = '1040px';
+    body.innerHTML = `<div class="mv-image-wrap"><img src="${info.src}" alt="${escapeHtml(m.title||'Image')}" /></div>`;
+  } else {
+    modal.style.maxWidth = (m.type === 'sheet' || m.type === 'doc') ? '900px' : '1040px';
+    body.innerHTML = `
+      <div class="mv-frame-wrap" style="padding-top:${info.ratio};">
+        <iframe src="${info.src}" allow="${info.allow||''}" allowfullscreen loading="lazy"></iframe>
+      </div>`;
+  }
+
+  mediaViewerOverlay.classList.add('open');
+}
+
+let currentMaterialsList = [];
+
+function materialCardHtml(m, idx){
+  const meta = MATERIAL_TYPE_META[m.type] || { icon:'📄', label:'File' };
+  const hint = m.type==='video' ? 'Plays automatically ▶'
+    : m.type==='image' ? 'Opens full-size 🔍'
+    : 'Opens in best view ↗';
   return `
-    <a class="material-card" href="${materialUrl(m.type, m.resourceId)}" target="_blank" rel="noopener">
+    <button type="button" class="material-card" data-idx="${idx}">
       <div class="ico">${meta.icon}</div>
-      <div class="txt"><div class="t">${escapeHtml(m.title || meta.label)}</div><div class="s">${meta.label} · Open in a new tab ↗</div></div>
-    </a>`;
+      <div class="txt"><div class="t">${escapeHtml(m.title || meta.label)}</div><div class="s">${meta.label} · ${hint}</div></div>
+    </button>`;
 }
 
 // Renders the Day-pills + material cards for whichever day is selected.
@@ -1422,10 +1919,14 @@ function renderMaterialsView(materials){
     const pillsHtml = dayKeys.length > 1
       ? `<div class="day-pills">${dayKeys.map(k=> `<button type="button" class="day-pill ${k===activeDay?'active':''}" data-day="${escapeHtml(k)}">${escapeHtml(k)}</button>`).join('')}</div>`
       : '';
-    const itemsHtml = byDay[activeDay].items.map(materialCardHtml).join('');
+    currentMaterialsList = byDay[activeDay].items;
+    const itemsHtml = currentMaterialsList.map(materialCardHtml).join('');
     area.innerHTML = pillsHtml + itemsHtml;
     area.querySelectorAll('.day-pill').forEach(p=>{
       p.addEventListener('click', ()=>{ activeDay = p.dataset.day; paint(); });
+    });
+    area.querySelectorAll('.material-card').forEach(card=>{
+      card.addEventListener('click', ()=> openMediaViewer(currentMaterialsList[Number(card.dataset.idx)]));
     });
   }
   paint();
@@ -1490,19 +1991,21 @@ document.getElementById('markDoneBtn').addEventListener('click', async ()=>{
   }
 });
 
+function closeAllOverlays(){
+  ALL_OVERLAYS.forEach(ov=> ov.classList.remove('open'));
+  document.getElementById('mediaViewerBody').innerHTML = ''; // stop any playing video/audio
+}
 document.querySelectorAll('[data-close]').forEach(el=>{
-  el.addEventListener('click', ()=>{
-    ALL_OVERLAYS.forEach(ov=> ov.classList.remove('open'));
-  });
+  el.addEventListener('click', closeAllOverlays);
 });
 ALL_OVERLAYS.forEach(ov=>{
-  ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('open'); });
+  ov.addEventListener('click', (e)=>{ if(e.target===ov) closeAllOverlays(); });
 });
 document.getElementById('helpBtn').addEventListener('click', ()=> helpOverlay.classList.add('open'));
 document.getElementById('certNavBtn').addEventListener('click', ()=> openCertificateList());
 document.getElementById('agentsNavBtn').addEventListener('click', ()=> openAgentsOverlay());
 document.addEventListener('keydown', (e)=>{
-  if(e.key==='Escape'){ ALL_OVERLAYS.forEach(ov=> ov.classList.remove('open')); }
+  if(e.key==='Escape'){ closeAllOverlays(); }
 });
 
 /* =========================================================
@@ -2272,6 +2775,18 @@ async function initApp(){
   renderTabs();
   switchTab(activeTab);
 }
+
+/* -----------------------------------------------------------
+   SESSION BOOTSTRAP — restores login on a hard refresh instead
+   of dropping back to the auth screen.
+----------------------------------------------------------- */
+(function restoreSession(){
+  const saved = loadSession();
+  if(saved && saved.username && saved.role){
+    currentUser = saved;
+    enterApp();
+  }
+})();
 </script>
 </body>
 </html>
