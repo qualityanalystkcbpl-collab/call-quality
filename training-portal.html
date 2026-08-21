@@ -796,7 +796,7 @@
      (name, score, date...) is still plain HTML text drawn on top. */
   .nc-art{ position:absolute; inset:0; z-index:1; width:100%; height:100%; display:block; }
 
-  .nc-content{ position:relative; z-index:3; height:100%; padding:40px 74px 34px 215px; text-align:left; display:flex; flex-direction:column; align-items:flex-start; }
+  .nc-content{ position:relative; z-index:3; height:100%; padding:40px 74px 34px 430px; text-align:left; display:flex; flex-direction:column; align-items:flex-start; }
 
   .nc-top-row{ display:flex; align-items:flex-start; justify-content:space-between; width:100%; }
   .nc-logo-box{ background:#fff; border-radius:12px; padding:10px 18px; box-shadow:0 8px 22px rgba(10,20,60,.14); }
@@ -804,8 +804,8 @@
   .nc-certno{ font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.1em; color:#b8891c; margin-top:6px; }
 
   .nc-title{
-    font-family:'Cormorant Garamond',serif; font-weight:700; font-size:66px; line-height:1;
-    color:#141c40; letter-spacing:.03em; margin:6px 0 2px;
+    font-family:'Cormorant Garamond',serif; font-weight:700; font-size:50px; line-height:1.05;
+    color:#141c40; letter-spacing:.01em; margin:6px 0 2px; white-space:nowrap;
   }
   .nc-title-sub{
     font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:17px; letter-spacing:.42em;
@@ -1273,17 +1273,17 @@
     <div class="nc-content">
       <div class="nc-top-row">
         <div class="nc-logo-box"><img id="certLogoImg" alt="GTPL KCBPL" crossorigin="anonymous" /></div>
-        <div class="nc-certno">Cert. No.<br/><span id="certNumber">—</span></div>
+        <div class="nc-certno" id="ncCertNoBlock">Cert. No.<br/><span id="certNumber">—</span></div>
       </div>
 
-      <div class="nc-title">CERTIFICATE</div>
+      <div class="nc-title" id="ncTitle">CERTIFICATE</div>
       <div class="nc-title-sub" id="certStageLabel">Stage Assessment</div>
 
-      <div class="nc-certify">This is to certify that</div>
+      <div class="nc-certify" id="ncCertify">This is to certify that</div>
       <div class="nc-name" id="certAgentName">Agent Name</div>
       <div class="nc-name-line"></div>
 
-      <div class="nc-desc">This certifies that <b id="certAgentNameInline">Agent Name</b> has successfully completed the assessment for <b id="certStageTitleInline">Stage</b> as part of the 45-Day Training Journey, achieving a passing score.</div>
+      <div class="nc-desc" id="ncDescBlock">This certifies that <b id="certAgentNameInline">Agent Name</b> has successfully completed the assessment for <b id="certStageTitleInline">Stage</b> as part of the 45-Day Training Journey, achieving a passing score.</div>
 
       <div class="nc-meta-row">
         <div><div class="lbl">Employee ID</div><div class="val" id="certEmployeeId">—</div></div>
@@ -2099,8 +2099,19 @@ async function renderAssessmentBox(tab, idx, stage){
       if(res.success){
         pill.textContent = `Passed · ${res.certificate.score}/${res.certificate.total}`;
         pill.classList.add('pass');
-        actions.innerHTML = `<button class="btn primary" id="downloadCertBtn">⬇ Download Certificate</button>`;
-        document.getElementById('downloadCertBtn').addEventListener('click', ()=> downloadCertificate(tab, idx, stage, res.certificate));
+
+        const kind = downloadKindForStage(idx);
+        const label = kind === 'certificate' ? 'Certificate' : 'Congratulations';
+        const allowance = await callBackend({ action:'checkDownloadAllowance', username: currentUser.username, tab, stageIndex: idx, type: kind }).catch(()=>null);
+        const remaining = allowance && allowance.success ? allowance.remaining : null;
+
+        if(remaining === 0){
+          actions.innerHTML = `<button class="btn" disabled title="Contact QA / Team Leader / HR / HOD for another copy">⬇ Download limit reached</button>`;
+        } else {
+          const countTag = remaining !== null ? ` (${remaining} left)` : '';
+          actions.innerHTML = `<button class="btn primary" id="downloadCertBtn">⬇ Download ${label}${countTag}</button>`;
+          document.getElementById('downloadCertBtn').addEventListener('click', ()=> downloadCertificate(tab, idx, stage, res.certificate));
+        }
       } else {
         pill.textContent = 'Assessment not attempted yet';
         actions.innerHTML = `<button class="btn primary" id="takeAssessBtn">📝 Take Assessment</button>`;
@@ -2206,6 +2217,8 @@ function showQuizResult(tab, idx, stage, res){
   document.getElementById('quizPlay').style.display = 'none';
   const box = document.getElementById('quizResultBox');
   box.style.display = '';
+  const kind = downloadKindForStage(idx);
+  const dlLabel = kind === 'certificate' ? 'Certificate' : 'Congratulations';
   box.innerHTML = `
     <div class="quiz-result ${res.passed ? 'pass' : 'fail'}">
       <div class="score-num">${res.score}/${res.total}</div>
@@ -2213,7 +2226,7 @@ function showQuizResult(tab, idx, stage, res){
       <div class="sub">${res.passed ? `Pass mark is ${res.passMark}/${res.total} — great work.` : `Pass mark is ${res.passMark}/${res.total}. You can try again.`}</div>
       <div class="modal-actions" style="justify-content:center; margin-top:20px;">
         ${res.passed
-          ? `<button class="btn primary" id="dlCertFromQuizBtn">⬇ Download Certificate</button>`
+          ? `<button class="btn primary" id="dlCertFromQuizBtn">⬇ Download ${dlLabel}</button>`
           : `<button class="btn primary" id="retakeBtn">Try Again</button>`}
         <button class="btn" data-close>Close</button>
       </div>
@@ -2623,7 +2636,24 @@ document.getElementById('certListSearch').addEventListener('input', (e)=>{
 });
 
 /* -------------------- CERTIFICATE (PDF + Drive auto-save) -------------------- */
+// Stages 1-5 (index 0-4) earn a congratulation message on passing.
+// Stage 6 (index 5) — On the Job Training — is the final stage and earns
+// the full completion certificate instead.
+const FINAL_STAGE_INDEX = 5;
+const CONGRATS_MESSAGES = [
+  "has completed <b>Induction Training</b> — the very first step of the 45-Day Training Journey. A great start!",
+  "has completed <b>Product Training</b> and demonstrated a solid understanding of the packages, schemes, and pricing.",
+  "has completed <b>Process Training</b> and shown a clear grasp of the process flow for the role.",
+  "has completed <b>Behavioural Skills Training</b> and sharpened the communication and customer-handling skills needed on the floor.",
+  "has completed <b>Shadow Training</b> and is now ready to start handling live calls independently."
+];
+
+function downloadKindForStage(idx){
+  return idx === FINAL_STAGE_INDEX ? 'certificate' : 'message';
+}
+
 async function fillCertificateTemplate(tab, idx, stage, cert){
+  const kind = downloadKindForStage(idx);
   const tLabel = (TABS.find(x=>x.key===tab) || {label:tab}).label;
   const stageTitle = stage.title || `Stage ${idx+1}`;
   const agentName = cert.fullName || currentUser.fullName;
@@ -2632,14 +2662,29 @@ async function fillCertificateTemplate(tab, idx, stage, cert){
 
   document.getElementById('certStageLabel').textContent = `${tLabel} · ${stageTitle}`;
   document.getElementById('certAgentName').textContent = agentName;
-  document.getElementById('certAgentNameInline').textContent = agentName;
-  document.getElementById('certStageTitleInline').textContent = stageTitle;
   document.getElementById('certEmployeeId').textContent = empId;
   document.getElementById('certScore').textContent = `${cert.score}/${cert.total}`;
   document.getElementById('certDate').textContent = certDate.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
-  document.getElementById('certNumber').textContent = cert.certificateNumber || '—';
 
-  return { agentName, empId, stageTitle };
+  const certNoBlock = document.getElementById('ncCertNoBlock');
+  const titleEl = document.getElementById('ncTitle');
+  const certifyEl = document.getElementById('ncCertify');
+  const descEl = document.getElementById('ncDescBlock');
+
+  if(kind === 'certificate'){
+    certNoBlock.style.display = '';
+    document.getElementById('certNumber').textContent = cert.certificateNumber || '—';
+    titleEl.textContent = 'CERTIFICATE';
+    certifyEl.textContent = 'This is to certify that';
+    descEl.innerHTML = `has successfully completed the full <b>45-Day Training Journey</b> for <b>${tLabel}</b> — Induction, Product Training, Process Training, Behavioural Skills, Shadow Training, and On the Job Training — and has met all assessment requirements throughout, scoring <b>${cert.score}/${cert.total}</b> on the final stage.`;
+  } else {
+    certNoBlock.style.display = 'none';
+    titleEl.textContent = 'CONGRATULATIONS!';
+    certifyEl.textContent = 'Presented to';
+    descEl.innerHTML = CONGRATS_MESSAGES[idx] || `has successfully completed <b>${stageTitle}</b> as part of the 45-Day Training Journey.`;
+  }
+
+  return { agentName, empId, stageTitle, kind };
 }
 
 // Renders the certificate template into a jsPDF document and returns it,
@@ -2729,19 +2774,38 @@ function triggerPdfDownload(pdf, fileName){
 }
 
 async function downloadCertificate(tab, idx, stage, cert){
+  const kind = downloadKindForStage(idx);
+  const label = kind === 'certificate' ? 'certificate' : 'congratulations message';
   try{
+    // Check the allowance first so we don't waste time rendering a PDF
+    // the agent isn't allowed to download.
+    const allowance = await callBackend({ action:'checkDownloadAllowance', username: currentUser.username, tab, stageIndex: idx, type: kind });
+    if(allowance.success && allowance.remaining <= 0){
+      showToast(`Download limit reached for this ${label}. Please contact QA / Team Leader / HR / HOD for another copy.`);
+      return;
+    }
+
     const { pdf, agentName, stageTitle } = await buildCertificatePdf(tab, idx, stage, cert);
-    triggerPdfDownload(pdf, `Certificate-${agentName.replace(/\s+/g,'_')}-${stageTitle.replace(/\s+/g,'_')}.pdf`);
+    const prefix = kind === 'certificate' ? 'Certificate' : 'Congratulations';
+    triggerPdfDownload(pdf, `${prefix}-${agentName.replace(/\s+/g,'_')}-${stageTitle.replace(/\s+/g,'_')}.pdf`);
+
+    const recorded = await callBackend({ action:'recordDownload', username: currentUser.username, tab, stageIndex: idx, type: kind });
+    if(recorded.success){
+      showToast(`Downloaded. ${recorded.remaining} download${recorded.remaining===1?'':'s'} remaining for this ${label}.`);
+    }
+    renderAssessmentBox(tab, idx, stage); // refresh the button/remaining-count state
   } catch(err){
-    console.error('Certificate download failed:', err);
+    console.error('Certificate/message download failed:', err);
     showToast('Could not generate the PDF: ' + (err && err.message ? err.message : 'unknown error') + ' (see browser console for details)');
   }
 }
 
-// Automatically saves a freshly-earned certificate to the shared Google
-// Drive folder (via the Apps Script backend) right after the agent passes.
-// Runs silently — failures don't block the agent from seeing their result.
+// Automatically saves a freshly-earned FINAL certificate (Stage 6 only —
+// congratulation messages for Stages 1-5 are not archived) to the shared
+// Google Drive folder right after the agent passes. Runs silently —
+// failures don't block the agent from seeing their result.
 async function autoSaveCertificateToDrive(tab, idx, stage, cert){
+  if(downloadKindForStage(idx) !== 'certificate') return; // only the final stage produces an archived certificate
   try{
     const { pdf, agentName, stageTitle } = await buildCertificatePdf(tab, idx, stage, cert);
     const base64 = pdf.output('datauristring').split(',')[1];
@@ -2834,13 +2898,13 @@ async function selectAgent(agent){
       detail.innerHTML = `<div class="empty-state">${escapeHtml(res.message || 'Could not load this agent\'s progress.')}</div>`;
       return;
     }
-    renderAgentDetail(agent, res.progress || {}, res.results || []);
+    renderAgentDetail(agent, res.progress || {}, res.results || [], res.downloads || {});
   } catch(err){
     detail.innerHTML = `<div class="empty-state">${escapeHtml(err.message || 'Could not reach the server.')}</div>`;
   }
 }
 
-function renderAgentDetail(agent, progress, results){
+function renderAgentDetail(agent, progress, results, downloads){
   const detail = document.getElementById('agentsDetail');
   const resultByKey = {};
   results.forEach(r=> resultByKey[`${r.tab}-${r.stageIndex}`] = r);
@@ -2870,11 +2934,22 @@ function renderAgentDetail(agent, progress, results){
       } else {
         statusHtml = `<span class="st-status pending">NOT STARTED</span>`;
       }
+
+      const dlKind = downloadKindForStage(idx);
+      const dlLabel = dlKind === 'certificate' ? 'Certificate' : 'Message';
+      const dlKey = `${t.key}-${idx}-${dlKind}`;
+      const dl = downloads[dlKey];
+      const dlCountHtml = (result && result.passed)
+        ? `<span class="st-dl-count">${dlLabel}: ${dl ? dl.used : 0}/${dl ? dl.limit : (dlKind==='certificate'?3:1)}</span>
+           <button type="button" class="row-mini-btn" data-grant-tab="${t.key}" data-grant-idx="${idx}" data-grant-type="${dlKind}">+1 Download</button>`
+        : '';
+
       return `
         <div class="agent-stage-row">
           <div class="st-name">Stage ${idx+1} — ${escapeHtml(stage.title || `Stage ${idx+1}`)}</div>
           <div class="st-right">
             ${statusHtml}
+            ${dlCountHtml}
             <button type="button" class="row-mini-btn" data-open-tab="${t.key}" data-open-idx="${idx}">Open</button>
             ${result ? `<button type="button" class="row-mini-btn danger" data-reset-tab="${t.key}" data-reset-idx="${idx}">Reset assessment</button>` : ``}
           </div>
@@ -2932,6 +3007,31 @@ function renderAgentDetail(agent, progress, results){
       } catch(err){
         showToast(err.message || 'Could not reach the server.');
         btn.disabled = false; btn.textContent = 'Reset assessment';
+      }
+    });
+  });
+
+  // "+1 Download" — grants this agent one more download of their
+  // Congratulations message or Certificate for this specific stage,
+  // any time they've used up their normal allowance.
+  detail.querySelectorAll('[data-grant-tab]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const tab = btn.dataset.grantTab;
+      const idx = Number(btn.dataset.grantIdx);
+      const type = btn.dataset.grantType;
+      btn.disabled = true; btn.textContent = 'Granting…';
+      try{
+        const res = await callBackend({ action:'grantDownload', role: currentUser.role, username: agent.username, tab, stageIndex: idx, type });
+        if(res.success){
+          showToast(`Granted — ${agent.fullName || agent.username} can download 1 more time (${res.remaining} remaining).`);
+          selectAgent(agent); // refresh this panel
+        } else {
+          showToast(res.message || 'Could not grant an extra download.');
+          btn.disabled = false; btn.textContent = '+1 Download';
+        }
+      } catch(err){
+        showToast(err.message || 'Could not reach the server.');
+        btn.disabled = false; btn.textContent = '+1 Download';
       }
     });
   });
