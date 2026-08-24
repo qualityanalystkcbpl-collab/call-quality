@@ -3194,7 +3194,7 @@ async function loadAndRenderMaterials(tab, idx){
 
     // Product Training (Stage 2): always show the internal Digital TV Package
     // viewer in every training tab, independent of backend material records.
-    if(Number(idx) === 1){
+    if(Number(idx) === 1 && activeTab !== 'soft'){
       const hasDigitalTvMaterial = materials.some(m => isProductCatalogMaterial(m));
       if(!hasDigitalTvMaterial){
         materials.unshift({
@@ -3211,13 +3211,13 @@ async function loadAndRenderMaterials(tab, idx){
   } catch(err){
     // Even if the backend material list fails, Product Training still gets
     // the Digital TV Package viewer.
-    if(Number(idx) === 1){
+    if(Number(idx) === 1 && activeTab !== 'soft'){
       renderMaterialsView([{
         type: 'website',
         title: 'Digital TV Package',
         resourceId: 'https://www.gtplkcbpl.com/packages',
-        dayLabel: 'Product Training',
-        dayOrder: 0
+        dayLabel: 'Day 1',
+        dayOrder: 1
       }]);
     } else {
       area.innerHTML = `<div class="empty-state">${escapeHtml(err.message || 'Could not reach the server.')}</div>`;
