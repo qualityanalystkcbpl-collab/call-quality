@@ -28,6 +28,7 @@
     --catv: #14E8C8;      --catv-glow: rgba(20, 232, 200, 0.45);
     --tech: #4C8DFF;      --tech-glow: rgba(76, 141, 255, 0.45);
     --renewal: #F5A623;   --renewal-glow: rgba(245, 166, 35, 0.45);
+    --retention: #A855F7; --retention-glow: rgba(168, 85, 247, 0.45);
     --soft: #FF6B8B;      --soft-glow: rgba(255, 107, 139, 0.45);
 
     --accent: var(--catv);
@@ -207,6 +208,62 @@
   }
   .tab-btn.active svg{ stroke: #0A0F1C; }
   .tab-btn.active .count{ background: rgba(10,15,28,.2); color: #0A0F1C; font-weight: 700; }
+
+  /* Staff Menu Bar (QA / Team Leader / HR / HOD only) */
+  .staff-menu{
+    position: relative; z-index: 3;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+    padding: 6px 24px; max-width: 1050px; margin: 20px auto 0;
+  }
+  .staff-menu-btn{
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 12px; cursor: pointer;
+    background: var(--bg-panel); border: 1px solid var(--line);
+    color: var(--text-muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px;
+    backdrop-filter: blur(16px); transition: all .2s ease;
+    box-shadow: 0 8px 18px -6px rgba(0,0,0,0.4);
+  }
+  .staff-menu-btn:hover{ color: var(--text-primary); border-color: var(--accent); transform: translateY(-2px); }
+  .staff-menu-btn.active{
+    color: #0A0F1C; background: linear-gradient(120deg, #a855f7, #ec4899); border-color: transparent;
+    box-shadow: 0 10px 22px -6px rgba(236,72,153,.5);
+  }
+
+  /* Home Dashboard */
+  .dash-grid{
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;
+    max-width: 920px; margin: 0 auto 26px;
+  }
+  .dash-card{
+    background: var(--bg-panel-2); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 20px; text-align: center; box-shadow: 0 10px 22px -8px rgba(0,0,0,0.5);
+  }
+  .dash-card .num{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:26px; color: var(--accent); }
+  .dash-card .lbl{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color: var(--text-faint); margin-top:4px; text-transform: uppercase; letter-spacing:.04em; }
+  .dash-welcome{ text-align:center; max-width:700px; margin:0 auto 26px; color: var(--text-muted); font-size:14px; line-height:1.7; }
+  .dash-welcome h2{ font-family:'Space Grotesk',sans-serif; color: var(--text-primary); margin:0 0 8px; }
+  .dash-quick{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:920px; margin:0 auto; }
+
+  /* Employees view */
+  .emp-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; max-width:920px; margin:0 auto 18px; }
+  .emp-search{
+    flex:1; min-width:220px; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--line);
+    background: #EDEFF5; color: #0A0F1C; font-family: 'Inter', sans-serif; font-size: 13.5px; outline:none;
+  }
+  .emp-list{ max-width:920px; margin:0 auto; display:flex; flex-direction:column; gap:10px; }
+  .emp-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background: var(--bg-panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px;
+    box-shadow: 0 8px 18px -4px rgba(0,0,0,0.5);
+  }
+  .emp-row .nm{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; }
+  .emp-row .meta{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color: var(--text-faint); margin-top:3px; }
+  .emp-form{
+    max-width:920px; margin: 0 auto 20px; background: var(--bg-panel-2); border:1px solid var(--line);
+    border-radius:14px; padding:18px 20px; display:none;
+  }
+  .emp-form.open{ display:block; }
+  .emp-form-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 16px; }
 
   /* Main Container */
   main{
@@ -890,6 +947,7 @@
 
   /* Media Viewer */
   .mv-frame-wrap{ position: relative; width: 100%; height: 0; border-radius: 12px; overflow: hidden; background: #000; }
+  .mv-frame-wrap.full{ height: 82vh; padding-top: 0 !important; }
   .mv-frame-wrap iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .mv-image-wrap{ display: flex; align-items: center; justify-content: center; background: #0B111F; border-radius: 12px; max-height: 78vh; overflow: auto; padding: 12px; }
   .mv-image-wrap img{ max-width: 100%; max-height: 74vh; display: block; border-radius: 6px; }
@@ -920,6 +978,97 @@
   .nc-sign .ln{ border-top: 1px solid #8892ac; margin: 2px auto 8px; width: 100%; }
   .nc-sign .nm{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: #141c40; letter-spacing: .03em; }
   .nc-sign .rl{ font-family: 'Inter', sans-serif; font-size: 11.5px; color: #5b658a; margin-top: 2px; }
+
+  /* =========================================================
+     PRODUCT / PACKAGE INFORMATION VIEWER
+     Uses the existing portal glassmorphism / accent system.
+  ========================================================= */
+  .product-modal{ max-width: 1180px !important; }
+  .product-viewer-shell{ display:flex; flex-direction:column; gap:16px; min-height:520px; }
+  .product-tabs{ display:flex; gap:10px; flex-wrap:wrap; }
+  .product-tab{ flex:1 1 240px; min-width:0; border:1px solid var(--line); background:rgba(255,255,255,.035); color:var(--text-muted); border-radius:14px; padding:13px 16px; cursor:pointer; text-align:left; font-family:'Space Grotesk',sans-serif; font-weight:700; transition:all .22s ease; box-shadow:0 8px 18px -6px rgba(0,0,0,.35), inset 0 1px 1px rgba(255,255,255,.08); }
+  .product-tab:hover{ border-color:var(--accent); color:var(--text-primary); transform:translateY(-2px); }
+  .product-tab.active{ color:#0A0F1C; background:linear-gradient(135deg,#fff 0%,var(--accent) 100%); border-color:transparent; box-shadow:0 12px 26px -7px var(--accent-glow), inset 0 1px 2px #fff; }
+  .product-tab .tab-title{ font-size:14px; }
+  .product-tab .tab-sub{ margin-top:3px; font-size:10.5px; font-family:'JetBrains Mono',monospace; opacity:.72; font-weight:500; }
+  .product-toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .product-search{ flex:1 1 280px; min-width:220px; padding:12px 14px; border-radius:11px; border:1px solid var(--line); background:rgba(255,255,255,.045); color:var(--text-primary); outline:none; font-family:'Inter',sans-serif; font-size:13px; box-shadow:inset 0 1px 1px rgba(255,255,255,.08); }
+  .product-search::placeholder{ color:var(--text-faint); }
+  .product-search:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
+  .product-filter{ min-width:190px; padding:12px 14px; border-radius:11px; border:1px solid var(--line); background:#EDEFF5; color:#0A0F1C; outline:none; font-family:'Inter',sans-serif; font-size:13px; }
+  .product-sync{ margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); white-space:nowrap; }
+  .product-summary{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+  .product-stat{ background:rgba(255,255,255,.025); border:1px solid var(--line); border-radius:12px; padding:11px 13px; }
+  .product-stat .k{ font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; font-size:9.5px; color:var(--text-faint); }
+  .product-stat .v{ margin-top:4px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--accent); }
+  .product-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; max-height:58vh; overflow:auto; padding:3px 4px 6px 2px; }
+  .product-card{ position:relative; border:1px solid var(--line); background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.018)); border-radius:15px; padding:16px; cursor:pointer; text-align:left; color:var(--text-primary); box-shadow:0 10px 22px -8px rgba(0,0,0,.55), inset 0 1px 1px rgba(255,255,255,.08); transition:all .24s cubic-bezier(.2,.8,.2,1); overflow:hidden; }
+  .product-card::before{ content:''; position:absolute; left:0; top:0; width:100%; height:3px; background:linear-gradient(90deg,var(--accent),transparent); transform:scaleX(0); transform-origin:left; transition:transform .3s ease; }
+  .product-card:hover{ transform:translateY(-4px) translateZ(10px); border-color:var(--accent); box-shadow:0 18px 34px -10px rgba(0,0,0,.7),0 0 20px -8px var(--accent-glow),inset 0 1px 2px rgba(255,255,255,.15); }
+  .product-card:hover::before{ transform:scaleX(1); }
+  .product-card .pc-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .product-card .pc-name{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; line-height:1.35; }
+  .product-card .pc-badge{ font-family:'JetBrains Mono',monospace; font-size:9px; padding:4px 7px; border-radius:999px; background:var(--accent-glow); color:var(--accent); border:1px solid rgba(255,255,255,.08); white-space:nowrap; }
+  .product-card .pc-category{ margin-top:7px; color:var(--text-faint); font-size:10.5px; }
+  .product-card .pc-price{ margin-top:13px; font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:var(--accent); }
+  .product-card .pc-price small{ font-size:10px; color:var(--text-faint); font-family:'JetBrains Mono',monospace; font-weight:500; }
+  .product-card .pc-meta{ display:flex; gap:7px; flex-wrap:wrap; margin-top:10px; }
+  .product-mini-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 10px;}
+  .product-mini-tab{border:1px solid var(--line);background:rgba(255,255,255,.035);color:var(--text-faint);border-radius:10px;padding:9px 12px;font:700 10px 'JetBrains Mono',monospace;cursor:pointer;transition:.2s;}
+  .product-mini-tab.active{background:linear-gradient(135deg,var(--accent),#34d9c7);color:#07131a;border-color:transparent;box-shadow:0 8px 22px -8px var(--accent-glow);}
+  .channel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-height:58vh;overflow:auto;padding:3px 4px 6px 2px;}
+  .channel-card{position:relative;border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.018));border-radius:14px;padding:12px;cursor:pointer;text-align:left;color:var(--text-primary);box-shadow:0 10px 22px -8px rgba(0,0,0,.55),inset 0 1px 1px rgba(255,255,255,.08);transition:all .22s ease;overflow:hidden;min-height:128px;}
+  .channel-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 16px 30px -10px rgba(0,0,0,.7),0 0 18px -8px var(--accent-glow);}
+  .channel-logo{height:54px;width:100%;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+  .channel-logo img{max-width:100%;max-height:52px;object-fit:contain;border-radius:6px;}
+  .channel-logo .logo-fallback{width:54px;height:54px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);color:var(--accent);font:800 16px 'Space Grotesk',sans-serif;}
+  .channel-name{font:700 12px 'Space Grotesk',sans-serif;line-height:1.3;}
+  .channel-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+  .channel-chip{font:500 9px 'JetBrains Mono',monospace;color:var(--text-faint);border:1px solid var(--line);border-radius:999px;padding:3px 6px;}
+  .channel-price{margin-top:7px;color:var(--accent);font:700 13px 'Space Grotesk',sans-serif;}
+  .channel-detail-logo{width:120px;height:80px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+  .channel-detail-logo img{max-width:120px;max-height:80px;object-fit:contain;}
+  @media (max-width:900px){ .channel-grid{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  @media (max-width:620px){ .channel-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:60vh;} }
+  .product-chip{ font-size:10px; color:var(--text-muted); padding:5px 8px; border:1px solid var(--line); border-radius:999px; background:rgba(255,255,255,.025); }
+  .product-empty{ padding:42px 18px; text-align:center; border:1px dashed var(--line); border-radius:14px; color:var(--text-faint); }
+  .product-detail{ border:1px solid var(--line); background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.018)); border-radius:16px; padding:18px; box-shadow:0 12px 28px -10px rgba(0,0,0,.55), inset 0 1px 1px rgba(255,255,255,.08); }
+  .product-detail-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:16px; }
+  .product-back{ border:1px solid var(--line); background:rgba(255,255,255,.035); color:var(--text-muted); padding:8px 11px; border-radius:9px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:11.5px; }
+  .product-back:hover{ color:var(--accent); border-color:var(--accent); transform:translateY(-1px); }
+  .product-detail h4{ margin:4px 0 4px; font-family:'Space Grotesk',sans-serif; font-size:23px; }
+  .product-detail .detail-tag{ color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.12em; }
+  .product-detail-price{ font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700; color:var(--accent); margin:5px 0 16px; }
+  .product-detail-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .product-detail-item{ border:1px solid var(--line); border-radius:11px; padding:11px 12px; background:rgba(255,255,255,.025); }
+  .product-detail-item .k{ font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+  .product-detail-item .v{ font-size:13px; color:var(--text-primary); line-height:1.5; word-break:break-word; }
+  .product-detail-note{ margin-top:14px; padding:12px 13px; border-left:3px solid var(--accent); background:rgba(255,255,255,.025); border-radius:0 10px 10px 0; color:var(--text-muted); font-size:12px; line-height:1.65; }
+  .product-source-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
+  .product-source-row a{ color:var(--accent); text-decoration:none; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:11.5px; }
+  .product-source-row a:hover{ text-decoration:underline; }
+
+  .broadcaster-detail{max-height:72vh;overflow-y:auto;padding-right:4px;}
+  .broadcaster-detail-count{margin-top:5px;font-size:11px;color:var(--text-faint);font-family:'JetBrains Mono',monospace;}
+  .broadcaster-price-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0;}
+  .broadcaster-price-strip>div{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.025);}
+  .broadcaster-price-strip span{display:block;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;}
+  .broadcaster-price-strip strong{display:block;margin-top:4px;font-family:'Space Grotesk',sans-serif;font-size:16px;color:var(--accent);}
+  .bouquet-list-title{margin:16px 0 8px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--text-primary);}
+  .bouquet-list{display:flex;flex-direction:column;gap:7px;max-height:48vh;overflow-y:auto;padding:2px 4px 6px 2px;}
+  .bouquet-row{display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:rgba(255,255,255,.025);}
+  .bouquet-row:hover{border-color:var(--accent);background:rgba(255,255,255,.045);}
+  .bouquet-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-faint);}
+  .bouquet-name{font-size:12px;font-weight:700;line-height:1.4;color:var(--text-primary);}
+  .bouquet-note{margin-top:2px;font-size:9px;color:var(--text-faint);}
+  .bouquet-price{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--accent);white-space:nowrap;}
+  @media(max-width:620px){.broadcaster-price-strip{grid-template-columns:1fr 1fr}.broadcaster-price-strip>div:last-child{grid-column:1/-1}.bouquet-row{grid-template-columns:30px 1fr}.bouquet-price{grid-column:2;justify-self:start;margin-top:2px;}}
+  .product-loading{ display:flex; align-items:center; justify-content:center; min-height:360px; color:var(--text-muted); font-family:'Space Grotesk',sans-serif; }
+  .product-spinner{ width:30px; height:30px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--accent); animation:productSpin .8s linear infinite; margin-right:10px; }
+  @keyframes productSpin{ to{ transform:rotate(360deg); } }
+  @media (max-width:900px){ .product-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } .product-summary{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:620px){ .product-grid{ grid-template-columns:1fr; max-height:60vh; } .product-summary{ grid-template-columns:1fr 1fr; } .product-detail-grid{ grid-template-columns:1fr; } .product-sync{ width:100%; margin-left:0; } }
+
 </style>
 </head>
 <body>
@@ -1034,6 +1183,7 @@
             <option value="catv">CATV</option>
             <option value="tech">BB TECH SUPPORT</option>
             <option value="renewal">BB RENEWAL</option>
+            <option value="retention">BB RETENTION</option>
           </select>
         </div>
         <div class="field" id="regCodeField">
@@ -1074,6 +1224,68 @@
   <p class="sub">Step-by-step training for Support Executives, from day of joining through Day 45 — each stage links directly to reference material in Google Sheets and Google Drive (PPT).</p>
 </header>
 
+<!-- Staff-only menu bar (QA / Team Leader / HR / HOD) -->
+<div class="staff-menu" id="staffMenuBar" style="display:none;">
+  <div class="staff-menu-btn" id="menuHomeBtn" data-view="home">🏠 Home</div>
+  <div class="staff-menu-btn" id="menuProcessBtn" data-view="process">🗂 All Process</div>
+  <div class="staff-menu-btn" id="menuEmployeesBtn" data-view="employees">🧑‍💼 All New Employees</div>
+  <div class="staff-menu-btn" id="menuProgressBtn" data-view="progress">👥 Agent Progress</div>
+</div>
+
+<!-- Home dashboard (staff only) -->
+<div id="homeView" style="display:none;">
+  <div class="dash-welcome">
+    <h2>Welcome, <span id="dashName" style="color:var(--accent);">—</span></h2>
+    <p>This is your training portal dashboard. Use the menu above to review every process, manage new employees, or check any agent's 45-Day Journey progress.</p>
+  </div>
+  <div class="dash-grid" id="dashStats">
+    <div class="dash-card"><div class="num" id="dashAgentCount">—</div><div class="lbl">Registered Agents</div></div>
+    <div class="dash-card"><div class="num" id="dashActiveCount">—</div><div class="lbl">Active Agents</div></div>
+    <div class="dash-card"><div class="num" id="dashCertCount">—</div><div class="lbl">Certificates Issued</div></div>
+    <div class="dash-card"><div class="num">5</div><div class="lbl">Training Processes</div></div>
+  </div>
+  <div class="dash-quick">
+    <div class="btn primary" id="dashQuickProcess">🗂 Open All Process</div>
+    <div class="btn" id="dashQuickEmployees">🧑‍💼 All New Employees</div>
+    <div class="btn" id="dashQuickProgress">👥 Agent Progress</div>
+    <div class="btn" id="dashQuickCerts">🎓 Certificates</div>
+  </div>
+</div>
+
+<!-- All New Employees view (staff only) -->
+<div id="employeesView" style="display:none;">
+  <div class="emp-toolbar">
+    <input type="text" class="emp-search" id="empSearch" placeholder="Search by name, employee ID, or username…" />
+    <button type="button" class="btn primary" id="empAddToggleBtn">+ Add New Employee</button>
+  </div>
+  <div class="emp-form" id="empForm">
+    <div class="emp-form-grid">
+      <div class="field"><label for="empFullName">Full Name</label><input id="empFullName" type="text" /></div>
+      <div class="field"><label for="empUsername">Username</label><input id="empUsername" type="text" /></div>
+      <div class="field"><label for="empPassword">Password</label><input id="empPassword" type="password" minlength="6" /></div>
+      <div class="field"><label for="empEmployeeId">Employee ID</label><input id="empEmployeeId" type="text" /></div>
+      <div class="field">
+        <label for="empDepartment">Department</label>
+        <select id="empDepartment">
+          <option value="">Select a department…</option>
+          <option value="catv">CATV</option>
+          <option value="tech">BB TECH SUPPORT</option>
+          <option value="renewal">BB RENEWAL</option>
+          <option value="retention">BB RETENTION</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top:6px;">
+      <button type="button" class="btn" id="empFormCancelBtn">Cancel</button>
+      <button type="button" class="btn primary" id="empFormSaveBtn">Create Employee</button>
+    </div>
+  </div>
+  <div id="empListLoading" class="empty-state">Loading…</div>
+  <div class="emp-list" id="empList"></div>
+</div>
+
+<!-- Training journey view (Home page / All Process) -->
+<div id="processView">
 <div class="tabs" id="tabs"></div>
 
 <main>
@@ -1083,8 +1295,8 @@
   </div>
   <div class="timeline" id="timeline"></div>
 </main>
+</div>
 
-<div class="cert-nav-btn" id="agentsNavBtn" style="bottom:146px;">👥 Agent Progress</div>
 <div class="cert-nav-btn" id="certNavBtn">🎓 Certificates</div>
 <div class="help-btn" id="helpBtn">?</div>
 <!-- Back to Top Button -->
@@ -1175,7 +1387,7 @@
       <h3 id="matStageTitle">Training Materials</h3>
     </div>
     <div class="modal-body">
-      <div style="font-size:12px; color:var(--text-faint); margin-bottom:16px;">Add PPTs, Google Sheets, Docs, videos, or images — grouped by Day (e.g. "Day 1", "Day 2").</div>
+      <div style="font-size:12px; color:var(--text-faint); margin-bottom:16px;">Add PPTs, Google Sheets, Docs, videos, images, or website links — grouped by Day (e.g. "Day 1", "Day 2").</div>
       <div id="matLoading" class="empty-state">Loading…</div>
       <div id="matBuilder" style="display:none;">
         <div id="matRows"></div>
@@ -1331,6 +1543,25 @@
     <div class="modal-body" style="padding-top:16px;">
       <div id="mediaViewerBody"></div>
       <div style="text-align:center; margin-top:12px; font-size:12px; color:var(--text-faint);">🔒 Preview only — opens here in the 3D portal.</div>
+      <div class="modal-actions">
+        <button class="btn primary" data-close>Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Interactive Product / Package Information Viewer -->
+<div class="modal-overlay" id="productCatalogOverlay">
+  <div class="modal product-modal" id="productCatalogModal">
+    <div class="modal-head">
+      <button class="modal-close" data-close>✕</button>
+      <div class="tag">Product Information</div>
+      <h3>📦 GTPL KCBPL Product &amp; Package Viewer</h3>
+    </div>
+    <div class="modal-body" style="padding-top:18px;">
+      <div id="productCatalogBody">
+        <div class="product-loading"><span class="product-spinner"></span>Loading official product data…</div>
+      </div>
       <div class="modal-actions">
         <button class="btn primary" data-close>Close</button>
       </div>
@@ -1764,7 +1995,17 @@ async function callBackend(payload){
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE_YOUR') === 0){
     throw new Error('Backend not connected yet. Paste your Apps Script Web App URL into APPS_SCRIPT_URL at the top of the script.');
   }
-  const res = await fetch(APPS_SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
+  const requestPayload = Object.assign({}, payload || {});
+  if(requestPayload.action === 'getProductCatalog'){
+    requestPayload._catalogClientVersion = 'V3';
+    requestPayload._requestTime = Date.now();
+  }
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method:'POST',
+    cache:'no-store',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(requestPayload)
+  });
   if(!res.ok) throw new Error('Server error (' + res.status + '). Please try again.');
   const data = await res.json();
   return data;
@@ -1813,7 +2054,7 @@ registerForm.addEventListener('submit', async (e)=>{
     return;
   }
   if(role === 'agent' && !department){
-    showAuthError('Please select a Department (CATV / BB TECH SUPPORT / BB RENEWAL).');
+    showAuthError('Please select a Department (CATV / BB TECH SUPPORT / BB RENEWAL / BB RETENTION).');
     return;
   }
 
@@ -1878,7 +2119,7 @@ async function enterApp(){
     } catch(err){}
     loadMyPassedStages().then(()=> renderTimeline()).catch(()=>{});
   } else {
-    openAgentsOverlay();
+    switchStaffView('home');
   }
   setTimeout(setup3DTilt, 300);
 }
@@ -1889,8 +2130,59 @@ function applyRolePermissions(){
   if(helpBtn) helpBtn.style.display = isAgent ? 'none' : 'flex';
   const certBtn = document.getElementById('certNavBtn');
   if(certBtn) certBtn.style.display = isAgent ? 'none' : 'flex';
-  const agentsBtn = document.getElementById('agentsNavBtn');
-  if(agentsBtn) agentsBtn.style.display = isAgent ? 'none' : 'flex';
+  const menuBar = document.getElementById('staffMenuBar');
+  if(menuBar) menuBar.style.display = isAgent ? 'none' : 'flex';
+  if(isAgent){
+    // Agents only ever see the training journey — no dashboard/employees views.
+    document.getElementById('homeView').style.display = 'none';
+    document.getElementById('employeesView').style.display = 'none';
+    document.getElementById('processView').style.display = 'block';
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* STAFF VIEW SWITCHER — Home / All Process / All New Employees /      */
+/* Agent Progress (the last one just opens the existing master modal)  */
+/* ------------------------------------------------------------------ */
+function switchStaffView(view){
+  if(view === 'progress'){
+    openAgentsOverlay();
+    return;
+  }
+  document.querySelectorAll('.staff-menu-btn').forEach(b=> b.classList.toggle('active', b.dataset.view === view));
+  document.getElementById('homeView').style.display = view === 'home' ? 'block' : 'none';
+  document.getElementById('processView').style.display = view === 'process' ? 'block' : 'none';
+  document.getElementById('employeesView').style.display = view === 'employees' ? 'block' : 'none';
+
+  if(view === 'home') renderHomeDashboard();
+  if(view === 'employees') openEmployeesView();
+}
+
+document.getElementById('menuHomeBtn').addEventListener('click', ()=> switchStaffView('home'));
+document.getElementById('menuProcessBtn').addEventListener('click', ()=> switchStaffView('process'));
+document.getElementById('menuEmployeesBtn').addEventListener('click', ()=> switchStaffView('employees'));
+document.getElementById('menuProgressBtn').addEventListener('click', ()=> switchStaffView('progress'));
+document.getElementById('dashQuickProcess').addEventListener('click', ()=> switchStaffView('process'));
+document.getElementById('dashQuickEmployees').addEventListener('click', ()=> switchStaffView('employees'));
+document.getElementById('dashQuickProgress').addEventListener('click', ()=> switchStaffView('progress'));
+document.getElementById('dashQuickCerts').addEventListener('click', ()=> openCertificateList());
+
+async function renderHomeDashboard(){
+  document.getElementById('dashName').textContent = currentUser.fullName || currentUser.username;
+  try{
+    const [agentsRes, certsRes] = await Promise.all([
+      callBackend({ action:'listAgents', role: currentUser.role }).catch(()=>null),
+      callBackend({ action:'listCertificates', role: currentUser.role }).catch(()=>null)
+    ]);
+    if(agentsRes && agentsRes.success){
+      const agents = agentsRes.agents || [];
+      document.getElementById('dashAgentCount').textContent = agents.length;
+      document.getElementById('dashActiveCount').textContent = agents.filter(a=> a.status !== 'disabled').length;
+    }
+    if(certsRes && certsRes.success){
+      document.getElementById('dashCertCount').textContent = (certsRes.certificates || []).length;
+    }
+  } catch(err){ /* dashboard stats are best-effort */ }
 }
 
 const TABS = [
@@ -1900,6 +2192,8 @@ const TABS = [
     icon:'<path d="M8 12a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>' },
   { key:'renewal', label:'BB RENEWAL', color:'var(--renewal)', hex:0xf5a623, glow:'var(--renewal-glow)',
     icon:'<path d="M4 4v6h6M20 20v-6h-6"/><path d="M5 14a8 8 0 0 0 14.5 3M19 10A8 8 0 0 0 4.5 7"/>' },
+  { key:'retention', label:'BB RETENTION', color:'var(--retention)', hex:0xa855f7, glow:'var(--retention-glow)',
+    icon:'<path d="M12 21s-7-4.35-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.65 12 21 12 21Z"/>' },
   { key:'soft', label:'SOFT SKILL (ALL PROCESS)', color:'var(--soft)', hex:0xff6b8b, glow:'var(--soft-glow)',
     icon:'<path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M9 11l2 2 4-4"/>' },
 ];
@@ -1943,10 +2237,11 @@ function blankJourney(){
 }
 
 const JOURNEY_CONFIG = {
-  catv:    baseJourney(),
-  tech:    baseJourney(),
-  renewal: baseJourney(),
-  soft:    blankJourney(),
+  catv:      baseJourney(),
+  tech:      baseJourney(),
+  renewal:   baseJourney(),
+  retention: baseJourney(),
+  soft:      blankJourney(),
 };
 
 let activeTab = 'catv';
@@ -2082,15 +2377,25 @@ const agentsOverlay = document.getElementById('agentsOverlay');
 const stageEditOverlay = document.getElementById('stageEditOverlay');
 const matOverlay = document.getElementById('matOverlay');
 const mediaViewerOverlay = document.getElementById('mediaViewerOverlay');
-const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, agentsOverlay, stageEditOverlay, matOverlay, mediaViewerOverlay];
+const productCatalogOverlay = document.getElementById('productCatalogOverlay');
+const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, agentsOverlay, stageEditOverlay, matOverlay, mediaViewerOverlay, productCatalogOverlay];
 
 const MATERIAL_TYPE_META = {
-  ppt:   { icon:'🎞️', label:'Presentation' },
-  sheet: { icon:'📊', label:'Google Sheet' },
-  doc:   { icon:'📝', label:'Google Doc' },
-  video: { icon:'🎬', label:'Video' },
-  image: { icon:'🖼️', label:'Image' },
+  ppt:     { icon:'🎞️', label:'Presentation' },
+  sheet:   { icon:'📊', label:'Google Sheet' },
+  doc:     { icon:'📝', label:'Google Doc' },
+  video:   { icon:'🎬', label:'Video' },
+  image:   { icon:'🖼️', label:'Image' },
+  website: { icon:'🔗', label:'Website' },
 };
+
+function normalizeWebsiteUrl(input){
+  let url = String(input||'').trim();
+  if(!url) return '';
+  if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  return url;
+}
+
 
 function extractResourceId(input){
   input = String(input||'').trim();
@@ -2131,11 +2436,19 @@ function mediaEmbedInfo(type, id){
   if(type === 'image'){
     return { kind:'image', src:`https://drive.google.com/thumbnail?id=${clean}&sz=w2000` };
   }
+  if(type === 'website'){
+    // id is already a full URL here (see normalizeWebsiteUrl) — embed as-is.
+    return { kind:'iframe', src: String(id||'').trim(), ratio:'75%' };
+  }
   return { kind:'iframe', src:`https://drive.google.com/file/d/${clean}/preview`, ratio:'75%' };
 }
 
 function openMediaViewer(m){
   if(!m) return;
+  if(isProductCatalogMaterial(m)){
+    openProductCatalogViewer();
+    return;
+  }
   const meta = MATERIAL_TYPE_META[m.type] || { icon:'📄', label:'File' };
   document.getElementById('mvTag').textContent = meta.label;
   document.getElementById('mvTitle').textContent = `${meta.icon} ${m.title || meta.label}`;
@@ -2147,6 +2460,15 @@ function openMediaViewer(m){
   if(info.kind === 'image'){
     modal.style.maxWidth = '1040px';
     body.innerHTML = `<div class="mv-image-wrap"><img src="${info.src}" alt="${escapeHtml(m.title||'Image')}" draggable="false" oncontextmenu="return false" style="-webkit-user-select:none; user-select:none; -webkit-user-drag:none;" /></div>`;
+  } else if(m.type === 'website'){
+    // Full, usable browsing area — not a small aspect-ratio preview box —
+    // so the whole external page can be scrolled and clicked around in.
+    modal.style.maxWidth = '96vw';
+    body.innerHTML = `
+      <div class="mv-frame-wrap full">
+        <iframe src="${info.src}" allow="clipboard-write; fullscreen" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div style="text-align:center; margin-top:10px;"><a href="${info.src}" target="_blank" rel="noopener" style="font-family:'Space Grotesk',sans-serif; font-size:12px; color:var(--accent);"></a></div>`;
   } else {
     modal.style.maxWidth = (m.type === 'sheet' || m.type === 'doc') ? '900px' : '1040px';
     body.innerHTML = `
@@ -2158,11 +2480,665 @@ function openMediaViewer(m){
   mediaViewerOverlay.classList.add('open');
 }
 
+
+/* =========================================================
+   INTERACTIVE PRODUCT / PACKAGE VIEWER
+   The Digital TV Package material remains a normal website
+   material in Manage Materials, but opens this internal viewer.
+========================================================= */
+const productCatalogModal = document.getElementById('productCatalogModal');
+const productCatalogBody = document.getElementById('productCatalogBody');
+const PRODUCT_SOURCE_URLS = {
+  tv: 'https://www.gtplkcbpl.com/packages',
+  broadband: 'https://www.gtplkcbpl.com/broadband-tariff'
+};
+let productCatalogState = { data:null, tab:'tv', tvView:'packages', search:'', category:'all', selected:null };
+
+function isProductCatalogMaterial(m){
+  if(!m || m.type !== 'website') return false;
+  const title = String(m.title||'').toLowerCase();
+  const url = String(m.resourceId||'').toLowerCase();
+  return title.includes('digital tv package') || title.includes('digital tv packages') || url.includes('gtplkcbpl.com/packages');
+}
+
+function openProductCatalogViewer(){
+  productCatalogState = { data:null, tab:'tv', tvView:'packages', search:'', category:'all', selected:null };
+  productCatalogModal.style.maxWidth = '1180px';
+  productCatalogOverlay.classList.add('open');
+  productCatalogBody.innerHTML = `<div class="product-loading"><span class="product-spinner"></span>Loading official GTPL KCBPL data…</div>`;
+  callBackend({ action:'getProductCatalog' })
+    .then(res=>{
+      if(!res || !res.success) throw new Error((res && res.message) || 'Could not load product data.');
+      productCatalogState.data = res;
+      paintProductCatalog();
+    })
+    .catch(err=>{
+      productCatalogBody.innerHTML = `<div class="product-empty"><div style="font-size:30px; margin-bottom:8px;">⚠️</div><b>Product data could not be loaded.</b><div style="margin-top:7px;">${escapeHtml(err.message || 'Please try again.')}</div><div style="margin-top:14px;"><button class="btn primary" type="button" id="productRetryBtn">Retry</button></div></div>`;
+      const retry = document.getElementById('productRetryBtn');
+      if(retry) retry.onclick = openProductCatalogViewer;
+    });
+}
+
+/* =========================================================
+   PRODUCT CATALOG V3 FIX
+   - Keeps ALL broadcaster names visible (11 master broadcasters)
+   - Normalizes category names before filtering
+   - Supports multiple price field names from backend
+   - Uses broadcaster bouquet-guide "From" prices as a fallback
+   - Makes A-la-Carte logo URLs resilient
+   ========================================================= */
+
+const PRODUCT_BROADCASTER_MASTER = [
+  {name:'STAR INDIA PVT LTD', aliases:['STAR INDIA PVT LTD','STAR INDIA'], from:25.06},
+  {name:'ZEE ENTERTAINMENT ENT. LTD.', aliases:['ZEE ENTERTAINMENT ENT. LTD.','ZEE ENTERTAINMENT ENT LTD','ZEE ENTERTAINMENT'], from:47.34},
+  {name:'CULVER MAX ENTERTAINMENT PRIVATE LIMITED', aliases:['CULVER MAX ENTERTAINMENT PRIVATE LIMITED','CULVER MAX ENTERTAINMENT','SONY'], from:41.77},
+  {name:'SUN DISTRIBUTION SERVICES PVT. LTD.', aliases:['SUN DISTRIBUTION SERVICES PVT. LTD.','SUN DISTRIBUTION SERVICES PVT LTD','SUN DISTRIBUTOR SERVICES PVT. LTD.','SUN DISTRIBUTOR SERVICES PVT LTD'], from:36.20},
+  {name:'TARANG BROADCASTING COMPANY LIMITED', aliases:['TARANG BROADCASTING COMPANY LIMITED','TARANG BROADCASTING COMPANY LTD','TARANG'], from:30.15},
+  {name:'DISCOVERY COMMUNICATIONS INDIA', aliases:['DISCOVERY COMMUNICATIONS INDIA','DISCOVERY'], from:20.89},
+  {name:'BENNETT COLEMAN CO. LTD.', aliases:['BENNETT COLEMAN CO. LTD.','BENNETT COLEMAN CO LTD','BENNETT COLEMAN'], from:6.96},
+  {name:'GTPL KCBPL', aliases:['GTPL KCBPL','GTPL KCBPL (OWN)'], from:132.28},
+  {name:'IN10 MEDIA PRIVATE LIMITED', aliases:['IN10 MEDIA PRIVATE LIMITED','IN10 MEDIA PVT LTD','IN10 MEDIA'], from:12.53},
+  {name:'EENADU TELEVISION PVT LTD', aliases:['EENADU TELEVISION PVT LTD','EENADU TELEVISION PVT. LTD.','EENADU'], from:52.91},
+  {name:'SIDHARTH TV NETWORK', aliases:['SIDHARTH TV NETWORK','SIDHARTH'], from:34.33}
+];
+
+function cleanProductText_(v){
+  return String(v == null ? '' : v)
+    .replace(/\u00a0/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function broadcasterMatch_(name){
+  const n = cleanProductText_(name).toUpperCase();
+  if(!n) return null;
+  for(let i=0;i<PRODUCT_BROADCASTER_MASTER.length;i++){
+    const b = PRODUCT_BROADCASTER_MASTER[i];
+    for(let j=0;j<b.aliases.length;j++){
+      if(n === b.aliases[j] || n.indexOf(b.aliases[j]) !== -1) return b;
+    }
+  }
+  return null;
+}
+
+function isBroadcasterItem_(item){
+  const cat = cleanProductText_(item && (item.category || item.type || item.packageType || item.package_category)).toLowerCase();
+  if(cat.indexOf('broadcaster') !== -1) return true;
+  return !!broadcasterMatch_(item && (item.name || item.title || item.broadcaster || item.broadcasterName));
+}
+
+function normalizeLogoUrl_(value){
+  const raw = cleanProductText_(value);
+  if(!raw) return '';
+  if(/^https?:\/\//i.test(raw)) return raw;
+  const file = raw.replace(/^\/+/,'');
+  return 'https://www.gtplkcbpl.com/channellogo/' + encodeURI(file);
+}
+
+function firstPriceValue_(item){
+  if(!item) return '';
+  const keys = [
+    'price','a_price','m_price','monthlyPrice','monthly_price','amount',
+    'finalPrice','final_price','basePrice','base_price','priceValue',
+    'bouquetPrice','bouquet_price','sellingPrice','selling_price'
+  ];
+  for(let i=0;i<keys.length;i++){
+    const v = item[keys[i]];
+    if(v !== null && v !== undefined && String(v).trim() !== '') return v;
+  }
+  return '';
+}
+
+
+/* =========================================================
+   SUPPLIED BOUQUET DETAIL MAP
+   Source: GTPL KCBPL Complete Package Guide / Bouquet Guide.
+   These are the named/priced bouquet rows actually supplied.
+   Star has 10 of 14 confirmed; 4 names/prices were not supplied.
+   ========================================================= */
+const SUPPLIED_BOUQUETS = {
+  'STAR INDIA PVT LTD': [
+    ['SVP LITE BENGALI LITE HINDI HD',222.78],
+    ['SPP HINDI',264.56],
+    ['SVP HINDI',167.09],
+    ['SPP LITE BENGALI LITE HINDI HD',327.21],
+    ['SPP LITE BENGALI HINDI',264.56],
+    ['DISNEY KIDS PACK',25.06],
+    ['SVP LITE BENGALI HINDI',167.09],
+    ['SPP LITE HINDI HD',306.33],
+    ['SVP LITE HINDI HD',222.78],
+    ['SVP LITE TELUGU',104.43]
+  ],
+  'ZEE ENTERTAINMENT ENT. LTD.': [
+    ['ZEE ALL-IN-ONE PACK BANGLA SD',89.11],
+    ['ZEE ALL-IN-ONE PACK HINDI SD',80.76],
+    ['ZEE PRIME PACK TELUGU SD',47.34],
+    ['ZEE ALL-IN-ONE PACK TELUGU SD',118.35],
+    ['ZEE FAMILY PACK TELUGU SD',58.48],
+    ['ZEE ALL-IN-ONE PACK ODIA SD',82.15],
+    ['ZEE ALL-IN-ONE PACK BANGLA HD',150.38],
+    ['ZEE ALL-IN-ONE PACK HINDI HD',135.06]
+  ],
+  'CULVER MAX ENTERTAINMENT PRIVATE LIMITED': [
+    ['SONY - HAPPY INDIA SMART MARATHI',84.94],
+    ['SONY - HAPPY INDIA SMART BANGLA',84.94],
+    ['SONY - HAPPY INDIA SMART PLUS BANGLA',133.67],
+    ['SONY - HAPPY INDIA ALL HD',69.75],
+    ['SONY - HAPPY INDIA SPORTS ACTION',73.80],
+    ['SONY - HAPPY INDIA SMART SOUTH',41.77],
+    ['SONY - HAPPY INDIA SMART HINDI',80.76],
+    ['SONY - HAPPY INDIA SMART PLUS HINDI',129.49]
+  ],
+  'SUN DISTRIBUTION SERVICES PVT. LTD.': [
+    ['SUN - KANNADA BASIC',61.27],
+    ['SUN - MALAYALAM BASIC',36.20],
+    ['SUN - TAMIL BASIC',80.76],
+    ['SUN - TELUGU BASIC',61.27]
+  ],
+  'TARANG BROADCASTING COMPANY LIMITED': [
+    ['BOUQUET 1 OTV',30.15]
+  ],
+  'DISCOVERY COMMUNICATIONS INDIA': [
+    ['WBD FAMILY HD',38.99],
+    ['WBD FAMILY SD',23.67],
+    ['WBD LIFE SD',20.89]
+  ],
+  'BENNETT COLEMAN CO. LTD.': [
+    ['TIMES - BOUQUET-1',6.96],
+    ['TIMES - BOUQUET-2',20.89],
+    ['TIMES - BOUQUET-3',48.73]
+  ],
+  'GTPL KCBPL': [
+    ['TELUGU ADD ON PACK',132.28]
+  ],
+  'IN10 MEDIA PRIVATE LIMITED': [
+    ['IN10 VALUE PACK',12.53]
+  ],
+  'EENADU TELEVISION PVT LTD': [
+    ['ETV FAMILY PACK',52.91]
+  ],
+  'SIDHARTH TV NETWORK': [
+    ['SIDHARTH ODIA PACK 1',34.33]
+  ]
+};
+
+function suppliedBouquetsFor_(name){
+  const b = broadcasterMatch_(name);
+  if(!b) return [];
+  const rows = SUPPLIED_BOUQUETS[b.name] || [];
+  return rows.map(function(r){
+    return {
+      name:r[0],
+      price:r[1],
+      finalPrice:r[1],
+      taxNote:'Final price includes 18% GST',
+      source:'Supplied GTPL KCBPL Package & Bouquet Guide'
+    };
+  });
+}
+
+function broadcasterBouquetCount_(name){
+  const rows = suppliedBouquetsFor_(name);
+  if(rows.length) return rows.length;
+  return 0;
+}
+
+function broadcasterFallback_(name){
+  const b = broadcasterMatch_(name);
+  if(!b) return null;
+  return {
+    name:b.name,
+    category:'Broadcaster Package',
+    price:'',
+    fallbackFromPrice:b.from,
+    bouquets:suppliedBouquetsFor_(b.name),
+    bouquetCount:suppliedBouquetsFor_(b.name).length,
+    bouquetNote:b.name === 'STAR INDIA PVT LTD' ? '10 of 14 bouquets confirmed in supplied source; 4 additional bouquet names/prices were not itemised.' : '',
+    taxNote:'Final bouquet price includes 18% GST',
+    details:'Broadcaster bouquet information from the supplied GTPL KCBPL Package & Bouquet Guide. The "From" price is the lowest supplied bouquet price for this broadcaster.',
+    sourceUrl:PRODUCT_SOURCE_URLS.tv
+  };
+}
+
+function normalizeProductItem_(raw){
+  const item = Object.assign({}, raw || {});
+  item.name = cleanProductText_(item.name || item.title || item.packageName || item.package_name || item.broadcaster || item.broadcasterName);
+  if(isBroadcasterItem_(item)){
+    const b = broadcasterMatch_(item.name);
+    item.category = 'Broadcaster Package';
+    if(b){
+      item.name = b.name;
+      item.fallbackFromPrice = b.from;
+      item.bouquets = suppliedBouquetsFor_(b.name);
+      item.bouquetCount = item.bouquets.length || (item.bouquetCount || 0);
+      if(b.name === 'STAR INDIA PVT LTD') item.bouquetNote = '10 of 14 bouquets confirmed in supplied source; 4 additional bouquet names/prices were not itemised.';
+    }
+    if(!item.taxNote) item.taxNote = 'Final bouquet price includes 18% GST';
+  }else{
+    item.category = cleanProductText_(item.category || item.type || 'Recommended Package') || 'Recommended Package';
+  }
+  if(!item.price) {
+    const p = firstPriceValue_(item);
+    if(p !== '') item.price = p;
+  }
+  return item;
+}
+
+function uniqueProducts_(list){
+  const out = [];
+  const seen = {};
+  (Array.isArray(list) ? list : []).forEach(function(raw){
+    const item = normalizeProductItem_(raw);
+    if(!item.name) return;
+    const key = item.name.toUpperCase() + '|' + item.category;
+    if(seen[key]) return;
+    seen[key] = true;
+    out.push(item);
+  });
+  return out;
+}
+
+function productDataset(){
+  if(!productCatalogState.data) return { items:[], categories:[], channels:[], channelCategories:[] };
+
+  if(productCatalogState.tab === 'tv'){
+    const tv = productCatalogState.data.digitalTv || {};
+
+    const channelList = Array.isArray(tv.channels) ? tv.channels.map(function(raw){
+      const ch = Object.assign({}, raw || {});
+      ch.name = cleanProductText_(ch.name || ch.channel_name || ch.chname || ch.title || 'Unnamed channel');
+      ch.logoUrl = normalizeLogoUrl_(ch.logoUrl || ch.logo || ch.logo_name || ch.logoName);
+      ch.logoUrlAlt = normalizeLogoUrl_(ch.logoUrlAlt || ch.logo_alt || ch.logo_name || ch.logoName);
+      if(!ch.price) {
+        const p = firstPriceValue_(ch);
+        if(p !== '') ch.price = p;
+      }
+      if(ch.lcn === undefined || ch.lcn === null || ch.lcn === '') {
+        ch.lcn = ch.c_lcn !== undefined ? ch.c_lcn : (ch.channel_no !== undefined ? ch.channel_no : '');
+      }
+      if(!ch.code) ch.code = ch.c_code || ch.channel_code || ch.cCode || '';
+      if(!ch.genre) ch.genre = ch.category || ch.channel_category || '';
+      return ch;
+    }) : [];
+
+    const rawPackages = []
+      .concat(Array.isArray(tv.items) ? tv.items : [])
+      .concat(Array.isArray(tv.recommended_packages) ? tv.recommended_packages : [])
+      .concat(Array.isArray(tv.broadcaster_packages) ? tv.broadcaster_packages : [])
+      .concat(Array.isArray(tv.bouquets) ? tv.bouquets : []);
+
+    let packageList = uniqueProducts_(rawPackages);
+
+    /* Guarantee the complete 11-broadcaster master list is present.
+       Existing API records win; missing names are added as safe fallback
+       records so the frontend cannot silently show 9 instead of 11. */
+    const existingBroadcasters = {};
+    packageList.forEach(function(item){
+      if(isBroadcasterItem_(item)) existingBroadcasters[item.name.toUpperCase()] = true;
+    });
+
+    PRODUCT_BROADCASTER_MASTER.forEach(function(b){
+      if(!existingBroadcasters[b.name.toUpperCase()]){
+        const fallback = broadcasterFallback_(b.name);
+        if(fallback) packageList.push(fallback);
+      }
+    });
+
+    packageList = uniqueProducts_(packageList);
+
+    const categories = Array.from(new Set(
+      packageList.map(function(x){ return isBroadcasterItem_(x) ? 'Broadcaster Package' : 'Recommended Package'; })
+    ));
+
+    if(categories.indexOf('Recommended Package') === -1) categories.unshift('Recommended Package');
+    if(categories.indexOf('Broadcaster Package') === -1) categories.push('Broadcaster Package');
+
+    return {
+      items: packageList,
+      categories: categories,
+      channels: channelList,
+      channelCategories: Array.isArray(tv.channelCategories) ? tv.channelCategories : []
+    };
+  }
+
+  const bb = productCatalogState.data.broadband || {};
+  return {
+    items: Array.isArray(bb.items) ? bb.items : [],
+    categories: Array.isArray(bb.categories) ? bb.categories : [],
+    channels: [],
+    channelCategories: []
+  };
+}
+
+function currentTvView(){
+  return productCatalogState.tvView || 'packages';
+}
+
+function productMatches(item){
+  const q = productCatalogState.search.trim().toLowerCase();
+  const normalizedCategory = isBroadcasterItem_(item) ? 'Broadcaster Package' : 'Recommended Package';
+  const catOk = productCatalogState.category === 'all' || normalizedCategory === productCatalogState.category;
+  if(!catOk) return false;
+  if(!q) return true;
+  return JSON.stringify(item).toLowerCase().includes(q);
+}
+
+function channelMatches(item){
+  const q = productCatalogState.search.trim().toLowerCase();
+  const catOk = productCatalogState.category === 'all' || String(item.genre||'') === productCatalogState.category;
+  if(!catOk) return false;
+  if(!q) return true;
+  return JSON.stringify(item).toLowerCase().includes(q);
+}
+
+function productMoney(v){
+  if(v === null || v === undefined || v === '') return '—';
+  const n = Number(String(v).replace(/[₹,\s]/g,''));
+  return Number.isFinite(n) ? `₹${n.toLocaleString('en-IN',{maximumFractionDigits:2})}` : String(v);
+}
+
+function broadcasterPriceDisplay_(item){
+  return 'See Bouquet Pricing';
+}
+
+function channelCardHtml(item, idx){
+  const initials = String(item.name||'?').trim().slice(0,2).toUpperCase();
+  const primary = item.logoUrl || '';
+  const secondary = item.logoUrlAlt || '';
+  const logo = primary
+    ? `<img src="${escapeHtml(primary)}" alt="${escapeHtml(item.name||'Channel logo')}" loading="lazy"
+         onerror="if(this.dataset.altTried!=='1' && ${secondary ? 'true' : 'false'}){this.dataset.altTried='1';this.src='${escapeHtml(secondary)}';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}">
+       <span class="logo-fallback" style="display:none;">${escapeHtml(initials)}</span>`
+    : `<span class="logo-fallback">${escapeHtml(initials)}</span>`;
+  return `<button type="button" class="channel-card" data-channel-index="${idx}">
+    <div class="channel-logo">${logo}</div>
+    <div class="channel-name">${escapeHtml(item.name||'Unnamed channel')}</div>
+    <div class="channel-meta">
+      ${item.lcn !== undefined && item.lcn !== null && item.lcn !== '' ? `<span class="channel-chip">LCN ${escapeHtml(String(item.lcn))}</span>` : ''}
+      ${item.genre ? `<span class="channel-chip">${escapeHtml(item.genre)}</span>` : ''}
+    </div>
+    ${firstPriceValue_(item) !== '' ? `<div class="channel-price">${escapeHtml(productMoney(firstPriceValue_(item)))}</div>` : ''}
+  </button>`;
+}
+
+function productCardHtml(item, idx){
+  const isTv = productCatalogState.tab === 'tv';
+  const isBroadcaster = isBroadcasterItem_(item);
+
+  /* IMPORTANT:
+     Broadcaster cards must NOT show any price. Their bouquet prices
+     are shown only after the broadcaster card is opened. */
+  const price = isBroadcaster
+    ? ''
+    : (firstPriceValue_(item) !== '' ? productMoney(firstPriceValue_(item)) : 'Price N/A');
+
+  const priceNote = item.priceNote || item.taxNote || (isTv ? '' : 'as shown on official tariff');
+  const badge = item.recommended ? 'RECOMMENDED' : (isBroadcaster ? 'BROADCASTER' : (isTv ? 'PACKAGE' : 'PLAN'));
+
+  const chips = isTv
+    ? [
+        item.channelCount ? `${item.channelCount} channels` : '',
+        item.validity || '',
+        isBroadcaster ? 'Open for bouquet pricing' : ''
+      ].filter(Boolean)
+    : [item.speed || '', item.validity || '', item.saving ? `Save ${productMoney(item.saving)}` : ''].filter(Boolean);
+
+  return `<button type="button" class="product-card" data-product-index="${idx}">
+    <div class="pc-top"><div class="pc-name">${escapeHtml(item.name||'Unnamed')}</div><span class="pc-badge">${escapeHtml(badge)}</span></div>
+    <div class="pc-category">${escapeHtml(isBroadcaster ? 'Broadcaster Package' : (item.category||'Recommended Package'))}</div>
+    ${isBroadcaster ? '' : `<div class="pc-price">${escapeHtml(price)} <small>${escapeHtml(priceNote)}</small></div>`}
+    <div class="pc-meta">${chips.map(c=>`<span class="product-chip">${escapeHtml(c)}</span>`).join('')}</div>
+  </button>`;
+}
+
+function productDetailHtml(item){
+  const isChannel = productCatalogState.tab === 'tv' && productCatalogState.tvView === 'channels';
+  const isTv = productCatalogState.tab === 'tv';
+
+  if(isChannel){
+    const price = firstPriceValue_(item) !== '' ? productMoney(firstPriceValue_(item)) : 'Not specified';
+    return `<div class="product-detail">
+      <div class="product-detail-head">
+        <div><div class="detail-tag">${escapeHtml(item.genre||'A-la-Carte Channel')}</div><h4>${escapeHtml(item.name||'Unnamed channel')}</h4></div>
+        <button type="button" class="product-back" id="productBackBtn">← Back to channels</button>
+      </div>
+      ${item.logoUrl ? `<div class="channel-detail-logo"><img src="${escapeHtml(item.logoUrl)}" alt="${escapeHtml(item.name||'Channel logo')}"
+        onerror="if(this.dataset.altTried!=='1' && ${item.logoUrlAlt ? 'true' : 'false'}){this.dataset.altTried='1';this.src='${escapeHtml(item.logoUrlAlt || '')}';}else{this.style.display='none'}"></div>` : ''}
+      <div class="product-detail-price">${escapeHtml(price)} <span style="font-size:11px;color:var(--text-faint);font-family:'JetBrains Mono',monospace;">A-LA-CARTE</span></div>
+      <div class="product-detail-grid">
+        <div class="product-detail-item"><div class="k">Channel Name</div><div class="v">${escapeHtml(item.name||'—')}</div></div>
+        <div class="product-detail-item"><div class="k">LCN</div><div class="v">${escapeHtml(item.lcn===undefined||item.lcn===null?'—':String(item.lcn))}</div></div>
+        <div class="product-detail-item"><div class="k">Category</div><div class="v">${escapeHtml(item.genre||'—')}</div></div>
+        <div class="product-detail-item"><div class="k">Channel Code</div><div class="v">${escapeHtml(item.code===undefined||item.code===null?'—':String(item.code))}</div></div>
+        <div class="product-detail-item"><div class="k">A-la-Carte Price</div><div class="v">${escapeHtml(price)}</div></div>
+      </div>
+      <div class="product-source-row"><span style="font-size:10.5px;color:var(--text-faint);">Source: official GTPL KCBPL A-la-Carte service</span><a href="${PRODUCT_SOURCE_URLS.tv}" target="_blank" rel="noopener">Open official source ↗</a></div>
+    </div>`;
+  }
+
+  const isBroadcaster = isBroadcasterItem_(item);
+
+  /* Broadcaster detail = show ALL supplied bouquet rows, not just the
+     broadcaster name. This fixes the previous "Star shows only one item"
+     behaviour. */
+  if(isTv && isBroadcaster){
+    const bouquets = Array.isArray(item.bouquets) && item.bouquets.length
+      ? item.bouquets
+      : suppliedBouquetsFor_(item.name);
+
+    const bouquetRows = bouquets.map(function(bq, i){
+      return `<div class="bouquet-row" data-bouquet-index="${i}">
+        <div class="bouquet-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="bouquet-main">
+          <div class="bouquet-name">${escapeHtml(bq.name)}</div>
+          <div class="bouquet-note">${escapeHtml(bq.taxNote || 'Final price includes 18% GST')}</div>
+        </div>
+        <div class="bouquet-price">${escapeHtml(productMoney(bq.price))}</div>
+      </div>`;
+    }).join('');
+
+    const note = item.bouquetNote || '';
+    return `<div class="product-detail broadcaster-detail">
+      <div class="product-detail-head">
+        <div>
+          <div class="detail-tag">Broadcaster Package</div>
+          <h4>${escapeHtml(item.name||'Broadcaster')}</h4>
+          <div class="broadcaster-detail-count">${bouquets.length} supplied bouquet${bouquets.length===1?'':'s'} with confirmed pricing</div>
+        </div>
+        <button type="button" class="product-back" id="productBackBtn">← Back to broadcasters</button>
+      </div>
+
+      <div class="broadcaster-price-strip">
+        <div><span>BOUQUETS SHOWN</span><strong>${bouquets.length}</strong></div>
+        <div><span>FROM</span><strong>${escapeHtml(productMoney(item.fallbackFromPrice || (bouquets[0] && bouquets[0].price) || ''))}</strong></div>
+        <div><span>GST</span><strong>18% Included</strong></div>
+      </div>
+
+      ${note ? `<div class="product-detail-note">${escapeHtml(note)}</div>` : ''}
+
+      <div class="bouquet-list-title">Available Bouquets</div>
+      <div class="bouquet-list">${bouquetRows || `<div class="product-empty">No named bouquet rows are available in the supplied source.</div>`}</div>
+
+
+    </div>`;
+  }
+
+  const price = firstPriceValue_(item) !== '' ? productMoney(firstPriceValue_(item)) : 'Not specified';
+
+  const fields = isTv ? [
+    ['Package Name', item.name],
+    ['Package Type / Category', isBroadcaster ? 'Broadcaster Package' : item.category],
+    ['Price', price],
+    ['Tax / Price Note', item.taxNote || item.priceNote || 'Not specified on source page'],
+    ['Channel Count', item.channelCount || 'Not available on source page'],
+    ['Details', item.details || 'See the official package details document if available.']
+  ] : [
+    ['Plan Name', item.name],
+    ['Plan Category', item.category],
+    ['Speed', item.speed],
+    ['Validity', item.validity],
+    ['Applicable Price', price],
+    ['GST', item.gst || item.taxNote || '18% GST as shown on official tariff'],
+    ['Saving / Offer', item.saving ? productMoney(item.saving) : '—'],
+    ['Other Details', item.details || 'Not specified on source page']
+  ];
+
+  return `<div class="product-detail">
+    <div class="product-detail-head">
+      <div><div class="detail-tag">${escapeHtml(isBroadcaster ? 'Broadcaster Package' : (item.category||'Product'))}</div><h4>${escapeHtml(item.name||'Unnamed')}</h4></div>
+      <button type="button" class="product-back" id="productBackBtn">← Back to list</button>
+    </div>
+    <div class="product-detail-price">${escapeHtml(price)} ${isTv ? '<span style="font-size:11px;color:var(--text-faint);font-family:\'JetBrains Mono\',monospace;">PRICE</span>' : ''}</div>
+    <div class="product-detail-grid">${fields.map(([k,v])=>`<div class="product-detail-item"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v || '—')}</div></div>`).join('')}</div>
+    ${item.details ? `<div class="product-detail-note">${escapeHtml(item.details)}</div>` : ''}
+    <div class="product-source-row">
+      <span style="font-size:10.5px;color:var(--text-faint);">Source: official GTPL KCBPL website / supplied package guide</span>
+      <span style="display:flex;gap:12px;flex-wrap:wrap;">
+        ${item.detailsUrl ? `<a href="${escapeHtml(item.detailsUrl)}" target="_blank" rel="noopener">Open package details ↗</a>` : ''}
+        <a href="${PRODUCT_SOURCE_URLS[isTv?'tv':'broadband']}" target="_blank" rel="noopener">Open official source ↗</a>
+      </span>
+    </div>
+  </div>`;
+}
+
+function paintProductCatalog(){
+  const ds = productDataset();
+
+  if(productCatalogState.selected){
+    productCatalogBody.innerHTML = productDetailHtml(productCatalogState.selected);
+    const back = document.getElementById('productBackBtn');
+    if(back) back.onclick = ()=>{ productCatalogState.selected = null; paintProductCatalog(); };
+    return;
+  }
+
+  const isTv = productCatalogState.tab === 'tv';
+  const tvView = currentTvView();
+
+  let categories, allItems, items;
+
+  if(isTv && tvView === 'channels'){
+    categories = Array.isArray(ds.channelCategories) ? ds.channelCategories : [];
+    allItems = Array.isArray(ds.channels) ? ds.channels : [];
+    items = allItems.filter(channelMatches);
+  }else{
+    categories = ['Recommended Package','Broadcaster Package'];
+    allItems = Array.isArray(ds.items) ? ds.items : [];
+    items = allItems.filter(productMatches);
+  }
+
+  const updated = productCatalogState.data.updatedAt ? new Date(productCatalogState.data.updatedAt) : null;
+  const updatedText = updated && !isNaN(updated.getTime())
+    ? updated.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    : 'latest backend data';
+
+  const total = allItems.length;
+  const broadcasterCount = allItems.filter(isBroadcasterItem_).length;
+  const recommendedCount = allItems.filter(x=>!isBroadcasterItem_(x)).length;
+
+  let stats;
+  if(isTv && tvView === 'channels'){
+    stats = [
+      ['Channels', total],
+      ['Categories', categories.length],
+      ['Showing', items.length],
+      ['Updated', updatedText.split(',')[0]]
+    ];
+  }else if(isTv){
+    stats = [
+      ['Items', total],
+      ['Categories', 2],
+      ['Recommended', recommendedCount],
+      ['Broadcasters', broadcasterCount]
+    ];
+  }else{
+    stats = [
+      ['Plans', total],
+      ['Categories', categories.length],
+      ['Speeds', new Set(allItems.map(x=>x.speed).filter(Boolean)).size],
+      ['Updated', updatedText.split(',')[0]]
+    ];
+  }
+
+  const miniTabs = isTv ? `<div class="product-mini-tabs">
+    <button type="button" class="product-mini-tab ${tvView==='packages'?'active':''}" data-tv-view="packages">📦 Recommended / Broadcaster Packages (${isTv && tvView==='packages' ? total : ''})</button>
+    <button type="button" class="product-mini-tab ${tvView==='channels'?'active':''}" data-tv-view="channels">📺 A-la-Carte Channels (${escapeHtml(String((ds.channels||[]).length || (productCatalogState.data.digitalTv||{}).channelCount || 0))})</button>
+  </div>` : '';
+
+  productCatalogBody.innerHTML = `<div class="product-viewer-shell">
+    <div class="product-tabs">
+      <button type="button" class="product-tab ${productCatalogState.tab==='tv'?'active':''}" data-product-tab="tv"><div class="tab-title">📺 Digital TV Packages</div><div class="tab-sub">Official CATV package information · V3</div></button>
+      <button type="button" class="product-tab ${productCatalogState.tab==='broadband'?'active':''}" data-product-tab="broadband"><div class="tab-title">🌐 Broadband Tariff</div><div class="tab-sub">Official broadband plan information</div></button>
+    </div>
+    ${miniTabs}
+    <div class="product-toolbar">
+      <input class="product-search" id="productSearch" type="search" placeholder="Search ${isTv && tvView==='channels'?'channel name, LCN, category…':productCatalogState.tab==='tv'?'packages, broadcaster, category…':'plans, speed, validity…'}" value="${escapeHtml(productCatalogState.search)}" />
+      <select class="product-filter" id="productFilter"><option value="all">All categories</option>${categories.map(c=>`<option value="${escapeHtml(c)}" ${productCatalogState.category===c?'selected':''}>${escapeHtml(c)}</option>`).join('')}</select>
+      <span class="product-sync">Synced: ${escapeHtml(updatedText)}</span>
+    </div>
+    <div class="product-summary">${stats.map(([k,v])=>`<div class="product-stat"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(String(v))}</div></div>`).join('')}</div>
+    ${items.length ? (isTv && tvView==='channels'
+      ? `<div class="channel-grid">${items.map(item=>channelCardHtml(item, allItems.indexOf(item))).join('')}</div>`
+      : `<div class="product-grid">${items.map(item=>productCardHtml(item, allItems.indexOf(item))).join('')}</div>`)
+      : `<div class="product-empty">No matching ${isTv && tvView==='channels'?'channels':'products'} found. Try another search or category.</div>`}
+    ${isTv && tvView==='packages' ? `<div style="font-size:10.5px;color:var(--text-faint);text-align:center;line-height:1.6;">
+      Broadcaster card prices are hidden. Open a broadcaster to view its supplied bouquet names and prices.
+    </div>` : `<div style="font-size:10.5px;color:var(--text-faint);text-align:center;line-height:1.6;">Data is delivered through the portal backend from the official GTPL KCBPL source. No browser-side cross-domain scraping is used.</div>`}
+  </div>`;
+
+  productCatalogBody.querySelectorAll('[data-product-tab]').forEach(btn=>btn.addEventListener('click',()=>{
+    productCatalogState.tab = btn.dataset.productTab;
+    productCatalogState.search = '';
+    productCatalogState.category = 'all';
+    productCatalogState.selected = null;
+    productCatalogState.tvView = 'packages';
+    paintProductCatalog();
+  }));
+
+  productCatalogBody.querySelectorAll('[data-tv-view]').forEach(btn=>btn.addEventListener('click',()=>{
+    productCatalogState.tvView = btn.dataset.tvView;
+    productCatalogState.search = '';
+    productCatalogState.category = 'all';
+    productCatalogState.selected = null;
+    paintProductCatalog();
+  }));
+
+  const search = document.getElementById('productSearch');
+  const filter = document.getElementById('productFilter');
+
+  search.addEventListener('input',e=>{
+    productCatalogState.search=e.target.value;
+    paintProductCatalog();
+    const el=document.getElementById('productSearch');
+    if(el){
+      el.focus();
+      el.setSelectionRange(el.value.length,el.value.length);
+    }
+  });
+
+  filter.addEventListener('change',e=>{
+    productCatalogState.category=e.target.value;
+    paintProductCatalog();
+  });
+
+  productCatalogBody.querySelectorAll('[data-product-index]').forEach(card=>card.addEventListener('click',()=>{
+    const dsNow = productDataset();
+    productCatalogState.selected = (dsNow.items||[])[Number(card.dataset.productIndex)] || null;
+    paintProductCatalog();
+  }));
+
+  productCatalogBody.querySelectorAll('[data-channel-index]').forEach(card=>card.addEventListener('click',()=>{
+    const dsNow = productDataset();
+    productCatalogState.selected = (dsNow.channels||[])[Number(card.dataset.channelIndex)] || null;
+    paintProductCatalog();
+  }));
+}
+
 let currentMaterialsList = [];
 
 function materialCardHtml(m, idx){
   const meta = MATERIAL_TYPE_META[m.type] || { icon:'📄', label:'File' };
-  const hint = m.type==='video' ? 'Plays automatically ▶'
+  const hint = isProductCatalogMaterial(m) ? 'Interactive package viewer 📦'
+    : m.type==='video' ? 'Plays automatically ▶'
     : m.type==='image' ? 'Opens full-size 🔍'
     : 'Preview in portal';
   return `
@@ -2214,15 +3190,53 @@ async function loadAndRenderMaterials(tab, idx){
       area.innerHTML = `<div class="empty-state">${escapeHtml(res.message || 'Could not load materials.')}</div>`;
       return;
     }
-    renderMaterialsView(res.materials || []);
+    let materials = Array.isArray(res.materials) ? res.materials.slice() : [];
+
+    // Product Training (Stage 2): always show the internal Digital TV Package
+    // viewer in every training tab, independent of backend material records.
+    if(Number(idx) === 1){
+      const hasDigitalTvMaterial = materials.some(m => isProductCatalogMaterial(m));
+      if(!hasDigitalTvMaterial){
+        materials.unshift({
+          type: 'website',
+          title: 'Digital TV Package',
+          resourceId: 'https://www.gtplkcbpl.com/packages',
+          dayLabel: 'Day 1',
+          dayOrder: 1
+        });
+      }
+    }
+
+    renderMaterialsView(materials);
   } catch(err){
-    area.innerHTML = `<div class="empty-state">${escapeHtml(err.message || 'Could not reach the server.')}</div>`;
+    // Even if the backend material list fails, Product Training still gets
+    // the Digital TV Package viewer.
+    if(Number(idx) === 1){
+      renderMaterialsView([{
+        type: 'website',
+        title: 'Digital TV Package',
+        resourceId: 'https://www.gtplkcbpl.com/packages',
+        dayLabel: 'Product Training',
+        dayOrder: 0
+      }]);
+    } else {
+      area.innerHTML = `<div class="empty-state">${escapeHtml(err.message || 'Could not reach the server.')}</div>`;
+    }
   }
 }
 
 function openStage(idx){
   const t = TABS.find(x=>x.key===activeTab);
-  const stage = JOURNEY_CONFIG[activeTab][idx];
+  const stage = Object.assign({}, JOURNEY_CONFIG[activeTab][idx] || {});
+
+  // Product Training is Stage 2 and is available in every process tab.
+  if(Number(idx) === 1){
+    stage.title = 'Product Training (with assessment)';
+    stage.timeline = stage.timeline || 'Within 3 days of joining';
+    stage.purpose = stage.purpose || 'Understanding of packages, schemes, and pricing in CATV and Broadband.';
+    stage.accountability = stage.accountability || 'Kalyan Sarkar';
+  }
+
   currentModalRef = { tab: activeTab, idx };
 
   document.getElementById('modalTag').textContent = `${t.label} · STAGE ${idx+1}`;
@@ -2266,13 +3280,14 @@ document.getElementById('markDoneBtn').addEventListener('click', async ()=>{
 function closeAllOverlays(){
   ALL_OVERLAYS.forEach(ov=> ov.classList.remove('open'));
   document.getElementById('mediaViewerBody').innerHTML = '';
+  if(productCatalogBody) productCatalogBody.innerHTML = '';
+  productCatalogState.selected = null;
 }
 document.querySelectorAll('[data-close]').forEach(el=>{
   el.addEventListener('click', closeAllOverlays);
 });
 document.getElementById('helpBtn').addEventListener('click', ()=> helpOverlay.classList.add('open'));
 document.getElementById('certNavBtn').addEventListener('click', ()=> openCertificateList());
-document.getElementById('agentsNavBtn').addEventListener('click', ()=> openAgentsOverlay());
 document.addEventListener('keydown', (e)=>{
   if(e.key==='Escape'){ closeAllOverlays(); }
 });
@@ -2606,14 +3621,18 @@ function buildMatRow(m, i){
         <option value="doc" ${m.type==='doc'?'selected':''}>Google Doc</option>
         <option value="video" ${m.type==='video'?'selected':''}>Video</option>
         <option value="image" ${m.type==='image'?'selected':''}>Image</option>
+        <option value="website" ${m.type==='website'?'selected':''}>Website / Link</option>
       </select>
     </div>
     <input type="text" class="mat-title" placeholder="Title (e.g., Package Pricing Sheet)" value="${escapeHtml(m.title||'')}" />
-    <input type="text" class="mat-resource" placeholder="Paste the Drive/Sheet/Doc share link or file ID" value="${escapeHtml(m.resourceId||'')}" />
+    <input type="text" class="mat-resource" placeholder="${m.type==='website' ? 'Paste the full website URL' : 'Paste the Drive/Sheet/Doc share link or file ID'}" value="${escapeHtml(m.resourceId||'')}" />
   `;
   div.querySelector('.qb-remove').addEventListener('click', ()=>{
     matState.materials.splice(i, 1);
     renderMatBuilder();
+  });
+  div.querySelector('.mat-type').addEventListener('change', (e)=>{
+    div.querySelector('.mat-resource').placeholder = e.target.value === 'website' ? 'Paste the full website URL' : 'Paste the Drive/Sheet/Doc share link or file ID';
   });
   return div;
 }
@@ -2634,13 +3653,14 @@ document.getElementById('matSaveBtn').addEventListener('click', async ()=>{
     const dayLabel = row.querySelector('.mat-day').value.trim() || 'Materials';
     const type = row.querySelector('.mat-type').value;
     const title = row.querySelector('.mat-title').value.trim();
-    const resourceId = extractResourceId(row.querySelector('.mat-resource').value);
+    const rawResource = row.querySelector('.mat-resource').value;
+    const resourceId = type === 'website' ? normalizeWebsiteUrl(rawResource) : extractResourceId(rawResource);
     if(!resourceId) valid = false;
     if(!(dayLabel in dayOrderMap)) dayOrderMap[dayLabel] = orderCounter++;
     materials.push({ dayLabel, dayOrder: dayOrderMap[dayLabel], type, title, resourceId });
   });
 
-  if(!valid){ showToast('Every material needs at least a Day label and a file link or ID.'); return; }
+  if(!valid){ showToast('Every material needs at least a Day label and a file link, URL, or ID.'); return; }
 
   const btn = document.getElementById('matSaveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
@@ -3047,6 +4067,123 @@ async function autoSaveCertificateToDrive(tab, idx, stage, cert){
     });
   } catch(err){
     console.error('Auto-save certificate to Drive failed:', err);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* ALL NEW EMPLOYEES — roster with add / delete (QA/TL/HR/HOD only)    */
+/* ------------------------------------------------------------------ */
+let employeesList = [];
+
+async function openEmployeesView(){
+  document.getElementById('empForm').classList.remove('open');
+  document.getElementById('empSearch').value = '';
+  document.getElementById('empListLoading').style.display = '';
+  document.getElementById('empListLoading').textContent = 'Loading employees…';
+  document.getElementById('empList').innerHTML = '';
+
+  try{
+    const res = await callBackend({ action:'listAgents', role: currentUser.role });
+    if(!res.success){
+      document.getElementById('empListLoading').textContent = res.message || 'Could not load the employee list.';
+      return;
+    }
+    employeesList = res.agents || [];
+    document.getElementById('empListLoading').style.display = 'none';
+    renderEmployeesList(employeesList);
+  } catch(err){
+    document.getElementById('empListLoading').textContent = err.message || 'Could not reach the server.';
+  }
+}
+
+function renderEmployeesList(list){
+  const container = document.getElementById('empList');
+  if(list.length === 0){
+    container.innerHTML = `<div class="empty-state" style="padding:16px 4px;">No employees have registered yet.</div>`;
+    return;
+  }
+  container.innerHTML = list.map(a=>{
+    const deptLabel = (TABS.find(t=>t.key===a.department) || {}).label || 'No department';
+    return `
+    <div class="emp-row">
+      <div>
+        <div class="nm">${escapeHtml(a.fullName || a.username)}</div>
+        <div class="meta">${escapeHtml(a.employeeId || '—')} · @${escapeHtml(a.username)} · ${escapeHtml(deptLabel)} · ${a.status==='disabled' ? 'Disabled' : 'Active'}</div>
+      </div>
+      <button type="button" class="row-mini-btn danger" data-del-username="${escapeHtml(a.username)}" data-del-name="${escapeHtml(a.fullName || a.username)}">🗑 Delete</button>
+    </div>
+  `;}).join('');
+
+  container.querySelectorAll('[data-del-username]').forEach(btn=>{
+    btn.addEventListener('click', ()=> deleteEmployee(btn.dataset.delUsername, btn.dataset.delName));
+  });
+}
+
+document.getElementById('empSearch').addEventListener('input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  if(!q){ renderEmployeesList(employeesList); return; }
+  renderEmployeesList(employeesList.filter(a=>
+    (a.fullName||'').toLowerCase().includes(q) ||
+    (a.employeeId||'').toLowerCase().includes(q) ||
+    (a.username||'').toLowerCase().includes(q)
+  ));
+});
+
+document.getElementById('empAddToggleBtn').addEventListener('click', ()=>{
+  document.getElementById('empForm').classList.toggle('open');
+});
+document.getElementById('empFormCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('empForm').classList.remove('open');
+});
+
+document.getElementById('empFormSaveBtn').addEventListener('click', async ()=>{
+  const fullName   = document.getElementById('empFullName').value.trim();
+  const username   = document.getElementById('empUsername').value.trim();
+  const password   = document.getElementById('empPassword').value;
+  const employeeId = document.getElementById('empEmployeeId').value.trim();
+  const department = document.getElementById('empDepartment').value;
+
+  if(!fullName || !username || !password || !employeeId || !department){
+    showToast('Please fill in every field, including Department.');
+    return;
+  }
+  if(password.length < 6){
+    showToast('Password must be at least 6 characters.');
+    return;
+  }
+
+  const saveBtn = document.getElementById('empFormSaveBtn');
+  saveBtn.disabled = true; saveBtn.textContent = 'Creating…';
+  try{
+    const res = await callBackend({ action:'register', fullName, username, password, role:'agent', employeeId, department });
+    if(!res.success){
+      showToast(res.message || 'Could not create the employee.');
+      return;
+    }
+    showToast(`${fullName} was added as a new agent.`);
+    ['empFullName','empUsername','empPassword','empEmployeeId'].forEach(id=> document.getElementById(id).value = '');
+    document.getElementById('empDepartment').value = '';
+    document.getElementById('empForm').classList.remove('open');
+    openEmployeesView();
+  } catch(err){
+    showToast(err.message || 'Could not reach the server.');
+  } finally{
+    saveBtn.disabled = false; saveBtn.textContent = 'Create Employee';
+  }
+});
+
+async function deleteEmployee(username, name){
+  if(!confirm(`Remove ${name} (@${username}) from the training portal? This cannot be undone.`)) return;
+  try{
+    const res = await callBackend({ action:'deleteAgent', role: currentUser.role, username });
+    if(!res.success){
+      showToast(res.message || 'Could not delete this employee.');
+      return;
+    }
+    showToast(`${name} was removed.`);
+    openEmployeesView();
+  } catch(err){
+    showToast(err.message || 'Could not reach the server.');
   }
 }
 
