@@ -4781,6 +4781,13 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sbClient = (typeof supabase !== 'undefined' && supabase.createClient)
   ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
+/* Employee Messages (চ্যাট) এখন সরাসরি এই দুইটা Supabase টেবিলে সেভ হয় —
+   আগের মতো Google Sheets-এ একটা বড় JSON ব্লব হিসেবে না, প্রতিটা মেসেজ আলাদা row।
+   ডিলিট করলে row মোছা হয় না, শুধু deleted_at সেট হয় (soft delete) — এটাই ব্যাকআপ হিসেবে কাজ করে। */
+const CHAT_MSG_TABLE = "chat_messages";
+const CHAT_META_TABLE = "chat_thread_meta";
+const SB_HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
+const SB_HEADERS_JSON = Object.assign({ 'Content-Type': 'application/json' }, SB_HEADERS);
 const BANNER_BUCKET = "banners";
 const BANNER_MAX_IMAGE_MB = 5;   // images/GIFs above this are rejected client-side
 const BANNER_MAX_VIDEO_MB = 15;  // videos above this are rejected client-side — keeps Home page load fast
@@ -5645,16 +5652,191 @@ function chatHeaderClockLabel(){
   const timePart = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
   return `${datePart} • ${timePart}`;
 }
+/* ===================== EMPLOYEE CHAT — Supabase data layer =====================
+   প্রতিটা মেসেজ chat_messages টেবিলে আলাদা row হিসেবে থাকে, কখনো overwrite হয় না।
+   ডিলিট = soft delete (deleted_at সেট হয়), তাই কোনো মেসেজ আসলে হারায় না — এটাই ব্যাকআপ।
+   thread এর "shape" (employeeId, employeeName, messages[], adminUnread, ইত্যাদি) আগের মতোই
+   রাখা হয়েছে, যাতে বাকি UI কোড না বদলালেও চলে — শুধু ডেটা কোথা থেকে আসছে সেটা বদলেছে। */
+function mapDbMsgToUi(m){
+  return {
+    id: m.id,
+    from: m.sender_type,
+    senderName: m.sender_name,
+    text: m.deleted_at ? '' : (m.text || ''),
+    imageUrl: m.deleted_at ? null : (m.image_url || null),
+    ts: new Date(m.created_at).getTime(),
+    isBroadcast: !!m.is_broadcast,
+    isAutoReply: !!m.is_auto_reply,
+    deleted: !!m.deleted_at
+  };
+}
+function mapMetaToThreadFields(meta){
+  return {
+    adminUnread: !!(meta && meta.admin_unread),
+    employeeUnread: !!(meta && meta.employee_unread),
+    lastReadByAdminAt: (meta && meta.last_read_by_admin_at) ? new Date(meta.last_read_by_admin_at).getTime() : 0,
+    lastReadByEmployeeAt: (meta && meta.last_read_by_employee_at) ? new Date(meta.last_read_by_employee_at).getTime() : 0
+  };
+}
+/* সব এজেন্টের সব থ্রেড একসাথে লাগে এমন জায়গায় (admin thread-list, unread badge, broadcast
+   টার্গেট লিস্ট) এটা ব্যবহার হয়। */
 async function getChatThreads(){
-  try{ return (await storageGet('chatThreads')) || {}; }
-  catch(e){ console.error('Failed to load chat threads', e); return {}; }
+  try{
+    const [msgsRes, metaRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/${CHAT_MSG_TABLE}?select=*&order=created_at.asc`, { headers: SB_HEADERS }),
+      fetch(`${SUPABASE_URL}/rest/v1/${CHAT_META_TABLE}?select=*`, { headers: SB_HEADERS })
+    ]);
+    if(!msgsRes.ok) throw new Error('chat_messages fetch failed: ' + msgsRes.status);
+    const msgs = await msgsRes.json();
+    const metas = metaRes.ok ? await metaRes.json() : [];
+    const metaByEmp = {};
+    metas.forEach(mt => { metaByEmp[mt.employee_id] = mt; });
+
+    const threads = {};
+    msgs.forEach(m => {
+      const key = m.employee_id;
+      if(!threads[key]) threads[key] = { employeeId: key, employeeName: m.employee_name, messages: [] };
+      if(m.employee_name) threads[key].employeeName = m.employee_name;
+      threads[key].messages.push(mapDbMsgToUi(m));
+    });
+    Object.keys(metaByEmp).forEach(key => {
+      if(!threads[key]) threads[key] = { employeeId: key, employeeName: metaByEmp[key].employee_name || key, messages: [] };
+      Object.assign(threads[key], mapMetaToThreadFields(metaByEmp[key]));
+    });
+    Object.keys(threads).forEach(key => {
+      if(threads[key].adminUnread === undefined) Object.assign(threads[key], mapMetaToThreadFields(null));
+    });
+    return threads;
+  }catch(e){
+    console.error('Failed to load chat threads from Supabase', e);
+    return {};
+  }
 }
-async function saveChatThreads(threads){
-  try{ await storageSet('chatThreads', threads); }
-  catch(e){ console.error('Failed to save chat threads', e); }
+/* শুধু একজন এজেন্টের থ্রেড লাগলে (এজেন্ট নিজে চ্যাট খুললে, বা এডমিন একটা থ্রেড ওপেন করলে)
+   পুরো টেবিল না টেনে শুধু তার রো-গুলো আনা হয় — এটা দ্রুত এবং হালকা। */
+async function fetchEmployeeThread(employeeId){
+  try{
+    const [msgsRes, metaRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/${CHAT_MSG_TABLE}?employee_id=eq.${encodeURIComponent(employeeId)}&select=*&order=created_at.asc`, { headers: SB_HEADERS }),
+      fetch(`${SUPABASE_URL}/rest/v1/${CHAT_META_TABLE}?employee_id=eq.${encodeURIComponent(employeeId)}&select=*`, { headers: SB_HEADERS })
+    ]);
+    if(!msgsRes.ok) throw new Error('chat_messages fetch failed: ' + msgsRes.status);
+    const msgs = await msgsRes.json();
+    const metas = metaRes.ok ? await metaRes.json() : [];
+    const meta = metas[0] || null;
+    const lastWithName = [...msgs].reverse().find(m => m.employee_name);
+    return Object.assign({
+      employeeId,
+      employeeName: (lastWithName && lastWithName.employee_name) || (meta && meta.employee_name) || employeeId,
+      messages: msgs.map(mapDbMsgToUi)
+    }, mapMetaToThreadFields(meta));
+  }catch(e){
+    console.error('Failed to load thread for', employeeId, e);
+    return { employeeId, employeeName: employeeId, messages: [], adminUnread:false, employeeUnread:false, lastReadByAdminAt:0, lastReadByEmployeeAt:0 };
+  }
 }
+/* একটা নতুন মেসেজ row হিসেবে insert করে — কখনো অন্য কোনো মেসেজকে touch/overwrite করে না। */
+async function insertChatMessage({ id, employeeId, employeeName, senderType, senderName, text, imageUrl, isBroadcast, isAutoReply }){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${CHAT_MSG_TABLE}`, {
+    method: 'POST',
+    headers: Object.assign({ Prefer: 'return=minimal' }, SB_HEADERS_JSON),
+    body: JSON.stringify({
+      id: id || chatUid(),
+      employee_id: employeeId,
+      employee_name: employeeName || null,
+      sender_type: senderType,
+      sender_name: senderName || null,
+      text: text || '',
+      image_url: imageUrl || null,
+      is_broadcast: !!isBroadcast,
+      is_auto_reply: !!isAutoReply
+    })
+  });
+  if(!res.ok) throw new Error('Insert chat message failed: ' + res.status);
+}
+/* Soft delete — row-টা থেকেই যায় (deleted_at সেট হয়), তাই এটাই ডেটার নিজস্ব ব্যাকআপ। */
+async function softDeleteChatMessage(msgId, deletedBy){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${CHAT_MSG_TABLE}?id=eq.${encodeURIComponent(msgId)}`, {
+    method: 'PATCH',
+    headers: Object.assign({ Prefer: 'return=minimal' }, SB_HEADERS_JSON),
+    body: JSON.stringify({ deleted_at: new Date().toISOString(), deleted_by: deletedBy || null })
+  });
+  if(!res.ok) throw new Error('Delete chat message failed: ' + res.status);
+}
+/* unread flags / last-read timestamp — এইগুলো ছোট মেটাডেটা, তাই per-employee একটা row-এ upsert হয়। */
+async function upsertThreadMeta(employeeId, patch){
+  const body = Object.assign({ employee_id: employeeId, updated_at: new Date().toISOString() }, patch);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${CHAT_META_TABLE}?on_conflict=employee_id`, {
+    method: 'POST',
+    headers: Object.assign({ Prefer: 'resolution=merge-duplicates,return=minimal' }, SB_HEADERS_JSON),
+    body: JSON.stringify(body)
+  });
+  if(!res.ok) throw new Error('Thread meta upsert failed: ' + res.status);
+}
+/* এখন DB-তে সব মেসেজ সবসময় থেকে যায় (কখনো ডিলিট হয় না), তাই এটা শুধু UI-তে কতগুলো
+   দেখানো হবে তা সীমিত রাখে — ডেটা হারায় না। */
 function trimThreadMessages(thread){
   if(thread.messages.length > 200) thread.messages = thread.messages.slice(thread.messages.length - 200);
+}
+/* ===== ONE-TIME MIGRATION: পুরনো Google Sheets 'chatThreads' ব্লব থেকে নতুন Supabase
+   টেবিলে সব থ্রেড/মেসেজ কপি করা হয়। এটা শুধু একবারই রান করা উচিত (Super Admin বাটন থেকে) —
+   বারবার রান করলে পুরনো মেসেজ ডুপ্লিকেট হয়ে যাবে, তাই সফল হলে একটা localStorage ফ্ল্যাগ
+   সেট করে বাটনটা লুকিয়ে দেওয়া হয়। মূল Google Sheets ডেটা কোনোভাবে মোছা/বদলানো হয় না। */
+async function migrateOldChatThreadsToSupabase(){
+  const btn = document.getElementById('chatMigrateBtn');
+  if(!confirm('পুরনো সব Employee Message Supabase-এ কপি করা হবে। এটা শুধু একবার রান করুন — আবার রান করলে মেসেজ ডুপ্লিকেট হয়ে যাবে। এগিয়ে যাবেন?')) return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Migrate হচ্ছে...'; }
+  try{
+    const oldThreads = (await storageGet('chatThreads')) || {};
+    const employeeIds = Object.keys(oldThreads);
+    if(!employeeIds.length){
+      showToast('পুরনো কোনো মেসেজ পাওয়া যায়নি — মাইগ্রেট করার কিছু নেই।');
+      localStorage.setItem('qa_chat_migrated', '1');
+      if(btn) btn.remove();
+      return;
+    }
+    let msgCount = 0;
+    for(const empId of employeeIds){
+      const t = oldThreads[empId] || {};
+      const msgs = Array.isArray(t.messages) ? t.messages : [];
+      for(const m of msgs){
+        await fetch(`${SUPABASE_URL}/rest/v1/${CHAT_MSG_TABLE}`, {
+          method: 'POST',
+          headers: Object.assign({ Prefer: 'resolution=ignore-duplicates,return=minimal' }, SB_HEADERS_JSON),
+          body: JSON.stringify({
+            id: m.id || chatUid(),
+            employee_id: empId,
+            employee_name: t.employeeName || empId,
+            sender_type: m.from === 'admin' ? 'admin' : 'employee',
+            sender_name: m.senderName || null,
+            text: m.deleted ? '' : (m.text || ''),
+            image_url: m.deleted ? null : (m.imageUrl || null),
+            is_broadcast: !!m.isBroadcast,
+            is_auto_reply: !!m.isAutoReply,
+            created_at: m.ts ? new Date(m.ts).toISOString() : new Date().toISOString(),
+            deleted_at: m.deleted ? new Date().toISOString() : null,
+            deleted_by: m.deleted ? 'migration' : null
+          })
+        });
+        msgCount++;
+      }
+      await upsertThreadMeta(empId, {
+        employee_name: t.employeeName || empId,
+        admin_unread: !!t.adminUnread,
+        employee_unread: !!t.employeeUnread,
+        last_read_by_admin_at: t.lastReadByAdminAt ? new Date(t.lastReadByAdminAt).toISOString() : null,
+        last_read_by_employee_at: t.lastReadByEmployeeAt ? new Date(t.lastReadByEmployeeAt).toISOString() : null
+      });
+    }
+    localStorage.setItem('qa_chat_migrated', '1');
+    showToast(`✅ Migration সম্পন্ন — ${employeeIds.length} জন এজেন্টের ${msgCount}টি মেসেজ কপি হয়েছে।`);
+    if(btn) btn.remove();
+    await renderAdminChatList();
+  }catch(e){
+    console.error('Chat migration failed', e);
+    showToast('Migration ব্যর্থ হয়েছে। Console এ error চেক করুন এবং আবার চেষ্টা করুন।');
+    if(btn){ btn.disabled = false; btn.textContent = '🗄️ পুরনো মেসেজ Migrate করুন (Run Once)'; }
+  }
 }
 
 async function sendEmployeeChatMessage(){
@@ -5665,37 +5847,34 @@ async function sendEmployeeChatMessage(){
   input.value = '';
   input.disabled = true;
   try{
-    const threads = await getChatThreads();
     const key = empEmployeeId;
-    if(!threads[key]) threads[key] = { employeeId: empEmployeeId, employeeName: empAgentName, messages: [] };
-    threads[key].employeeName = empAgentName;
+    const thread = await fetchEmployeeThread(key);
 
     // Auto-reply শুধু তখনই যাবে যখন এটা এই থ্রেডের প্রথম মেসেজ, অথবা শেষ employee
     // মেসেজের পর অনেকটা সময় (২ দিন) পার হয়ে গেছে — একটানা চ্যাট করার সময় প্রতিটা
     // মেসেজে বারবার auto-reply আসবে না।
     const AUTO_REPLY_GAP_MS = 2 * 24 * 60 * 60 * 1000; // ২ দিন
-    const priorEmployeeMsgs = (threads[key].messages || []).filter(m => m.from === 'employee');
+    const priorEmployeeMsgs = (thread.messages || []).filter(m => m.from === 'employee');
     const lastEmployeeMsgTs = priorEmployeeMsgs.length ? priorEmployeeMsgs[priorEmployeeMsgs.length - 1].ts : null;
     const shouldAutoReply = !lastEmployeeMsgTs || (Date.now() - lastEmployeeMsgTs) > AUTO_REPLY_GAP_MS;
 
-    threads[key].messages.push({ id: chatUid(), from:'employee', text, ts: Date.now() });
-    threads[key].adminUnread = true;
-
+    await insertChatMessage({ employeeId: key, employeeName: empAgentName, senderType:'employee', text });
     if(shouldAutoReply){
-      threads[key].messages.push({
-        id: chatUid(),
-        from: 'admin',
+      await insertChatMessage({
+        employeeId: key,
+        employeeName: empAgentName,
+        senderType: 'admin',
         senderName: 'Quality Team',
         text: 'Thank you for contacting the Quality Team. Your message will be answered as soon as possible.',
-        ts: Date.now() + 1,
         isAutoReply: true
       });
     }
+    await upsertThreadMeta(key, { employee_name: empAgentName, admin_unread: true });
 
-    trimThreadMessages(threads[key]);
-    await saveChatThreads(threads);
+    const freshThread = await fetchEmployeeThread(key);
+    trimThreadMessages(freshThread);
     localStorage.setItem('qa_emp_chat_seen_ts', String(Date.now()));
-    renderEmployeeChatMessages(threads[key]);
+    renderEmployeeChatMessages(freshThread);
   }catch(e){
     console.error(e);
     showToast('মেসেজ পাঠাতে ব্যর্থ, আবার চেষ্টা করুন।');
@@ -5737,14 +5916,8 @@ async function deleteEmployeeChatMessage(msgId){
   if(!empEmployeeId) return;
   if(!confirm('মেসেজটি মুছে ফেলবেন? এটি মুছে ফেলা হয়েছে বলে দেখানো হবে।')) return;
   try{
-    const threads = await getChatThreads();
-    const thread = threads[empEmployeeId];
-    if(!thread) return;
-    const msg = (thread.messages||[]).find(x=>x.id===msgId);
-    if(!msg || msg.from!=='employee') return;
-    msg.deleted = true;
-    msg.text = '';
-    await saveChatThreads(threads);
+    await softDeleteChatMessage(msgId, empAgentName || empEmployeeId);
+    const thread = await fetchEmployeeThread(empEmployeeId);
     renderEmployeeChatMessages(thread);
   }catch(e){
     console.error(e);
@@ -5753,24 +5926,19 @@ async function deleteEmployeeChatMessage(msgId){
 }
 /* Employee has the chat panel open and has seen Quality Team's messages up to now —
    record this on the shared thread so Admin's own "✓✓ Read" ticks can update. */
+let lastEmpReadMarkTs = 0;
 async function markThreadReadByEmployee(){
   if(!empEmployeeId) return;
   try{
-    const threads = await getChatThreads();
-    const thread = threads[empEmployeeId];
-    if(!thread) return;
-    const already = thread.lastReadByEmployeeAt || 0;
     const now = Date.now();
-    if(now - already < 8000) return; // avoid hammering the backend on every poll tick
-    thread.lastReadByEmployeeAt = now;
-    thread.employeeUnread = false;
-    await saveChatThreads(threads);
+    if(now - lastEmpReadMarkTs < 8000) return; // avoid hammering the backend on every poll tick
+    lastEmpReadMarkTs = now;
+    await upsertThreadMeta(empEmployeeId, { employee_name: empAgentName, last_read_by_employee_at: new Date(now).toISOString(), employee_unread: false });
   }catch(e){ console.error('Failed to mark thread read by employee', e); }
 }
 async function refreshEmployeeChat(){
   if(!empEmployeeId) return;
-  const threads = await getChatThreads();
-  const thread = threads[empEmployeeId];
+  const thread = await fetchEmployeeThread(empEmployeeId);
   const panel = document.getElementById('empChatPanel');
   const isOpen = panel && panel.classList.contains('open');
   if(isOpen){
@@ -5833,6 +6001,7 @@ async function renderAdminChatList(){
     <div class="panel-header">
       <div><h1>💬 Employee Messages</h1><p>এজেন্টদের পাঠানো মেসেজ দেখুন এবং রিপ্লাই দিন।</p></div>
       <div style="display:flex; gap:8px;">
+        ${(superAdminToken && localStorage.getItem('qa_chat_migrated')!=='1') ? `<button class="btn" onclick="migrateOldChatThreadsToSupabase()" id="chatMigrateBtn">🗄️ পুরনো মেসেজ Migrate করুন (Run Once)</button>` : ''}
         <button class="btn" onclick="openBroadcastModal()">📢 Broadcast</button>
         <button class="btn primary" onclick="renderAdminChatList()">↻ Refresh</button>
       </div>
@@ -5991,12 +6160,11 @@ async function openAdminChatThread(employeeId){
     view.innerHTML = `<div class="chat-loading-state" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px;">Please wait......</div>`;
   }
 
-  const threads = await getChatThreads();
-  const thread = threads[employeeId];
+  const thread = await fetchEmployeeThread(employeeId);
   if(!thread) return;
   thread.adminUnread = false;
   thread.lastReadByAdminAt = Date.now();
-  await saveChatThreads(threads);
+  await upsertThreadMeta(employeeId, { employee_name: thread.employeeName, admin_unread: false, last_read_by_admin_at: new Date(thread.lastReadByAdminAt).toISOString() });
   updateAdminChatNavBadge();
 
   const headerName = thread.employeeName||employeeId;
@@ -6040,13 +6208,10 @@ function renderAdminChatMessages(thread){
 }
 async function deleteAdminChatMessage(msgId){
   if(!chatOpenEmployeeId) return;
-  if(!confirm('মেসেজটি স্থায়ীভাবে মুছে ফেলা হবে, এর কোনো প্রমাণ আর থাকবে না। এগিয়ে যাবেন?')) return;
+  if(!confirm('মেসেজটি এজেন্টের কাছে "মুছে ফেলা হয়েছে" দেখানো হবে (আসল ডেটা ব্যাকআপ হিসেবে থেকে যাবে)। এগিয়ে যাবেন?')) return;
   try{
-    const threads = await getChatThreads();
-    const thread = threads[chatOpenEmployeeId];
-    if(!thread) return;
-    thread.messages = (thread.messages||[]).filter(m=>m.id!==msgId);
-    await saveChatThreads(threads);
+    await softDeleteChatMessage(msgId, 'admin');
+    const thread = await fetchEmployeeThread(chatOpenEmployeeId);
     renderAdminChatMessages(thread);
     await refreshAdminChatList();
   }catch(e){
@@ -6071,15 +6236,13 @@ async function sendAdminChatReply(){
   }
 
   try{
-    const threads = await getChatThreads();
-    const thread = threads[chatOpenEmployeeId];
-    if(!thread) return;
+    const employeeId = chatOpenEmployeeId;
+    const priorThread = await fetchEmployeeThread(employeeId);
     const senderName = 'Quality Team';
-    thread.messages.push({ id: chatUid(), from:'admin', text, ts: Date.now(), senderName });
-    thread.employeeUnread = true;
-    thread.adminUnread = false;
+    await insertChatMessage({ employeeId, employeeName: priorThread.employeeName, senderType:'admin', senderName, text });
+    await upsertThreadMeta(employeeId, { employee_name: priorThread.employeeName, employee_unread: true, admin_unread: false });
+    const thread = await fetchEmployeeThread(employeeId);
     trimThreadMessages(thread);
-    await saveChatThreads(threads);
     renderAdminChatMessages(thread);
     await refreshAdminChatList();
   }catch(e){
@@ -6142,15 +6305,13 @@ async function handleAdminChatImageAttach(input){
     if(!uploadRes.ok){ throw new Error('Storage upload failed: ' + uploadRes.status); }
     const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}/${path}`;
 
-    const threads = await getChatThreads();
-    const thread = threads[chatOpenEmployeeId];
-    if(!thread) return;
+    const employeeId = chatOpenEmployeeId;
+    const priorThread = await fetchEmployeeThread(employeeId);
     const senderName = 'Quality Team';
-    thread.messages.push({ id: chatUid(), from:'admin', text:'', imageUrl: publicUrl, ts: Date.now(), senderName });
-    thread.employeeUnread = true;
-    thread.adminUnread = false;
+    await insertChatMessage({ employeeId, employeeName: priorThread.employeeName, senderType:'admin', senderName, text:'', imageUrl: publicUrl });
+    await upsertThreadMeta(employeeId, { employee_name: priorThread.employeeName, employee_unread: true, admin_unread: false });
+    const thread = await fetchEmployeeThread(employeeId);
     trimThreadMessages(thread);
-    await saveChatThreads(threads);
     renderAdminChatMessages(thread);
     await refreshAdminChatList();
     showToast('ছবি পাঠানো হয়েছে ✅');
@@ -6229,22 +6390,17 @@ async function sendBroadcastAnnouncement(){
 
   if(sendBtn){ sendBtn.disabled = true; sendBtn.textContent = 'পাঠানো হচ্ছে...'; }
   try{
-    const threads = await getChatThreads();
     const ts = Date.now();
-    targetIds.forEach(id=>{
+    await Promise.all(targetIds.map(async id=>{
       const name = broadcastNameMap[id] || id;
-      if(!threads[id]) threads[id] = { employeeId: id, employeeName: name, messages: [] };
-      threads[id].employeeName = threads[id].employeeName || name;
-      threads[id].messages.push({
-        id: chatUid(), from:'admin', senderName:'Quality Team', text, ts, isBroadcast:true
+      await insertChatMessage({ employeeId:id, employeeName:name, senderType:'admin', senderName:'Quality Team', text, isBroadcast:true });
+      await upsertThreadMeta(id, {
+        employee_name: name,
+        employee_unread: true,
+        admin_unread: false,
+        last_read_by_admin_at: new Date(ts).toISOString() // admin obviously has "read" its own broadcast
       });
-      threads[id].employeeUnread = true;
-      threads[id].adminUnread = false;
-      threads[id].lastReadByAdminAt = ts; // admin obviously has "read" its own broadcast
-      trimThreadMessages(threads[id]);
-    });
-
-    await saveChatThreads(threads, targetIds);
+    }));
 
     // Super Admin যেন পরে এসে দেখতে পারেন কে, কবে, কতজনকে কী broadcast পাঠিয়েছেন
     try{
@@ -6285,16 +6441,13 @@ function runChatPollTick(){
     if(currentTab === 'EMPCHAT'){
       refreshAdminChatList();
       if(chatOpenEmployeeId){
-        getChatThreads().then(async threads=>{
-          const t = threads[chatOpenEmployeeId];
+        fetchEmployeeThread(chatOpenEmployeeId).then(async t=>{
           if(!t) return;
           renderAdminChatMessages(t);
           // Thread is actively open on screen — keep marking new incoming messages as read.
           const now = Date.now();
           if(now - (t.lastReadByAdminAt||0) > 8000 || t.adminUnread){
-            t.lastReadByAdminAt = now;
-            t.adminUnread = false;
-            await saveChatThreads(threads);
+            await upsertThreadMeta(chatOpenEmployeeId, { employee_name: t.employeeName, admin_unread:false, last_read_by_admin_at: new Date(now).toISOString() });
           }
         });
       }
@@ -6308,16 +6461,19 @@ function startChatPolling(){
 startChatPolling();
 
 /* ===================== CHAT REALTIME (Supabase) =====================
-   chat_threads টেবিলে যেকোনো insert/update হলে সাথে সাথে runChatPollTick()
-   চালিয়ে UI রিফ্রেশ করে দেয় — ১৫ সেকেন্ড পোলিং-এর জন্য আর অপেক্ষা করতে হয় না।
+   chat_messages বা chat_thread_meta টেবিলে যেকোনো insert/update হলে সাথে সাথে
+   runChatPollTick() চালিয়ে UI রিফ্রেশ করে দেয় — ১৫ সেকেন্ড পোলিং-এর জন্য আর অপেক্ষা করতে হয় না।
    পোলিং (উপরে) safety-net হিসেবে চলতেই থাকে, যদি কখনো realtime সংযোগ ছিঁড়ে যায়। */
 let chatRealtimeChannel = null;
 function initChatRealtime(){
   if(!sbClient || chatRealtimeChannel) return;
   try{
     chatRealtimeChannel = sbClient
-      .channel('chat_threads_live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_threads' }, () => {
+      .channel('chat_messages_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: CHAT_MSG_TABLE }, () => {
+        runChatPollTick();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: CHAT_META_TABLE }, () => {
         runChatPollTick();
       })
       .subscribe();
