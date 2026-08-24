@@ -11919,8 +11919,21 @@ setInterval(updateWelcome,1000);
   86%{  box-shadow:0 0 36px rgba(0,255,157,0.55), 0 0 75px rgba(0,255,157,0.30); border-color:rgba(0,255,157,0.85); }
 }
 .emp-highlight-box h2{ font-size:24px; }
-.emp-highlight-box p.hint{ color:var(--text, #EAF0F6); opacity:0.85; }
-.emp-highlight-box .field label{ color:var(--text, #EAF0F6); opacity:0.85; }
+.emp-highlight-box p.hint{ color:var(--text, #EAF0F6); opacity:0.97; }
+.emp-highlight-box .field label{ color:var(--text, #EAF0F6); opacity:0.97; }
+/* translateZ(18px) নিচের লাইনে ব্যবহার হয় স্মুথ 3D টিল্ট ইফেক্টের জন্য — কিন্তু এটা টেক্সটে
+   সাব-পিক্সেল ব্লার তৈরি করছিল। backface-visibility:hidden দিলে ব্রাউজার টেক্সটকে
+   sharp/crisp রেন্ডার করে, টিল্ট ইফেক্ট ঠিক থেকেও যায়। */
+.emp-highlight-box > *{
+  transform:translateZ(18px);
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.emp-highlight-box,
+.emp-highlight-box *{
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
 
 /* Quality Team / Admin / Super Admin — collapsed by default into a light, low-key tab;
    tapping the heading reveals the same login box underneath. */
