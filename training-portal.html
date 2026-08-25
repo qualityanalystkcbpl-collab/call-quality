@@ -242,7 +242,19 @@
   .dash-card .lbl{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color: var(--text-faint); margin-top:4px; text-transform: uppercase; letter-spacing:.04em; }
   .dash-welcome{ text-align:center; max-width:700px; margin:0 auto 26px; color: var(--text-muted); font-size:14px; line-height:1.7; }
   .dash-welcome h2{ font-family:'Space Grotesk',sans-serif; color: var(--text-primary); margin:0 0 8px; }
-  .dash-quick{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:920px; margin:0 auto; }
+
+  /* Dashboard stat charts (donut rings) */
+  .chart-card{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:20px 14px 16px; }
+  .ring-wrap{ position:relative; width:96px; height:96px; }
+  .dash-ring{ width:96px; height:96px; transform:rotate(-90deg); }
+  .dash-ring .ring-bg{ fill:none; stroke:rgba(255,255,255,.08); stroke-width:8; }
+  .dash-ring .ring-fg{ fill:none; stroke-width:8; stroke-linecap:round; stroke-dasharray:264; stroke-dashoffset:264; transition:stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1); }
+  .dash-ring .ring-catv{ stroke: var(--catv); filter: drop-shadow(0 0 6px var(--catv-glow)); }
+  .dash-ring .ring-tech{ stroke: var(--tech); filter: drop-shadow(0 0 6px var(--tech-glow)); }
+  .dash-ring .ring-renewal{ stroke: var(--renewal); filter: drop-shadow(0 0 6px var(--renewal-glow)); }
+  .dash-ring .ring-retention{ stroke: var(--retention); filter: drop-shadow(0 0 6px var(--retention-glow)); }
+  .ring-num{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; color: var(--text-primary); }
+  .chart-card .lbl{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing:.04em; text-align:center; }
 
   /* Employees view */
   .emp-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; max-width:920px; margin:0 auto 18px; }
@@ -297,6 +309,27 @@
     0%{ background-position: 0% 0%; }
     100%{ background-position: 0% 200%; }
   }
+
+  /* Curvy 3D flowing connector (desktop) — replaces the straight bar */
+  .timeline.curvy-mode::before{ display: none; }
+  .timeline-path-svg{
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; overflow: visible;
+  }
+  .curve-shadow{
+    fill: none; stroke: rgba(0,0,0,0.5); stroke-width: 10; stroke-linecap: round;
+    filter: blur(5px); transform: translateY(4px);
+  }
+  .curve-glow{
+    fill: none; stroke-width: 16; stroke-linecap: round; opacity: .38; filter: blur(7px);
+  }
+  .curve-main{
+    fill: none; stroke-width: 5; stroke-linecap: round;
+    stroke-dasharray: 14 11;
+    animation: curveFlow 2.2s linear infinite;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,.55));
+  }
+  @keyframes curveFlow{ to{ stroke-dashoffset: -50; } }
 
   .stage{
     position: relative; display: flex; align-items: flex-start; margin-bottom: 38px;
@@ -376,7 +409,7 @@
     cursor: pointer;
     backdrop-filter: blur(20px);
     box-shadow: var(--3d-shadow);
-    position: relative; overflow: hidden;
+    position: relative; overflow: hidden; z-index: 2;
     transform-style: preserve-3d;
     transform: perspective(1000px) translateZ(10px);
     backface-visibility: hidden; -webkit-backface-visibility: hidden;
@@ -433,6 +466,10 @@
     .stage, .stage.left, .stage.right{ justify-content: flex-start; padding-left: 64px; }
     .stage-badge{ left: 26px; }
     .stage-card{ width: 100%; text-align: left !important; margin: 0 !important; }
+    .agents-layout{ flex-direction: column; }
+    .agents-sidebar{ width: 100%; }
+    .agent-list{ max-height: 300px; }
+    .agents-detail{ max-height: none; }
   }
 
   /* Back to Top Button */
@@ -467,22 +504,6 @@
   .help-btn:hover{
     color: var(--accent); border-color: var(--accent);
     transform: translateY(-4px) scale(1.1) rotate(10deg);
-    box-shadow: 0 18px 36px -8px var(--accent-glow);
-  }
-
-  .cert-nav-btn{
-    position: fixed; right: 22px; bottom: 86px; z-index: 10;
-    display: flex; align-items: center; gap: 8px;
-    background: var(--bg-panel); border: 1px solid var(--line); color: var(--text-muted);
-    padding: 12px 18px; border-radius: 999px; cursor: pointer;
-    font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.25);
-    backdrop-filter: blur(16px);
-    transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  .cert-nav-btn:hover{
-    color: var(--accent); border-color: var(--accent);
-    transform: translateY(-4px) scale(1.05);
     box-shadow: 0 18px 36px -8px var(--accent-glow);
   }
 
@@ -776,9 +797,9 @@
   .cert-row .info .meta{ font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-faint); margin-top: 3px; }
   .cert-row .score{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: #3ee6a8; }
 
-  .agents-layout{ display: flex; gap: 18px; align-items: flex-start; }
-  .agents-sidebar{ width: 250px; flex-shrink: 0; display: flex; flex-direction: column; }
-  .agent-list{ overflow-y: auto; max-height: 480px; display: flex; flex-direction: column; gap: 8px; }
+  .agents-layout{ display: flex; gap: 18px; align-items: flex-start; max-width: 1100px; margin: 0 auto; }
+  .agents-sidebar{ width: 280px; flex-shrink: 0; display: flex; flex-direction: column; }
+  .agent-list{ overflow-y: auto; max-height: 62vh; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
   .agent-chip{
     padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px;
     background: rgba(255,255,255,.02); cursor: pointer; transition: all .2s ease;
@@ -787,7 +808,7 @@
   .agent-chip.active{ border-color: var(--accent); background: var(--accent-glow); box-shadow: 0 0 12px var(--accent-glow); }
   .agent-chip .nm{ font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13px; }
   .agent-chip .id{ font-size: 10.5px; color: var(--text-faint); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
-  .agents-detail{ flex: 1; min-width: 0; max-height: 480px; overflow-y: auto; padding-right: 2px; }
+  .agents-detail{ flex: 1; min-width: 0; max-height: 72vh; overflow-y: auto; padding-right: 2px; }
   .agent-stage-row{
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 6px;
@@ -1066,6 +1087,73 @@
   .product-loading{ display:flex; align-items:center; justify-content:center; min-height:360px; color:var(--text-muted); font-family:'Space Grotesk',sans-serif; }
   .product-spinner{ width:30px; height:30px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--accent); animation:productSpin .8s linear infinite; margin-right:10px; }
   @keyframes productSpin{ to{ transform:rotate(360deg); } }
+
+  /* ===== App-only animated footer strip (login screen unaffected) ===== */
+  .app-footer-strip{
+    position: relative;
+    width: 100%;
+    z-index: 1;
+    padding: 9px 16px;
+    margin-top: 28px;
+    overflow: hidden;
+    background: rgba(6, 9, 20, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+  }
+  [data-theme="light"] .app-footer-strip{
+    background: rgba(255,255,255,0.75);
+  }
+  .app-footer-strip::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      var(--catv), var(--tech), var(--renewal), var(--retention), var(--soft), var(--catv)
+    );
+    background-size: 300% 100%;
+    opacity: 0.16;
+    animation: footerHue 14s ease-in-out infinite;
+  }
+  [data-theme="light"] .app-footer-strip::before{ opacity: 0.12; }
+  @keyframes footerHue{
+    0%{ background-position: 0% 50%; }
+    50%{ background-position: 100% 50%; }
+    100%{ background-position: 0% 50%; }
+  }
+  .app-footer-strip-inner{
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    text-align: center;
+  }
+  .app-footer-strip-text{
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    color: var(--text-muted);
+    background: linear-gradient(90deg, var(--catv), var(--tech), var(--retention), var(--soft), var(--catv));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: footerHue 14s ease-in-out infinite;
+    opacity: 0.85;
+  }
+  .app-footer-strip-dot{
+    color: var(--text-faint);
+    font-size: 10px;
+  }
+  @media (max-width: 600px){
+    .app-footer-strip{ padding: 8px 12px; }
+    .app-footer-strip-text{ font-size: 10.5px; }
+  }
   @media (max-width:900px){ .product-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } .product-summary{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width:620px){ .product-grid{ grid-template-columns:1fr; max-height:60vh; } .product-summary{ grid-template-columns:1fr 1fr; } .product-detail-grid{ grid-template-columns:1fr; } .product-sync{ width:100%; margin-left:0; } }
 
@@ -1146,6 +1234,9 @@
       <!-- REGISTER FORM -->
       <form id="registerForm" style="display:none;">
         <h2 style="font-family:'Space Grotesk',sans-serif; font-size:24px; margin:0 0 20px;">Create New Account</h2>
+        <div class="auth-note" style="margin:-8px 0 16px; padding:10px 12px; border-radius:10px; background:rgba(76,141,255,0.08); border:1px solid rgba(76,141,255,0.3); color:var(--text-muted); font-size:12px; line-height:1.6;">
+          ℹ️ New agent accounts cannot be self-registered here. Only <b>QA</b>, <b>TL</b>, <b>HR</b> or <b>HOD</b> can create a new agent account, from inside the portal under <b>All New Employees</b>. This form is only for QA / TL / HR / HOD staff accounts.
+        </div>
         <div class="field">
           <label for="regFullName">Full Name</label>
           <input id="regFullName" type="text" placeholder="e.g., John Smith" required />
@@ -1165,11 +1256,10 @@
         <div class="field">
           <label for="regRole">Role</label>
           <select id="regRole" required>
-            <option value="agent">Agent</option>
-            <option value="qa">Quality Analyst (QA)</option>
-            <option value="tl">Team Leader</option>
-            <option value="hr">HR</option>
-            <option value="hod">HOD</option>
+            <option value="qa">QA (Quality Analyst)</option>
+            <option value="tl">TL (Team Leader)</option>
+            <option value="hr">HR (Human Resources)</option>
+            <option value="hod">HOD (Head of Department)</option>
           </select>
         </div>
         <div class="field" id="regEmployeeIdField">
@@ -1230,6 +1320,7 @@
   <div class="staff-menu-btn" id="menuProcessBtn" data-view="process">🗂 All Process</div>
   <div class="staff-menu-btn" id="menuEmployeesBtn" data-view="employees">🧑‍💼 All New Employees</div>
   <div class="staff-menu-btn" id="menuProgressBtn" data-view="progress">👥 Agent Progress</div>
+  <div class="staff-menu-btn" id="certNavBtn">🎓 Certificates</div>
 </div>
 
 <!-- Home dashboard (staff only) -->
@@ -1239,17 +1330,36 @@
     <p>This is your training portal dashboard. Use the menu above to review every process, manage new employees, or check any agent's 45-Day Journey progress.</p>
   </div>
   <div class="dash-grid" id="dashStats">
-    <div class="dash-card"><div class="num" id="dashAgentCount">—</div><div class="lbl">Registered Agents</div></div>
-    <div class="dash-card"><div class="num" id="dashActiveCount">—</div><div class="lbl">Active Agents</div></div>
-    <div class="dash-card"><div class="num" id="dashCertCount">—</div><div class="lbl">Certificates Issued</div></div>
-    <div class="dash-card"><div class="num">5</div><div class="lbl">Training Processes</div></div>
+    <div class="dash-card chart-card">
+      <div class="ring-wrap">
+        <svg class="dash-ring" viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="42"/><circle class="ring-fg ring-catv" id="ringAgentCount" cx="50" cy="50" r="42"/></svg>
+        <div class="ring-num" id="dashAgentCount">—</div>
+      </div>
+      <div class="lbl">Registered Agents</div>
+    </div>
+    <div class="dash-card chart-card">
+      <div class="ring-wrap">
+        <svg class="dash-ring" viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="42"/><circle class="ring-fg ring-tech" id="ringActiveCount" cx="50" cy="50" r="42"/></svg>
+        <div class="ring-num" id="dashActiveCount">—</div>
+      </div>
+      <div class="lbl">Active Agents</div>
+    </div>
+    <div class="dash-card chart-card">
+      <div class="ring-wrap">
+        <svg class="dash-ring" viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="42"/><circle class="ring-fg ring-renewal" id="ringCertCount" cx="50" cy="50" r="42"/></svg>
+        <div class="ring-num" id="dashCertCount">—</div>
+      </div>
+      <div class="lbl">Certificates Issued</div>
+    </div>
+    <div class="dash-card chart-card">
+      <div class="ring-wrap">
+        <svg class="dash-ring" viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="42"/><circle class="ring-fg ring-retention" id="ringProcessCount" cx="50" cy="50" r="42"/></svg>
+        <div class="ring-num">5</div>
+      </div>
+      <div class="lbl">Training Processes</div>
+    </div>
   </div>
-  <div class="dash-quick">
-    <div class="btn primary" id="dashQuickProcess">🗂 Open All Process</div>
-    <div class="btn" id="dashQuickEmployees">🧑‍💼 All New Employees</div>
-    <div class="btn" id="dashQuickProgress">👥 Agent Progress</div>
-    <div class="btn" id="dashQuickCerts">🎓 Certificates</div>
-  </div>
+
 </div>
 
 <!-- All New Employees view (staff only) -->
@@ -1284,6 +1394,25 @@
   <div class="emp-list" id="empList"></div>
 </div>
 
+<!-- Agent Progress view (staff only) — inline page, not a popup, built to stay fast at 1000-2000+ agents -->
+<div id="progressView" style="display:none;">
+  <div class="path-heading">
+    <h2><span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.08em; color:var(--accent); display:block; margin-bottom:4px;">MASTER ACCESS</span>Agent Progress</h2>
+    <small id="agentCountText">Loading agents…</small>
+  </div>
+  <div class="agents-layout">
+    <div class="agents-sidebar">
+      <input type="text" id="agentSearch" class="cert-list-search" placeholder="Search agent name or employee ID…" />
+      <div id="agentListLoading" class="empty-state" style="padding:20px 4px;">Loading agents…</div>
+      <div id="agentListResults" class="agent-list"></div>
+      <button type="button" class="btn" id="agentListLoadMoreBtn" style="display:none; margin-top:10px; width:100%;">Load more agents</button>
+    </div>
+    <div class="agents-detail" id="agentsDetail">
+      <div class="empty-state">Select an agent from the list to view their 45-Day Journey progress across all four processes.</div>
+    </div>
+  </div>
+</div>
+
 <!-- Training journey view (Home page / All Process) -->
 <div id="processView">
 <div class="tabs" id="tabs"></div>
@@ -1297,7 +1426,6 @@
 </main>
 </div>
 
-<div class="cert-nav-btn" id="certNavBtn">🎓 Certificates</div>
 <div class="help-btn" id="helpBtn">?</div>
 <!-- Back to Top Button -->
 <button id="backToTopBtn" title="Back to top" aria-label="Back to top">↑</button>
@@ -1509,28 +1637,7 @@
   </div>
 </div>
 
-<!-- Agent Progress master modal -->
-<div class="modal-overlay" id="agentsOverlay">
-  <div class="modal" style="max-width:940px;">
-    <div class="modal-head">
-      <button class="modal-close" data-close>✕</button>
-      <div class="tag">Master Access</div>
-      <h3>Agent Progress</h3>
-    </div>
-    <div class="modal-body">
-      <div class="agents-layout">
-        <div class="agents-sidebar">
-          <input type="text" id="agentSearch" class="cert-list-search" placeholder="Search agent name or employee ID…" />
-          <div id="agentListLoading" class="empty-state" style="padding:20px 4px;">Loading agents…</div>
-          <div id="agentListResults" class="agent-list"></div>
-        </div>
-        <div class="agents-detail" id="agentsDetail">
-          <div class="empty-state">Select an agent from the list to view their 45-Day Journey progress across all four processes.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <!-- Media Viewer modal -->
 <div class="modal-overlay" id="mediaViewerOverlay">
@@ -1604,6 +1711,15 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- App-only animated footer strip (hidden on login screen) -->
+<div class="app-footer-strip" id="appFooterStrip">
+  <div class="app-footer-strip-inner">
+    <span class="app-footer-strip-text">GTPL KCBPL · Training Management System</span>
+    <span class="app-footer-strip-dot">•</span>
+    <span class="app-footer-strip-text">© 2026 Developed &amp; Maintained by Kalyan Sarkar</span>
   </div>
 </div>
 
@@ -1831,7 +1947,7 @@ const LOGO_URL = "https://raw.githubusercontent.com/qualityanalystkcbpl-collab/c
   if(el) el.src = LOGO_URL;
 });
 
-const ROLE_LABELS = { agent:"Agent", qa:"Quality Analyst (QA)", tl:"Team Leader", hr:"HR", hod:"HOD" };
+const ROLE_LABELS = { agent:"Agent", qa:"QA (Quality Analyst)", tl:"TL (Team Leader)", hr:"HR (Human Resources)", hod:"HOD (Head of Department)" };
 
 function getGreeting(){
   const h = new Date().getHours();
@@ -2145,43 +2261,58 @@ function applyRolePermissions(){
 /* Agent Progress (the last one just opens the existing master modal)  */
 /* ------------------------------------------------------------------ */
 function switchStaffView(view){
-  if(view === 'progress'){
-    openAgentsOverlay();
-    return;
-  }
   document.querySelectorAll('.staff-menu-btn').forEach(b=> b.classList.toggle('active', b.dataset.view === view));
   document.getElementById('homeView').style.display = view === 'home' ? 'block' : 'none';
   document.getElementById('processView').style.display = view === 'process' ? 'block' : 'none';
   document.getElementById('employeesView').style.display = view === 'employees' ? 'block' : 'none';
+  document.getElementById('progressView').style.display = view === 'progress' ? 'block' : 'none';
 
   if(view === 'home') renderHomeDashboard();
   if(view === 'employees') openEmployeesView();
+  if(view === 'progress') openAgentProgressView();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 document.getElementById('menuHomeBtn').addEventListener('click', ()=> switchStaffView('home'));
 document.getElementById('menuProcessBtn').addEventListener('click', ()=> switchStaffView('process'));
 document.getElementById('menuEmployeesBtn').addEventListener('click', ()=> switchStaffView('employees'));
 document.getElementById('menuProgressBtn').addEventListener('click', ()=> switchStaffView('progress'));
-document.getElementById('dashQuickProcess').addEventListener('click', ()=> switchStaffView('process'));
-document.getElementById('dashQuickEmployees').addEventListener('click', ()=> switchStaffView('employees'));
-document.getElementById('dashQuickProgress').addEventListener('click', ()=> switchStaffView('progress'));
-document.getElementById('dashQuickCerts').addEventListener('click', ()=> openCertificateList());
+
+const DASH_RING_CIRC = 263.9; // 2 * PI * 42
+function setDashRing(id, pct){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const clamped = Math.max(0, Math.min(100, pct || 0));
+  el.style.strokeDashoffset = DASH_RING_CIRC * (1 - clamped / 100);
+}
 
 async function renderHomeDashboard(){
   document.getElementById('dashName').textContent = currentUser.fullName || currentUser.username;
+  // reset rings to empty, then animate to their target fill after data loads
+  ['ringAgentCount','ringActiveCount','ringCertCount','ringProcessCount'].forEach(id=> setDashRing(id, 0));
   try{
     const [agentsRes, certsRes] = await Promise.all([
       callBackend({ action:'listAgents', role: currentUser.role }).catch(()=>null),
       callBackend({ action:'listCertificates', role: currentUser.role }).catch(()=>null)
     ]);
+    let agentCount = 0, activeCount = 0, certCount = 0;
     if(agentsRes && agentsRes.success){
       const agents = agentsRes.agents || [];
-      document.getElementById('dashAgentCount').textContent = agents.length;
-      document.getElementById('dashActiveCount').textContent = agents.filter(a=> a.status !== 'disabled').length;
+      agentCount = agents.length;
+      activeCount = agents.filter(a=> a.status !== 'disabled').length;
+      document.getElementById('dashAgentCount').textContent = agentCount;
+      document.getElementById('dashActiveCount').textContent = activeCount;
     }
     if(certsRes && certsRes.success){
-      document.getElementById('dashCertCount').textContent = (certsRes.certificates || []).length;
+      certCount = (certsRes.certificates || []).filter(c=> downloadKindForStage(Number(c.stageIndex)) === 'certificate').length;
+      document.getElementById('dashCertCount').textContent = certCount;
     }
+    setTimeout(()=>{
+      setDashRing('ringAgentCount', 100); // total registered agents (reference ring)
+      setDashRing('ringActiveCount', agentCount ? (activeCount / agentCount) * 100 : 0); // % currently active
+      setDashRing('ringCertCount', agentCount ? (certCount / agentCount) * 100 : 0); // certification rate
+      setDashRing('ringProcessCount', 100); // 5 training processes offered
+    }, 60);
   } catch(err){ /* dashboard stats are best-effort */ }
 }
 
@@ -2301,6 +2432,7 @@ function switchTab(key){
   if(window.update3DThemeColor && t.hex) window.update3DThemeColor(t.hex);
   renderTimeline();
   setup3DTilt();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 const timelineEl = document.getElementById('timeline');
@@ -2328,6 +2460,7 @@ function escapeHtml(str){
 
 function renderTimeline(){
   timelineEl.innerHTML = '';
+  timelineEl.insertAdjacentHTML('beforeend', '<svg id="timelinePathSvg" class="timeline-path-svg"></svg>');
   const stages = JOURNEY_CONFIG[activeTab];
   let doneCount = 0;
 
@@ -2365,20 +2498,92 @@ function renderTimeline(){
   });
 
   document.getElementById('progressText').textContent = `${doneCount} / ${stages.length} completed`;
+  document.getElementById('progressText').style.display = (currentUser && currentUser.role === 'agent') ? '' : 'none';
   setup3DTilt();
 }
+
+/* =========================================================
+   3D FLOWING CURVE — connects the stage badges with a
+   soft, glowing S-curve instead of a plain straight bar.
+   Runs on a continuous rAF loop so it always tracks the
+   badges' floating animation instead of a stale snapshot.
+========================================================= */
+function ensureCurveSvgStructure(svg){
+  if(svg.dataset.built === '1') return;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" style="stop-color:var(--catv)"/>
+        <stop offset="45%" style="stop-color:var(--tech)"/>
+        <stop offset="75%" style="stop-color:var(--retention)"/>
+        <stop offset="100%" style="stop-color:var(--soft)"/>
+      </linearGradient>
+    </defs>
+    <path class="curve-shadow" d=""></path>
+    <path class="curve-glow" style="stroke:url(#curveGrad)" d=""></path>
+    <path class="curve-main" style="stroke:url(#curveGrad)" d=""></path>
+  `;
+  svg.dataset.built = '1';
+}
+
+function drawTimelineCurve(){
+  const svg = document.getElementById('timelinePathSvg');
+  if(!svg || !timelineEl) return;
+
+  const isDesktop = window.innerWidth > 720;
+  timelineEl.classList.toggle('curvy-mode', isDesktop);
+  if(!isDesktop){
+    if(svg.dataset.built === '1'){ svg.innerHTML = ''; svg.dataset.built = '0'; }
+    return;
+  }
+
+  const badges = Array.from(timelineEl.querySelectorAll('.stage-badge'));
+  const stagesEls = Array.from(timelineEl.querySelectorAll('.stage'));
+  if(badges.length < 2){
+    if(svg.dataset.built === '1'){ svg.innerHTML = ''; svg.dataset.built = '0'; }
+    return;
+  }
+
+  ensureCurveSvgStructure(svg);
+
+  const containerRect = timelineEl.getBoundingClientRect();
+  const pts = badges.map(b=>{
+    const r = b.getBoundingClientRect();
+    return { x: r.left + r.width/2 - containerRect.left, y: r.top + r.height/2 - containerRect.top };
+  });
+
+  svg.setAttribute('width', containerRect.width);
+  svg.setAttribute('height', containerRect.height);
+  svg.setAttribute('viewBox', `0 0 ${containerRect.width} ${containerRect.height}`);
+
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)} `;
+  for(let i=0;i<pts.length-1;i++){
+    const p0 = pts[i], p1 = pts[i+1];
+    const side = stagesEls[i].classList.contains('left') ? -1 : 1;
+    const bulge = 92;
+    const c1x = p0.x + side*bulge, c1y = p0.y + (p1.y-p0.y)*0.35;
+    const c2x = p0.x + side*bulge, c2y = p0.y + (p1.y-p0.y)*0.65;
+    d += `C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} `;
+  }
+
+  svg.querySelectorAll('path').forEach(p=> p.setAttribute('d', d));
+}
+
+(function curveLoop(){
+  drawTimelineCurve();
+  requestAnimationFrame(curveLoop);
+})();
 
 const dayOverlay = document.getElementById('dayOverlay');
 const helpOverlay = document.getElementById('helpOverlay');
 const quizOverlay = document.getElementById('quizOverlay');
 const qbOverlay = document.getElementById('qbOverlay');
 const certListOverlay = document.getElementById('certListOverlay');
-const agentsOverlay = document.getElementById('agentsOverlay');
 const stageEditOverlay = document.getElementById('stageEditOverlay');
 const matOverlay = document.getElementById('matOverlay');
 const mediaViewerOverlay = document.getElementById('mediaViewerOverlay');
 const productCatalogOverlay = document.getElementById('productCatalogOverlay');
-const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, agentsOverlay, stageEditOverlay, matOverlay, mediaViewerOverlay, productCatalogOverlay];
+const ALL_OVERLAYS = [dayOverlay, helpOverlay, quizOverlay, qbOverlay, certListOverlay, stageEditOverlay, matOverlay, mediaViewerOverlay, productCatalogOverlay];
 
 const MATERIAL_TYPE_META = {
   ppt:     { icon:'🎞️', label:'Presentation' },
@@ -2816,9 +3021,50 @@ function currentTvView(){
 
 function productMatches(item){
   const q = productCatalogState.search.trim().toLowerCase();
-  const normalizedCategory = isBroadcasterItem_(item) ? 'Broadcaster Package' : 'Recommended Package';
-  const catOk = productCatalogState.category === 'all' || normalizedCategory === productCatalogState.category;
-  if(!catOk) return false;
+  const selectedCategory = String(productCatalogState.category || 'all').trim();
+
+  // "All categories" is a real reset state. It must always show
+  // the complete dataset for the currently selected tab.
+  const isAll = selectedCategory === 'all' ||
+                selectedCategory === '' ||
+                selectedCategory.toLowerCase() === 'all categories';
+
+  // Broadband uses the category supplied by the official broadband
+  // backend. Never apply the CATV "Recommended/Broadcaster" logic here.
+  if(productCatalogState.tab === 'broadband'){
+    if(!isAll){
+      const itemCategory = String(
+        item.category ??
+        item.category_name ??
+        item.categoryName ??
+        item.plan_category ??
+        item.planCategory ??
+        item.type ??
+        ''
+      ).trim();
+
+      // Compare normalized text so small spacing/case differences
+      // from the backend do not break the filter.
+      const norm = function(v){
+        return String(v || '')
+          .toLowerCase()
+          .replace(/&amp;/g,'&')
+          .replace(/[\s_-]+/g,' ')
+          .trim();
+      };
+
+      if(norm(itemCategory) !== norm(selectedCategory)) return false;
+    }
+
+    if(!q) return true;
+    return JSON.stringify(item).toLowerCase().includes(q);
+  }
+
+  const normalizedCategory = isBroadcasterItem_(item)
+    ? 'Broadcaster Package'
+    : 'Recommended Package';
+
+  if(!isAll && normalizedCategory !== selectedCategory) return false;
   if(!q) return true;
   return JSON.stringify(item).toLowerCase().includes(q);
 }
@@ -3021,9 +3267,41 @@ function paintProductCatalog(){
     allItems = Array.isArray(ds.channels) ? ds.channels : [];
     items = allItems.filter(channelMatches);
   }else{
-    categories = ['Recommended Package','Broadcaster Package'];
     allItems = Array.isArray(ds.items) ? ds.items : [];
-    items = allItems.filter(productMatches);
+
+    if(productCatalogState.tab === 'broadband'){
+      // Broadband has its own category vocabulary. Do NOT reset the
+      // selected category during every repaint; that made the dropdown
+      // snap back to "All categories" immediately after a selection.
+      const rawBbCats = Array.isArray(productCatalogState.data.broadband && productCatalogState.data.broadband.categories)
+        ? productCatalogState.data.broadband.categories
+        : [];
+      categories = Array.from(new Set(
+        rawBbCats.map(c => cleanProductText_(c)).filter(Boolean)
+      ));
+
+      // "All categories" is the reset option, not a backend category.
+      // Keep it outside the backend category list to avoid duplicates.
+      categories = categories.filter(function(c){
+        return String(c).toLowerCase() !== 'all' &&
+               String(c).toLowerCase() !== 'all categories';
+      });
+
+      // If the previously selected category no longer exists in the
+      // current Broadband dataset, fall back safely to All categories.
+      if(productCatalogState.category !== 'all' &&
+         !categories.some(function(c){
+           return String(c).trim().toLowerCase() ===
+                  String(productCatalogState.category).trim().toLowerCase();
+         })){
+        productCatalogState.category = 'all';
+      }
+
+      items = allItems.filter(productMatches);
+    }else{
+      categories = ['Recommended Package','Broadcaster Package'];
+      items = allItems.filter(productMatches);
+    }
   }
 
   const updated = productCatalogState.data.updatedAt ? new Date(productCatalogState.data.updatedAt) : null;
@@ -3091,6 +3369,12 @@ function paintProductCatalog(){
     productCatalogState.category = 'all';
     productCatalogState.selected = null;
     productCatalogState.tvView = 'packages';
+
+    // Broadband must always open with its complete plan list.
+    if(productCatalogState.tab === 'broadband'){
+      productCatalogState.category = 'all';
+    }
+
     paintProductCatalog();
   }));
 
@@ -3104,6 +3388,15 @@ function paintProductCatalog(){
 
   const search = document.getElementById('productSearch');
   const filter = document.getElementById('productFilter');
+
+  if(filter){
+    // Keep the current category visible. "all" is the explicit reset state.
+    filter.value = productCatalogState.category || 'all';
+    if(filter.value !== (productCatalogState.category || 'all')){
+      filter.value = 'all';
+      productCatalogState.category = 'all';
+    }
+  }
 
   search.addEventListener('input',e=>{
     productCatalogState.search=e.target.value;
@@ -3226,6 +3519,7 @@ async function loadAndRenderMaterials(tab, idx){
 }
 
 function openStage(idx){
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   const t = TABS.find(x=>x.key===activeTab);
   const stage = Object.assign({}, JOURNEY_CONFIG[activeTab][idx] || {});
 
@@ -3258,6 +3552,7 @@ function openStage(idx){
   const key = `${activeTab}-${idx}`;
   const doneBtn = document.getElementById('markDoneBtn');
   doneBtn.textContent = doneMap[key] ? '✓ Completed' : '✓ Mark as completed';
+  doneBtn.style.display = isAgentRole ? '' : 'none';
 
   renderAssessmentBox(activeTab, idx, stage);
   dayOverlay.classList.add('open');
@@ -3309,16 +3604,22 @@ async function renderAssessmentBox(tab, idx, stage){
         pill.classList.add('pass');
 
         const kind = downloadKindForStage(idx);
-        const label = kind === 'certificate' ? 'Certificate' : 'Congratulations';
-        const allowance = await callBackend({ action:'checkDownloadAllowance', username: currentUser.username, tab, stageIndex: idx, type: kind }).catch(()=>null);
-        const remaining = allowance && allowance.success ? allowance.remaining : null;
 
-        if(remaining === 0){
-          actions.innerHTML = `<button class="btn" disabled title="Contact QA / Team Leader / HR / HOD for another copy">⬇ Download limit reached</button>`;
+        if(kind !== 'certificate'){
+          // Intermediate stages: passing is tracked, but nothing is downloadable here —
+          // the real Certificate only unlocks once the full 45-Day Journey is complete.
+          actions.innerHTML = `<div class="empty-state" style="padding:6px 2px; text-align:left; font-size:12px;">✅ Stage passed and saved to your progress. The downloadable Certificate unlocks once you complete the full 45-Day Journey (final stage).</div>`;
         } else {
-          const countTag = remaining !== null ? ` (${remaining} left)` : '';
-          actions.innerHTML = `<button class="btn primary" id="downloadCertBtn">⬇ Download ${label}${countTag}</button>`;
-          document.getElementById('downloadCertBtn').addEventListener('click', ()=> downloadCertificate(tab, idx, stage, res.certificate));
+          const allowance = await callBackend({ action:'checkDownloadAllowance', username: currentUser.username, tab, stageIndex: idx, type: kind }).catch(()=>null);
+          const remaining = allowance && allowance.success ? allowance.remaining : null;
+
+          if(remaining === 0){
+            actions.innerHTML = `<button class="btn" disabled title="Contact QA (Quality Analyst) / TL (Team Leader) / HR (Human Resources) / HOD (Head of Department) for another copy">⬇ Download limit reached</button>`;
+          } else {
+            const countTag = remaining !== null ? ` (${remaining} left)` : '';
+            actions.innerHTML = `<button class="btn primary" id="downloadCertBtn">⬇ Download Certificate${countTag}</button>`;
+            document.getElementById('downloadCertBtn').addEventListener('click', ()=> downloadCertificate(tab, idx, stage, res.certificate));
+          }
         }
       } else {
         pill.textContent = 'Assessment not attempted yet';
@@ -3469,11 +3770,19 @@ function showQuizResult(tab, idx, stage, res){
   const box = document.getElementById('quizResultBox');
   box.style.display = '';
   const kind = downloadKindForStage(idx);
-  const dlLabel = kind === 'certificate' ? 'Certificate' : 'Congratulations Message';
 
   if(res.passed){
     // Trigger celebration confetti blast!
     launchCelebration();
+
+    const actionsHtml = kind === 'certificate'
+      ? `<button class="btn primary" id="dlCertFromQuizBtn" style="padding:12px 24px; font-size:14px; box-shadow:0 12px 30px -4px var(--accent-glow);">⬇ Download Certificate</button>
+         <button class="btn" data-close>Close</button>`
+      : `<button class="btn primary" data-close style="padding:12px 24px; font-size:14px;">Continue</button>`;
+
+    const msgHtml = kind === 'certificate'
+      ? `Outstanding work, <b>${escapeHtml(currentUser.fullName || currentUser.username)}</b>! You have passed the assessment for <b>${escapeHtml(stage.title || `Stage ${idx+1}`)}</b> and completed the full 45-Day Journey. Your Certificate is ready to download below.`
+      : `Outstanding work, <b>${escapeHtml(currentUser.fullName || currentUser.username)}</b>! You have passed the assessment for <b>${escapeHtml(stage.title || `Stage ${idx+1}`)}</b>. Keep going — your downloadable Certificate unlocks once you complete the full 45-Day Journey.`;
 
     box.innerHTML = `
       <div class="celebrate-card">
@@ -3485,11 +3794,10 @@ function showQuizResult(tab, idx, stage, res){
         <div class="celebrate-title">🎉 CONGRATULATIONS! 🎉</div>
         <div class="celebrate-score">✨ PASSED WITH SCORE: ${res.score}/${res.total} ✨</div>
         <div class="celebrate-msg">
-          Outstanding work, <b>${escapeHtml(currentUser.fullName || currentUser.username)}</b>! You have passed the assessment for <b>${escapeHtml(stage.title || `Stage ${idx+1}`)}</b>.
+          ${msgHtml}
         </div>
         <div class="modal-actions" style="justify-content:center; gap:12px; margin-top:14px; flex-wrap:wrap;">
-          <button class="btn primary" id="dlCertFromQuizBtn" style="padding:12px 24px; font-size:14px; box-shadow:0 12px 30px -4px var(--accent-glow);">⬇ Download ${dlLabel}</button>
-          <button class="btn" data-close>Close</button>
+          ${actionsHtml}
         </div>
         <div>
           <button type="button" class="celebrate-sparkle-btn" id="reCelebrateBtn">🎊 Celebrate Again!</button>
@@ -3497,7 +3805,9 @@ function showQuizResult(tab, idx, stage, res){
       </div>
     `;
 
-    document.getElementById('dlCertFromQuizBtn').addEventListener('click', ()=> downloadCertificate(tab, idx, stage, res));
+    if(kind === 'certificate'){
+      document.getElementById('dlCertFromQuizBtn').addEventListener('click', ()=> downloadCertificate(tab, idx, stage, res));
+    }
     document.getElementById('reCelebrateBtn').addEventListener('click', ()=> launchCelebration());
 
     const key = `${tab}-${idx}`;
@@ -3848,7 +4158,9 @@ async function openCertificateList(){
       document.getElementById('certListLoading').textContent = res.message || 'Could not load certificates.';
       return;
     }
-    allCertificates = res.certificates || [];
+    // Only the real 45-Day completion Certificate is ever downloadable now, so only
+    // show final-stage records here — intermediate per-stage passes aren't certificates.
+    allCertificates = (res.certificates || []).filter(c=> downloadKindForStage(Number(c.stageIndex)) === 'certificate');
     document.getElementById('certListLoading').style.display = 'none';
     renderCertificateList(allCertificates);
   } catch(err){
@@ -4034,7 +4346,7 @@ async function downloadCertificate(tab, idx, stage, cert){
   try{
     const allowance = await callBackend({ action:'checkDownloadAllowance', username: currentUser.username, tab, stageIndex: idx, type: kind });
     if(allowance.success && allowance.remaining <= 0){
-      showToast(`Download limit reached for this ${label}. Please contact QA / Team Leader / HR / HOD for another copy.`);
+      showToast(`Download limit reached for this ${label}. Please contact QA (Quality Analyst) / TL (Team Leader) / HR (Human Resources) / HOD (Head of Department) for another copy.`);
       return;
     }
 
@@ -4189,15 +4501,20 @@ async function deleteEmployee(username, name){
 
 let allAgents = [];
 let selectedAgentUsername = null;
+let agentListFiltered = [];
+let agentListRenderCount = 0;
+const AGENT_PAGE_SIZE = 60; // render agents in batches so the DOM stays light even with 1000-2000+ agents
 
-async function openAgentsOverlay(){
-  agentsOverlay.classList.add('open');
+async function openAgentProgressView(){
   document.getElementById('agentSearch').value = '';
   document.getElementById('agentListLoading').style.display = '';
   document.getElementById('agentListLoading').textContent = 'Loading agents…';
   document.getElementById('agentListResults').innerHTML = '';
+  document.getElementById('agentListLoadMoreBtn').style.display = 'none';
+  document.getElementById('agentCountText').textContent = '';
   document.getElementById('agentsDetail').innerHTML =
     `<div class="empty-state">Select an agent from the list to view their 45-Day Journey progress across all four processes.</div>`;
+  selectedAgentUsername = null;
 
   try{
     const res = await callBackend({ action:'listAgents', role: currentUser.role });
@@ -4207,28 +4524,59 @@ async function openAgentsOverlay(){
     }
     allAgents = res.agents || [];
     document.getElementById('agentListLoading').style.display = 'none';
-    renderAgentList(allAgents);
+    document.getElementById('agentCountText').textContent =
+      `${allAgents.length} agent${allAgents.length===1?'':'s'} registered`;
+    renderAgentList(allAgents, true);
   } catch(err){
     document.getElementById('agentListLoading').textContent = err.message || 'Could not reach the server.';
   }
 }
 
-function renderAgentList(list){
-  const container = document.getElementById('agentListResults');
-  if(list.length === 0){
-    container.innerHTML = `<div class="empty-state" style="padding:16px 4px;">No agents have registered yet.</div>`;
-    return;
-  }
-  container.innerHTML = list.map(a=>{
-    const deptLabel = (TABS.find(t=>t.key===a.department) || {}).label || 'No department';
-    return `
+function agentChipHtml(a){
+  const deptLabel = (TABS.find(t=>t.key===a.department) || {}).label || 'No department';
+  return `
     <div class="agent-chip ${a.username===selectedAgentUsername?'active':''}" data-username="${escapeHtml(a.username)}">
       <div class="nm">${escapeHtml(a.fullName || a.username)}</div>
       <div class="id">${escapeHtml(a.employeeId || '—')} · ${escapeHtml(deptLabel)} · ${a.status==='disabled' ? 'Disabled' : 'Active'}</div>
     </div>
-  `;}).join('');
+  `;
+}
 
+// Renders agents in pages of AGENT_PAGE_SIZE instead of dumping the whole list into the
+// DOM at once — keeps search/scroll smooth even when the roster grows into the thousands.
+function renderAgentList(list, reset){
+  agentListFiltered = list;
+  const container = document.getElementById('agentListResults');
+  const loadMoreBtn = document.getElementById('agentListLoadMoreBtn');
+
+  if(reset){
+    agentListRenderCount = 0;
+    container.innerHTML = '';
+  }
+
+  if(list.length === 0){
+    container.innerHTML = `<div class="empty-state" style="padding:16px 4px;">No agents found.</div>`;
+    loadMoreBtn.style.display = 'none';
+    return;
+  }
+
+  const nextSlice = list.slice(agentListRenderCount, agentListRenderCount + AGENT_PAGE_SIZE);
+  container.insertAdjacentHTML('beforeend', nextSlice.map(agentChipHtml).join(''));
+  agentListRenderCount += nextSlice.length;
+  bindAgentChipClicks(container);
+
+  if(agentListRenderCount < list.length){
+    loadMoreBtn.style.display = '';
+    loadMoreBtn.textContent = `Load more agents (${list.length - agentListRenderCount} remaining)`;
+  } else {
+    loadMoreBtn.style.display = 'none';
+  }
+}
+
+function bindAgentChipClicks(container){
   container.querySelectorAll('.agent-chip').forEach(chip=>{
+    if(chip.dataset.bound) return;
+    chip.dataset.bound = '1';
     chip.addEventListener('click', ()=>{
       const agent = allAgents.find(a=> a.username === chip.dataset.username);
       if(agent) selectAgent(agent);
@@ -4236,14 +4584,25 @@ function renderAgentList(list){
   });
 }
 
+document.getElementById('agentListLoadMoreBtn').addEventListener('click', ()=>{
+  renderAgentList(agentListFiltered, false);
+});
+
+let agentSearchDebounce = null;
 document.getElementById('agentSearch').addEventListener('input', (e)=>{
+  clearTimeout(agentSearchDebounce);
   const q = e.target.value.trim().toLowerCase();
-  if(!q){ renderAgentList(allAgents); return; }
-  renderAgentList(allAgents.filter(a=>
-    (a.fullName||'').toLowerCase().includes(q) ||
-    (a.employeeId||'').toLowerCase().includes(q) ||
-    (a.username||'').toLowerCase().includes(q)
-  ));
+  // Debounced so typing doesn't re-filter/re-render on every single keystroke once the
+  // roster is large — filtering itself stays a simple in-memory pass (fast up to several
+  // thousand agents), it's just delayed slightly so fast typing doesn't pile up renders.
+  agentSearchDebounce = setTimeout(()=>{
+    const filtered = !q ? allAgents : allAgents.filter(a=>
+      (a.fullName||'').toLowerCase().includes(q) ||
+      (a.employeeId||'').toLowerCase().includes(q) ||
+      (a.username||'').toLowerCase().includes(q)
+    );
+    renderAgentList(filtered, true);
+  }, 180);
 });
 
 async function selectAgent(agent){
@@ -4297,11 +4656,10 @@ function renderAgentDetail(agent, progress, results, downloads){
       }
 
       const dlKind = downloadKindForStage(idx);
-      const dlLabel = dlKind === 'certificate' ? 'Certificate' : 'Message';
       const dlKey = `${t.key}-${idx}-${dlKind}`;
       const dl = downloads[dlKey];
-      const dlCountHtml = (result && result.passed)
-        ? `<span class="st-dl-count">${dlLabel}: ${dl ? dl.used : 0}/${dl ? dl.limit : (dlKind==='certificate'?3:1)}</span>
+      const dlCountHtml = (result && result.passed && dlKind === 'certificate')
+        ? `<span class="st-dl-count">Certificate: ${dl ? dl.used : 0}/${dl ? dl.limit : 3}</span>
            <button type="button" class="row-mini-btn" data-grant-tab="${t.key}" data-grant-idx="${idx}" data-grant-type="${dlKind}">+1 Download</button>`
         : '';
 
@@ -4328,6 +4686,8 @@ function renderAgentDetail(agent, progress, results, downloads){
     `;
   }).join('');
 
+  document.getElementById('agentCountText').textContent = `${totalDone} / ${totalStages} completed — ${escapeHtml(agent.fullName || agent.username)}`;
+
   detail.innerHTML = `
     <div class="agent-detail-head" style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--line);">
       <div class="nm" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px;">${escapeHtml(agent.fullName || agent.username)}</div>
@@ -4341,7 +4701,7 @@ function renderAgentDetail(agent, progress, results, downloads){
     btn.addEventListener('click', ()=>{
       const tab = btn.dataset.openTab;
       const idx = Number(btn.dataset.openIdx);
-      agentsOverlay.classList.remove('open');
+      switchStaffView('process');
       if(activeTab !== tab){ switchTab(tab); renderTabs(); }
       openStage(idx);
     });
