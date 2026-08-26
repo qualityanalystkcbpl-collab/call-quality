@@ -1724,7 +1724,335 @@ width:max-content;
 }
 /* layout */
 .body-layout{display:flex;flex:1;gap:0;margin-top:18px;}
-aside.sidebar{
+aside
+/* ============================================================
+   SQL CONTROL CENTER — isolated module
+   Does not modify existing dashboard panels or data logic.
+   ============================================================ */
+.sql-control-nav{
+  margin-top:10px !important;
+  border:1px solid rgba(74,127,224,.45) !important;
+  background:linear-gradient(160deg,rgba(74,127,224,.10),rgba(185,74,224,.04)) !important;
+  box-shadow:0 0 14px rgba(74,127,224,.10);
+}
+.sql-control-nav .nav-label{
+  background:linear-gradient(90deg,#4A7FE0,#B94AE0,#33C9B0,#4A7FE0);
+  background-size:300% 100%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:transparent;
+}
+.sql-control-item{
+  border:1px solid rgba(74,127,224,.20) !important;
+}
+.sql-control-item:hover,
+.sql-control-item.active{
+  background:linear-gradient(90deg,rgba(74,127,224,.14),rgba(185,74,224,.08)) !important;
+  color:#fff !important;
+  border-color:rgba(74,127,224,.45) !important;
+}
+.sql-control-item .dot{
+  background:#4A7FE0 !important;
+  box-shadow:0 0 8px rgba(74,127,224,.65);
+}
+
+.sql-center-wrap{
+  padding:18px 0 40px;
+}
+.sql-center-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+.sql-center-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  font-weight:800;
+}
+.sql-center-subtitle{
+  color:var(--text-muted);
+  font-size:12.5px;
+  margin-top:5px;
+  line-height:1.5;
+}
+.sql-api-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  padding:12px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  border-radius:10px;
+  margin-bottom:16px;
+}
+.sql-api-row label{
+  font-size:11px;
+  font-weight:800;
+  color:var(--text-muted);
+  letter-spacing:.8px;
+  text-transform:uppercase;
+}
+.sql-api-input{
+  flex:1;
+  min-width:280px;
+  padding:9px 11px;
+  border-radius:7px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text);
+  outline:none;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+}
+.sql-api-input:focus{border-color:#4A7FE0;}
+.sql-status-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(150px,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.sql-status-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:15px;
+  min-height:92px;
+}
+.sql-status-label{
+  font-size:10px;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-weight:800;
+}
+.sql-status-value{
+  margin-top:8px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  font-weight:800;
+}
+.sql-status-value.online{color:var(--agent);}
+.sql-status-value.offline{color:var(--need);}
+.sql-status-value.loading{color:var(--admin);}
+.sql-action-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(180px,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.sql-action-card{
+  background:linear-gradient(160deg,var(--surface),var(--surface-2));
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:16px;
+}
+.sql-action-card h3{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:14px;
+  margin-bottom:5px;
+}
+.sql-action-card p{
+  color:var(--text-muted);
+  font-size:11.5px;
+  line-height:1.5;
+  min-height:36px;
+  margin-bottom:12px;
+}
+.sql-log{
+  background:#050A11;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:13px;
+  min-height:150px;
+  color:#A9C8E8;
+  font:11px/1.6 'IBM Plex Mono',monospace;
+  white-space:pre-wrap;
+  overflow:auto;
+}
+.sql-report-box{
+  margin-top:16px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:15px;
+  overflow:auto;
+}
+.sql-report-box h3{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;
+  margin-bottom:10px;
+}
+.sql-report-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:11.5px;
+}
+.sql-report-table th,
+.sql-report-table td{
+  padding:8px 9px;
+  border-bottom:1px solid var(--border);
+  text-align:left;
+  white-space:nowrap;
+}
+.sql-report-table th{
+  color:var(--text-muted);
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+}
+@media(max-width:1000px){
+  .sql-status-grid{grid-template-columns:repeat(2,minmax(150px,1fr));}
+  .sql-action-grid{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  .sql-status-grid{grid-template-columns:1fr 1fr;}
+  .sql-api-input{min-width:100%;}
+}
+
+/* ============================================================
+   ADVANCED REPORTS — extension of SQL Control Center
+   Isolated block; does not alter existing SQL Control Center
+   status cards / basic report logic above.
+   ============================================================ */
+.sql-adv-wrap{
+  margin-top:24px;
+  border-top:1px solid var(--border);
+  padding-top:20px;
+}
+.sql-adv-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:19px;
+  font-weight:800;
+  margin-bottom:4px;
+}
+.sql-adv-subtitle{
+  color:var(--text-muted);
+  font-size:12px;
+  margin-bottom:14px;
+  line-height:1.5;
+}
+.sql-adv-filterbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:flex-end;
+  padding:14px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  border-radius:10px;
+  margin-bottom:14px;
+}
+.sql-adv-field{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:140px;
+}
+.sql-adv-field label{
+  font-size:10px;
+  font-weight:800;
+  color:var(--text-muted);
+  letter-spacing:.7px;
+  text-transform:uppercase;
+}
+.sql-adv-field input,
+.sql-adv-field select{
+  padding:8px 10px;
+  border-radius:7px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text);
+  outline:none;
+  font-size:12px;
+  font-family:'Inter',sans-serif;
+}
+.sql-adv-field input:focus,
+.sql-adv-field select:focus{border-color:#4A7FE0;}
+.sql-adv-filter-actions{
+  display:flex;
+  gap:8px;
+  margin-left:auto;
+  flex-wrap:wrap;
+}
+.sql-adv-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-bottom:14px;
+}
+.sql-adv-tab{
+  padding:8px 13px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text-muted);
+  font-size:11.5px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:.15s;
+}
+.sql-adv-tab:hover{border-color:#4A7FE0;color:var(--text);}
+.sql-adv-tab.active{
+  background:linear-gradient(90deg,rgba(74,127,224,.22),rgba(185,74,224,.14));
+  border-color:#4A7FE0;
+  color:#fff;
+}
+.sql-adv-content{
+  min-height:120px;
+}
+.sql-adv-summary-strip{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(120px,1fr));
+  gap:10px;
+  margin-bottom:14px;
+}
+.sql-adv-chart-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:16px;
+  height:340px;
+  position:relative;
+}
+.sql-adv-empty{
+  padding:30px;
+  text-align:center;
+  color:var(--text-muted);
+  font-size:12.5px;
+}
+.sql-adv-badge-fatal{
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:20px;
+  background:rgba(224,74,74,.16);
+  color:var(--need);
+  font-size:10.5px;
+  font-weight:800;
+  letter-spacing:.4px;
+}
+.sql-adv-rank-top{color:var(--agent);font-weight:800;}
+.sql-adv-rank-bottom{color:var(--need);font-weight:800;}
+
+/* Print / PDF export: only the active advanced-report content is printed */
+@media print{
+  body *{visibility:hidden;}
+  #sqlAdvPrintArea, #sqlAdvPrintArea *{visibility:visible;}
+  #sqlAdvPrintArea{position:absolute;left:0;top:0;width:100%;}
+  .sql-adv-filterbar, .sql-adv-tabs, #sqlAdvPrintBtn{display:none !important;}
+}
+@media(max-width:900px){
+  .sql-adv-summary-strip{grid-template-columns:1fr 1fr;}
+  .sql-adv-filter-actions{margin-left:0;}
+}
+
+.sidebar{
   width:240px;
   padding:0 12px 40px 24px;
   display:flex;flex-direction:column;gap:4px;
@@ -3841,6 +4169,34 @@ transform:translateY(0);
   .admin-chat-thread-view{ min-height:360px; }
 }
 </style>
+
+<style>
+/* ===================== AGENT PERSONAL QA REPORT ===================== */
+.agent-report-wrap{max-width:1180px;margin:0 auto;}
+.agent-report-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px;padding:20px 22px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(135deg,rgba(51,201,176,.10),var(--surface) 55%,rgba(227,168,87,.07));}
+.agent-report-name{font-family:'Space Grotesk',sans-serif;font-size:27px;font-weight:800;margin:0 0 5px;}
+.agent-report-sub{color:var(--text-muted);font-size:12px;margin:0;}
+.agent-report-status{padding:8px 13px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.5px;border:1px solid var(--border);}
+.agent-report-status.excellent{color:var(--excellent);border-color:rgba(63,191,127,.35);background:rgba(63,191,127,.08);}
+.agent-report-status.good{color:var(--good);border-color:rgba(224,195,65,.35);background:rgba(224,195,65,.08);}
+.agent-report-status.average{color:var(--average);border-color:rgba(224,138,63,.35);background:rgba(224,138,63,.08);}
+.agent-report-status.need{color:var(--need);border-color:rgba(224,82,74,.35);background:rgba(224,82,74,.08);}
+.agent-report-status.no-data{color:var(--text-muted);}
+.agent-report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px;}
+.agent-report-card{padding:17px 18px;border:1px solid var(--border);border-radius:12px;background:var(--surface);min-height:88px;}
+.agent-report-card .label{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:8px;}
+.agent-report-card .value{font-family:'Space Grotesk',sans-serif;font-size:25px;font-weight:800;}
+.agent-report-section{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:18px;margin-bottom:16px;}
+.agent-report-section h3{margin:0 0 13px;font-size:14px;}
+.agent-report-fail-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+.agent-report-fail-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border-radius:9px;background:var(--surface-2);border:1px solid rgba(224,82,74,.18);}
+.agent-report-fail-item .fail-name{font-size:12px;color:var(--text);}
+.agent-report-fail-item .fail-count{font-size:12px;font-weight:800;color:var(--need);}
+.agent-report-empty{padding:25px;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:10px;}
+.agent-report-note{font-size:11px;color:var(--text-muted);margin-top:10px;}
+@media(max-width:800px){.agent-report-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.agent-report-fail-list{grid-template-columns:1fr;}}
+@media(max-width:520px){.agent-report-grid{grid-template-columns:1fr 1fr;}.agent-report-name{font-size:22px;}}
+</style>
 </head>
 <body>
 
@@ -4191,7 +4547,12 @@ transform:translateY(0);
       <div class="nav-item" data-tab="MONTHDATA" onclick="switchTab('MONTHDATA')"><span class="dot"></span>📅 Month wise Data (Previous Month)</div>
       </div>
 
-      <div class="nav-section">
+      <div class="nav-section agent-only" style="display:none;">
+      <div class="nav-label">MY PERFORMANCE</div>
+      <div class="nav-item" data-tab="AGENTREPORT" onclick="switchTab('AGENTREPORT')"><span class="dot"></span>📊 My QA Report</div>
+      </div>
+
+      <div class="nav-section admin-only" style="display:none;">
       <div class="nav-label">AI Tools</div>
       <div class="nav-item" data-tab="AIINSIGHT" onclick="switchTab('AIINSIGHT')"><span class="dot"></span>🤖 Get feedback from AI Agent</div>
       </div>
@@ -4316,6 +4677,25 @@ transform:translateY(0);
     Calendar
 </div>
 
+
+<div class="nav-section sql-control-nav admin-only" style="display:none;">
+  <div class="nav-label">SQL / DATA SERVER</div>
+  <div class="nav-item sql-control-item"
+       data-tab="SQLCONTROL"
+       onclick="switchTab('SQLCONTROL')">
+    <span class="dot"></span>
+    🗄️ SQL Control Center
+  </div>
+</div>
+
+<div class="nav-section admin-only" style="display:none;">
+  <div class="nav-label">QA REPORT PREVIEW</div>
+  <div class="nav-item" data-tab="AGENTREPORT" onclick="switchTab('AGENTREPORT')">
+    <span class="dot"></span>
+    📊 My QA Report (Agent View)
+  </div>
+</div>
+
 <div class="sidebar-online-block" id="sidebarOnlineBlock">
     <div class="sidebar-online-title">
         <span class="pulse-dot" style="display:inline-block;"></span>
@@ -4336,6 +4716,8 @@ transform:translateY(0);
       <div class="panel" id="panel-CATV" data-vertical="CATV"></div>
       <div class="panel" id="panel-BBTECH" data-vertical="BBTECH"></div>
       <div class="panel" id="panel-BBRENEWAL" data-vertical="BBRENEWAL"></div>
+      <!-- Agent personal QA report + Admin preview -->
+      <div class="panel" id="panel-AGENTREPORT"></div>
       <!-- AI Insight panel -->
       <div class="panel" id="panel-AIINSIGHT"></div>
       <!-- Dedicated Dashboards panels -->
@@ -4360,7 +4742,140 @@ transform:translateY(0);
       <div class="panel" id="panel-LOBDATA"></div>
       <div class="panel" id="panel-LEADFORM"></div>
       <!-- Updates panel -->
-      <div class="panel" id="panel-UPDATES">
+      
+<!-- ============================================================
+     SQL CONTROL CENTER — completely separate panel
+     ============================================================ -->
+<div class="panel" id="panel-SQLCONTROL">
+  <div class="sql-center-wrap">
+    <div class="sql-center-header">
+      <div>
+        <div class="sql-center-title">🗄️ SQL Control Center</div>
+        <div class="sql-center-subtitle">
+          Local SQL Server API-এর status, report data এবং SQL-backed analytics এখানে আলাদা ভাবে দেখা যাবে।
+          Existing dashboard-এর অন্য panel/data logic অপরিবর্তিত রাখা হয়েছে।
+        </div>
+      </div>
+      <button class="btn primary" type="button" onclick="sqlCenterRefreshAll()">↻ Refresh All</button>
+    </div>
+
+    <div class="sql-api-row">
+      <label for="sqlApiUrlInput">API URL</label>
+      <input id="sqlApiUrlInput"
+             class="sql-api-input"
+             type="text"
+             spellcheck="false"
+             value="https://yiddish-tipping-frequency.ngrok-free.dev">
+      <button class="btn small" type="button" onclick="sqlCenterSaveApiUrl()">Save</button>
+    </div>
+
+    <div class="sql-status-grid">
+      <div class="sql-status-card">
+        <div class="sql-status-label">API Status</div>
+        <div class="sql-status-value" id="sqlApiStatus">--</div>
+      </div>
+      <div class="sql-status-card">
+        <div class="sql-status-label">SQL Database</div>
+        <div class="sql-status-value" id="sqlDbStatus">--</div>
+      </div>
+      <div class="sql-status-card">
+        <div class="sql-status-label">QA Records</div>
+        <div class="sql-status-value" id="sqlRecordCount">--</div>
+      </div>
+      <div class="sql-status-card">
+        <div class="sql-status-label">Last Refresh</div>
+        <div class="sql-status-value" id="sqlLastRefresh" style="font-size:14px;">--</div>
+      </div>
+    </div>
+
+    <div class="sql-action-grid">
+      <div class="sql-action-card">
+        <h3>1. API Health Check</h3>
+        <p>FastAPI / endpoint reachable কিনা পরীক্ষা করবে।</p>
+        <button class="btn primary small" type="button" onclick="sqlCenterApiTest()">Test API</button>
+      </div>
+
+      <div class="sql-action-card">
+        <h3>2. SQL Connection Test</h3>
+        <p>FastAPI-এর মাধ্যমে SQL Server এবং QA_Control_Room database পরীক্ষা করবে।</p>
+        <button class="btn gold small" type="button" onclick="sqlCenterSqlTest()">Test SQL</button>
+      </div>
+
+      <div class="sql-action-card">
+        <h3>3. Load SQL Report</h3>
+        <p>/report-data থেকে current audit summary এনে নিচে দেখাবে।</p>
+        <button class="btn small" type="button" onclick="sqlCenterLoadReport()">Load Report</button>
+      </div>
+    </div>
+
+    <div class="sql-report-box">
+      <h3>SQL Report Summary</h3>
+      <div id="sqlReportSummary">Load Report চাপুন।</div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div style="font-size:11px;font-weight:800;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;">
+        SQL Control Log
+      </div>
+      <div class="sql-log" id="sqlControlLog">SQL Control Center ready.</div>
+    </div>
+
+    <!-- ============================================================
+         ADVANCED REPORTS — new, additive section inside SQL Control Center
+         ============================================================ -->
+    <div class="sql-adv-wrap">
+      <div class="sql-adv-title">📈 Advanced Reports</div>
+      <div class="sql-adv-subtitle">
+        SQL Server (dbo.QA_Call_Data)-এর filtered data থেকে সরাসরি তৈরি হওয়া advanced analytics।
+        নিচে filter সেট করে "Apply Filters" চাপুন, তারপর যেকোনো report tab দেখুন।
+      </div>
+
+      <div class="sql-adv-filterbar">
+        <div class="sql-adv-field">
+          <label for="advFilterStart">Start Date</label>
+          <input type="date" id="advFilterStart">
+        </div>
+        <div class="sql-adv-field">
+          <label for="advFilterEnd">End Date</label>
+          <input type="date" id="advFilterEnd">
+        </div>
+        <div class="sql-adv-field">
+          <label for="advFilterProcess">Process</label>
+          <select id="advFilterProcess"><option value="">সব</option></select>
+        </div>
+        <div class="sql-adv-field">
+          <label for="advFilterAgent">Agent</label>
+          <select id="advFilterAgent"><option value="">সব</option></select>
+        </div>
+        <div class="sql-adv-field">
+          <label for="advFilterTL">TL</label>
+          <select id="advFilterTL"><option value="">সব</option></select>
+        </div>
+        <div class="sql-adv-filter-actions">
+          <button class="btn primary small" type="button" onclick="advReportApplyFilters()">🔍 Apply Filters</button>
+          <button class="btn small" type="button" onclick="advReportResetFilters()">↺ Reset</button>
+          <button class="btn gold small" id="sqlAdvPrintBtn" type="button" onclick="advReportPrint()">🖨️ Print / Export PDF</button>
+        </div>
+      </div>
+
+      <div class="sql-adv-tabs" id="sqlAdvTabs">
+        <div class="sql-adv-tab active" data-adv="TREND" onclick="advReportSwitchTab('TREND')">📈 Agent Trend</div>
+        <div class="sql-adv-tab" data-adv="WEAK" onclick="advReportSwitchTab('WEAK')">🎯 Weak Area (Parameter-wise)</div>
+        <div class="sql-adv-tab" data-adv="COMPARE" onclick="advReportSwitchTab('COMPARE')">⚖️ Process / TL Compare</div>
+        <div class="sql-adv-tab" data-adv="FATAL" onclick="advReportSwitchTab('FATAL')">☠️ FATAL Tracker</div>
+        <div class="sql-adv-tab" data-adv="LEADER" onclick="advReportSwitchTab('LEADER')">🏆 Leaderboard</div>
+      </div>
+
+      <div id="sqlAdvPrintArea">
+        <div class="sql-adv-content" id="sqlAdvContent">
+          <div class="sql-adv-empty">প্রথমে উপরের filter সেট করে "Apply Filters" চাপুন।</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-UPDATES">
         <div class="panel-header">
           <div><h1>New Updates</h1><p>Team-এর জন্য latest announcements আর notes।</p></div>
         </div>
@@ -7041,6 +7556,9 @@ async function saveNewsTicker(){
 }
 /* ===================== NAVIGATION & TABS ===================== */
 async function switchTab(tab){
+  // Role guard: SQL Control Center is Admin-only; My QA Report is Agent-only.
+  if(tab === 'SQLCONTROL' && currentRole !== 'admin'){ tab = 'HOME'; }
+  if(tab === 'AGENTREPORT' && currentRole !== 'agent' && currentRole !== 'admin'){ tab = 'HOME'; }
   currentTab = tab;
   if(leadFormAutoLogoutPaused && tab !== 'LEADFORM' && typeof scheduleFixedAutoLogout === 'function'){
     leadFormAutoLogoutPaused = false;
@@ -7072,6 +7590,8 @@ async function switchTab(tab){
       await renderAnswered3SecPanel(ans3secSubTab);
     } else if (tab === 'FATALTM') {
       await renderFatalThisMonthPanel(fatalSubTab);
+    } else if (tab === 'AGENTREPORT') {
+      await renderAgentPersonalReport();
     } else if (tab === 'AIINSIGHT') {
       renderAIInsightPanel();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -7085,7 +7605,9 @@ async function switchTab(tab){
       await renderLobDataPanel();
     } else if (tab === 'LEADFORM') {
       renderLeadFormPanel();
-    } else if (tab === 'HELP') {
+        } else if (tab === 'SQLCONTROL') {
+      await sqlCenterRefreshAll();
+ } else if (tab === 'HELP') {
       renderHelpPanel();
     } else if (tab === 'QUICKLINK') {
       renderQuickLinkPanel();
@@ -7098,6 +7620,810 @@ async function switchTab(tab){
     hidePageLoadOverlay();
   }
 }
+
+/* ===================== AGENT PERSONAL QA REPORT ===================== */
+function agentReportStatus(score){
+  const n = Number(score);
+  if(!Number.isFinite(n)) return {cls:'no-data', label:'NO DATA'};
+  if(n >= 95) return {cls:'excellent', label:'EXCELLENT'};
+  if(n >= 90) return {cls:'good', label:'GOOD'};
+  if(n >= 80) return {cls:'average', label:'AVERAGE'};
+  return {cls:'need', label:'NEEDS IMPROVEMENT'};
+}
+
+function agentReportNormalizeProcess(process){
+  const p = String(process || '').trim().toUpperCase();
+  if(p.includes('BB TECH')) return 'BBTECH';
+  if(p.includes('BB RENEWAL')) return 'BBRENEWAL';
+  if(p.includes('CATV') || p.includes('CABLE')) return 'CATV';
+  return null;
+}
+
+function agentReportFormatNumber(n){
+  const x = Number(n || 0);
+  return Number.isFinite(x) ? x.toLocaleString('en-IN') : '0';
+}
+
+function agentReportFailEntries(fails){
+  if(!fails) return [];
+  let arr = [];
+  if(Array.isArray(fails)){
+    arr = fails.map(x=>({name:x.parameter || x.name || x.label || 'Parameter', count:Number(x.count ?? x.failCount ?? x.fails ?? x.value ?? 0)}));
+  }else if(typeof fails === 'object'){
+    arr = Object.entries(fails).map(([name,count])=>({name, count:Number(count || 0)}));
+  }
+  return arr.filter(x=>x.name && Number.isFinite(x.count) && x.count > 0)
+    .sort((a,b)=>b.count-a.count || String(a.name).localeCompare(String(b.name)));
+}
+
+async function renderAgentPersonalReportLegacy(adminSelectedAgent = null){
+  const panel = document.getElementById('panel-AGENTREPORT');
+  if(!panel) return;
+
+  const isAdminPreview = currentRole === 'admin';
+  const loggedInAgent = String((typeof empAgentName !== 'undefined' && empAgentName) || localStorage.getItem('qa_emp_name') || '').trim();
+  const loggedInProcess = agentReportNormalizeProcess((typeof empProcess !== 'undefined' && empProcess) || localStorage.getItem('qa_emp_process') || '');
+
+  // Admin preview: collect the same agent rows the Agent report uses and allow
+  // the Admin to select exactly which Agent's report to preview.
+  if(isAdminPreview && !adminSelectedAgent){
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div>
+          <h1>My QA Report</h1>
+          <p>Admin Preview — এখানে যে Agent select করবেন, Agent login করলে ঠিক এই report-টাই দেখতে পাবে।</p>
+        </div>
+      </div>
+      <div class="agent-report-empty">Agent list লোড হচ্ছে...</div>`;
+
+    try{
+      const allAgents = new Map();
+      for(const key of Object.keys(VERTICALS)){
+        try{
+          const { rows } = await ensureVerticalDataLoaded(key);
+          (rows || []).forEach(r => {
+            const name = String(r.agent || '').trim();
+            if(name){
+              const normalized = name.toLowerCase();
+              if(!allAgents.has(normalized)) allAgents.set(normalized, name);
+            }
+          });
+        }catch(e){ console.warn('Agent list load failed for', key, e); }
+      }
+
+      const names = Array.from(allAgents.values()).sort((a,b)=>a.localeCompare(b));
+      if(!names.length){
+        panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>Admin Preview</p></div></div><div class="agent-report-empty">কোনো Agent QA data পাওয়া যায়নি।</div>`;
+        return;
+      }
+
+      const saved = String(localStorage.getItem('qa_admin_report_agent') || '').trim();
+      const selected = names.find(n => n.toLowerCase() === saved.toLowerCase()) || names[0];
+
+      panel.innerHTML = `
+        <div class="panel-header">
+          <div>
+            <h1>My QA Report</h1>
+            <p>Admin Preview — selected Agent-এর personal report exactly Agent view-এর মতো দেখানো হচ্ছে।</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface);">
+          <label for="adminAgentReportSelect" style="font-size:12px;font-weight:800;color:var(--text-muted);">SELECT AGENT</label>
+          <select id="adminAgentReportSelect" style="min-width:280px;max-width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2,var(--surface));color:var(--text);font-weight:700;outline:none;">
+            ${names.map(n => `<option value="${escapeHtml(n)}" ${n.toLowerCase()===selected.toLowerCase()?'selected':''}>${escapeHtml(n)}</option>`).join('')}
+          </select>
+          <button class="btn primary small" type="button" onclick="adminPreviewAgentReport()">View Report</button>
+          <span style="font-size:11px;color:var(--text-muted);">This is a read-only Agent view.</span>
+        </div>
+        <div id="adminAgentReportBody"></div>`;
+
+      await renderAgentPersonalReport(selected);
+    }catch(e){
+      console.error('Admin agent list failed', e);
+      panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>Admin Preview</p></div></div><div class="agent-report-empty" style="color:var(--need);">Agent list load করতে সমস্যা হয়েছে।</div>`;
+    }
+    return;
+  }
+
+  const agent = isAdminPreview
+    ? String(adminSelectedAgent || '').trim()
+    : loggedInAgent;
+
+  const processKey = isAdminPreview ? null : loggedInProcess;
+
+  if(!agent){
+    panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>Agent session information পাওয়া যায়নি।</p></div></div><div class="agent-report-empty">আপনার Agent session আবার শুরু করুন।</div>`;
+    return;
+  }
+
+  // Preserve the Admin selector while replacing only the report body.
+  const adminSelector = isAdminPreview ? document.getElementById('adminAgentReportSelect') : null;
+  const selectorBlock = isAdminPreview ? `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface);">
+      <label for="adminAgentReportSelect" style="font-size:12px;font-weight:800;color:var(--text-muted);">SELECT AGENT</label>
+      <select id="adminAgentReportSelect" style="min-width:280px;max-width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2,var(--surface));color:var(--text);font-weight:700;outline:none;"></select>
+      <button class="btn primary small" type="button" onclick="adminPreviewAgentReport()">View Report</button>
+      <span style="font-size:11px;color:var(--text-muted);">Read-only preview of the Agent's view.</span>
+    </div>` : '';
+
+  panel.innerHTML = `${isAdminPreview ? `<div class="panel-header"><div><h1>My QA Report</h1><p>Admin Preview — ${escapeHtml(agent)}</p></div></div>${selectorBlock}` : `<div class="panel-header"><div><h1>My QA Report</h1><p>${escapeHtml(agent)}-এর ব্যক্তিগত Call Quality performance report</p></div></div>`}<div class="agent-report-empty">আপনার QA data লোড হচ্ছে...</div>`;
+
+  try{
+    const keys = processKey ? [processKey] : Object.keys(VERTICALS);
+    const results = [];
+    for(const key of keys){
+      const { rows } = await ensureVerticalDataLoaded(key);
+      const row = (rows || []).find(r => String(r.agent || '').trim().toLowerCase() === agent.toLowerCase());
+      if(row) results.push({tab:key, row});
+    }
+
+    // Rebuild selector after data load so Admin can change Agent without leaving the panel.
+    if(isAdminPreview){
+      const select = document.getElementById('adminAgentReportSelect');
+      if(select && select.options.length === 0){
+        const allAgents = new Map();
+        for(const key of Object.keys(VERTICALS)){
+          const cached = rawDataCache[key];
+          const rows = cached && cached.rows ? cached.rows : [];
+          rows.forEach(r=>{
+            const n = String(r.agent || '').trim();
+            if(n && !allAgents.has(n.toLowerCase())) allAgents.set(n.toLowerCase(), n);
+          });
+        }
+        Array.from(allAgents.values()).sort((a,b)=>a.localeCompare(b)).forEach(n=>{
+          const opt=document.createElement('option'); opt.value=n; opt.textContent=n; select.appendChild(opt);
+        });
+        select.value = agent;
+      }
+    }
+
+    if(!results.length){
+      const head = isAdminPreview ? `Admin Preview — ${escapeHtml(agent)}` : escapeHtml(agent);
+      panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>${head}</p></div></div>${isAdminPreview ? selectorBlock : ''}<div class="agent-report-empty">এই Agent-এর জন্য বর্তমানে কোনো QA report পাওয়া যায়নি।</div>`;
+      return;
+    }
+
+    const totalAudits = results.reduce((sum,x)=>sum + Number(x.row.auditCount || 0), 0);
+    const weightedScoreNumerator = results.reduce((sum,x)=>sum + (Number(x.row.auditCount || 0) * Number(x.row.avgScore || 0)), 0);
+    const avgScore = totalAudits > 0 ? weightedScoreNumerator / totalAudits : (Number(results[0].row.avgScore) || 0);
+    const status = agentReportStatus(avgScore);
+    const lobs = results.map(x => (VERTICALS[x.tab] && VERTICALS[x.tab].label) || x.tab).join(' • ');
+
+    const failMap = {};
+    results.forEach(({row})=>{
+      agentReportFailEntries(row.fails).forEach(f=>{ failMap[f.name] = (failMap[f.name] || 0) + f.count; });
+    });
+    const failEntries = Object.entries(failMap).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count).slice(0,8);
+
+    const scoreText = Number.isFinite(Number(avgScore)) ? Number(avgScore).toFixed(2) + '%' : '--';
+    const previewHeader = isAdminPreview ? `
+      <div style="margin:0 0 14px;padding:10px 13px;border:1px dashed var(--border);border-radius:10px;color:var(--text-muted);font-size:11.5px;">
+        👁️ <b>Admin Preview:</b> এই report-টি <b>${escapeHtml(agent)}</b> Agent login করলে যে personal QA report দেখতে পাবে, একই data/logic দিয়ে তৈরি।
+      </div>` : '';
+
+    const reportBody = `
+      ${previewHeader}
+      <div class="agent-report-wrap">
+        <div class="agent-report-hero">
+          <div>
+            <div class="agent-report-name">${escapeHtml(agent)}</div>
+            <p class="agent-report-sub">${escapeHtml(lobs)} &nbsp;•&nbsp; Personal QA Performance</p>
+          </div>
+          <div class="agent-report-status ${status.cls}">${status.label}</div>
+        </div>
+
+        <div class="agent-report-grid">
+          <div class="agent-report-card"><div class="label">Total Audits</div><div class="value">${agentReportFormatNumber(totalAudits)}</div></div>
+          <div class="agent-report-card"><div class="label">Average Score</div><div class="value">${escapeHtml(scoreText)}</div></div>
+          <div class="agent-report-card"><div class="label">LOB / Process</div><div class="value" style="font-size:18px;">${escapeHtml(lobs)}</div></div>
+          <div class="agent-report-card"><div class="label">Report Status</div><div class="value" style="font-size:18px;">${status.label}</div></div>
+        </div>
+
+        <div class="agent-report-section">
+          <h3>⚠️ My Improvement Areas</h3>
+          ${failEntries.length ? `<div class="agent-report-fail-list">${failEntries.map(f=>`<div class="agent-report-fail-item"><span class="fail-name">${escapeHtml(f.name)}</span><span class="fail-count">${f.count} fail${f.count===1?'':'s'}</span></div>`).join('')}</div>` : `<div class="agent-report-empty">কোনো parameter-wise fail data পাওয়া যায়নি।</div>`}
+          <div class="agent-report-note">এই অংশে QA data-তে সবচেয়ে বেশি fail হওয়া parameter-গুলো আগে দেখানো হচ্ছে।</div>
+        </div>
+
+        <div class="agent-report-section">
+          <h3>📌 QA Feedback</h3>
+          <div style="font-size:13px;line-height:1.75;color:var(--text);">
+            ${status.cls === 'excellent' ? 'আপনার overall QA performance খুব ভালো। একই consistency বজায় রাখুন এবং যে parameter-গুলোতে fail হয়েছে সেগুলো শূন্যে নামানোর চেষ্টা করুন।' :
+              status.cls === 'good' ? 'আপনার overall performance ভালো। কয়েকটি parameter-এ আরও consistency আনলে score আরও বাড়বে।' :
+              status.cls === 'average' ? 'আপনার performance উন্নত করার যথেষ্ট সুযোগ আছে। উপরের improvement areas-এ বিশেষভাবে নজর দিন এবং পরবর্তী calls-এ সেগুলো practice করুন।' :
+              'আপনার QA score উন্নত করার জন্য parameter-wise feedback অনুসরণ করুন এবং repeated fail হওয়া বিষয়গুলো আগে ঠিক করুন.'}
+          </div>
+        </div>
+
+        <div class="agent-report-note">Last loaded: ${escapeHtml(new Date().toLocaleString('en-IN'))}</div>
+      </div>`;
+
+    // Keep the Admin selector visible above the report.
+    if(isAdminPreview){
+      const select = document.getElementById('adminAgentReportSelect');
+      const currentSelectValue = select ? select.value : agent;
+      panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>Admin Preview — selected Agent-এর personal report</p></div></div>${selectorBlock}<div id="adminAgentReportBody">${reportBody}</div>`;
+      const newSelect = document.getElementById('adminAgentReportSelect');
+      if(newSelect){
+        // Rebuild from all cached rows and keep selected agent.
+        const allAgents = new Map();
+        Object.keys(VERTICALS).forEach(key=>{
+          const cached = rawDataCache[key];
+          (cached && cached.rows ? cached.rows : []).forEach(r=>{
+            const n=String(r.agent||'').trim();
+            if(n && !allAgents.has(n.toLowerCase())) allAgents.set(n.toLowerCase(),n);
+          });
+        });
+        Array.from(allAgents.values()).sort((a,b)=>a.localeCompare(b)).forEach(n=>{
+          const opt=document.createElement('option'); opt.value=n; opt.textContent=n; newSelect.appendChild(opt);
+        });
+        newSelect.value = currentSelectValue || agent;
+      }
+    }else{
+      panel.innerHTML = reportBody;
+    }
+    runCountUps(panel);
+  }catch(e){
+    console.error('Agent personal report failed', e);
+    panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>${escapeHtml(agent)}</p></div></div><div class="agent-report-empty" style="color:var(--need);">Report load করতে সমস্যা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।</div>`;
+  }
+}
+
+async function adminPreviewAgentReport(){
+  if(currentRole !== 'admin') return;
+  const select = document.getElementById('adminAgentReportSelect');
+  const agent = select ? String(select.value || '').trim() : '';
+  if(!agent) return;
+  localStorage.setItem('qa_admin_report_agent', agent);
+  await renderAgentPersonalReport(agent);
+}
+
+/* ===================== SQL CONTROL CENTER =====================
+   NGROK FIX:
+   All FastAPI requests send Accept: application/json and
+   ngrok-skip-browser-warning: true. This prevents the ngrok
+   browser warning page from being mistaken for API JSON.
+   ================================================================ */
+const SQL_CENTER_DEFAULT_API =
+  'https://yiddish-tipping-frequency.ngrok-free.dev';
+
+function sqlCenterApiBase(){
+  const el = document.getElementById('sqlApiUrlInput');
+  const saved = localStorage.getItem('qa_sql_api_url');
+  const raw = (el && el.value.trim()) || saved || SQL_CENTER_DEFAULT_API;
+  return raw.replace(/\/+$/, '');
+}
+
+function sqlCenterLog(message){
+  const el = document.getElementById('sqlControlLog');
+  if(!el) return;
+  const now = new Date().toLocaleTimeString();
+  el.textContent = `[${now}] ${message}\n` + el.textContent;
+}
+
+function sqlCenterSetStatus(id, value, cls){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = value;
+  el.classList.remove('online','offline','loading');
+  if(cls) el.classList.add(cls);
+}
+
+function sqlCenterSaveApiUrl(){
+  const el = document.getElementById('sqlApiUrlInput');
+  if(!el) return;
+  const value = el.value.trim().replace(/\/+$/, '');
+  if(!value){
+    sqlCenterLog('API URL empty.');
+    return;
+  }
+  localStorage.setItem('qa_sql_api_url', value);
+  el.value = value;
+  sqlCenterLog('API URL saved.');
+  showToast && showToast('SQL API URL saved.');
+}
+
+async function sqlCenterFetch(path, options = {}){
+  const base = sqlCenterApiBase();
+  const url = base + (String(path || '').startsWith('/') ? path : '/' + path);
+
+  const opts = Object.assign({
+    method: 'GET',
+    mode: 'cors',
+    cache: 'no-store',
+    redirect: 'follow',
+    credentials: 'omit',
+    headers: {
+      'Accept': 'application/json',
+      'ngrok-skip-browser-warning': 'true'
+    }
+  }, options || {});
+
+  opts.headers = Object.assign({
+    'Accept': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
+  }, (options && options.headers) || {});
+
+  const response = await fetch(url, opts);
+  const text = await response.text();
+
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch(e) {
+    data = {
+      status: 'error',
+      message: text || 'Invalid JSON response from FastAPI'
+    };
+  }
+
+  if(!response.ok){
+    throw new Error(`HTTP ${response.status}: ${data.message || text || response.statusText}`);
+  }
+
+  return data;
+}
+
+async function sqlCenterApiTest(){
+  sqlCenterSetStatus('sqlApiStatus','Testing…','loading');
+  sqlCenterLog('Testing FastAPI home endpoint...');
+  try{
+    const data = await sqlCenterFetch('/');
+    if(data.status === 'success'){
+      sqlCenterSetStatus('sqlApiStatus','ONLINE','online');
+      sqlCenterLog('API OK — ' + (data.message || 'FastAPI is running'));
+      return true;
+    }
+    throw new Error(data.message || 'API returned an error');
+  }catch(e){
+    sqlCenterSetStatus('sqlApiStatus','OFFLINE','offline');
+    sqlCenterLog('API ERROR — ' + e.message);
+    return false;
+  }
+}
+
+async function sqlCenterSqlTest(){
+  sqlCenterSetStatus('sqlDbStatus','Testing…','loading');
+  sqlCenterLog('Testing SQL Server connection...');
+  try{
+    const data = await sqlCenterFetch('/sql-test');
+    if(data.status === 'success'){
+      sqlCenterSetStatus('sqlDbStatus','CONNECTED','online');
+      sqlCenterLog(`SQL OK — Database: ${data.database || '--'}`);
+      return true;
+    }
+    throw new Error(data.message || 'SQL connection failed');
+  }catch(e){
+    sqlCenterSetStatus('sqlDbStatus','ERROR','offline');
+    sqlCenterLog('SQL ERROR — ' + e.message);
+    return false;
+  }
+}
+
+async function sqlCenterLoadReport(){
+  sqlCenterSetStatus('sqlRecordCount','Loading…','loading');
+  sqlCenterLog('Loading /report-data...');
+  try{
+    const data = await sqlCenterFetch('/report-data');
+    if(data.status !== 'success'){
+      throw new Error(data.message || 'Report request failed');
+    }
+
+    sqlCenterSetStatus('sqlRecordCount',
+      Number(data.total_audits || 0).toLocaleString('en-IN'),
+      'online'
+    );
+
+    const avg = data.overall_average_score;
+    const processes = data.process_count;
+    const agents = data.agent_count;
+
+    const summary = `
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;">
+        <div class="sql-status-card"><div class="sql-status-label">Total Audits</div><div class="sql-status-value">${Number(data.total_audits||0).toLocaleString('en-IN')}</div></div>
+        <div class="sql-status-card"><div class="sql-status-label">Average Score</div><div class="sql-status-value">${avg == null ? '--' : Number(avg).toFixed(2)}</div></div>
+        <div class="sql-status-card"><div class="sql-status-label">Processes</div><div class="sql-status-value">${Number(processes||0).toLocaleString('en-IN')}</div></div>
+        <div class="sql-status-card"><div class="sql-status-label">Agents</div><div class="sql-status-value">${Number(agents||0).toLocaleString('en-IN')}</div></div>
+      </div>
+      <div style="margin-top:14px;color:var(--text-muted);font-size:11.5px;">
+        Source: FastAPI → SQL Server → dbo.QA_Call_Data
+      </div>
+    `;
+    const box = document.getElementById('sqlReportSummary');
+    if(box) box.innerHTML = summary;
+
+    sqlCenterSetStatus('sqlLastRefresh', new Date().toLocaleTimeString(), null);
+    sqlCenterLog('Report loaded successfully.');
+    return data;
+  }catch(e){
+    sqlCenterSetStatus('sqlRecordCount','ERROR','offline');
+    const box = document.getElementById('sqlReportSummary');
+    if(box) box.innerHTML = `<span style="color:var(--need);">Report load failed: ${escapeHtml(e.message)}</span>`;
+    sqlCenterLog('REPORT ERROR — ' + e.message);
+    return null;
+  }
+}
+
+async function sqlCenterRefreshAll(){
+  const el = document.getElementById('sqlApiUrlInput');
+  if(el){
+    el.value = localStorage.getItem('qa_sql_api_url') || SQL_CENTER_DEFAULT_API;
+  }
+
+  const apiOK = await sqlCenterApiTest();
+  if(!apiOK) return false;
+
+  await sqlCenterSqlTest();
+  await sqlCenterLoadReport();
+  await advReportLoadFilterOptions(true);
+
+  return true;
+}
+
+/* ===================== ADVANCED REPORTS (SQL Control Center extension) =====================
+   Additive module. Expects two new FastAPI endpoints (see separately supplied backend snippet):
+     GET /advanced-report-filters
+         -> { status:"success", processes:[...], agents:[...], tls:[...] }
+     GET /advanced-report-data?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&process=&agent=&tl=
+         -> { status:"success", rows:[ {Record_ID, Call_Date, Process, Associate_Emp_ID,
+              Associate_Name, TL_Name, Call_ID, Disposition, Total_Score, <29 score columns>} ] }
+   FATAL is preserved exactly as text in every score column — never coerced to 0 here.
+   ============================================================================================ */
+
+const ADV_SCORE_COLUMNS = [
+  ['Opening_Score','Opening'],
+  ['Enthusiastic_Tone_Score','Enthusiastic Tone'],
+  ['Assurance_Score','Assurance'],
+  ['Closing_Score','Closing'],
+  ['Account_Authentication_Security_Checks_Score','Account Authentication / Security Checks'],
+  ['Query_System_Probing_Score','Query System / Probing'],
+  ['Empathy_Apology_Score','Empathy / Apology'],
+  ['Paraphrasing_Acknowledgement_Score','Paraphrasing / Acknowledgement'],
+  ['Hold_Transfer_Procedure_Score','Hold / Transfer Procedure'],
+  ['Dead_Air_Score','Dead Air'],
+  ['Active_Listening_Attentiveness_Score','Active Listening / Attentiveness'],
+  ['Interruption_Score','Interruption'],
+  ['Choice_of_Words_Sentence_Formation_Score','Choice of Words / Sentence Formation'],
+  ['Clarity_of_Speech_Rate_of_Speech_Score','Clarity / Rate of Speech'],
+  ['Lack_of_Confidence_Fumbling_Score','Lack of Confidence / Fumbling'],
+  ['Using_Customer_Language_Score','Using Customer Language'],
+  ['Background_Noise_Score','Background Noise'],
+  ['Personalization_Rapport_Building_Score','Personalization / Rapport Building'],
+  ['Jargon_Abbreviations_Score','Jargon / Abbreviations'],
+  ['Enthusiasm_Energy_Willing_to_Help_Score','Enthusiasm / Energy / Willing to Help'],
+  ['Impolite_Commanding_Casual_Flat_Tone_Score','Impolite / Commanding / Casual Flat Tone'],
+  ['Incorrect_Information_Score','Incorrect Information'],
+  ['Incomplete_Information_Score','Incomplete Information'],
+  ['Proactive_Information_Score','Proactive Information'],
+  ['Tagging_Accuracy_Status_Dispo_Score','Tagging Accuracy / Status Dispo'],
+  ['Disconnection_Call_Ignorance_Score','Disconnection / Call Ignorance'],
+  ['Unprofessional_Rude_Sarcastic_Slangs_Score','Unprofessional / Rude / Sarcastic / Slangs'],
+  ['Escalation_Denial_Score','Escalation Denial'],
+  ['Cross_Talk_Laughing_Validation_Failure_Score','Cross Talk / Laughing / Validation Failure']
+];
+
+let advReportRows = [];
+let advReportActiveTab = 'TREND';
+let advReportFiltersLoaded = false;
+
+function advReportIsFatal(v){
+  return typeof v === 'string' && v.trim().toUpperCase() === 'FATAL';
+}
+function advReportNumOrNull(v){
+  if(v === null || v === undefined || v === '') return null;
+  if(advReportIsFatal(v)) return null; // FATAL kept as-is, excluded only from numeric averaging
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+}
+
+async function advReportLoadFilterOptions(force = false){
+  if(advReportFiltersLoaded && !force) return true;
+
+  try{
+    const data = await sqlCenterFetch('/advanced-report-filters');
+    if(!data || data.status !== 'success'){
+      throw new Error((data && data.message) || 'Filter meta load failed');
+    }
+
+    advReportFillSelect('advFilterProcess', data.processes || []);
+    advReportFillSelect('advFilterAgent', data.agents || []);
+    advReportFillSelect('advFilterTL', data.tls || []);
+
+    advReportFiltersLoaded = true;
+    sqlCenterLog(
+      `Advanced report filters loaded — ` +
+      `${(data.agents || []).length} agents, ` +
+      `${(data.processes || []).length} processes, ` +
+      `${(data.tls || []).length} TLs.`
+    );
+    return true;
+  }catch(e){
+    advReportFiltersLoaded = false;
+    sqlCenterLog('ADVANCED FILTER ERROR — ' + e.message);
+    return false;
+  }
+}
+
+function advReportFillSelect(id, values){
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  const current = String(el.value || '');
+  const clean = Array.from(new Set(
+    (Array.isArray(values) ? values : [])
+      .map(v => String(v ?? '').trim())
+      .filter(Boolean)
+  )).sort((a,b)=>a.localeCompare(b));
+
+  el.innerHTML =
+    '<option value="">সব</option>' +
+    clean.map(v =>
+      `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`
+    ).join('');
+
+  if(current && clean.some(v => v.toLowerCase() === current.toLowerCase())){
+    el.value = clean.find(v => v.toLowerCase() === current.toLowerCase());
+  }
+}
+
+function advReportResetFilters(){
+  document.getElementById('advFilterStart').value = '';
+  document.getElementById('advFilterEnd').value = '';
+  document.getElementById('advFilterProcess').value = '';
+  document.getElementById('advFilterAgent').value = '';
+  document.getElementById('advFilterTL').value = '';
+  advReportRows = [];
+  document.getElementById('sqlAdvContent').innerHTML =
+    '<div class="sql-adv-empty">প্রথমে উপরের filter সেট করে "Apply Filters" চাপুন।</div>';
+  sqlCenterLog('Advanced report filters reset.');
+}
+
+async function advReportApplyFilters(){
+  const start = document.getElementById('advFilterStart').value;
+  const end = document.getElementById('advFilterEnd').value;
+  const process = document.getElementById('advFilterProcess').value;
+  const agent = document.getElementById('advFilterAgent').value;
+  const tl = document.getElementById('advFilterTL').value;
+
+  const contentEl = document.getElementById('sqlAdvContent');
+  contentEl.innerHTML = '<div class="sql-adv-empty">Loading advanced report data...</div>';
+  sqlCenterLog('Loading /advanced-report-data with current filters...');
+
+  try{
+    const params = new URLSearchParams();
+    if(start) params.set('start_date', start);
+    if(end) params.set('end_date', end);
+    if(process) params.set('process', process);
+    if(agent) params.set('agent', agent);
+    if(tl) params.set('tl', tl);
+
+    const data = await sqlCenterFetch('/advanced-report-data?' + params.toString());
+    if(data.status !== 'success') throw new Error(data.message || 'Advanced report load failed');
+
+    advReportRows = Array.isArray(data.rows) ? data.rows : [];
+    sqlCenterLog(`Advanced report loaded — ${advReportRows.length} matching record(s).`);
+    advReportRenderActiveTab();
+  }catch(e){
+    contentEl.innerHTML = `<div class="sql-adv-empty" style="color:var(--need);">Advanced report load failed: ${escapeHtml(e.message)}</div>`;
+    sqlCenterLog('ADVANCED REPORT ERROR — ' + e.message);
+  }
+}
+
+function advReportSwitchTab(tab){
+  advReportActiveTab = tab;
+  document.querySelectorAll('.sql-adv-tab').forEach(t => t.classList.toggle('active', t.dataset.adv === tab));
+  advReportRenderActiveTab();
+}
+
+function advReportRenderActiveTab(){
+  const contentEl = document.getElementById('sqlAdvContent');
+  if(!advReportRows.length){
+    contentEl.innerHTML = '<div class="sql-adv-empty">এই filter-এর জন্য কোনো data পাওয়া যায়নি।</div>';
+    return;
+  }
+  if(advReportActiveTab === 'TREND') return advReportRenderTrend(contentEl);
+  if(advReportActiveTab === 'WEAK') return advReportRenderWeak(contentEl);
+  if(advReportActiveTab === 'COMPARE') return advReportRenderCompare(contentEl);
+  if(advReportActiveTab === 'FATAL') return advReportRenderFatal(contentEl);
+  if(advReportActiveTab === 'LEADER') return advReportRenderLeader(contentEl);
+}
+
+/* ---- A) Agent-wise performance trend (avg Total_Score per day) ---- */
+function advReportRenderTrend(contentEl){
+  const byDate = {};
+  advReportRows.forEach(r => {
+    const d = r.Call_Date || '--';
+    const score = advReportNumOrNull(r.Total_Score);
+    if(score === null) return;
+    if(!byDate[d]) byDate[d] = { sum:0, count:0 };
+    byDate[d].sum += score;
+    byDate[d].count += 1;
+  });
+  const dates = Object.keys(byDate).sort();
+  const avgs = dates.map(d => +(byDate[d].sum / byDate[d].count).toFixed(2));
+
+  contentEl.innerHTML = `
+    <div class="sql-adv-summary-strip">
+      <div class="sql-status-card"><div class="sql-status-label">Total Calls</div><div class="sql-status-value">${advReportRows.length}</div></div>
+      <div class="sql-status-card"><div class="sql-status-label">Days Covered</div><div class="sql-status-value">${dates.length}</div></div>
+      <div class="sql-status-card"><div class="sql-status-label">Overall Avg Score</div><div class="sql-status-value">${avgs.length ? (avgs.reduce((a,b)=>a+b,0)/avgs.length).toFixed(2) : '--'}</div></div>
+      <div class="sql-status-card"><div class="sql-status-label">Agents Covered</div><div class="sql-status-value">${new Set(advReportRows.map(r=>r.Associate_Name)).size}</div></div>
+    </div>
+    <div class="sql-adv-chart-box"><canvas id="advTrendChart"></canvas></div>
+  `;
+  const ctx = document.getElementById('advTrendChart');
+  if(chartInstances['adv-trend']) chartInstances['adv-trend'].destroy();
+  chartInstances['adv-trend'] = new Chart(ctx, {
+    type:'line',
+    data:{ labels:dates, datasets:[{ label:'Average Total Score', data:avgs, borderColor:'#4A7FE0', backgroundColor:'rgba(74,127,224,.15)', tension:.3, fill:true }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#ccc'}}}, scales:{ x:{ticks:{color:'#999'}}, y:{ticks:{color:'#999'}} } }
+  });
+}
+
+/* ---- B) Parameter-wise weak area analysis ---- */
+function advReportRenderWeak(contentEl){
+  const stats = ADV_SCORE_COLUMNS.map(([col,label]) => {
+    let sum=0, count=0, fatal=0;
+    advReportRows.forEach(r => {
+      const raw = r[col];
+      if(advReportIsFatal(raw)){ fatal++; return; }
+      const n = advReportNumOrNull(raw);
+      if(n !== null){ sum += n; count++; }
+    });
+    return { col, label, avg: count ? sum/count : null, count, fatal };
+  }).filter(s => s.count > 0 || s.fatal > 0);
+
+  stats.sort((a,b) => (a.avg ?? 999) - (b.avg ?? 999));
+  const weakest5 = stats.slice(0,5);
+
+  contentEl.innerHTML = `
+    <div class="sql-adv-chart-box"><canvas id="advWeakChart"></canvas></div>
+    <div class="sql-report-box">
+      <h3>Weakest 5 Parameters (নিচের দিকে থাকা parameter-এ সবচেয়ে বেশি নজর দরকার)</h3>
+      <table class="sql-report-table">
+        <thead><tr><th>#</th><th>Parameter</th><th>Avg Score</th><th>Sample Size</th><th>FATAL Count</th></tr></thead>
+        <tbody>
+          ${weakest5.map((s,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(s.label)}</td><td>${s.avg===null?'--':s.avg.toFixed(2)}</td><td>${s.count}</td><td>${s.fatal ? `<span class="sql-adv-badge-fatal">${s.fatal} FATAL</span>` : '0'}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="sql-report-box" style="margin-top:14px;">
+      <h3>All Parameters — Full Breakdown</h3>
+      <table class="sql-report-table">
+        <thead><tr><th>Parameter</th><th>Avg Score</th><th>Sample Size</th><th>FATAL Count</th></tr></thead>
+        <tbody>
+          ${stats.map(s=>`<tr><td>${escapeHtml(s.label)}</td><td>${s.avg===null?'--':s.avg.toFixed(2)}</td><td>${s.count}</td><td>${s.fatal ? `<span class="sql-adv-badge-fatal">${s.fatal} FATAL</span>` : '0'}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  const ctx = document.getElementById('advWeakChart');
+  if(chartInstances['adv-weak']) chartInstances['adv-weak'].destroy();
+  chartInstances['adv-weak'] = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: stats.map(s=>s.label),
+      datasets:[{ label:'Average Score', data: stats.map(s=>s.avg===null?0:+s.avg.toFixed(2)), backgroundColor: stats.map((s,i)=> i<5 ? '#E04A4A' : '#4A7FE0') }]
+    },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#999'}}, y:{ticks:{color:'#999',font:{size:9}}} } }
+  });
+}
+
+/* ---- C) Process / TL comparison ---- */
+function advReportRenderCompare(contentEl){
+  const byProcess = {}, byTL = {};
+  advReportRows.forEach(r => {
+    const score = advReportNumOrNull(r.Total_Score);
+    if(score === null) return;
+    const p = r.Process || 'Unknown';
+    const t = r.TL_Name || 'Unknown';
+    if(!byProcess[p]) byProcess[p] = { sum:0, count:0 };
+    byProcess[p].sum += score; byProcess[p].count += 1;
+    if(!byTL[t]) byTL[t] = { sum:0, count:0 };
+    byTL[t].sum += score; byTL[t].count += 1;
+  });
+  const processLabels = Object.keys(byProcess);
+  const processAvgs = processLabels.map(p => +(byProcess[p].sum/byProcess[p].count).toFixed(2));
+  const tlLabels = Object.keys(byTL);
+  const tlAvgs = tlLabels.map(t => +(byTL[t].sum/byTL[t].count).toFixed(2));
+
+  contentEl.innerHTML = `
+    <div class="sql-adv-chart-box"><canvas id="advProcessChart"></canvas></div>
+    <div class="sql-adv-chart-box"><canvas id="advTLChart"></canvas></div>
+  `;
+  const ctx1 = document.getElementById('advProcessChart');
+  if(chartInstances['adv-process']) chartInstances['adv-process'].destroy();
+  chartInstances['adv-process'] = new Chart(ctx1, {
+    type:'bar',
+    data:{ labels:processLabels, datasets:[{ label:'Avg Total Score by Process', data:processAvgs, backgroundColor:'#33C9B0' }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#ccc'}}}, scales:{ x:{ticks:{color:'#999'}}, y:{ticks:{color:'#999'}} } }
+  });
+  const ctx2 = document.getElementById('advTLChart');
+  if(chartInstances['adv-tl']) chartInstances['adv-tl'].destroy();
+  chartInstances['adv-tl'] = new Chart(ctx2, {
+    type:'bar',
+    data:{ labels:tlLabels, datasets:[{ label:'Avg Total Score by TL', data:tlAvgs, backgroundColor:'#B94AE0' }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#ccc'}}}, scales:{ x:{ticks:{color:'#999'}}, y:{ticks:{color:'#999'}} } }
+  });
+}
+
+/* ---- D) FATAL call tracker ---- */
+function advReportRenderFatal(contentEl){
+  const fatalRows = [];
+  advReportRows.forEach(r => {
+    const hitParams = ADV_SCORE_COLUMNS.filter(([col]) => advReportIsFatal(r[col])).map(([,label])=>label);
+    if(hitParams.length) fatalRows.push({ r, hitParams });
+  });
+
+  contentEl.innerHTML = `
+    <div class="sql-adv-summary-strip">
+      <div class="sql-status-card"><div class="sql-status-label">Total FATAL Calls</div><div class="sql-status-value" style="color:var(--need);">${fatalRows.length}</div></div>
+      <div class="sql-status-card"><div class="sql-status-label">Out Of</div><div class="sql-status-value">${advReportRows.length}</div></div>
+      <div class="sql-status-card"><div class="sql-status-label">FATAL %</div><div class="sql-status-value">${advReportRows.length ? ((fatalRows.length/advReportRows.length)*100).toFixed(1)+'%' : '--'}</div></div>
+      <div class="sql-status-card"><div class="sql-status-label">Agents With FATAL</div><div class="sql-status-value">${new Set(fatalRows.map(x=>x.r.Associate_Name)).size}</div></div>
+    </div>
+    <div class="sql-report-box">
+      <h3>FATAL Call Details</h3>
+      ${fatalRows.length === 0 ? '<div class="sql-adv-empty">এই filter-এ কোনো FATAL call পাওয়া যায়নি।</div>' : `
+      <table class="sql-report-table">
+        <thead><tr><th>Call Date</th><th>Process</th><th>Agent</th><th>TL</th><th>Call ID</th><th>FATAL Parameter(s)</th></tr></thead>
+        <tbody>
+          ${fatalRows.map(({r,hitParams}) => `
+            <tr>
+              <td>${escapeHtml(r.Call_Date||'--')}</td>
+              <td>${escapeHtml(r.Process||'--')}</td>
+              <td>${escapeHtml(r.Associate_Name||'--')} (${escapeHtml(r.Associate_Emp_ID||'--')})</td>
+              <td>${escapeHtml(r.TL_Name||'--')}</td>
+              <td>${escapeHtml(r.Call_ID||'--')}</td>
+              <td>${hitParams.map(p=>`<span class="sql-adv-badge-fatal">${escapeHtml(p)}</span>`).join(' ')}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`}
+    </div>
+  `;
+}
+
+/* ---- E) Top / Bottom performer leaderboard ---- */
+function advReportRenderLeader(contentEl){
+  const byAgent = {};
+  advReportRows.forEach(r => {
+    const score = advReportNumOrNull(r.Total_Score);
+    if(score === null) return;
+    const a = r.Associate_Name || 'Unknown';
+    if(!byAgent[a]) byAgent[a] = { sum:0, count:0, emp: r.Associate_Emp_ID || '--' };
+    byAgent[a].sum += score; byAgent[a].count += 1;
+  });
+  const ranked = Object.keys(byAgent).map(a => ({
+    agent:a, emp:byAgent[a].emp, avg:+(byAgent[a].sum/byAgent[a].count).toFixed(2), count:byAgent[a].count
+  })).sort((x,y)=> y.avg - x.avg);
+
+  const top10 = ranked.slice(0,10);
+  const bottom10 = ranked.slice(-10).reverse();
+
+  contentEl.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="sql-report-box">
+        <h3>🏆 Top 10 Performers</h3>
+        <table class="sql-report-table">
+          <thead><tr><th>#</th><th>Agent</th><th>Avg Score</th><th>Calls</th></tr></thead>
+          <tbody>${top10.map((a,i)=>`<tr><td>${i+1}</td><td class="sql-adv-rank-top">${escapeHtml(a.agent)} (${escapeHtml(a.emp)})</td><td>${a.avg}</td><td>${a.count}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+      <div class="sql-report-box">
+        <h3>⚠️ Bottom 10 Performers</h3>
+        <table class="sql-report-table">
+          <thead><tr><th>#</th><th>Agent</th><th>Avg Score</th><th>Calls</th></tr></thead>
+          <tbody>${bottom10.map((a,i)=>`<tr><td>${i+1}</td><td class="sql-adv-rank-bottom">${escapeHtml(a.agent)} (${escapeHtml(a.emp)})</td><td>${a.avg}</td><td>${a.count}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function advReportPrint(){
+  window.print();
+}
+
 /* ===================== LEAD ENTRY FORM TAB ===================== */
 /* Replace this with your own deployed Apps Script Web App URL for the
    "Call Centre Lead _ Sheet" spreadsheet (see the Code.gs shared alongside this file). */
@@ -13710,5 +15036,326 @@ doLogout = function(){
   }
 })();
 </script>
+
+<script>
+/* =========================================================
+   FIX: Admin "My QA Report" Agent selector
+   Uses FastAPI -> SQL Server /advanced-report-filters and
+   /advanced-report-data instead of the old cached Sheet data.
+   Agent login behavior remains unchanged (legacy function).
+   ========================================================= */
+async function qaSqlAdminAgentReport(agentName = null){
+  const panel = document.getElementById('panel-AGENTREPORT');
+  if(!panel) return;
+
+  const isAdmin = currentRole === 'admin';
+  if(!isAdmin){
+    return renderAgentPersonalReportLegacy(agentName);
+  }
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div>
+        <h1>My QA Report</h1>
+        <p>Admin Preview — SQL Server-এর live QA data থেকে Agent report</p>
+      </div>
+    </div>
+    <div class="agent-report-empty">Agent list লোড হচ্ছে...</div>`;
+
+  try{
+    const filterData = await sqlCenterFetch('/advanced-report-filters');
+    if(!filterData || filterData.status !== 'success'){
+      throw new Error((filterData && filterData.message) || 'Agent list load failed');
+    }
+
+    const names = Array.from(new Set(
+      (filterData.agents || [])
+        .map(x => String(x || '').trim())
+        .filter(Boolean)
+    )).sort((a,b)=>a.localeCompare(b));
+
+    if(!names.length){
+      throw new Error('SQL Server থেকে কোনো Agent পাওয়া যায়নি।');
+    }
+
+    const saved = String(localStorage.getItem('qa_admin_report_agent') || '').trim();
+    const requested = String(agentName || '').trim();
+    const selected =
+      names.find(n => n.toLowerCase() === requested.toLowerCase()) ||
+      names.find(n => n.toLowerCase() === saved.toLowerCase()) ||
+      names[0];
+
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div>
+          <h1>My QA Report</h1>
+          <p>Admin Preview — selected Agent-এর personal report</p>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface);">
+        <label for="adminAgentReportSelect" style="font-size:12px;font-weight:800;color:var(--text-muted);">SELECT AGENT</label>
+        <select id="adminAgentReportSelect"
+          onchange="adminPreviewAgentReport()"
+          style="min-width:280px;max-width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2,var(--surface));color:var(--text);font-weight:700;outline:none;">
+          ${names.map(n => `<option value="${escapeHtml(n)}" ${n.toLowerCase()===selected.toLowerCase()?'selected':''}>${escapeHtml(n)}</option>`).join('')}
+        </select>
+        <button class="btn primary small" type="button" onclick="adminPreviewAgentReport()">View Report</button>
+        <span style="font-size:11px;color:var(--text-muted);">Read-only preview of the Agent's view.</span>
+      </div>
+
+      <div id="adminAgentReportBody">
+        <div class="agent-report-empty">Report লোড হচ্ছে...</div>
+      </div>`;
+
+    localStorage.setItem('qa_admin_report_agent', selected);
+    await qaRenderSqlAgentReport(selected);
+
+  }catch(e){
+    console.error('SQL Agent report failed:', e);
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div><h1>My QA Report</h1><p>Admin Preview</p></div>
+      </div>
+      <div class="agent-report-empty" style="color:var(--need);">
+        Agent list load করতে সমস্যা হয়েছে: ${escapeHtml(e.message)}
+      </div>`;
+  }
+}
+
+function qaScoreStatus(score){
+  const n = Number(score);
+  if(!Number.isFinite(n)) return {cls:'need',label:'NO DATA'};
+  if(n >= 95) return {cls:'excellent',label:'EXCELLENT'};
+  if(n >= 90) return {cls:'good',label:'GOOD'};
+  if(n >= 85) return {cls:'average',label:'AVERAGE'};
+  return {cls:'need',label:'NEEDS IMPROVEMENT'};
+}
+
+function qaSqlNumber(v){
+  if(v === null || v === undefined || v === '' || String(v).trim().toUpperCase() === 'FATAL') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function qaRenderSqlAgentReport(agent){
+  const body = document.getElementById('adminAgentReportBody');
+  if(!body) return;
+
+  try{
+    const params = new URLSearchParams();
+    params.set('agent', agent);
+
+    const data = await sqlCenterFetch('/advanced-report-data?' + params.toString());
+    if(!data || data.status !== 'success'){
+      throw new Error((data && data.message) || 'Agent report load failed');
+    }
+
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+
+    if(!rows.length){
+      body.innerHTML = `
+        <div class="agent-report-empty">
+          এই Agent-এর জন্য বর্তমানে কোনো SQL Server QA report পাওয়া যায়নি।
+        </div>`;
+      return;
+    }
+
+    const totalAudits = rows.length;
+    const totalScores = rows.map(r => qaSqlNumber(r.Total_Score)).filter(v => v !== null);
+    const avgScore = totalScores.length
+      ? totalScores.reduce((a,b)=>a+b,0) / totalScores.length
+      : null;
+
+    const processes = Array.from(new Set(
+      rows.map(r => String(r.Process || '').trim()).filter(Boolean)
+    ));
+    const tls = Array.from(new Set(
+      rows.map(r => String(r.TL_Name || '').trim()).filter(Boolean)
+    ));
+
+    const status = qaScoreStatus(avgScore);
+
+    /* All score fields except Total_Score. Lowest averages are shown
+       as improvement areas; FATAL values are tracked separately. */
+    const parameterMap = {};
+    let fatalCount = 0;
+
+    rows.forEach(r=>{
+      Object.keys(r).forEach(key=>{
+        if(!/_Score$/i.test(key) || key === 'Total_Score') return;
+        const raw = r[key];
+        if(String(raw ?? '').trim().toUpperCase() === 'FATAL'){
+          fatalCount++;
+          return;
+        }
+        const n = qaSqlNumber(raw);
+        if(n === null) return;
+        if(!parameterMap[key]) parameterMap[key] = {sum:0,count:0};
+        parameterMap[key].sum += n;
+        parameterMap[key].count += 1;
+      });
+    });
+
+    const lowest = Object.entries(parameterMap)
+      .map(([key,v])=>({
+        key,
+        avg:v.count ? v.sum/v.count : null,
+        label:key
+          .replace(/_Score$/i,'')
+          .replace(/_/g,' ')
+          .replace(/\b\w/g,m=>m.toUpperCase())
+      }))
+      .filter(x=>x.avg !== null)
+      .sort((a,b)=>a.avg-b.avg)
+      .slice(0,5);
+
+    const scoreText = avgScore === null ? '--' : avgScore.toFixed(2) + '%';
+
+    const recent = rows
+      .slice()
+      .sort((a,b)=>String(b.Call_Date||'').localeCompare(String(a.Call_Date||'')))
+      .slice(0,10);
+
+    body.innerHTML = `
+      <div class="agent-report-wrap">
+        <div class="agent-report-hero">
+          <div>
+            <div class="agent-report-name">${escapeHtml(agent)}</div>
+            <p class="agent-report-sub">
+              ${escapeHtml(processes.join(' • ') || 'SQL Server QA Data')}
+              &nbsp;•&nbsp; Personal QA Performance
+            </p>
+          </div>
+          <div class="agent-report-status ${status.cls}">${status.label}</div>
+        </div>
+
+        <div class="agent-report-grid">
+          <div class="agent-report-card">
+            <div class="label">Total Audits</div>
+            <div class="value">${totalAudits.toLocaleString('en-IN')}</div>
+          </div>
+          <div class="agent-report-card">
+            <div class="label">Average Score</div>
+            <div class="value">${escapeHtml(scoreText)}</div>
+          </div>
+          <div class="agent-report-card">
+            <div class="label">LOB / Process</div>
+            <div class="value" style="font-size:18px;">${escapeHtml(processes.join(' • ') || '--')}</div>
+          </div>
+          <div class="agent-report-card">
+            <div class="label">FATAL Count</div>
+            <div class="value" style="font-size:18px;">${fatalCount}</div>
+          </div>
+        </div>
+
+        <div class="agent-report-section">
+          <h3>⚠️ My Improvement Areas</h3>
+          ${
+            lowest.length
+            ? `<div class="agent-report-fail-list">
+                ${lowest.map(x=>`
+                  <div class="agent-report-fail-item">
+                    <span class="fail-name">${escapeHtml(x.label)}</span>
+                    <span class="fail-count">${x.avg.toFixed(2)}</span>
+                  </div>`).join('')}
+              </div>`
+            : `<div class="agent-report-empty">Parameter score data পাওয়া যায়নি।</div>`
+          }
+          <div class="agent-report-note">
+            
+          </div>
+        </div>
+
+        <div class="agent-report-section">
+          <h3>📌 QA Feedback</h3>
+          <div style="font-size:13px;line-height:1.75;color:var(--text);">
+            ${
+              status.cls === 'excellent'
+              ? 'আপনার overall QA performance খুব ভালো। একই consistency বজায় রাখুন এবং improvement areas আরও শক্ত করুন।'
+              : status.cls === 'good'
+              ? 'আপনার overall performance ভালো। নিচের improvement areas-এ consistency বাড়ালে score আরও উন্নত হবে।'
+              : status.cls === 'average'
+              ? 'আপনার performance উন্নত করার সুযোগ আছে। নিচের lowest-scoring parameter-গুলোতে বিশেষভাবে নজর দিন।'
+              : 'আপনার QA score উন্নত করার জন্য lowest-scoring parameter-গুলো আগে ঠিক করুন এবং repeated issues কমানোর চেষ্টা করুন।'
+            }
+          </div>
+        </div>
+
+        <div class="agent-report-section">
+          <h3>📞 Recent Audits</h3>
+          <div class="table-wrapper" style="overflow:auto;">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th>Call Date</th>
+                  <th>Process</th>
+                  <th>TL</th>
+                  <th>Call ID</th>
+                  <th>Total Score</th>
+                  <th>Disposition</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${recent.map(r=>`
+                  <tr>
+                    <td>${escapeHtml(r.Call_Date || '--')}</td>
+                    <td>${escapeHtml(r.Process || '--')}</td>
+                    <td>${escapeHtml(r.TL_Name || '--')}</td>
+                    <td class="mono">${escapeHtml(r.Call_ID || '--')}</td>
+                    <td style="font-weight:700;">${escapeHtml(r.Total_Score ?? '--')}</td>
+                    <td>${escapeHtml(r.Disposition || '--')}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="agent-report-note">
+          Source: FastAPI → SQL Server → dbo.QA_Call_Data
+          ${tls.length ? ` • TL: ${escapeHtml(tls.join(' • '))}` : ''}
+        </div>
+      </div>`;
+
+    if(typeof runCountUps === 'function') runCountUps(body);
+
+  }catch(e){
+    console.error('SQL Agent report data failed:', e);
+    body.innerHTML = `
+      <div class="agent-report-empty" style="color:var(--need);">
+        Agent report load করতে সমস্যা হয়েছে: ${escapeHtml(e.message)}
+      </div>`;
+  }
+}
+
+/* Replace the Admin-only selector action with the SQL-backed version. */
+async function renderAgentPersonalReport(adminSelectedAgent = null){
+  if(currentRole === 'admin'){
+    return qaSqlAdminAgentReport(adminSelectedAgent);
+  }
+  return renderAgentPersonalReportLegacy(adminSelectedAgent);
+}
+
+async function adminPreviewAgentReport(){
+  if(currentRole !== 'admin') return;
+
+  const select = document.getElementById('adminAgentReportSelect');
+  const agent = select ? String(select.value || '').trim() : '';
+
+  if(!agent){
+    return;
+  }
+
+  localStorage.setItem('qa_admin_report_agent', agent);
+
+  const body = document.getElementById('adminAgentReportBody');
+  if(body){
+    body.innerHTML = '<div class="agent-report-empty">Selected Agent-এর SQL report লোড হচ্ছে...</div>';
+  }
+
+  await qaRenderSqlAgentReport(agent);
+}
+</script>
+
 </body>
-</html>
+</html>S
