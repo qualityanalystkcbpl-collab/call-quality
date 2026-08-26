@@ -1725,6 +1725,100 @@ width:max-content;
 /* layout */
 .body-layout{display:flex;flex:1;gap:0;margin-top:18px;}
 aside
+
+/* ================= GOOGLE SHEET ↔ SQL MATCH CHECK ================= */
+// Match source: Google Apps Script -> action=get_audit_call_ids -> Parameter wise fail count
+.sql-match-wrap{
+  margin-top:16px;
+  padding:16px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  border-radius:10px;
+}
+.sql-match-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.sql-match-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:16px;
+  font-weight:800;
+}
+.sql-match-subtitle{
+  color:var(--text-muted);
+  font-size:11.5px;
+  margin-top:3px;
+}
+.sql-match-grid{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(105px,1fr));
+  gap:9px;
+}
+.sql-match-card{
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  border-radius:9px;
+  padding:11px;
+}
+.sql-match-label{
+  color:var(--text-muted);
+  font-size:9.5px;
+  font-weight:800;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+}
+.sql-match-value{
+  margin-top:5px;
+  font-size:19px;
+  font-weight:800;
+}
+.sql-match-status{
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  font-size:12px;
+  font-weight:700;
+}
+.sql-match-status.match-ok{
+  color:var(--excellent);
+  background:rgba(63,191,127,.08);
+  border-color:rgba(63,191,127,.35);
+}
+.sql-match-status.match-bad{
+  color:var(--need);
+  background:rgba(224,82,74,.08);
+  border-color:rgba(224,82,74,.35);
+}
+.sql-match-details{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.sql-match-list{
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  border-radius:8px;
+  padding:10px;
+  max-height:130px;
+  overflow:auto;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  color:var(--text-muted);
+}
+@media(max-width:900px){
+  .sql-match-grid{grid-template-columns:repeat(3,minmax(105px,1fr));}
+}
+@media(max-width:600px){
+  .sql-match-grid{grid-template-columns:repeat(2,minmax(105px,1fr));}
+  .sql-match-details{grid-template-columns:1fr;}
+}
+
 /* ============================================================
    SQL CONTROL CENTER — isolated module
    Does not modify existing dashboard panels or data logic.
@@ -4168,6 +4262,111 @@ transform:translateY(0);
   .admin-chat-thread-list{ width:100%; max-height:220px; border-right:none; border-bottom:1px solid var(--border); }
   .admin-chat-thread-view{ min-height:360px; }
 }
+
+<style id="sql-duplicate-check-styles">
+  .sql-dup-wrap{
+    margin-top:16px;
+    border:1px solid var(--border, #28486b);
+    border-radius:12px;
+    background:rgba(15,31,52,.72);
+    padding:14px;
+  }
+  .sql-dup-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .sql-dup-title{
+    font-size:15px;
+    font-weight:800;
+    color:var(--text, #eef5ff);
+  }
+  .sql-dup-subtitle{
+    margin-top:4px;
+    font-size:11px;
+    color:var(--text-muted, #9eb0c8);
+  }
+  .sql-dup-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+  }
+  .sql-dup-card{
+    min-height:68px;
+    border:1px solid var(--border, #28486b);
+    border-radius:10px;
+    background:rgba(18,39,65,.72);
+    padding:11px 13px;
+  }
+  .sql-dup-label{
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+    color:var(--text-muted, #9eb0c8);
+  }
+  .sql-dup-value{
+    margin-top:7px;
+    font-size:20px;
+    font-weight:900;
+    color:var(--text, #eef5ff);
+  }
+  .sql-dup-status{
+    margin-top:12px;
+    padding:10px 12px;
+    border:1px solid rgba(53,211,153,.35);
+    border-radius:8px;
+    color:#35d399;
+    background:rgba(53,211,153,.08);
+    font-size:12px;
+    font-weight:700;
+  }
+  .sql-dup-status.has-duplicates{
+    color:#ffb454;
+    border-color:rgba(255,180,84,.35);
+    background:rgba(255,180,84,.08);
+  }
+  .sql-dup-table-wrap{
+    margin-top:12px;
+    overflow:auto;
+    max-height:330px;
+    border:1px solid var(--border, #28486b);
+    border-radius:8px;
+  }
+  .sql-dup-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:11px;
+  }
+  .sql-dup-table th,
+  .sql-dup-table td{
+    padding:8px 10px;
+    text-align:left;
+    border-bottom:1px solid rgba(120,150,190,.15);
+    white-space:nowrap;
+  }
+  .sql-dup-table th{
+    position:sticky;
+    top:0;
+    background:#122741;
+    color:var(--text-muted, #9eb0c8);
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+  }
+  .sql-dup-table td{
+    color:var(--text, #eef5ff);
+  }
+  .sql-dup-count{
+    font-weight:900;
+  }
+  @media (max-width:900px){
+    .sql-dup-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  }
+</style>
+
 </style>
 
 <style>
@@ -4813,6 +5012,129 @@ transform:translateY(0);
       <div id="sqlReportSummary">Load Report চাপুন।</div>
     </div>
 
+
+    <!-- ============================================================
+         GOOGLE SHEET ↔ SQL MATCH CHECK
+         Compares unique Call ID between the live Google Sheet and SQL Server.
+         ============================================================ -->
+    <div class="sql-match-wrap">
+      <div class="sql-match-head">
+        <div>
+          <div class="sql-match-title">🔄 Google Sheet ↔ SQL Match Check</div>
+          <div class="sql-match-subtitle">
+            Google Sheet-এর <b>Parameter wise fail count</b> এবং SQL Server-এর <b>dbo.QA_Call_Data</b>-এর unique Call ID মিলিয়ে দেখবে।
+          </div>
+        </div>
+        <button class="btn primary small" type="button" onclick="runGoogleSheetSqlMatchCheck()">
+          🔍 Check Match
+        </button>
+      </div>
+
+      <div class="sql-match-grid">
+        <div class="sql-match-card">
+          <div class="sql-match-label">Sheet Unique Call IDs</div>
+          <div class="sql-match-value" id="matchSheetCount">--</div>
+        </div>
+        <div class="sql-match-card">
+          <div class="sql-match-label">SQL Unique Call IDs</div>
+          <div class="sql-match-value" id="matchSqlCount">--</div>
+        </div>
+        <div class="sql-match-card">
+          <div class="sql-match-label">Matched</div>
+          <div class="sql-match-value" id="matchCommonCount">--</div>
+        </div>
+        <div class="sql-match-card">
+          <div class="sql-match-label">Only Sheet</div>
+          <div class="sql-match-value" id="matchOnlySheetCount">--</div>
+        </div>
+        <div class="sql-match-card">
+          <div class="sql-match-label">Only SQL</div>
+          <div class="sql-match-value" id="matchOnlySqlCount">--</div>
+        </div>
+        <div class="sql-match-card">
+          <div class="sql-match-label">Match %</div>
+          <div class="sql-match-value" id="matchPercent">--</div>
+        </div>
+      </div>
+
+      <div id="matchStatus" class="sql-match-status">
+        Check Match চাপুন।
+      </div>
+
+      <div class="sql-match-details" id="matchDetails" style="display:none;">
+        <div>
+          <div style="font-size:10px;font-weight:800;color:var(--text-muted);margin-bottom:5px;">
+            Google Sheet-এ আছে, SQL-এ নেই
+          </div>
+          <div class="sql-match-list" id="matchOnlySheetList"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:800;color:var(--text-muted);margin-bottom:5px;">
+            SQL-এ আছে, Google Sheet-এ নেই
+          </div>
+          <div class="sql-match-list" id="matchOnlySqlList"></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================================
+         SQL DUPLICATE CALL ID CHECK
+         Checks all rows returned by /advanced-report-data and
+         groups duplicate Call IDs by occurrence count.
+         ============================================================ -->
+    <div class="sql-dup-wrap" id="sqlDuplicateCheck">
+      <div class="sql-dup-head">
+        <div>
+          <div class="sql-dup-title">🔁 SQL Duplicate Call ID Check</div>
+          <div class="sql-dup-subtitle">
+            SQL Server-এর <b>dbo.QA_Call_Data</b>-তে একই Call ID একাধিকবার আছে কি না দেখাবে।
+          </div>
+        </div>
+        <button class="btn primary small" type="button" onclick="runSqlDuplicateCallIdCheck()">
+          🔍 Check Duplicates
+        </button>
+      </div>
+
+      <div class="sql-dup-grid">
+        <div class="sql-dup-card">
+          <div class="sql-dup-label">Total SQL Rows</div>
+          <div class="sql-dup-value" id="sqlDupTotalRows">--</div>
+        </div>
+        <div class="sql-dup-card">
+          <div class="sql-dup-label">Unique Call IDs</div>
+          <div class="sql-dup-value" id="sqlDupUniqueIds">--</div>
+        </div>
+        <div class="sql-dup-card">
+          <div class="sql-dup-label">Duplicate Call IDs</div>
+          <div class="sql-dup-value" id="sqlDupDuplicateIds">--</div>
+        </div>
+        <div class="sql-dup-card">
+          <div class="sql-dup-label">Extra Duplicate Rows</div>
+          <div class="sql-dup-value" id="sqlDupExtraRows">--</div>
+        </div>
+      </div>
+
+      <div id="sqlDupStatus" class="sql-dup-status">
+        Check Duplicates চাপুন।
+      </div>
+
+      <div class="sql-dup-table-wrap" id="sqlDupTableWrap" style="display:none;">
+        <table class="sql-dup-table">
+          <thead>
+            <tr>
+              <th>Call ID</th>
+              <th>Occurrences</th>
+              <th>Extra Rows</th>
+              <th>Call Dates</th>
+              <th>Agents</th>
+            </tr>
+          </thead>
+          <tbody id="sqlDupTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div style="margin-top:16px;">
       <div style="font-size:11px;font-weight:800;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;">
         SQL Control Log
@@ -5337,7 +5659,7 @@ const ANS3SEC_SHEETS = {
   BBRENEWAL: 'BBRENEWAL_ANSWERED_3SEC'
 };
 
-const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweHhwH_NAuH-fRKtLUdJC9d6t5GxKKN3Th0_0HHVoV4lIf7vbfaGt1VY8dgz0zlRSm/exec";
+const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbynuWG1pmogLgWrrWV3PliaoouH4zUQMP3On-stBbh3abS1-Ya5IJoNy75mYrzZzE1GUw/exec";
 
 /* Month wise Data (Previous Month) tab — TWO separate Google Sheets, so TWO separate Apps Script
    deployments. Deploy the matching Code.gs inside each spreadsheet (Extensions > Apps Script),
@@ -8044,6 +8366,306 @@ async function sqlCenterLoadReport(){
   }
 }
 
+
+/* ================= GOOGLE SHEET ↔ SQL MATCH CHECK ================= */
+const MATCH_CHECK_SHEET_NAME = 'Parameter wise fail count';
+
+function matchNormalizeCallId(value){
+  if(value === null || value === undefined) return '';
+  return String(value).trim().replace(/\s+/g,'');
+}
+
+function matchFindHeaderIndex(headers, candidates){
+  const wanted = candidates.map(x => String(x).trim().toLowerCase());
+  for(let i=0;i<headers.length;i++){
+    const h = String(headers[i] ?? '').trim().toLowerCase().replace(/[\s_-]+/g,'');
+    if(wanted.some(w => h === w.replace(/[\s_-]+/g,''))) return i;
+  }
+  return -1;
+}
+
+function matchSetValue(id, value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value;
+}
+
+async function fetchGoogleSheetMatchCallIds(){
+  // The Apps Script now exposes a dedicated endpoint for the
+  // Parameter wise fail count sheet and returns unique Call IDs.
+  const url = RAW_SHEET_WEB_APP_URL + '?action=get_audit_call_ids';
+
+  const response = await fetch(url, {
+    method:'GET',
+    mode:'cors',
+    cache:'no-store',
+    headers:{'Accept':'application/json'}
+  });
+
+  if(!response.ok){
+    throw new Error('Google Sheet HTTP ' + response.status);
+  }
+
+  const raw = await response.json();
+
+  if(!raw || raw.ok !== true){
+    throw new Error(
+      (raw && (raw.error || raw.message)) ||
+      'Google Sheet data load failed'
+    );
+  }
+
+  const ids = Array.isArray(raw.callIds)
+    ? raw.callIds
+        .map(matchNormalizeCallId)
+        .filter(Boolean)
+    : [];
+
+  if(!ids.length){
+    throw new Error('Google Sheet-এ কোনো Call ID পাওয়া যায়নি।');
+  }
+
+  sqlCenterLog(
+    `Google Sheet OK — ${ids.length} unique Call IDs from ${raw.sheet || MATCH_CHECK_SHEET_NAME}.`
+  );
+
+  return new Set(ids);
+}
+
+async function fetchSqlMatchCallIds(){
+  const data = await sqlCenterFetch('/advanced-report-data');
+  if(!data || data.status !== 'success'){
+    throw new Error((data && data.message) || 'SQL report data load failed');
+  }
+
+  const rows = Array.isArray(data.rows) ? data.rows : [];
+  const ids = rows
+    .map(r => matchNormalizeCallId(r.Call_ID ?? r.CallId ?? r['Call ID'] ?? r.call_id))
+    .filter(Boolean);
+
+  if(!ids.length) throw new Error('SQL Server-এ কোনো Call ID পাওয়া যায়নি।');
+  return new Set(ids);
+}
+
+async function runGoogleSheetSqlMatchCheck(){
+  const status = document.getElementById('matchStatus');
+  const details = document.getElementById('matchDetails');
+
+  if(status){
+    status.className = 'sql-match-status';
+    status.textContent = 'Google Sheet এবং SQL Server data check হচ্ছে...';
+  }
+  if(details) details.style.display = 'none';
+
+  ['matchSheetCount','matchSqlCount','matchCommonCount',
+   'matchOnlySheetCount','matchOnlySqlCount','matchPercent']
+   .forEach(id => matchSetValue(id,'…'));
+
+  sqlCenterLog('Google Sheet ↔ SQL Call ID matching started...');
+  sqlCenterLog('Sheet source: Parameter wise fail count — Apps Script get_audit_call_ids endpoint.');
+
+  try{
+    const [sheetIds, sqlIds] = await Promise.all([
+      fetchGoogleSheetMatchCallIds(),
+      fetchSqlMatchCallIds()
+    ]);
+
+    const onlySheet = [...sheetIds].filter(id => !sqlIds.has(id)).sort();
+    const onlySql   = [...sqlIds].filter(id => !sheetIds.has(id)).sort();
+    const matched   = [...sheetIds].filter(id => sqlIds.has(id)).length;
+
+    const denominator = Math.max(sheetIds.size, sqlIds.size);
+    const percent = denominator ? ((matched / denominator) * 100) : 0;
+
+    matchSetValue('matchSheetCount', sheetIds.size.toLocaleString('en-IN'));
+    matchSetValue('matchSqlCount', sqlIds.size.toLocaleString('en-IN'));
+    matchSetValue('matchCommonCount', matched.toLocaleString('en-IN'));
+    matchSetValue('matchOnlySheetCount', onlySheet.length.toLocaleString('en-IN'));
+    matchSetValue('matchOnlySqlCount', onlySql.length.toLocaleString('en-IN'));
+    matchSetValue('matchPercent', percent.toFixed(2) + '%');
+
+    if(status){
+      const perfect = onlySheet.length === 0 && onlySql.length === 0;
+      status.className = 'sql-match-status ' + (perfect ? 'match-ok' : 'match-bad');
+      status.innerHTML = perfect
+        ? '✅ <b>100% MATCH</b> — Google Sheet এবং SQL Server-এর সব unique Call ID একই।'
+        : `⚠️ <b>Mismatch found</b> — ${onlySheet.length}টি Sheet-only এবং ${onlySql.length}টি SQL-only Call ID আছে।`;
+    }
+
+    const detailsBox = document.getElementById('matchDetails');
+    if(detailsBox && (onlySheet.length || onlySql.length)){
+      detailsBox.style.display = 'grid';
+      const s = document.getElementById('matchOnlySheetList');
+      const q = document.getElementById('matchOnlySqlList');
+
+      if(s) s.textContent = onlySheet.length ? onlySheet.slice(0,100).join('\n') + (onlySheet.length>100 ? '\n…আরও ' + (onlySheet.length-100) : '') : 'কোনোটি নেই';
+      if(q) q.textContent = onlySql.length ? onlySql.slice(0,100).join('\n') + (onlySql.length>100 ? '\n…আরও ' + (onlySql.length-100) : '') : 'কোনোটি নেই';
+    }
+
+    sqlCenterLog(`Match check complete — Sheet: ${sheetIds.size}, SQL: ${sqlIds.size}, Matched: ${matched}, Sheet-only: ${onlySheet.length}, SQL-only: ${onlySql.length}.`);
+    return {sheetIds, sqlIds, matched, onlySheet, onlySql};
+  }catch(e){
+    if(status){
+      status.className = 'sql-match-status match-bad';
+      status.textContent = '❌ Match check failed — ' + e.message;
+    }
+    sqlCenterLog('MATCH CHECK ERROR — ' + e.message);
+    return null;
+  }
+}
+
+
+/* ===================== SQL DUPLICATE CALL ID CHECK ===================== */
+
+function sqlDupNormalizeCallId(value){
+  if(value === null || value === undefined) return '';
+  return String(value).trim().replace(/\s+/g,'');
+}
+
+function sqlDupSetValue(id, value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value;
+}
+
+function sqlDupEsc(value){
+  if(typeof escapeHtml === 'function') return escapeHtml(String(value ?? ''));
+  return String(value ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+async function runSqlDuplicateCallIdCheck(){
+  const status = document.getElementById('sqlDupStatus');
+  const tableWrap = document.getElementById('sqlDupTableWrap');
+  const tbody = document.getElementById('sqlDupTableBody');
+
+  ['sqlDupTotalRows','sqlDupUniqueIds','sqlDupDuplicateIds','sqlDupExtraRows']
+    .forEach(id => sqlDupSetValue(id,'…'));
+
+  if(status){
+    status.className = 'sql-dup-status';
+    status.textContent = 'SQL Server-এর Call ID duplicate check হচ্ছে...';
+  }
+  if(tableWrap) tableWrap.style.display = 'none';
+  if(tbody) tbody.innerHTML = '';
+
+  if(typeof sqlCenterLog === 'function'){
+    sqlCenterLog('SQL Duplicate Call ID check started...');
+  }
+
+  try{
+    const data = await sqlCenterFetch('/advanced-report-data');
+
+    if(!data || data.status !== 'success'){
+      throw new Error((data && data.message) || 'SQL report data load failed');
+    }
+
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+
+    if(!rows.length){
+      throw new Error('SQL Server-এ কোনো row পাওয়া যায়নি।');
+    }
+
+    const groups = new Map();
+
+    rows.forEach(row => {
+      const id = sqlDupNormalizeCallId(
+        row.Call_ID ??
+        row.CallId ??
+        row['Call ID'] ??
+        row.call_id
+      );
+
+      if(!id) return;
+
+      if(!groups.has(id)){
+        groups.set(id, {
+          count: 0,
+          dates: new Set(),
+          agents: new Set()
+        });
+      }
+
+      const g = groups.get(id);
+      g.count++;
+
+      const date = row.Call_Date ?? row.CallDate ?? row['Call Date'];
+      if(date !== null && date !== undefined && String(date).trim()){
+        g.dates.add(String(date).trim());
+      }
+
+      const agent = row.Associate_Name ?? row.AssociateName ?? row['Associate Name'];
+      if(agent !== null && agent !== undefined && String(agent).trim()){
+        g.agents.add(String(agent).trim());
+      }
+    });
+
+    const duplicates = [...groups.entries()]
+      .filter(([,g]) => g.count > 1)
+      .map(([id,g]) => ({
+        id,
+        count: g.count,
+        extra: g.count - 1,
+        dates: [...g.dates].sort(),
+        agents: [...g.agents].sort()
+      }))
+      .sort((a,b) => b.count - a.count || a.id.localeCompare(b.id));
+
+    const totalRows = rows.length;
+    const uniqueIds = groups.size;
+    const extraRows = duplicates.reduce((sum,d) => sum + d.extra, 0);
+
+    sqlDupSetValue('sqlDupTotalRows', totalRows.toLocaleString('en-IN'));
+    sqlDupSetValue('sqlDupUniqueIds', uniqueIds.toLocaleString('en-IN'));
+    sqlDupSetValue('sqlDupDuplicateIds', duplicates.length.toLocaleString('en-IN'));
+    sqlDupSetValue('sqlDupExtraRows', extraRows.toLocaleString('en-IN'));
+
+    if(status){
+      status.className = 'sql-dup-status' + (duplicates.length ? ' has-duplicates' : '');
+      status.innerHTML = duplicates.length
+        ? `⚠️ <b>${duplicates.length}</b>টি Call ID duplicate আছে — মোট <b>${extraRows}</b>টি extra duplicate row।`
+        : '✅ <b>No duplicate Call ID</b> — প্রতিটি Call ID SQL table-এ একবার করে আছে।';
+    }
+
+    if(tbody && duplicates.length){
+      tbody.innerHTML = duplicates.map(d => `
+        <tr>
+          <td>${sqlDupEsc(d.id)}</td>
+          <td class="sql-dup-count">${d.count}</td>
+          <td>${d.extra}</td>
+          <td>${sqlDupEsc(d.dates.join(', ') || '—')}</td>
+          <td>${sqlDupEsc(d.agents.join(', ') || '—')}</td>
+        </tr>
+      `).join('');
+
+      if(tableWrap) tableWrap.style.display = 'block';
+    }
+
+    if(typeof sqlCenterLog === 'function'){
+      sqlCenterLog(
+        `SQL Duplicate check complete — Rows: ${totalRows}, Unique Call IDs: ${uniqueIds}, ` +
+        `Duplicate IDs: ${duplicates.length}, Extra duplicate rows: ${extraRows}.`
+      );
+    }
+
+    return {rows, groups, duplicates, totalRows, uniqueIds, extraRows};
+
+  }catch(e){
+    if(status){
+      status.className = 'sql-dup-status has-duplicates';
+      status.textContent = '❌ Duplicate check failed — ' + e.message;
+    }
+
+    if(typeof sqlCenterLog === 'function'){
+      sqlCenterLog('SQL DUPLICATE CHECK ERROR — ' + e.message);
+    }
+
+    return null;
+  }
+}
+
 async function sqlCenterRefreshAll(){
   const el = document.getElementById('sqlApiUrlInput');
   if(el){
@@ -8056,6 +8678,8 @@ async function sqlCenterRefreshAll(){
   await sqlCenterSqlTest();
   await sqlCenterLoadReport();
   await advReportLoadFilterOptions(true);
+  await runGoogleSheetSqlMatchCheck();
+  await runSqlDuplicateCallIdCheck();
 
   return true;
 }
