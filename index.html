@@ -2134,6 +2134,100 @@ aside
 .sql-adv-rank-top{color:var(--agent);font-weight:800;}
 .sql-adv-rank-bottom{color:var(--need);font-weight:800;}
 
+
+/* ===================== FEEDBACK SHEET — BELOW 85 ===================== */
+.adv-feedback-wrap{
+  margin-top:18px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(14,26,43,.96),rgba(8,16,28,.96));
+  overflow:hidden;
+}
+.adv-feedback-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 16px;
+  border-bottom:1px solid var(--border);
+}
+.adv-feedback-title{font-size:15px;font-weight:800;color:#fff;}
+.adv-feedback-subtitle{font-size:11px;color:var(--text-muted);margin-top:3px;}
+.adv-feedback-count{
+  min-width:70px;
+  text-align:center;
+  padding:8px 12px;
+  border-radius:9px;
+  border:1px solid rgba(224,82,74,.35);
+  background:rgba(224,82,74,.12);
+  color:#ff8d86;
+  font-weight:800;
+  font-size:12px;
+}
+.adv-feedback-process{
+  border-top:1px solid rgba(32,56,89,.7);
+  padding:14px 16px;
+}
+.adv-feedback-process:first-child{border-top:0;}
+.adv-feedback-process-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.adv-feedback-process-name{font-weight:800;font-size:13px;color:#fff;}
+.adv-feedback-process-meta{font-size:10.5px;color:var(--text-muted);}
+.adv-feedback-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.adv-feedback-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:rgba(20,37,61,.72);
+}
+.adv-feedback-card-main{min-width:0;}
+.adv-feedback-agent{font-weight:800;font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.adv-feedback-meta{font-size:10px;color:var(--text-muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.adv-feedback-score{
+  flex:0 0 auto;
+  min-width:48px;
+  text-align:center;
+  padding:5px 8px;
+  border-radius:7px;
+  background:rgba(224,82,74,.16);
+  color:#ff8d86;
+  font-weight:900;
+  font-size:12px;
+}
+.adv-feedback-actions{display:flex;gap:6px;flex:0 0 auto;}
+.adv-feedback-empty{
+  padding:18px;
+  text-align:center;
+  color:var(--agent);
+  font-size:12px;
+}
+.adv-feedback-note{
+  padding:10px 16px;
+  border-top:1px solid var(--border);
+  color:var(--text-muted);
+  font-size:10.5px;
+}
+@media(max-width:900px){
+  .adv-feedback-list{grid-template-columns:1fr;}
+  .adv-feedback-head,.adv-feedback-process-head{align-items:flex-start;flex-direction:column;}
+}
+
+/* Feedback PDF page helpers */
+.feedback-pdf-hidden{display:none !important;}
+
 /* Print / PDF export: only the active advanced-report content is printed */
 @media print{
   body *{visibility:hidden;}
@@ -5191,6 +5285,26 @@ transform:translateY(0);
       <div id="sqlAdvPrintArea">
         <div class="sql-adv-content" id="sqlAdvContent">
           <div class="sql-adv-empty">প্রথমে উপরের filter সেট করে "Apply Filters" চাপুন।</div>
+        </div>
+      </div>
+
+      <div class="adv-feedback-wrap" id="advFeedbackSection">
+        <div class="adv-feedback-head">
+          <div>
+            <div class="adv-feedback-title">📝 Feedback Sheet — Below 85</div>
+            <div class="adv-feedback-subtitle">
+              Current filter-এর মধ্যে Total Score 85-এর নিচে হলে এই feedback sheet automatically তৈরি হবে।
+              Process-wise group করা থাকবে।
+            </div>
+          </div>
+          <div class="adv-feedback-count" id="advFeedbackCount">0 Calls</div>
+        </div>
+        <div id="advFeedbackBody">
+          <div class="adv-feedback-empty">প্রথমে Advanced Report load করুন।</div>
+        </div>
+        <div class="adv-feedback-note">
+          📄 PDF format attached Feedback Sheet-এর মতো হবে — উপরে GTPL KCBPL logo, call details, score, সব parameter, remarks এবং call summary থাকবে।
+          Download button চাপলে PDF save হবে।
         </div>
       </div>
     </div>
@@ -8799,6 +8913,7 @@ function advReportResetFilters(){
   advReportRows = [];
   document.getElementById('sqlAdvContent').innerHTML =
     '<div class="sql-adv-empty">প্রথমে উপরের filter সেট করে "Apply Filters" চাপুন।</div>';
+  advFeedbackRender();
   sqlCenterLog('Advanced report filters reset.');
 }
 
@@ -8827,11 +8942,363 @@ async function advReportApplyFilters(){
     advReportRows = Array.isArray(data.rows) ? data.rows : [];
     sqlCenterLog(`Advanced report loaded — ${advReportRows.length} matching record(s).`);
     advReportRenderActiveTab();
+    advFeedbackRender();
   }catch(e){
     contentEl.innerHTML = `<div class="sql-adv-empty" style="color:var(--need);">Advanced report load failed: ${escapeHtml(e.message)}</div>`;
     sqlCenterLog('ADVANCED REPORT ERROR — ' + e.message);
   }
 }
+
+
+/* ===================== AUTO FEEDBACK SHEET / PDF ===================== */
+const ADV_FEEDBACK_THRESHOLD = 85;
+
+// Embedded copy of the GTPL KCBPL logo from the supplied Feedback Sheet template.
+const ADV_FEEDBACK_LOGO_DATA = "data:image/jpeg;base64,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";
+
+const ADV_FEEDBACK_REMARK_MAP = {
+  'Opening_Score':'Remarks_1',
+  'Enthusiastic_Tone_Score':'Remarks_2',
+  'Assurance_Score':'Remarks_3',
+  'Closing_Score':'Remarks_4',
+  'Account_Authentication_Security_Checks_Score':'Remarks_5',
+  'Query_System_Probing_Score':'Remarks_6',
+  'Empathy_Apology_Score':'Remarks_7',
+  'Paraphrasing_Acknowledgement_Score':'Remarks_8',
+  'Hold_Transfer_Procedure_Score':'Remarks_9',
+  'Dead_Air_Score':'Remarks_10',
+  'Active_Listening_Attentiveness_Score':'Remarks_11',
+  'Interruption_Score':'Remarks_12',
+  'Choice_of_Words_Sentence_Formation_Score':'Remarks_13',
+  'Clarity_of_Speech_Rate_of_Speech_Score':'Remarks_14',
+  'Lack_of_Confidence_Fumbling_Score':'Remarks_15',
+  'Using_Customer_Language_Score':'Remarks_16',
+  'Background_Noise_Score':'Remarks_17',
+  'Personalization_Rapport_Building_Score':'Remarks_18',
+  'Jargon_Abbreviations_Score':'Remarks_19',
+  'Enthusiasm_Energy_Willing_to_Help_Score':'Remarks_20',
+  'Impolite_Commanding_Casual_Flat_Tone_Score':'Remarks_21',
+  'Incorrect_Information_Score':'Remarks_22',
+  'Incomplete_Information_Score':'Remarks_23',
+  'Proactive_Information_Score':'Remarks_24',
+  'Tagging_Accuracy_Status_Dispo_Score':'Remarks_25',
+  'Disconnection_Call_Ignorance_Score':'Remarks_26',
+  'Unprofessional_Rude_Sarcastic_Slangs_Score':'Remarks_27',
+  'Escalation_Denial_Score':'Remarks_28',
+  'Cross_Talk_Laughing_Validation_Failure_Score':'Remarks_29'
+};
+
+function advFeedbackNum(v){
+  if(v === null || v === undefined || v === '') return null;
+  if(typeof v === 'string' && v.trim().toUpperCase() === 'FATAL') return 0;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function advFeedbackLowRows(){
+  return (Array.isArray(advReportRows) ? advReportRows : [])
+    .filter(r => {
+      const n = advFeedbackNum(r.Total_Score);
+      return n !== null && n < ADV_FEEDBACK_THRESHOLD;
+    })
+    .sort((a,b) => {
+      const pa = String(a.Process || '');
+      const pb = String(b.Process || '');
+      if(pa !== pb) return pa.localeCompare(pb);
+      return String(a.Call_Date || '').localeCompare(String(b.Call_Date || ''));
+    });
+}
+
+function advFeedbackRender(){
+  const body = document.getElementById('advFeedbackBody');
+  const count = document.getElementById('advFeedbackCount');
+  if(!body || !count) return;
+
+  const low = advFeedbackLowRows();
+  count.textContent = `${low.length} Call${low.length === 1 ? '' : 's'}`;
+
+  if(!advReportRows.length){
+    body.innerHTML = '<div class="adv-feedback-empty">প্রথমে Advanced Report load করুন।</div>';
+    return;
+  }
+
+  if(!low.length){
+    body.innerHTML = '<div class="adv-feedback-empty">✓ এই filter-এর মধ্যে 85-এর নিচে কোনো call নেই।</div>';
+    return;
+  }
+
+  const groups = {};
+  low.forEach(r => {
+    const p = String(r.Process || 'Unknown Process').trim() || 'Unknown Process';
+    (groups[p] ||= []).push(r);
+  });
+
+  body.innerHTML = Object.keys(groups).sort().map(process => {
+    const rows = groups[process];
+    const safeProcess = encodeURIComponent(process);
+    return `
+      <div class="adv-feedback-process">
+        <div class="adv-feedback-process-head">
+          <div>
+            <div class="adv-feedback-process-name">${escapeHtml(process)}</div>
+            <div class="adv-feedback-process-meta">${rows.length} low-score feedback sheet${rows.length === 1 ? '' : 's'}</div>
+          </div>
+          <button class="btn gold small" type="button" onclick="advFeedbackDownloadProcess('${safeProcess}')">
+            ⬇ Download ${escapeHtml(process)} PDF
+          </button>
+        </div>
+        <div class="adv-feedback-list">
+          ${rows.map((r, i) => `
+            <div class="adv-feedback-card">
+              <div class="adv-feedback-card-main">
+                <div class="adv-feedback-agent">${escapeHtml(r.Associate_Name || '--')}</div>
+                <div class="adv-feedback-meta">
+                  ${escapeHtml(r.Call_Date || '--')} • ${escapeHtml(r.Call_ID || '--')}
+                </div>
+              </div>
+              <div class="adv-feedback-score">${escapeHtml(String(r.Total_Score ?? '--'))}</div>
+              <div class="adv-feedback-actions">
+                <button class="btn small" type="button" onclick="advFeedbackDownloadOne(${advReportRows.indexOf(r)})">⬇ PDF</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function advFeedbackSafeFileName(value){
+  return String(value || 'feedback')
+    .replace(/[<>:"/\\|?*]+/g, '_')
+    .replace(/\s+/g, '_')
+    .slice(0, 100);
+}
+
+function advFeedbackPdfDoc(){
+  if(!window.jspdf || !window.jspdf.jsPDF){
+    throw new Error('PDF library failed to load.');
+  }
+  return new window.jspdf.jsPDF({
+    orientation:'portrait',
+    unit:'mm',
+    format:'a4',
+    compress:true
+  });
+}
+
+function advFeedbackAddHeader(doc, row, pageLabel){
+  const pageW = doc.internal.pageSize.getWidth();
+
+  if(ADV_FEEDBACK_LOGO_DATA){
+    try{
+      doc.addImage(ADV_FEEDBACK_LOGO_DATA, 'JPEG', 14, 8, 48, 12);
+    }catch(e){}
+  }
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  doc.setTextColor(0,0,0);
+  const title = 'FEEDBACK SHEET';
+  const titleX = pageW - 14 - doc.getTextWidth(title);
+  doc.text(title, titleX, 17);
+  doc.setLineWidth(0.5);
+  doc.line(titleX, 18.5, pageW - 14, 18.5);
+
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(100,100,100);
+  doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 24);
+  if(pageLabel){
+    doc.text(pageLabel, pageW - 14 - doc.getTextWidth(pageLabel), 24);
+  }
+}
+
+function advFeedbackValue(v){
+  if(v === null || v === undefined) return '';
+  return String(v);
+}
+
+function advFeedbackFormatDate(v){
+  const s = advFeedbackValue(v);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${Number(m[2])}/${Number(m[3])}/${m[1]}` : s;
+}
+
+function advFeedbackFormatTime(v){
+  const s = advFeedbackValue(v);
+  const m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if(!m) return s;
+  let h = Number(m[1]);
+  const min = m[2];
+  const sec = m[3] || '00';
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${min}:${sec} ${ampm}`;
+}
+
+function advFeedbackTableRows(row){
+  // Matches the supplied Feedback Sheet template structure.
+  return [
+    ['Process', advFeedbackValue(row.Process)],
+    ['Associate Name', advFeedbackValue(row.Associate_Name)],
+    ['Calling Number', advFeedbackValue(row.Calling_Number)],
+    ['Call Date', advFeedbackFormatDate(row.Call_Date)],
+    ['Call time', advFeedbackFormatTime(row.Call_Time)],
+    ['Call ID', advFeedbackValue(row.Call_ID)],
+    ['Language', advFeedbackValue(row.Language)],
+    ['Call Duration', advFeedbackValue(row.Call_Duration)],
+    ['Disposition', advFeedbackValue(row.Disposition)],
+    ['Scores', advFeedbackValue(row.Total_Score)],
+    ['Call Link', advFeedbackValue(row.Call_Link)],
+
+    ['Opening', advFeedbackValue(row.Opening_Score)],
+    ['Remarks 1', advFeedbackValue(row.Remarks_1)],
+
+    ['Assurance', advFeedbackValue(row.Assurance_Score)],
+    ['Remarks 3', advFeedbackValue(row.Remarks_3)],
+
+    ['Closing', advFeedbackValue(row.Closing_Score)],
+    ['Remarks 4', advFeedbackValue(row.Remarks_4)],
+
+    ['Account Authentication/Security Checks', advFeedbackValue(row.Account_Authentication_Security_Checks_Score)],
+    ['Remarks 5', advFeedbackValue(row.Remarks_5)],
+
+    ['Empathy/Apology', advFeedbackValue(row.Empathy_Apology_Score)],
+    ['Remarks 7', advFeedbackValue(row.Remarks_7)],
+
+    ['Paraphrasing/ Acknowledgement', advFeedbackValue(row.Paraphrasing_Acknowledgement_Score)],
+    ['Remarks 8', advFeedbackValue(row.Remarks_8)],
+
+    ['Remarks 10', advFeedbackValue(row.Remarks_10)],
+
+    ['Interruption', advFeedbackValue(row.Interruption_Score)],
+    ['Remarks 12', advFeedbackValue(row.Remarks_12)],
+
+    ['Remarks 15', advFeedbackValue(row.Remarks_15)],
+
+    ['Incorrect information', advFeedbackValue(row.Incorrect_Information_Score)],
+    ['Remarks 22', advFeedbackValue(row.Remarks_22)],
+
+    ['Incomplete information', advFeedbackValue(row.Incomplete_Information_Score)],
+    ['Remarks 23', advFeedbackValue(row.Remarks_23)],
+
+    ['Tagging accuracy/Tagging Status/Dispo', advFeedbackValue(row.Tagging_Accuracy_Status_Dispo_Score)],
+    ['Remarks 25', advFeedbackValue(row.Remarks_25)],
+
+    ['Call Summary', advFeedbackValue(row.Call_Summary)]
+  ];
+}
+
+function advFeedbackRenderPdfPage(doc, row, pageNo, totalPages){
+  const pageW = doc.internal.pageSize.getWidth();
+  const rows = advFeedbackTableRows(row);
+
+  advFeedbackAddHeader(
+    doc,
+    row,
+    `${String(row.Process || 'Process')} • Page ${pageNo}/${totalPages}`
+  );
+
+  doc.autoTable({
+    body: rows,
+    startY: 30,
+    margin: {left:14,right:14,bottom:18},
+    theme: 'grid',
+    tableWidth: 'auto',
+    styles: {
+      font: 'helvetica',
+      fontSize: 8.2,
+      cellPadding: 2.1,
+      lineColor: [120,120,120],
+      lineWidth: 0.25,
+      textColor: [35,35,35],
+      valign: 'middle',
+      overflow: 'linebreak'
+    },
+    columnStyles: {
+      0: {cellWidth: 47, fontStyle:'bold', textColor:[255,255,255]},
+      1: {cellWidth: 'auto'}
+    },
+    didParseCell: function(data){
+      if(data.section !== 'body') return;
+      const label = String(data.row.raw?.[0] || '');
+      if(data.column.index === 0){
+        data.cell.styles.fillColor = [143,68,8]; // template brown
+      }
+
+      if(label === 'Associate Name' && data.column.index === 1){
+        data.cell.styles.fillColor = [246,177,132];
+        data.cell.styles.textColor = [215,35,25];
+        data.cell.styles.fontStyle = 'bold';
+      }
+
+      if(label === 'Scores' && data.column.index === 1){
+        const n = advFeedbackNum(row.Total_Score);
+        data.cell.styles.fillColor = (n !== null && n <= 0) ? [255,102,102] : [91,191,116];
+        data.cell.styles.textColor = [0,0,0];
+        data.cell.styles.fontStyle = 'bold';
+      }
+
+      if(label === 'Call Link' && data.column.index === 1){
+        data.cell.styles.textColor = [0,102,170];
+        data.cell.styles.fontSize = 7.4;
+      }
+    },
+    didDrawCell: function(data){
+      if(data.section !== 'body' || data.column.index !== 1) return;
+      const label = String(data.row.raw?.[0] || '');
+      if(label === 'Call Link' && row.Call_Link){
+        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, {url:String(row.Call_Link)});
+      }
+    },
+    didDrawPage: function(){
+      const h = doc.internal.pageSize.getHeight();
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(90,90,90);
+      doc.text('Agent Signature & Date', 35, h - 8);
+      doc.line(14, h - 14, 92, h - 14);
+      doc.text('FEEDBACK GIVEN BY :', pageW - 62, h - 8);
+    }
+  });
+}
+
+function advFeedbackDownloadOne(index){
+  try{
+    const row = advReportRows[index];
+    if(!row) throw new Error('Feedback record not found.');
+    const doc = advFeedbackPdfDoc();
+    advFeedbackRenderPdfPage(doc, row, 1, 1);
+    const name = advFeedbackSafeFileName(
+      `${row.Process || 'Process'}_${row.Associate_Name || 'Agent'}_${row.Call_ID || 'Call'}_Feedback_Sheet`
+    );
+    doc.save(`${name}.pdf`);
+    sqlCenterLog(`Feedback PDF downloaded — ${row.Associate_Name || ''} / ${row.Call_ID || ''}`);
+  }catch(e){
+    alert('Feedback PDF তৈরি করা যায়নি: ' + e.message);
+  }
+}
+
+function advFeedbackDownloadProcess(encodedProcess){
+  try{
+    const process = decodeURIComponent(encodedProcess || '');
+    const rows = advFeedbackLowRows().filter(r => String(r.Process || '') === process);
+    if(!rows.length) throw new Error('এই process-এর জন্য 85-এর নিচে কোনো call নেই.');
+
+    const doc = advFeedbackPdfDoc();
+    rows.forEach((row, i) => {
+      if(i > 0) doc.addPage();
+      advFeedbackRenderPdfPage(doc, row, i + 1, rows.length);
+    });
+
+    doc.save(`${advFeedbackSafeFileName(process)}_Feedback_Sheets_Below_85.pdf`);
+    sqlCenterLog(`Process feedback PDF downloaded — ${process} / ${rows.length} sheet(s).`);
+  }catch(e){
+    alert('Process Feedback PDF তৈরি করা যায়নি: ' + e.message);
+  }
+}
+
 
 function advReportSwitchTab(tab){
   advReportActiveTab = tab;
