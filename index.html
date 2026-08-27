@@ -4366,6 +4366,14 @@ transform:translateY(0);
     .sql-dup-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
   }
 
+
+/* Agent Advanced Insights */
+.agent-report-section .agent-report-card{min-width:0}
+@media (max-width:900px){
+  .agent-report-section [style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
+  .agent-report-section [style*="grid-template-columns:repeat(3"]{grid-template-columns:1fr !important;}
+}
+
 /* Agent View — Total Score conditional formatting */
 .agent-score-cell{
   font-weight:800;
@@ -4839,7 +4847,7 @@ transform:translateY(0);
     <span class="dot"></span>
     Process Update
 </div>
-<div class="nav-item" data-tab="AUDITNEW" onclick="switchTab('AUDITNEW')"><span class="dot"></span>Audit Sheet (NEW)</div>
+<div class="nav-item" data-tab="AUDITNEW" onclick="switchTab('AUDITNEW')"><span class="dot"></span>Parameter wise fail count</div>
 <div class="nav-item" data-tab="CATVDISPO" onclick="switchTab('CATVDISPO')"><span class="dot"></span>CATV DISPO</div>
 <div class="nav-item" data-tab="BBTECHDISPO" onclick="switchTab('BBTECHDISPO')"><span class="dot"></span>BB TECH DISPO</div>
 <div class="nav-item" data-tab="BBRENEWALDISPO" onclick="switchTab('BBRENEWALDISPO')"><span class="dot"></span>BB RENEWAL DISPO</div>
@@ -7091,7 +7099,7 @@ const LOBDATA_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxOGm2OUBGu
 const LOBDATA_SHEET_NAME = 'LOB WISE DATA'; // change this to match your actual sheet/tab name
 let lobDataCache = null;
 const RAW_SHEET_TABS = {
-  AUDITNEW:        { label: 'Audit Sheet (NEW)',              sheetName: 'Audit sheet(NEW)',        icon: '🗂️' },
+  AUDITNEW:        { label: 'Parameter wise fail count',              sheetName: 'Parameter wise fail count',        icon: '🗂️' },
   CATVDISPO:       { label: 'CATV DISPO',                     sheetName: 'CATV DISPO',               icon: '📋' },
   BBTECHDISPO:     { label: 'BB TECH DISPO',                  sheetName: 'BB TECH DISPO',            icon: '🛠️' },
   BBRENEWALDISPO:  { label: 'BB RENEWAL DISPO',               sheetName: 'BB RENEWAL DISPO',         icon: '🔄' },
@@ -10347,7 +10355,7 @@ function advFeedbackRenderList(){
 }
 function advFeedbackGoPage(page){advFeedbackPage=page;advFeedbackRenderList();document.getElementById('sqlAdvContent')?.scrollIntoView({behavior:'smooth',block:'start'});}
 
-async function advFeedbackLoadAuditRows(){if(Array.isArray(advFeedbackAuditRows))return advFeedbackAuditRows;const cached=rawDataCache&&rawDataCache.AUDITNEW;if(Array.isArray(cached)&&cached.length){advFeedbackAuditRows=cached;return cached;}const res=await fetch(RAW_SHEET_WEB_APP_URL+'?vertical='+encodeURIComponent('Audit sheet(NEW)'),{cache:'no-store',headers:{Accept:'application/json'}});if(!res.ok)throw new Error('Audit Sheet HTTP '+res.status);const raw=await res.json();const values=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.values)?raw.values:[]);if(!values.length)throw new Error('Audit sheet returned no data');const headers=values[0].map((h,i)=>String(h??'').trim()||('Column '+(i+1)));advFeedbackAuditRows=values.slice(1).map(row=>{const o={};headers.forEach((h,i)=>o[h]=row[i]===undefined?'':row[i]);return o;});rawDataCache.AUDITNEW=advFeedbackAuditRows;return advFeedbackAuditRows;}
+async function advFeedbackLoadAuditRows(){if(Array.isArray(advFeedbackAuditRows))return advFeedbackAuditRows;const cached=rawDataCache&&rawDataCache.AUDITNEW;if(Array.isArray(cached)&&cached.length){advFeedbackAuditRows=cached;return cached;}const res=await fetch(RAW_SHEET_WEB_APP_URL+'?vertical='+encodeURIComponent('Parameter wise fail count'),{cache:'no-store',headers:{Accept:'application/json'}});if(!res.ok)throw new Error('Audit Sheet HTTP '+res.status);const raw=await res.json();const values=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.values)?raw.values:[]);if(!values.length)throw new Error('Audit sheet returned no data');const headers=values[0].map((h,i)=>String(h??'').trim()||('Column '+(i+1)));advFeedbackAuditRows=values.slice(1).map(row=>{const o={};headers.forEach((h,i)=>o[h]=row[i]===undefined?'':row[i]);return o;});rawDataCache.AUDITNEW=advFeedbackAuditRows;return advFeedbackAuditRows;}
 async function advFeedbackFindAuditRow(row){const id=advFeedbackNormalizeCallId(row&&row.Call_ID);if(!id)return null;const rows=await advFeedbackLoadAuditRows();return rows.find(r=>advFeedbackNormalizeCallId(r[advFeedbackFindKey(r,[/^\s*call\s*id\s*$/i,/call\s*id/i])]||'')===id)||null;}
 function advFeedbackMergeRow(sql,audit){const out=Object.assign({},sql||{});if(!audit)return out;const maps={Call_Date:[/^\s*call\s*date\s*$/i,/call\s*date/i],Call_Time:[/^\s*call\s*time\s*$/i,/call\s*time/i],Associate_Name:[/^\s*(associate|agent)\s*name\s*$/i,/(associate|agent).*name/i],Calling_Number:[/calling\s*(number|no)/i,/customer.*number/i],Language:[/^\s*language\s*$/i,/language/i],Call_Duration:[/call\s*duration/i,/duration/i],Call_Link:[/call\s*link/i,/recording/i,/audio/i],Call_Summary:[/call\s*summary/i,/summary/i],Disposition:[/^\s*disposition\s*$/i,/disposition/i],TL_Name:[/^\s*tl\s*name\s*$/i,/^\s*tl\s*$/i,/team\s*leader/i]};for(const [target,patterns] of Object.entries(maps)){const k=advFeedbackFindKey(audit,patterns);if(k&&advFeedbackText(audit[k]))out[target]=audit[k];}for(let i=1;i<=29;i++){const k=advFeedbackFindKey(audit,[new RegExp('^\\s*remarks\\s*'+i+'\\s*$','i')]);if(k)out['Remarks_'+i]=audit[k];}return out;}
 function advFeedbackDate(v){const s=advFeedbackText(v),m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}/${m[2]}/${m[1]}`:s;}
@@ -17500,8 +17508,236 @@ function qaSqlNumber(v){
   return Number.isFinite(n) ? n : null;
 }
 
-async function qaRenderSqlAgentReport(agent){
-  const body = document.getElementById('adminAgentReportBody');
+
+/* =========================================================
+   AGENT ADVANCED INSIGHTS
+   Shared by Agent login + Admin selected-Agent preview.
+   ========================================================= */
+
+function qaAgentDurationSeconds(value){
+  if(value === null || value === undefined || value === '') return null;
+  const s = String(value).trim();
+  if(!s) return null;
+
+  // HH:MM:SS / MM:SS
+  let m = s.match(/^(\d{1,3}):(\d{2})(?::(\d{2}))?$/);
+  if(m){
+    if(m[3] !== undefined) return (+m[1]*3600)+(+m[2]*60)+(+m[3]);
+    return (+m[1]*60)+(+m[2]);
+  }
+
+  // Text forms: "3 min 25 sec", "3 mins", "25 secs", etc.
+  const tm = s.match(/(?:(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours))?\s*(?:(\d+(?:\.\d+)?)\s*(?:m|min|mins|minute|minutes))?\s*(?:(\d+(?:\.\d+)?)\s*(?:s|sec|secs|second|seconds))?/i);
+  if(tm && (tm[1] !== undefined || tm[2] !== undefined || tm[3] !== undefined)){
+    return Math.round((Number(tm[1]||0)*3600)+(Number(tm[2]||0)*60)+Number(tm[3]||0));
+  }
+
+  // Numeric seconds or Google Sheets fraction-of-day.
+  const n = Number(s.replace(/,/g,''));
+  if(Number.isFinite(n)){
+    if(n > 0 && n < 1) return Math.round(n * 86400);
+    if(n >= 0) return Math.round(n);
+  }
+  return null;
+}
+
+function qaAgentNormalizeCallId(value){
+  let s = String(value ?? '').trim().replace(/^'+/,'').trim().toLowerCase();
+  if(!s) return '';
+  s = s.replace(/\.0+$/,'');
+  return s.replace(/[^a-z0-9]/g,'');
+}
+
+function qaAgentFindDurationInObject(row){
+  if(!row || typeof row !== 'object') return null;
+  const keys = Object.keys(row);
+  const key = keys.find(k => /call[\s_-]*duration|duration/i.test(String(k)));
+  return key ? qaAgentDurationSeconds(row[key]) : null;
+}
+
+function qaAgentDurationLabel(sec){
+  if(sec === null || !Number.isFinite(sec)) return '--';
+  const m = Math.floor(sec/60), s = Math.round(sec%60);
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function qaAgentBenchmarkRows(rows, agent){
+  const scores = rows
+    .map(r => ({score:qaSqlNumber(r.Total_Score), process:String(r.Process||'').trim()}))
+    .filter(x => x.score !== null);
+
+  const agentRows = scores.filter(x => String(x.agent||'').trim().toLowerCase() === String(agent||'').trim().toLowerCase());
+  const agentAvg = agentRows.length
+    ? agentRows.reduce((a,x)=>a+x.score,0)/agentRows.length
+    : null;
+
+  const agentProcesses = new Set(
+    rows.map(r=>String(r.Process||'').trim()).filter(Boolean)
+  );
+
+  const teamScores = scores.filter(x => agentProcesses.has(x.process));
+  const teamAvg = teamScores.length
+    ? teamScores.reduce((a,x)=>a+x.score,0)/teamScores.length
+    : null;
+
+  return {agentAvg, teamAvg, teamCount:teamScores.length};
+}
+
+async function qaLoadAuditDurationMap(){
+  /*
+    Duration source:
+    1) WEB_APP_URL -> full Parameter wise fail count rows
+    2) RAW_SHEET_WEB_APP_URL -> fallback if the full-row endpoint is unavailable
+
+    The SQL report supplies the score; Google Sheet supplies Call Duration.
+  */
+  const map = new Map();
+
+  function addRows(values){
+    if(!Array.isArray(values) || !values.length) return 0;
+
+    const headers = Array.isArray(values[0])
+      ? values[0].map((h,i)=>String(h ?? '').trim() || ('Column '+(i+1)))
+      : null;
+
+    if(!headers) return 0;
+
+    let added = 0;
+
+    values.slice(1).forEach(row=>{
+      const r = {};
+      headers.forEach((h,i)=>r[h] = row[i] === undefined ? '' : row[i]);
+
+      const idKey = advFeedbackFindKey(r,[
+        /^\s*call\s*id\s*$/i,
+        /call[\s_-]*id/i,
+        /call[\s_-]*identifier/i
+      ]);
+
+      const durationKey = advFeedbackFindKey(r,[
+        /^\s*call[\s_-]*duration\s*$/i,
+        /call[\s_-]*duration/i,
+        /^\s*duration\s*$/i,
+        /duration/i
+      ]);
+
+      const id = idKey ? qaAgentNormalizeCallId(r[idKey]) : '';
+      const sec = durationKey ? qaAgentDurationSeconds(r[durationKey]) : null;
+
+      if(id && sec !== null){
+        map.set(id,sec);
+        added++;
+      }
+    });
+
+    return added;
+  }
+
+  try{
+    // IMPORTANT: this endpoint is the existing full-row Google Sheet endpoint.
+    const url = WEB_APP_URL + '?vertical=' +
+      encodeURIComponent('Parameter wise fail count');
+
+    const res = await fetch(url,{
+      cache:'no-store',
+      headers:{Accept:'application/json'}
+    });
+
+    if(res.ok){
+      const raw = await res.json();
+
+      // Standard full-sheet response: [headers, row1, row2, ...]
+      if(Array.isArray(raw)){
+        addRows(raw);
+      }else if(raw && Array.isArray(raw.values)){
+        addRows(raw.values);
+      }
+    }
+  }catch(e){
+    console.warn('Primary Parameter wise fail count duration load failed:',e);
+  }
+
+  // Fallback to the raw endpoint if the primary endpoint returned no rows.
+  if(map.size === 0){
+    try{
+      const url = RAW_SHEET_WEB_APP_URL + '?vertical=' +
+        encodeURIComponent('Parameter wise fail count');
+
+      const res = await fetch(url,{
+        cache:'no-store',
+        headers:{Accept:'application/json'}
+      });
+
+      if(res.ok){
+        const raw = await res.json();
+        if(Array.isArray(raw)){
+          addRows(raw);
+        }else if(raw && Array.isArray(raw.values)){
+          addRows(raw.values);
+        }
+      }
+    }catch(e){
+      console.warn('Fallback Parameter wise fail count duration load failed:',e);
+    }
+  }
+
+  console.info(
+    'QA Duration: matched',
+    map.size,
+    'Call ID → Call Duration records'
+  );
+
+  return map;
+}
+
+function qaAgentDurationBuckets(rows, durationMap){
+  const buckets = [
+    {label:'0–2 min', min:0, max:120},
+    {label:'2–4 min', min:120, max:240},
+    {label:'4–6 min', min:240, max:360},
+    {label:'6+ min', min:360, max:Infinity}
+  ];
+
+  return buckets.map(b=>{
+    const matched = rows.map(r=>{
+      // SQL duration, if present, always wins.
+      const sqlDuration = qaAgentFindDurationInObject(r);
+      const id = qaAgentNormalizeCallId(r.Call_ID);
+      const sec = sqlDuration !== null
+        ? sqlDuration
+        : (id && durationMap instanceof Map ? durationMap.get(id) : null);
+
+      const score = qaSqlNumber(r.Total_Score);
+      return {sec,score};
+    }).filter(x =>
+      x.sec !== null &&
+      x.score !== null &&
+      x.sec >= b.min &&
+      x.sec < b.max
+    );
+
+    return {
+      label:b.label,
+      count:matched.length,
+      avg:matched.length
+        ? matched.reduce((a,x)=>a+x.score,0)/matched.length
+        : null
+    };
+  });
+}
+
+function qaAgentCoachingPriority(improvementAreas, totalAudits){
+  return improvementAreas.slice(0,3).map((x,i)=>({
+    rank:i+1,
+    name:x.name,
+    count:x.count,
+    total:totalAudits
+  }));
+}
+
+
+async function qaRenderSqlAgentReport(agent, targetId='adminAgentReportBody'){
+  const body = document.getElementById(targetId);
   if(!body) return;
 
   try{
@@ -17514,12 +17750,8 @@ async function qaRenderSqlAgentReport(agent){
     }
 
     const rows = Array.isArray(data.rows) ? data.rows : [];
-
     if(!rows.length){
-      body.innerHTML = `
-        <div class="agent-report-empty">
-          এই Agent-এর জন্য বর্তমানে কোনো SQL Server QA report পাওয়া যায়নি।
-        </div>`;
+      body.innerHTML = `<div class="agent-report-empty">এই Agent-এর জন্য বর্তমানে কোনো SQL Server QA report পাওয়া যায়নি।</div>`;
       return;
     }
 
@@ -17533,102 +17765,123 @@ async function qaRenderSqlAgentReport(agent){
       rows.map(r => String(r.Process || '').trim()).filter(Boolean)
     ));
 
-    /*
-     * TL DISPLAY FIX
-     * An Agent can have historical records under more than one TL.
-     * The report should show the TL from the Agent's latest audit,
-     * rather than joining every historical TL into one line.
-     */
     const sortedByLatestAudit = rows.slice().sort((a,b) => {
       const dateA = String(a.Call_Date || '');
       const dateB = String(b.Call_Date || '');
       if(dateA !== dateB) return dateB.localeCompare(dateA);
-
-      const timeA = String(a.Call_Time || '');
-      const timeB = String(b.Call_Time || '');
-      return timeB.localeCompare(timeA);
+      return String(b.Call_Time || '').localeCompare(String(a.Call_Time || ''));
     });
-
     const primaryTL = sortedByLatestAudit.length
       ? String(sortedByLatestAudit[0].TL_Name || '').trim()
       : '';
 
     const status = qaScoreStatus(avgScore);
 
-    /*
-     * IMPROVEMENT AREAS
-     *
-     * A parameter is considered failed when its corresponding Remarks_N
-     * field is non-blank. This avoids displaying raw parameter scores
-     * such as 0.00 / 1.00 as if they were failure counts.
-     */
     const improvementMap = {};
-
-    const ADV_REMARK_COLUMNS = Array.from(
-      {length: 29},
-      (_, i) => 'Remarks_' + (i + 1)
-    );
-
+    const ADV_REMARK_COLUMNS = Array.from({length:29},(_,i)=>'Remarks_'+(i+1));
     const ADV_PARAMETER_LABELS = Object.fromEntries(
-      ADV_SCORE_COLUMNS.map((x, i) => [
-        'Remarks_' + (i + 1),
-        x[1]
-      ])
+      ADV_SCORE_COLUMNS.map((x,i)=>['Remarks_'+(i+1),x[1]])
     );
 
     let fatalCount = 0;
-
-    rows.forEach(r => {
-      ADV_SCORE_COLUMNS.forEach(([scoreColumn]) => {
-        const raw = r[scoreColumn];
-        if(String(raw ?? '').trim().toUpperCase() === 'FATAL'){
-          fatalCount++;
-        }
+    rows.forEach(r=>{
+      ADV_SCORE_COLUMNS.forEach(([scoreColumn])=>{
+        if(String(r[scoreColumn] ?? '').trim().toUpperCase() === 'FATAL') fatalCount++;
       });
-
-      ADV_REMARK_COLUMNS.forEach(remarkColumn => {
-        const remark = r[remarkColumn];
-
-        if(
-          remark !== null &&
-          remark !== undefined &&
-          String(remark).trim() !== ''
-        ){
+      ADV_REMARK_COLUMNS.forEach(remarkColumn=>{
+        const remark=r[remarkColumn];
+        if(remark !== null && remark !== undefined && String(remark).trim() !== ''){
           if(!improvementMap[remarkColumn]){
-            improvementMap[remarkColumn] = {
-              name: ADV_PARAMETER_LABELS[remarkColumn] || remarkColumn,
-              count: 0
+            improvementMap[remarkColumn]={
+              name:ADV_PARAMETER_LABELS[remarkColumn] || remarkColumn,
+              count:0
             };
           }
-
           improvementMap[remarkColumn].count++;
         }
       });
     });
 
     const improvementAreas = Object.values(improvementMap)
-      .filter(x => x.count > 0)
-      .sort((a,b) =>
-        b.count - a.count ||
-        String(a.name).localeCompare(String(b.name))
-      )
-      .slice(0, 8);
+      .filter(x=>x.count>0)
+      .sort((a,b)=>b.count-a.count || String(a.name).localeCompare(String(b.name)))
+      .slice(0,8);
 
-    const scoreText = avgScore === null
-      ? '--'
-      : avgScore.toFixed(2) + '%';
+    const scoreText = avgScore === null ? '--' : avgScore.toFixed(2)+'%';
 
-    const recent = rows
-      .slice()
-      .sort((a,b) => {
-        const da = String(b.Call_Date || '');
-        const db = String(a.Call_Date || '');
-        if(da !== db) return da.localeCompare(db);
-        return String(b.Call_Time || '').localeCompare(String(a.Call_Time || ''));
-      })
-      .slice(0,10);
+    /* ---------------- TEAM BENCHMARK ---------------- */
+    let benchmarkRows = rows.slice();
+    try{
+      // Same process/team benchmark. This is calculated from the live SQL dataset.
+      const allData = await sqlCenterFetch('/advanced-report-data');
+      if(allData && allData.status === 'success' && Array.isArray(allData.rows)){
+        benchmarkRows = allData.rows;
+      }
+    }catch(e){
+      console.warn('Team benchmark load failed:',e);
+    }
+
+    const agentScores = rows.map(r=>qaSqlNumber(r.Total_Score)).filter(v=>v!==null);
+    const agentAvg = agentScores.length
+      ? agentScores.reduce((a,b)=>a+b,0)/agentScores.length
+      : null;
+
+    const processSet = new Set(processes);
+    const teamScores = benchmarkRows
+      .filter(r=>processSet.has(String(r.Process||'').trim()))
+      .map(r=>qaSqlNumber(r.Total_Score))
+      .filter(v=>v!==null);
+    const teamAvg = teamScores.length
+      ? teamScores.reduce((a,b)=>a+b,0)/teamScores.length
+      : null;
+
+    const benchmarkGap = agentAvg !== null && teamAvg !== null ? agentAvg-teamAvg : null;
+    const benchmarkLabel = benchmarkGap === null
+      ? 'NO BENCHMARK DATA'
+      : benchmarkGap > 0.05
+        ? 'ABOVE TEAM AVERAGE'
+        : benchmarkGap < -0.05
+          ? 'BELOW TEAM AVERAGE'
+          : 'AT TEAM AVERAGE';
+
+    /* ---------------- COACHING PRIORITY ---------------- */
+    const coaching = qaAgentCoachingPriority(improvementAreas,totalAudits);
+    const focusNames = coaching.slice(0,2).map(x=>x.name);
+    const focusText = focusNames.length
+      ? focusNames.join(' এবং ')
+      : 'সব QA parameters';
+    const coachingMessage = focusNames.length
+      ? `Next 5 calls-এ ${escapeHtml(focusText)}-এর উপর বিশেষভাবে focus করুন।`
+      : 'Next 5 calls-এ সব QA parameters-এ consistency বজায় রাখার উপর focus করুন।';
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const recent = rows.slice().filter(r=>{
+      const raw = String(r.Call_Date || '').trim();
+      const m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if(m){
+        return Number(m[1]) === currentYear && (Number(m[2])-1) === currentMonth;
+      }
+      const d = new Date(raw);
+      return !Number.isNaN(d.getTime()) &&
+             d.getFullYear() === currentYear &&
+             d.getMonth() === currentMonth;
+    }).sort((a,b)=>{
+      const da=String(b.Call_Date||''), db=String(a.Call_Date||'');
+      if(da!==db) return da.localeCompare(db);
+      return String(b.Call_Time||'').localeCompare(String(a.Call_Time||''));
+    });
+
+    const previewHeader = currentRole === 'admin'
+      ? `<div style="margin:0 0 14px;padding:10px 13px;border:1px dashed var(--border);border-radius:10px;color:var(--text-muted);font-size:11.5px;">
+          👁️ <b>Admin Preview:</b> <b>${escapeHtml(agent)}</b>-এর Agent personal report — একই SQL data ও logic দিয়ে।
+        </div>`
+      : '';
 
     body.innerHTML = `
+      ${previewHeader}
       <div class="agent-report-wrap">
 
         <div class="agent-report-hero">
@@ -17639,174 +17892,119 @@ async function qaRenderSqlAgentReport(agent){
               &nbsp;•&nbsp; Personal QA Performance
             </p>
           </div>
-          <div class="agent-report-status ${status.cls}">
-            ${status.label}
-          </div>
+          <div class="agent-report-status ${status.cls}">${status.label}</div>
         </div>
 
         <div class="agent-report-grid">
+          <div class="agent-report-card"><div class="label">Total Audits</div><div class="value">${totalAudits.toLocaleString('en-IN')}</div></div>
+          <div class="agent-report-card"><div class="label">Average Score</div><div class="value">${escapeHtml(scoreText)}</div></div>
+          <div class="agent-report-card"><div class="label">LOB / Process</div><div class="value" style="font-size:18px;">${escapeHtml(processes.join(' • ') || '--')}</div></div>
+          <div class="agent-report-card"><div class="label">FATAL Count</div><div class="value" style="font-size:18px;">${fatalCount}</div></div>
+        </div>
 
-          <div class="agent-report-card">
-            <div class="label">Total Audits</div>
-            <div class="value">${totalAudits.toLocaleString('en-IN')}</div>
-          </div>
-
-          <div class="agent-report-card">
-            <div class="label">Average Score</div>
-            <div class="value">${escapeHtml(scoreText)}</div>
-          </div>
-
-          <div class="agent-report-card">
-            <div class="label">LOB / Process</div>
-            <div class="value" style="font-size:18px;">
-              ${escapeHtml(processes.join(' • ') || '--')}
+        <div class="agent-report-section">
+          <h3>🏆 Agent vs Team Benchmark</h3>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+            <div class="agent-report-card">
+              <div class="label">Your Average</div>
+              <div class="value">${agentAvg===null?'--':agentAvg.toFixed(2)+'%'}</div>
+            </div>
+            <div class="agent-report-card">
+              <div class="label">Team Average</div>
+              <div class="value">${teamAvg===null?'--':teamAvg.toFixed(2)+'%'}</div>
+            </div>
+            <div class="agent-report-card">
+              <div class="label">Gap</div>
+              <div class="value" style="color:${benchmarkGap===null?'var(--text)':benchmarkGap>=0?'#18b889':'#ff5d57'};">
+                ${benchmarkGap===null?'--':(benchmarkGap>=0?'+':'')+benchmarkGap.toFixed(2)+' pts'}
+              </div>
             </div>
           </div>
-
-          <div class="agent-report-card">
-            <div class="label">FATAL Count</div>
-            <div class="value" style="font-size:18px;">
-              ${fatalCount}
-            </div>
+          <div style="margin-top:10px;padding:10px 12px;border-radius:9px;background:var(--surface-2,var(--surface));font-weight:800;">
+            ${benchmarkGap===null?'Benchmark data unavailable.':benchmarkGap>0.05
+              ? '🟢 '+benchmarkLabel+' — team benchmark-এর উপরে performance।'
+              : benchmarkGap< -0.05
+                ? '🔴 '+benchmarkLabel+' — team average-এর নিচে performance।'
+                : '🟡 '+benchmarkLabel+' — team average-এর খুব কাছাকাছি performance।'}
           </div>
+        </div>
 
+        <div class="agent-report-section">
+          <h3>🚨 Coaching Priority</h3>
+          ${
+            coaching.length
+            ? `<div style="display:grid;gap:8px;">
+                ${coaching.map(x=>`
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2,var(--surface));">
+                    <div><b>Priority ${x.rank} — ${escapeHtml(x.name)}</b></div>
+                    <div style="font-weight:900;color:var(--need);">${x.count} / ${x.total} calls</div>
+                  </div>
+                `).join('')}
+              </div>`
+            : `<div class="agent-report-empty">কোনো repeated parameter failure পাওয়া যায়নি।</div>`
+          }
+          <div style="margin-top:10px;padding:11px 13px;border-left:4px solid var(--accent);background:var(--surface-2,var(--surface));border-radius:8px;">
+            <b>Recommended Focus:</b> ${coachingMessage}
+          </div>
         </div>
 
         <div class="agent-report-section">
           <h3>⚠️ My Improvement Areas</h3>
-
           ${
             improvementAreas.length
             ? `<div class="agent-report-fail-list">
-                ${improvementAreas.map(x => `
+                ${improvementAreas.map(x=>`
                   <div class="agent-report-fail-item">
-                    <span class="fail-name">
-                      ${escapeHtml(x.name)}
-                    </span>
-                    <span class="fail-count">
-                      ${x.count} fail${x.count === 1 ? '' : 's'}
-                    </span>
+                    <span class="fail-name">${escapeHtml(x.name)}</span>
+                    <span class="fail-count">${x.count} fail${x.count===1?'':'s'}</span>
                   </div>
                 `).join('')}
               </div>`
-            : `<div class="agent-report-empty">
-                কোনো parameter-wise fail data পাওয়া যায়নি।
-              </div>`
+            : `<div class="agent-report-empty">কোনো parameter-wise fail data পাওয়া যায়নি।</div>`
           }
-
-          <div class="agent-report-note">
-            এই Agent-এর QA data-তে সবচেয়ে বেশি fail হওয়া parameter-গুলো আগে দেখানো হচ্ছে।
-          </div>
         </div>
 
         <div class="agent-report-section">
           <h3>📌 QA Feedback</h3>
-
           <div style="font-size:13px;line-height:1.85;color:var(--text);">
             ${
               (() => {
-                const top1 = improvementAreas[0] || null;
-                const top2 = improvementAreas[1] || null;
-                const top3 = improvementAreas[2] || null;
-
-                const areaText = top1
-                  ? (
-                      '<strong>' + escapeHtml(top1.name) + '</strong> (' + top1.count + ' fail' + (top1.count === 1 ? '' : 's') + ')' +
-                      (top2
-                        ? ' এবং <strong>' + escapeHtml(top2.name) + '</strong> (' + top2.count + ' fail' + (top2.count === 1 ? '' : 's') + ')'
-                        : '') +
-                      (top3
-                        ? ' এবং <strong>' + escapeHtml(top3.name) + '</strong> (' + top3.count + ' fail' + (top3.count === 1 ? '' : 's') + ')'
-                        : '')
-                    )
+                const top1=improvementAreas[0]||null, top2=improvementAreas[1]||null, top3=improvementAreas[2]||null;
+                const areaText=top1
+                  ? `<strong>${escapeHtml(top1.name)}</strong> (${top1.count} fail${top1.count===1?'':'s'})`
+                    +(top2?` এবং <strong>${escapeHtml(top2.name)}</strong> (${top2.count} fail${top2.count===1?'':'s'})`:'')
+                    +(top3?` এবং <strong>${escapeHtml(top3.name)}</strong> (${top3.count} fail${top3.count===1?'':'s'})`:'')
                   : '';
-
-                if(status.cls === 'excellent'){
-                  return `
-                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Excellent range-এ রয়েছে।
-                    Overall performance খুব ভালো এবং QA parameters-এ আপনার consistency প্রশংসনীয়।
-                    ${top1
-                      ? 'তবে ' + areaText + ' parameter-এ কিছু repeated observation রয়েছে। এই gap-গুলো নিয়মিতভাবে address করতে পারলে performance আরও consistent হবে।'
-                      : 'এই ভালো performance এবং consistency বজায় রাখুন।'}
-                    পরবর্তী audits-এ একই quality standard ধরে রাখার পাশাপাশি customer handling, process adherence এবং communication quality-তে একই level বজায় রাখার উপর গুরুত্ব দিন।
-                  `;
-                }
-
-                if(status.cls === 'good'){
-                  return `
-                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Good range-এ রয়েছে।
-                    Overall performance ভালো এবং basic QA standards যথেষ্টভাবে maintain হচ্ছে।
-                    ${top1
-                      ? 'তবে ' + areaText + ' parameter-এ repeated gaps লক্ষ্য করা যাচ্ছে। এই areas-এ একটু বেশি attention দিলে overall score আরও উন্নত করা সম্ভব।'
-                      : 'এখন মূল লক্ষ্য হওয়া উচিত এই performance-টি আরও consistent রাখা।'}
-                    প্রতিটি call-এ parameter-wise checklist follow করুন এবং যেসব area-তে observation বেশি হচ্ছে, call handling-এর সময় সেগুলো consciously maintain করুন।
-                  `;
-                }
-
-                if(status.cls === 'average'){
-                  return `
-                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Average range-এ রয়েছে।
-                    Performance-এ ভালো দিক রয়েছে, তবে কিছু parameter-এ repeated gaps-এর কারণে overall score আরও উন্নত করার সুযোগ রয়েছে।
-                    ${top1
-                      ? 'প্রধান improvement areas হলো ' + areaText + '।'
-                      : 'Parameter-wise performance আরও consistent করা প্রয়োজন।'}
-                    এই parameters-এ কেন repeated error হচ্ছে তা review করে প্রতিটি call-এ process এবং communication points consciously follow করুন।
-                    পরবর্তী audits-এ একই ধরনের observation কমানো এবং consistency বাড়ানোকে প্রধান focus হিসেবে রাখুন।
-                  `;
-                }
-
-                return `
-                  আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Needs Improvement range-এ রয়েছে।
-                  Overall performance উন্নত করার জন্য parameter-wise repeated issues-এর উপর immediate focus প্রয়োজন।
-                  ${top1
-                    ? 'প্রধান improvement areas হলো ' + areaText + '।'
-                    : 'Parameter-wise performance আরও consistent করা প্রয়োজন।'}
-                  এই parameters-এ repeated failures-এর কারণ review করে সংশ্লিষ্ট QA guidelines এবং process steps follow করার উপর বিশেষ গুরুত্ব দিন।
-                  প্রতিটি call-এর আগে এবং call handling-এর সময় relevant checklist points মনে রেখে কাজ করলে একই ধরনের observation কমানো সম্ভব হবে।
-                  পরবর্তী QA audits-এ repeated issue কমিয়ে score এবং overall call quality ধারাবাহিকভাবে উন্নত করাই মূল লক্ষ্য হওয়া উচিত।
-                `;
+                if(status.cls==='excellent') return `আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Excellent range-এ রয়েছে। ${top1?'তবে '+areaText+' parameter-এ কিছু repeated observation রয়েছে।':'Overall performance খুব ভালো।'} এই areas-এ consistency বজায় রাখুন।`;
+                if(status.cls==='good') return `আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Good range-এ রয়েছে। ${top1?'তবে '+areaText+' parameter-এ repeated gaps লক্ষ্য করা যাচ্ছে।':'Overall performance ভালো।'} এই areas-এ আরও attention দিলে score উন্নত করা সম্ভব।`;
+                if(status.cls==='average') return `আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Average range-এ রয়েছে। ${top1?'প্রধান improvement areas হলো '+areaText+'।':'Parameter-wise performance আরও consistent করা প্রয়োজন।'} পরবর্তী audits-এ repeated observation কমানোকে প্রধান focus হিসেবে রাখুন।`;
+                return `আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Needs Improvement range-এ রয়েছে। ${top1?'প্রধান improvement areas হলো '+areaText+'।':'Parameter-wise performance আরও consistent করা প্রয়োজন।'} সংশ্লিষ্ট QA guidelines এবং process steps follow করে repeated issue কমানোর উপর বিশেষ গুরুত্ব দিন।`;
               })()
             }
           </div>
         </div>
 
         <div class="agent-report-section">
-          <h3>📞 Recent Audits</h3>
-
+          <h3>📞 Audit This Month</h3>
+          <div style="font-size:11px;color:var(--text-muted);margin:-5px 0 10px;">
+            Current month-এর সব audited calls
+            <b style="color:var(--text);">(${recent.length})</b>
+          </div>
           <div class="table-wrapper" style="overflow:auto;">
             <table class="score-table">
-              <thead>
-                <tr>
-                  <th>Process</th>
-                  <th>TL</th>
-                  <th>Call ID</th>
-                  <th>Total Score</th>
-                  <th>Disposition</th>
-                </tr>
-              </thead>
-
+              <thead><tr><th>Process</th><th>TL</th><th>Call ID</th><th>Total Score</th><th>Disposition</th></tr></thead>
               <tbody>
-                ${recent.map(r => `
+                ${recent.length ? recent.map(r=>`
                   <tr>
-                    <td>${escapeHtml(r.Process || '--')}</td>
-                    <td>${escapeHtml(r.TL_Name || '--')}</td>
-                    <td class="mono">${escapeHtml(r.Call_ID || '--')}</td>
+                    <td>${escapeHtml(r.Process||'--')}</td>
+                    <td>${escapeHtml(r.TL_Name||'--')}</td>
+                    <td class="mono">${escapeHtml(r.Call_ID||'--')}</td>
                     <td class="agent-score-cell ${
-                      (() => {
-                        const s = qaSqlNumber(r.Total_Score);
-                        if(s === null) return 'score-na';
-                        if(s < 70) return 'score-critical';
-                        if(s < 85) return 'score-needs';
-                        if(s < 90) return 'score-average';
-                        if(s < 95) return 'score-good';
-                        return 'score-excellent';
-                      })()
-                    }">
-                      ${escapeHtml(r.Total_Score ?? '--')}
-                    </td>
-                    <td>${escapeHtml(r.Disposition || '--')}</td>
+                      (()=>{const s=qaSqlNumber(r.Total_Score);if(s===null)return 'score-na';if(s<70)return 'score-critical';if(s<85)return 'score-needs';if(s<90)return 'score-average';if(s<95)return 'score-good';return 'score-excellent';})()
+                    }">${escapeHtml(r.Total_Score??'--')}</td>
+                    <td>${escapeHtml(r.Disposition||'--')}</td>
                   </tr>
-                `).join('')}
+                `).join('') : `<tr><td colspan="5" style="text-align:center;padding:18px;color:var(--text-muted);">এই মাসে কোনো audited call পাওয়া যায়নি।</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -17822,8 +18020,7 @@ async function qaRenderSqlAgentReport(agent){
     if(typeof runCountUps === 'function') runCountUps(body);
 
   }catch(e){
-    console.error('SQL Agent report data failed:', e);
-
+    console.error('SQL Agent report data failed:',e);
     body.innerHTML = `
       <div class="agent-report-empty" style="color:var(--need);">
         Agent report load করতে সমস্যা হয়েছে:
@@ -17837,7 +18034,21 @@ async function renderAgentPersonalReport(adminSelectedAgent = null){
   if(currentRole === 'admin'){
     return qaSqlAdminAgentReport(adminSelectedAgent);
   }
-  return renderAgentPersonalReportLegacy(adminSelectedAgent);
+  const agent = String(
+    (typeof empAgentName !== 'undefined' && empAgentName) ||
+    localStorage.getItem('qa_emp_name') || ''
+  ).trim();
+  if(!agent){
+    const panel=document.getElementById('panel-AGENTREPORT');
+    if(panel) panel.innerHTML='<div class="agent-report-empty">Agent session information পাওয়া যায়নি।</div>';
+    return;
+  }
+  const panel=document.getElementById('panel-AGENTREPORT');
+  if(panel){
+    panel.innerHTML='<div class="panel-header"><div><h1>My QA Report</h1><p>Personal QA Performance Report</p></div></div><div id="agentPersonalSqlBody" class="agent-report-empty">আপনার QA report লোড হচ্ছে...</div>';
+  }
+  // Reuse the same SQL report renderer; it will render into agentPersonalSqlBody.
+  await qaRenderSqlAgentReport(agent, 'agentPersonalSqlBody');
 }
 
 async function adminPreviewAgentReport(){
