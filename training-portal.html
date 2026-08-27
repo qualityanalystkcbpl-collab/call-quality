@@ -837,7 +837,93 @@
   }
   .quiz-opt:hover, .quiz-opt.selected{ border-color: var(--accent); background: rgba(255,255,255,.03); }
 
-  .qb-row{ background: var(--bg-panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
+  .qb-row{ background:#fff; border:1px solid #dadce0; border-radius:10px; padding:0; margin:0 0 16px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,.08); color:#202124; }
+  .qb-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid #e8eaed;background:#fff}
+  .qb-card-title{font-family:'Google Sans','Space Grotesk',sans-serif;font-weight:600;font-size:13px;color:#202124;display:flex;align-items:center;gap:8px}
+  .qb-card-title .qb-drag{color:#9aa0a6;font-size:15px;letter-spacing:2px;cursor:grab}
+
+  .qb-row.qb-dragging{opacity:.45; transform:scale(.995);}
+  .qb-row.qb-drag-over{border:2px dashed #673ab7; box-shadow:0 3px 12px rgba(103,58,183,.16);}
+  .qb-card-title .qb-drag{user-select:none;-webkit-user-select:none;touch-action:none;cursor:grab;padding:4px 6px;border-radius:5px;}
+  .qb-card-title .qb-drag:active{cursor:grabbing;background:#f1f3f4;}
+  .qb-required{display:flex;align-items:center;gap:6px;font-size:11px;color:#5f6368;white-space:nowrap}
+  .qb-required input{width:16px;height:16px;accent-color:#673ab7}
+  .qb-card-body{padding:16px}
+  .qb-question-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+  .qb-question-head textarea{flex:1;min-height:72px;font-size:14px;padding:13px 14px;border:1px solid #dadce0;border-radius:4px;background:#fff;color:#202124;margin:0}
+  .qb-type-select{width:190px;padding:12px 10px;border:1px solid #dadce0;border-radius:4px;background:#fff;color:#202124;font-size:12px}
+  .qb-opt-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .qb-opt-row input[type=radio]{width:18px;height:18px;accent-color:#673ab7;flex:0 0 auto}
+  .qb-opt-row input[type=text]{margin:0;flex:1;padding:10px 12px;border:1px solid #dadce0;border-radius:4px;background:#fff;color:#202124}
+  .qb-opt-label{width:20px;font-size:12px;color:#5f6368;text-align:center}
+  .qb-correct-hint{font-size:10.5px;color:#80868b;margin:2px 0 14px 48px}
+  .qb-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;margin-top:8px;border-top:1px solid #eee}
+  .qb-points{display:flex;align-items:center;gap:7px;font-size:12px;color:#5f6368}
+  .qb-points input{width:64px!important;padding:8px 9px!important;border:1px solid #dadce0!important;border-radius:4px!important;background:#fff!important;color:#202124!important;margin:0!important}
+  .qb-card-actions{display:flex;align-items:center;gap:6px}
+  .qb-icon-btn{border:0;background:transparent;color:#5f6368;padding:8px 9px;border-radius:4px;cursor:pointer;font-size:12px}
+  .qb-icon-btn:hover{background:#f1f3f4;color:#202124}.qb-icon-btn.danger:hover{color:#d93025;background:#fce8e6}
+  .qb-empty-question{text-align:center;padding:30px 20px;border:1px dashed #dadce0;border-radius:10px;color:#80868b;background:#fff;margin-bottom:14px}.qb-empty-question strong{display:block;color:#3c4043;margin-bottom:5px}
+  @media(max-width:600px){.qb-question-head{flex-direction:column}.qb-type-select{width:100%}.qb-card-bottom{flex-wrap:wrap}}
+
+  .qb-settings-section{
+    background: var(--bg-panel-2); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; margin-top:16px;
+  }
+  .qb-settings-title{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px;
+    color:var(--text-primary); margin-bottom:12px;
+  }
+  .qb-setting-row{
+    display:flex; align-items:flex-start; gap:12px; padding:12px 0;
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .qb-setting-row:last-child{ border-bottom:0; padding-bottom:0; }
+  .qb-setting-check{
+    width:18px; height:18px; margin:1px 0 0; accent-color:var(--accent);
+    flex-shrink:0; cursor:pointer;
+  }
+  .qb-setting-copy{ flex:1; min-width:0; cursor:pointer; }
+  .qb-setting-name{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px;
+    color:var(--text-primary);
+  }
+  .qb-setting-help{
+    margin-top:3px; color:var(--text-faint); font-size:11.5px; line-height:1.5;
+  }
+  .qb-timer-setting{ display:flex; align-items:flex-end; gap:14px; margin-top:8px; padding:12px; border-radius:11px; background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.06); }
+  .qb-timer-preview{ min-width:128px; padding:10px 12px; border-radius:9px; border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--text-faint); font-family:'JetBrains Mono',monospace; font-size:11px; text-align:center; }
+  @media(max-width:520px){ .qb-timer-setting{flex-direction:column;align-items:stretch;} .qb-timer-preview{width:auto;} }
+  .quiz-timer-wrap{
+    position:sticky; top:0; z-index:20; margin:-4px -4px 12px; padding:12px 14px 13px;
+    border:1px solid rgba(236,72,153,.35); border-radius:14px;
+    background:linear-gradient(135deg, rgba(168,85,247,.16), rgba(236,72,153,.10));
+    backdrop-filter:blur(16px); box-shadow:0 12px 30px -18px rgba(236,72,153,.7);
+  }
+  .quiz-timer-meta{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .quiz-timer-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-faint); }
+  .quiz-timer-display{ font-family:'Space Grotesk',sans-serif; font-size:30px; line-height:1; font-weight:800; letter-spacing:.04em; color:var(--text-primary); text-shadow:0 0 18px rgba(236,72,153,.45); }
+  .quiz-timer-display.warning{ color:#ffd166; text-shadow:0 0 18px rgba(255,209,102,.45); }
+  .quiz-timer-display.danger{ color:#ff6b6b; text-shadow:0 0 20px rgba(255,107,107,.55); animation:timerPulse 1s ease-in-out infinite; }
+  .quiz-timer-track{ width:100%; height:6px; margin-top:10px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,.08); }
+  .quiz-timer-fill{ width:100%; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--accent),#ec4899); transition:width .5s linear; }
+  @keyframes timerPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.035); } }
+  @media(max-width:520px){ .quiz-timer-display{font-size:26px;} .quiz-timer-wrap{margin-left:-2px;margin-right:-2px;} }
+
+  .quiz-progress-wrap{ margin-bottom:16px; }
+  .quiz-progress-meta{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-bottom:7px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint);
+  }
+  .quiz-progress-track{
+    width:100%; height:7px; border-radius:999px; overflow:hidden;
+    background:rgba(255,255,255,.08); border:1px solid var(--line);
+  }
+  .quiz-progress-fill{
+    width:0%; height:100%; border-radius:inherit;
+    background:linear-gradient(90deg,var(--accent),#fff);
+    box-shadow:0 0 12px var(--accent-glow); transition:width .3s ease;
+  }
   .qb-row textarea, .qb-row input[type="text"]{
     width: 100%; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--line);
     background: #EDEFF5; color: #0A0F1C; font-family: 'Inter', sans-serif; font-size: 13.5px;
@@ -1160,6 +1246,56 @@
   @media (max-width:620px){ .product-grid{ grid-template-columns:1fr; max-height:60vh; } .product-summary{ grid-template-columns:1fr 1fr; } .product-detail-grid{ grid-template-columns:1fr; } .product-sync{ width:100%; margin-left:0; } }
 
 </style>
+<script>
+/* Google-Forms-style Add Question: deliberately inline/global so it cannot be lost if another init fails. */
+(function(){
+  function renumber(){
+    var cards=document.querySelectorAll('#qbQuestions .qb-row');
+    cards.forEach(function(card,i){
+      var title=card.querySelector('.qb-card-title span:last-child');
+      if(title) title.textContent='Question '+(i+1);
+    });
+    var stat=document.getElementById('qbStatCount'); if(stat) stat.textContent=cards.length;
+    var total=0; cards.forEach(function(card){var m=card.querySelector('.qb-marks'); total += m ? (Number(m.value)||0) : 0;});
+    var totalEl=document.getElementById('qbStatTotal'); if(totalEl) totalEl.textContent=total;
+  }
+  function addDirect(ev){
+    if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+    var container=document.getElementById('qbQuestions');
+    if(!container) return false;
+    var empty=container.querySelector('.qb-empty-question'); if(empty) empty.remove();
+    var n=container.querySelectorAll('.qb-row').length+1;
+    var uid='direct_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    var card=document.createElement('div'); card.className='qb-row';
+    card.innerHTML='<div class="qb-card-top"><div class="qb-card-title"><span class="qb-drag">⠿⠿</span><span>Question '+n+'</span></div><label class="qb-required"><input type="checkbox" class="qb-required-check" checked> Required</label></div>'+
+      '<div class="qb-card-body"><div class="qb-question-head"><textarea rows="2" placeholder="Question" class="qb-question"></textarea><select class="qb-type-select"><option value="multiple_choice" selected>Multiple choice</option></select></div>'+['A','B','C','D'].map(function(l){return '<div class="qb-opt-row"><input type="radio" name="'+uid+'_correct" value="'+l+'" class="qb-correct"><span class="qb-opt-label">'+l+'</span><input type="text" placeholder="Option '+l+'" class="qb-opt-'+l+'"></div>';}).join('')+'<div class="qb-correct-hint">Select the radio button beside the correct answer.</div><div class="qb-card-bottom"><div class="qb-points"><span>Points</span><input type="number" class="qb-marks" min="1" step="1" value="1"></div><div class="qb-card-actions"><button type="button" class="qb-icon-btn danger qb-remove">🗑 Delete</button></div></div></div>';
+    container.appendChild(card);
+    var rem=card.querySelector('.qb-remove'); if(rem) rem.onclick=function(e){e.preventDefault();card.remove();renumber();};
+    var marks=card.querySelector('.qb-marks'); if(marks) marks.oninput=renumber;
+    /* Attach the shared pointer-based drag-reorder handlers (defined later in
+       the page) to this card too. window.attachQbDragHandlers will already
+       exist by the time a user actually clicks "Add Question", since the
+       whole page has finished parsing/loading by then. */
+    try{ if(window.attachQbDragHandlers) window.attachQbDragHandlers(card); }catch(ignore){}
+    renumber();
+    var q=card.querySelector('.qb-question');
+    if(q){ setTimeout(function(){q.focus(); card.scrollIntoView({behavior:'smooth',block:'center'});},40); }
+    /* Keep the application's in-memory state in sync when it exists. */
+    try{
+      if(window.qbState && Array.isArray(window.qbState.questions)) window.qbState.questions.push({questionText:'',optionA:'',optionB:'',optionC:'',optionD:'',correctOption:'',marks:1,required:true,type:'multiple_choice'});
+    }catch(ignore){}
+    return false;
+  }
+  window.__addQuestionDirect=addDirect;
+  /* Capture-phase listener: cannot be replaced by later button handlers. */
+  document.addEventListener('click', function(e){
+    var btn=e.target && e.target.closest ? e.target.closest('#qbAddBtn') : null;
+    if(!btn) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    addDirect(e);
+  }, true);
+})();
+</script>
 </head>
 <body>
 
@@ -1563,7 +1699,24 @@
     <div class="modal-body">
       <div id="quizLoading" class="empty-state">Loading questions…</div>
       <div id="quizPlay" style="display:none;">
-        <div class="quiz-progress" id="quizProgress" style="font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-faint); margin-bottom:14px;"></div>
+        <div class="quiz-timer-wrap" id="quizTimerWrap" style="display:none;">
+          <div class="quiz-timer-meta">
+            <span class="quiz-timer-label">⏱ Assessment Time Remaining</span>
+            <span class="quiz-timer-display" id="quizTimerDisplay">00:00</span>
+          </div>
+          <div class="quiz-timer-track" aria-hidden="true">
+            <div class="quiz-timer-fill" id="quizTimerFill"></div>
+          </div>
+        </div>
+        <div class="quiz-progress-wrap" id="quizProgressWrap">
+          <div class="quiz-progress-meta">
+            <span id="quizProgress">0 Questions</span>
+            <span id="quizProgressCount">Question 0 of 0</span>
+          </div>
+          <div class="quiz-progress-track" aria-hidden="true">
+            <div class="quiz-progress-fill" id="quizProgressFill"></div>
+          </div>
+        </div>
         <div id="quizQuestions"></div>
         <div class="modal-actions">
           <button class="btn" data-close>Cancel</button>
@@ -1594,7 +1747,8 @@
       <div id="qbBuilder" style="display:none;">
         <div id="qbQuestionsPanel">
           <div id="qbQuestions"></div>
-          <button type="button" class="qb-add-btn" id="qbAddBtn">+ Add Question</button>
+          <button type="button" class="qb-add-btn" id="qbAddBtn">＋ Add Question</button>
+
         </div>
 
         <div id="qbSettingsPanel" style="display:none;">
@@ -1611,6 +1765,38 @@
           <div class="field">
             <label for="qbPassMark">Pass Mark (out of total marks)</label>
             <input id="qbPassMark" type="number" min="1" step="1" placeholder="e.g., 18" />
+          </div>
+
+          <div class="qb-settings-section">
+            <div class="qb-settings-title">⚙️ Question &amp; Form Presentation</div>
+            <div class="qb-setting-row">
+              <input class="qb-setting-check" id="qbShuffleQuestions" type="checkbox" />
+              <label class="qb-setting-copy" for="qbShuffleQuestions">
+                <div class="qb-setting-name">Shuffle question order</div>
+                <div class="qb-setting-help">When enabled, the questions added to this assessment will appear in a different order each time an agent starts the assessment.</div>
+              </label>
+            </div>
+            <div class="qb-setting-row">
+              <input class="qb-setting-check" id="qbShowProgressBar" type="checkbox" />
+              <label class="qb-setting-copy" for="qbShowProgressBar">
+                <div class="qb-setting-name">Show progress bar</div>
+                <div class="qb-setting-help">Show the agent how many questions have been answered while taking the assessment.</div>
+              </label>
+            </div>
+            <div class="qb-setting-row" style="align-items:center;">
+              <input class="qb-setting-check" id="qbEnableTimer" type="checkbox" />
+              <label class="qb-setting-copy" for="qbEnableTimer">
+                <div class="qb-setting-name">Enable assessment timer</div>
+                <div class="qb-setting-help">Set a time limit for the agent. The timer starts when the assessment opens and the assessment will automatically close when time runs out.</div>
+              </label>
+            </div>
+            <div class="qb-timer-setting" id="qbTimerSettingRow">
+              <div class="field" style="margin:0; flex:1;">
+                <label for="qbTimerMinutes">Time limit (minutes)</label>
+                <input id="qbTimerMinutes" type="number" min="1" max="240" step="1" placeholder="e.g., 30" />
+              </div>
+              <div class="qb-timer-preview" id="qbTimerPreview">Timer disabled</div>
+            </div>
           </div>
         </div>
 
@@ -3590,6 +3776,7 @@ document.getElementById('markDoneBtn').addEventListener('click', async ()=>{
 });
 
 function closeAllOverlays(){
+  clearQuizTimer();
   ALL_OVERLAYS.forEach(ov=> ov.classList.remove('open'));
   document.getElementById('mediaViewerBody').innerHTML = '';
   if(productCatalogBody) productCatalogBody.innerHTML = '';
@@ -3658,8 +3845,114 @@ async function renderAssessmentBox(tab, idx, stage){
 }
 
 let quizAnswers = {};
+let quizTimerInterval = null;
+let quizTimerSyncInterval = null;
+let quizTimerState = { enabled:false, durationSeconds:0, remainingSeconds:0, startedAtMs:0, expiresAtMs:0, tab:null, idx:null, stage:null, timedOut:false };
+
+function clearQuizTimer(){
+  if(quizTimerInterval){ clearInterval(quizTimerInterval); quizTimerInterval = null; }
+  if(quizTimerSyncInterval){ clearInterval(quizTimerSyncInterval); quizTimerSyncInterval = null; }
+  quizTimerState = { enabled:false, durationSeconds:0, remainingSeconds:0, startedAtMs:0, expiresAtMs:0, tab:null, idx:null, stage:null, timedOut:false };
+  const wrap = document.getElementById('quizTimerWrap');
+  const display = document.getElementById('quizTimerDisplay');
+  const fill = document.getElementById('quizTimerFill');
+  if(wrap) wrap.style.display = 'none';
+  if(display){ display.textContent = '00:00'; display.className = 'quiz-timer-display'; }
+  if(fill) fill.style.width = '100%';
+}
+
+function formatQuizTime(totalSeconds){
+  const sec = Math.max(0, Math.floor(totalSeconds || 0));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if(h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function paintQuizTimer(remainingSeconds){
+  const display = document.getElementById('quizTimerDisplay');
+  const fill = document.getElementById('quizTimerFill');
+  if(!display) return;
+  const remaining = Math.max(0, Math.ceil(remainingSeconds));
+  display.textContent = formatQuizTime(remaining);
+  display.className = 'quiz-timer-display' + (remaining <= 30 ? ' danger' : remaining <= 120 ? ' warning' : '');
+  if(fill){
+    const pct = quizTimerState.durationSeconds ? Math.max(0, Math.min(100, (remaining / quizTimerState.durationSeconds) * 100)) : 100;
+    fill.style.width = `${pct}%`;
+  }
+}
+
+async function expireQuizByTimer(){
+  if(quizTimerState.timedOut) return;
+  const expiredTab = quizTimerState.tab;
+  const expiredIdx = quizTimerState.idx;
+  quizTimerState.timedOut = true;
+  if(quizTimerInterval){ clearInterval(quizTimerInterval); quizTimerInterval = null; }
+  if(quizTimerSyncInterval){ clearInterval(quizTimerSyncInterval); quizTimerSyncInterval = null; }
+  try{
+    await callBackend({ action:'expireAssessmentAttempt', username:currentUser.username, tab:expiredTab, stageIndex:expiredIdx }).catch(()=>{});
+  }catch(err){}
+  const overlay = document.getElementById('quizOverlay');
+  const resultBox = document.getElementById('quizResultBox');
+  const play = document.getElementById('quizPlay');
+  if(play) play.style.display = 'none';
+  if(resultBox){
+    resultBox.style.display = '';
+    resultBox.innerHTML = `
+      <div class="quiz-result fail" style="text-align:center; padding:24px 10px;">
+        <div style="font-size:42px; margin-bottom:8px;">⏰</div>
+        <div class="verdict" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; margin-bottom:6px; color:#ff9b9b;">Time expired</div>
+        <div class="sub" style="color:var(--text-muted); font-size:13.5px; max-width:440px; margin:0 auto 20px; line-height:1.6;">The assessment time limit ended before you submitted your answers. Your assessment was not submitted.</div>
+        <div class="modal-actions" style="justify-content:center;"><button class="btn" id="timerExpiredCloseBtn">Close Assessment</button></div>
+      </div>`;
+    document.getElementById('timerExpiredCloseBtn').addEventListener('click', ()=> closeAllOverlays());
+  }
+  if(overlay) overlay.classList.add('open');
+  quizTimerState = { enabled:false, durationSeconds:0, remainingSeconds:0, startedAtMs:0, expiresAtMs:0, tab:null, idx:null, stage:null, timedOut:true };
+  // Give the agent a brief timeout notice, then automatically leave the assessment.
+  setTimeout(()=>{ if(document.getElementById('quizOverlay')?.classList.contains('open')) closeAllOverlays(); }, 1600);
+}
+
+async function startQuizTimer(tab, idx, stage, timerInfo){
+  clearQuizTimer();
+  if(!timerInfo || !timerInfo.enabled || !(Number(timerInfo.remainingSeconds) > 0)) return;
+  const duration = Number(timerInfo.durationSeconds) || Number(timerInfo.remainingSeconds);
+  const remaining = Number(timerInfo.remainingSeconds);
+  quizTimerState = {
+    enabled:true, durationSeconds:duration, remainingSeconds:remaining,
+    startedAtMs:performance.now(), expiresAtMs:performance.now() + remaining*1000,
+    tab, idx, stage, timedOut:false
+  };
+  const wrap = document.getElementById('quizTimerWrap');
+  if(wrap) wrap.style.display = '';
+  paintQuizTimer(remaining);
+
+  quizTimerInterval = setInterval(()=>{
+    const left = Math.max(0, (quizTimerState.expiresAtMs - performance.now()) / 1000);
+    quizTimerState.remainingSeconds = left;
+    paintQuizTimer(left);
+    if(left <= 0){ expireQuizByTimer(); }
+  }, 250);
+
+  // Periodically re-sync with server so refresh/system-clock changes cannot extend the attempt.
+  quizTimerSyncInterval = setInterval(async ()=>{
+    if(!quizTimerState.enabled || quizTimerState.timedOut) return;
+    try{
+      const res = await callBackend({ action:'getAssessmentAttempt', username:currentUser.username, tab, stageIndex:idx });
+      if(!res.success || res.expired){ expireQuizByTimer(); return; }
+      const serverRemaining = Number(res.remainingSeconds);
+      if(isFinite(serverRemaining)){
+        quizTimerState.remainingSeconds = serverRemaining;
+        quizTimerState.expiresAtMs = performance.now() + serverRemaining*1000;
+        paintQuizTimer(serverRemaining);
+      }
+    }catch(err){}
+  }, 10000);
+}
 
 async function startQuiz(tab, idx, stage){
+  clearQuizTimer();
   quizOverlay.classList.add('open');
   document.getElementById('quizTag').textContent = `${TABS.find(x=>x.key===tab).label} · STAGE ${idx+1}`;
   document.getElementById('quizStageTitle').textContent = (stage.title || `Stage ${idx+1}`) + ' — Assessment';
@@ -3674,18 +3967,57 @@ async function startQuiz(tab, idx, stage){
       document.getElementById('quizLoading').textContent = 'No assessment has been set up for this stage yet. Please check back later.';
       return;
     }
-    renderQuiz(tab, idx, stage, res.questions, res.totalMarks, res.passMark);
+    const storedSettings = getStoredQbSettings(tab, idx);
+    const backendSettings = (res.settings && typeof res.settings === 'object') ? res.settings : null;
+    const settings = {
+      shuffleQuestions: backendSettings && typeof backendSettings.shuffleQuestions !== 'undefined' ? !!backendSettings.shuffleQuestions : storedSettings.shuffleQuestions,
+      showProgressBar: backendSettings && typeof backendSettings.showProgressBar !== 'undefined' ? backendSettings.showProgressBar !== false : storedSettings.showProgressBar,
+      timerEnabled: backendSettings && typeof backendSettings.timerEnabled !== 'undefined' ? !!backendSettings.timerEnabled : storedSettings.timerEnabled,
+      timerMinutes: backendSettings && typeof backendSettings.timerMinutes !== 'undefined' ? Number(backendSettings.timerMinutes)||0 : Number(storedSettings.timerMinutes)||0
+    };
+    let questions = res.questions.slice();
+    if(settings.shuffleQuestions){
+      for(let i=questions.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [questions[i],questions[j]]=[questions[j],questions[i]];
+      }
+    }
+
+    let timerInfo = { enabled:false };
+    if(settings.timerEnabled && settings.timerMinutes > 0){
+      const attempt = await callBackend({ action:'startAssessment', username:currentUser.username, tab, stageIndex:idx, timerMinutes:settings.timerMinutes });
+      if(!attempt.success){ throw new Error(attempt.message || 'Could not start the timed assessment.'); }
+      timerInfo = {
+        enabled: !!attempt.enabled,
+        durationSeconds: Number(attempt.durationSeconds)||settings.timerMinutes*60,
+        remainingSeconds: Number(attempt.remainingSeconds)||settings.timerMinutes*60
+      };
+    }
+    renderQuiz(tab, idx, stage, questions, res.totalMarks, res.passMark, settings, timerInfo);
   } catch(err){
     document.getElementById('quizLoading').textContent = err.message || 'Could not load the assessment.';
   }
 }
 
-function renderQuiz(tab, idx, stage, questions, totalMarks, passMark){
+function updateQuizProgressBar(totalQuestions){
+  const answered = Object.keys(quizAnswers || {}).length;
+  const pct = totalQuestions ? Math.round((answered / totalQuestions) * 100) : 0;
+  const fill = document.getElementById('quizProgressFill');
+  const count = document.getElementById('quizProgressCount');
+  if(fill) fill.style.width = `${pct}%`;
+  if(count) count.textContent = `Answered ${answered} of ${totalQuestions}`;
+}
+
+function renderQuiz(tab, idx, stage, questions, totalMarks, passMark, settings={ shuffleQuestions:false, showProgressBar:true, timerEnabled:false, timerMinutes:0 }, timerInfo={enabled:false}){
   quizAnswers = {};
   document.getElementById('quizLoading').style.display = 'none';
   document.getElementById('quizPlay').style.display = '';
   const marksLabel = questions.every(q=> (Number(q.marks)||1) === 1) ? '1 mark each' : 'marks vary by question';
   document.getElementById('quizProgress').textContent = `${questions.length} Questions · ${marksLabel} · Pass mark ${passMark}/${totalMarks}`;
+  const progressWrap = document.getElementById('quizProgressWrap');
+  if(progressWrap) progressWrap.style.display = settings.showProgressBar === false ? 'none' : '';
+  updateQuizProgressBar(questions.length);
+  startQuizTimer(tab, idx, stage, timerInfo);
 
   const container = document.getElementById('quizQuestions');
   container.innerHTML = '';
@@ -3709,10 +4041,12 @@ function renderQuiz(tab, idx, stage, questions, totalMarks, passMark){
       quizAnswers[opt.dataset.qid] = opt.dataset.opt;
       opt.querySelector('input').checked = true;
       opt.closest('.quiz-q').querySelectorAll('.quiz-opt').forEach(o=> o.classList.toggle('selected', o===opt));
+      updateQuizProgressBar(questions.length);
     });
   });
 
   document.getElementById('quizSubmitBtn').onclick = async ()=>{
+    if(quizTimerState.enabled && quizTimerState.remainingSeconds <= 0){ expireQuizByTimer(); return; }
     if(Object.keys(quizAnswers).length < questions.length){
       showToast('Please answer all questions before submitting.');
       return;
@@ -3726,7 +4060,10 @@ function renderQuiz(tab, idx, stage, questions, totalMarks, passMark){
         answers: quizAnswers
       });
       if(res.success){
+        clearQuizTimer();
         showQuizResult(tab, idx, stage, res);
+      } else if(res.timedOut){
+        await expireQuizByTimer();
       } else {
         showToast(res.message || 'Could not submit the assessment.');
       }
@@ -4031,10 +4368,68 @@ async function loadStagesFromBackend(){
   } catch(err){}
 }
 
-let qbState = { tab:null, idx:null, stage:null, questions:[], passMark:0 };
+let qbState = { tab:null, idx:null, stage:null, questions:[], passMark:0, settings:{ shuffleQuestions:false, showProgressBar:true, timerEnabled:false, timerMinutes:0 } };
 
 const qbTabQuestions = document.getElementById('qbTabQuestions');
 const qbTabSettings  = document.getElementById('qbTabSettings');
+
+function qbSettingsKey(tab, idx){ return `qa_qb_settings_${tab}_${idx}`; }
+
+function getStoredQbSettings(tab, idx){
+  try{
+    const raw = localStorage.getItem(qbSettingsKey(tab, idx));
+    if(raw){
+      const parsed = JSON.parse(raw);
+      return {
+        shuffleQuestions: !!parsed.shuffleQuestions,
+        showProgressBar: parsed.showProgressBar !== false,
+        timerEnabled: !!parsed.timerEnabled,
+        timerMinutes: Math.max(0, Number(parsed.timerMinutes)||0)
+      };
+    }
+  }catch(err){}
+  return { shuffleQuestions:false, showProgressBar:true, timerEnabled:false, timerMinutes:0 };
+}
+
+function setQbSettingsUI(settings){
+  document.getElementById('qbShuffleQuestions').checked = !!settings.shuffleQuestions;
+  document.getElementById('qbShowProgressBar').checked = settings.showProgressBar !== false;
+  document.getElementById('qbEnableTimer').checked = !!settings.timerEnabled;
+  document.getElementById('qbTimerMinutes').value = Number(settings.timerMinutes)||'';
+  updateQbTimerSettingUI();
+}
+
+function updateQbTimerSettingUI(){
+  const enabled = document.getElementById('qbEnableTimer').checked;
+  const row = document.getElementById('qbTimerSettingRow');
+  const input = document.getElementById('qbTimerMinutes');
+  const preview = document.getElementById('qbTimerPreview');
+  if(row) row.style.opacity = enabled ? '1' : '.55';
+  if(input) input.disabled = !enabled;
+  const minutes = Number(input && input.value)||0;
+  if(preview) preview.textContent = enabled && minutes > 0 ? `⏱ ${minutes} minute${minutes===1?'':'s'}` : 'Timer disabled';
+}
+
+function getQbSettingsFromUI(){
+  const timerEnabled = document.getElementById('qbEnableTimer').checked;
+  let timerMinutes = Math.floor(Number(document.getElementById('qbTimerMinutes').value)||0);
+  if(timerEnabled && (timerMinutes < 1 || timerMinutes > 240)){
+    throw new Error('Set the timer between 1 and 240 minutes, or turn the timer off.');
+  }
+  if(!timerEnabled) timerMinutes = 0;
+  return {
+    shuffleQuestions: document.getElementById('qbShuffleQuestions').checked,
+    showProgressBar: document.getElementById('qbShowProgressBar').checked,
+    timerEnabled, timerMinutes
+  };
+}
+
+document.getElementById('qbEnableTimer').addEventListener('change', updateQbTimerSettingUI);
+document.getElementById('qbTimerMinutes').addEventListener('input', updateQbTimerSettingUI);
+
+function saveStoredQbSettings(tab, idx, settings){
+  try{ localStorage.setItem(qbSettingsKey(tab, idx), JSON.stringify(settings)); }catch(err){}
+}
 qbTabQuestions.addEventListener('click', ()=>{
   qbTabQuestions.classList.add('active'); qbTabSettings.classList.remove('active');
   document.getElementById('qbQuestionsPanel').style.display = '';
@@ -4062,8 +4457,17 @@ async function openQuestionBuilder(tab, idx, stage){
       document.getElementById('qbLoading').textContent = res.message || 'Could not load questions.';
       return;
     }
-    qbState = { tab, idx, stage, questions: res.questions || [], passMark: res.passMark || 0 };
+    const storedSettings = getStoredQbSettings(tab, idx);
+    const backendSettings = (res.settings && typeof res.settings === 'object') ? res.settings : null;
+    const settings = {
+      shuffleQuestions: backendSettings && typeof backendSettings.shuffleQuestions !== 'undefined' ? !!backendSettings.shuffleQuestions : storedSettings.shuffleQuestions,
+      showProgressBar: backendSettings && typeof backendSettings.showProgressBar !== 'undefined' ? backendSettings.showProgressBar !== false : storedSettings.showProgressBar,
+      timerEnabled: backendSettings && typeof backendSettings.timerEnabled !== 'undefined' ? !!backendSettings.timerEnabled : storedSettings.timerEnabled,
+      timerMinutes: backendSettings && typeof backendSettings.timerMinutes !== 'undefined' ? Number(backendSettings.timerMinutes)||0 : Number(storedSettings.timerMinutes)||0
+    };
+    qbState = { tab, idx, stage, questions: res.questions || [], passMark: res.passMark || 0, settings };
     document.getElementById('qbPassMark').value = qbState.passMark || '';
+    setQbSettingsUI(settings);
     renderQuestionBuilder();
   } catch(err){
     document.getElementById('qbLoading').textContent = err.message || 'Could not reach the server.';
@@ -4071,53 +4475,221 @@ async function openQuestionBuilder(tab, idx, stage){
 }
 
 function renderQuestionBuilder(){
-  document.getElementById('qbLoading').style.display = 'none';
-  document.getElementById('qbBuilder').style.display = '';
-  const container = document.getElementById('qbQuestions');
-  container.innerHTML = '';
-  qbState.questions.forEach((q, i)=> container.appendChild(buildQbRow(q, i)));
+  document.getElementById('qbLoading').style.display='none';
+  document.getElementById('qbBuilder').style.display='';
+  const container=document.getElementById('qbQuestions');
+  container.innerHTML='';
+  if(!qbState.questions.length){
+    container.innerHTML='<div class="qb-empty-question"><strong>No questions yet</strong>Click <b>＋ Add Question</b> to create your first question.</div>';
+  } else {
+    qbState.questions.forEach((q,i)=>container.appendChild(buildQbRow(q,i)));
+  }
   refreshQbStats();
 }
 
-function refreshQbStats(){
-  const rows = document.querySelectorAll('#qbQuestions .qb-row');
-  let total = 0;
-  rows.forEach(row=>{
-    const marksInput = row.querySelector('.qb-marks');
-    total += marksInput ? (Number(marksInput.value) || 0) : 0;
-  });
-  document.getElementById('qbStatCount').textContent = rows.length;
-  document.getElementById('qbStatTotal').textContent = total;
-}
-
-function buildQbRow(q, i){
-  const div = document.createElement('div');
-  div.className = 'qb-row';
-  div.innerHTML = `
-    <div class="qb-num" style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Question ${i+1}</span><button type="button" class="qb-remove" style="border:1px solid rgba(255,90,90,.35); background:rgba(255,90,90,.08); color:#ff9b9b; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer;">Remove</button></div>
-    <textarea rows="2" placeholder="Question text" class="qb-question">${escapeHtml(q.questionText||'')}</textarea>
-    ${['A','B','C','D'].map(letter=> `
-      <div class="qb-opt-row">
-        <input type="radio" name="qb_correct_${i}" value="${letter}" class="qb-correct" ${String(q.correctOption||'').toUpperCase()===letter?'checked':''}/>
-        <input type="text" placeholder="Option ${letter} (select the radio if this is correct)" class="qb-opt-${letter}" value="${escapeHtml(q['option'+letter]||'')}" />
-      </div>`).join('')}
-    <div style="display:flex; align-items:center; gap:8px;">
-      <label for="qbMarks${i}" style="font-size:12px; color:var(--text-muted);">Marks:</label>
-      <input type="number" id="qbMarks${i}" class="qb-marks" min="1" step="1" value="${Number(q.marks)||1}" style="width:70px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#EDEFF5; color:#0A0F1C;" />
+function buildQbRow(q,i){
+  const div=document.createElement('div'); div.className='qb-row';
+  div.draggable = false;
+  div.dataset.qbIndex = String(i);
+  const required=q.required!==false;
+  div.innerHTML=`
+    <div class="qb-card-top">
+      <div class="qb-card-title"><span class="qb-drag">⠿⠿</span><span>Question ${i+1}</span></div>
+      <label class="qb-required"><input type="checkbox" class="qb-required-check" ${required?'checked':''}/> Required</label>
     </div>
-  `;
-  div.querySelector('.qb-remove').addEventListener('click', ()=>{
-    qbState.questions.splice(i, 1);
-    renderQuestionBuilder();
-  });
-  div.querySelector('.qb-marks').addEventListener('input', refreshQbStats);
+    <div class="qb-card-body">
+      <div class="qb-question-head">
+        <textarea rows="2" placeholder="Question" class="qb-question">${escapeHtml(q.questionText||'')}</textarea>
+        <select class="qb-type-select"><option value="multiple_choice" selected>Multiple choice</option></select>
+      </div>
+      ${['A','B','C','D'].map(letter=>`<div class="qb-opt-row"><input type="radio" name="qb_correct_${i}" value="${letter}" class="qb-correct" ${String(q.correctOption||'').toUpperCase()===letter?'checked':''}/><span class="qb-opt-label">${letter}</span><input type="text" placeholder="Option ${letter}" class="qb-opt-${letter}" value="${escapeHtml(q['option'+letter]||'')}" /></div>`).join('')}
+      <div class="qb-correct-hint">Select the radio button beside the correct answer.</div>
+      <div class="qb-card-bottom">
+        <div class="qb-points"><span>Points</span><input type="number" class="qb-marks" min="1" step="1" value="${Number(q.marks)||1}" /></div>
+        <div class="qb-card-actions"><button type="button" class="qb-icon-btn qb-duplicate">⧉ Duplicate</button><button type="button" class="qb-icon-btn danger qb-remove">🗑 Delete</button></div>
+      </div>
+    </div>`;
+  div.querySelector('.qb-remove').addEventListener('click',()=>{qbState.questions.splice(i,1);renderQuestionBuilder();});
+  div.querySelector('.qb-duplicate').addEventListener('click',()=>{qbState.questions.splice(i+1,0,{questionText:q.questionText||'',optionA:q.optionA||'',optionB:q.optionB||'',optionC:q.optionC||'',optionD:q.optionD||'',correctOption:q.correctOption||'',marks:Number(q.marks)||1,required:q.required!==false});renderQuestionBuilder();});
+  div.querySelector('.qb-marks').addEventListener('input',refreshQbStats);
+
+  attachQbDragHandlers(div);
   return div;
 }
 
-document.getElementById('qbAddBtn').addEventListener('click', ()=>{
-  qbState.questions.push({ questionText:'', optionA:'', optionB:'', optionC:'', optionD:'', correctOption:'', marks:1 });
+// Shared drag-reorder wiring, used by BOTH card-creation paths in this file:
+// buildQbRow() above, and the legacy/failsafe addDirect() card creator that
+// lives in the inline <head> script bound to #qbAddBtn. Previously only
+// buildQbRow() attached these handlers, so any card added via the "Add
+// Question" button (which goes through addDirect(), not buildQbRow()) had a
+// drag handle that looked draggable but had no listeners at all. Exposed on
+// window so the earlier-parsed head script can call it too.
+// Reliable pointer-based drag reorder. HTML5 drag/drop is intentionally avoided
+// because this modal contains text inputs and nested interactive controls.
+function attachQbDragHandlers(div){
+  const dragHandle = div.querySelector('.qb-drag');
+  if(!dragHandle) return;
+  if(dragHandle.dataset.qbDragBound==='1') return; // never double-bind
+  dragHandle.dataset.qbDragBound='1';
+
+  dragHandle.setAttribute('title','Drag to reorder question');
+  dragHandle.style.cursor='grab';
+  dragHandle.style.touchAction='none';
+  let dragging=false;
+  // IMPORTANT: we intentionally do NOT use setPointerCapture() here.
+  // Root cause of the earlier "drag stops after the first move" bug:
+  // capturing the pointer on the handle, then reparenting its row via
+  // insertBefore() on every pointermove, causes Chromium (and other
+  // browsers) to silently fire 'lostpointercapture' the moment the
+  // captured element moves in the DOM - even though it never actually
+  // leaves the document. After that, no further pointermove/pointerup
+  // ever reaches the handle again, so the drag freezes after moving
+  // exactly one position. Listening on `document` instead sidesteps this
+  // entirely, since `document` itself is never reparented.
+  let moveHandler=null, upHandler=null;
+
+  const clearDrag=()=>{
+    dragging=false;
+    div.classList.remove('qb-dragging');
+    document.querySelectorAll('#qbQuestions .qb-row').forEach(r=>r.classList.remove('qb-drag-over'));
+    document.body.classList.remove('qb-pointer-dragging');
+    if(moveHandler){ document.removeEventListener('pointermove', moveHandler); moveHandler=null; }
+    if(upHandler){
+      document.removeEventListener('pointerup', upHandler);
+      document.removeEventListener('pointercancel', upHandler);
+      upHandler=null;
+    }
+  };
+
+  dragHandle.addEventListener('pointerdown',(e)=>{
+    if(e.button!==0 && e.pointerType!=='touch') return;
+    e.preventDefault();
+    e.stopPropagation();
+    dragging=true;
+    div.classList.add('qb-dragging');
+    document.body.classList.add('qb-pointer-dragging');
+
+    moveHandler=(e)=>{
+      if(!dragging) return;
+      e.preventDefault();
+      const container=div.parentNode;
+      const rows=[...document.querySelectorAll('#qbQuestions .qb-row')].filter(r=>r!==div);
+      rows.forEach(r=>r.classList.remove('qb-drag-over'));
+      if(rows.length===0) return;
+
+      // Find the row whose vertical midpoint the pointer has crossed.
+      // This also correctly handles dropping above the first card or
+      // below the last card, which a strict top/bottom-bounds check misses.
+      let target=null, before=true;
+      for(const row of rows){
+        const rect=row.getBoundingClientRect();
+        const mid=rect.top + rect.height/2;
+        if(e.clientY < mid){ target=row; before=true; break; }
+      }
+      if(!target){
+        target=rows[rows.length-1];
+        before=false;
+      }
+
+      target.classList.add('qb-drag-over');
+      if(before) container.insertBefore(div,target);
+      else container.insertBefore(div,target.nextSibling);
+      div.classList.add('qb-dragging');
+    };
+
+    upHandler=(e)=>{
+      if(!dragging) return;
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+      clearDrag();
+      syncQbStateFromDom();
+      renumberQbCards();
+    };
+
+    document.addEventListener('pointermove', moveHandler);
+    document.addEventListener('pointerup', upHandler);
+    document.addEventListener('pointercancel', upHandler);
+  });
+}
+window.attachQbDragHandlers = attachQbDragHandlers;
+
+function syncQbStateFromDom(){
+  const rows=document.querySelectorAll('#qbQuestions .qb-row');
+  const current=[];
+  rows.forEach((row)=>{
+    const radio=row.querySelector('.qb-correct:checked');
+    const oldIndex=Number(row.dataset.qbIndex);
+    const old=(Number.isInteger(oldIndex) && qbState.questions[oldIndex]) ? qbState.questions[oldIndex] : {};
+    current.push({
+      qid: old.qid || '',
+      questionText: row.querySelector('.qb-question')?.value.trim() || '',
+      optionA: row.querySelector('.qb-opt-A')?.value.trim() || '',
+      optionB: row.querySelector('.qb-opt-B')?.value.trim() || '',
+      optionC: row.querySelector('.qb-opt-C')?.value.trim() || '',
+      optionD: row.querySelector('.qb-opt-D')?.value.trim() || '',
+      correctOption: radio ? radio.value : '',
+      marks: Number(row.querySelector('.qb-marks')?.value) || 1,
+      required: row.querySelector('.qb-required-check') ? row.querySelector('.qb-required-check').checked : true,
+      type: 'multiple_choice'
+    });
+  });
+  qbState.questions=current;
+  rows.forEach((row,i)=>row.dataset.qbIndex=String(i));
+}
+
+function renumberQbCards(){
+  const rows = [...document.querySelectorAll('#qbQuestions .qb-row')];
+
+  // Renaming a radio's `name` mid-loop can momentarily put it in the same
+  // native radio-group as another row whose radios haven't been renamed
+  // yet (e.g. row A gets renamed to 'qb_correct_0' while row B, not yet
+  // processed, still happens to be named 'qb_correct_0' from before the
+  // reorder). The instant that collision happens, the browser enforces
+  // "only one checked radio per name" and silently unchecks one of the two
+  // rows' selected answers - and it can do this to a row we haven't even
+  // reached yet in the loop, so capturing the checked value inside the same
+  // iteration is too late. To make this collision-proof we capture every
+  // row's checked value up front, rename ALL radios across ALL rows, and
+  // only then restore every row's selection from what we captured.
+  const checkedValues = rows.map(row => row.querySelector('.qb-correct:checked')?.value);
+
+  rows.forEach((row,i)=>{
+    const title=row.querySelector('.qb-card-title span:last-child');
+    if(title) title.textContent='Question '+(i+1);
+    row.querySelectorAll('.qb-correct').forEach(r=>{ r.name='qb_correct_'+i; });
+    row.dataset.qbIndex=String(i);
+  });
+
+  rows.forEach((row,i)=>{
+    const val = checkedValues[i];
+    if(!val) return;
+    const toRecheck = row.querySelector('.qb-correct[value="'+val+'"]');
+    if(toRecheck) toRecheck.checked = true;
+  });
+
+  refreshQbStats();
+}
+
+function addBuilderQuestion(){
+  // Google Forms-style: add exactly one new question, then focus it.
+  if(!qbState || !Array.isArray(qbState.questions)) qbState.questions = [];
+  qbState.questions.push({
+    questionText:'', optionA:'', optionB:'', optionC:'', optionD:'',
+    correctOption:'', marks:1, required:true, type:'multiple_choice'
+  });
   renderQuestionBuilder();
-});
+  setTimeout(()=>{
+    const cards=document.querySelectorAll('#qbQuestions .qb-row');
+    const last=cards[cards.length-1];
+    if(last){
+      last.scrollIntoView({behavior:'smooth',block:'center'});
+      const q=last.querySelector('.qb-question');
+      if(q) q.focus();
+    }
+  },60);
+}
+
+// Add Question is bound by the independent bridge next to the button.
 
 document.getElementById('qbSaveBtn').addEventListener('click', async ()=>{
   const rows = document.querySelectorAll('#qbQuestions .qb-row');
@@ -4132,12 +4704,16 @@ document.getElementById('qbSaveBtn').addEventListener('click', async ()=>{
     const correctRadio = row.querySelector('.qb-correct:checked');
     const correctOption = correctRadio ? correctRadio.value : '';
     const marks = Number(row.querySelector('.qb-marks').value) || 0;
+    const required = row.querySelector('.qb-required-check') ? row.querySelector('.qb-required-check').checked : true;
     if(!questionText || !optionA || !optionB || !optionC || !optionD || !correctOption || marks <= 0) valid = false;
-    questions.push({ questionText, optionA, optionB, optionC, optionD, correctOption, marks });
+    questions.push({ questionText, optionA, optionB, optionC, optionD, correctOption, marks, required, type:'multiple_choice' });
   });
   if(!valid){ showToast('Fill in every question, all 4 options, mark the correct answer, and give each question marks > 0.'); return; }
 
   const passMarkInput = Number(document.getElementById('qbPassMark').value);
+  let settings;
+  try{ settings = getQbSettingsFromUI(); }catch(err){ showToast(err.message); return; }
+  qbState.settings = settings;
 
   const btn = document.getElementById('qbSaveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
@@ -4145,9 +4721,11 @@ document.getElementById('qbSaveBtn').addEventListener('click', async ()=>{
     const res = await callBackend({
       action:'saveQuestions', role: currentUser.role, username: currentUser.username,
       tab: qbState.tab, stageIndex: qbState.idx, questions,
-      passMark: passMarkInput > 0 ? passMarkInput : undefined
+      passMark: passMarkInput > 0 ? passMarkInput : undefined,
+      settings
     });
     if(res.success){
+      saveStoredQbSettings(qbState.tab, qbState.idx, settings);
       showToast(`Saved ${res.count} question(s) · Pass mark ${res.passMark}/${res.totalMarks}.`);
       qbOverlay.classList.remove('open');
     } else {
@@ -4312,7 +4890,13 @@ async function renderCertificateCanvas(){
     doc.open();
     doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
       <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
-      <style>html,body{margin:0;padding:0;background:#fdfcf8;}${styleText}</style>
+      <style>html,body{margin:0;padding:0;background:#fdfcf8;}${styleText}
+/* Reliable pointer drag feedback for question reordering */
+#qbQuestions .qb-row.qb-dragging{opacity:.72;transform:scale(.995);}
+#qbQuestions .qb-row.qb-drag-over{outline:2px solid rgba(0,220,200,.65);outline-offset:3px;}
+.qb-drag{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+body.qb-pointer-dragging{user-select:none;-webkit-user-select:none;}
+</style>
       </head><body></body></html>`);
     doc.close();
 
