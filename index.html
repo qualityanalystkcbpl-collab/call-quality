@@ -5272,17 +5272,7 @@ transform:translateY(0);
         </div>
       </div>
 
-      <!-- QA FEEDBACK SHEETS — BELOW 85 -->
-      <section class="adv-feedback-wrap" id="advFeedbackSection">
-        <div class="adv-feedback-head">
-          <div>
-            <div class="adv-feedback-title">📝 QA Feedback Sheets — Below 85 Score</div>
-            <div class="adv-feedback-subtitle">বর্তমান Advanced Reports filter-এর মধ্যে Total Score 85%-এর নিচে থাকা প্রতিটি audited call-এর জন্য আলাদা 1-page Feedback Sheet।</div>
-          </div>
-          <div class="adv-feedback-count" id="advFeedbackCount">0 Calls</div>
-        </div>
-        <div id="advFeedbackBody"><div class="adv-feedback-empty">প্রথমে Advanced Report load করুন।</div></div>
-      </section>
+      
     </div>
 </div>
 
@@ -10286,7 +10276,6 @@ function advReportResetFilters(){
   advReportRows = [];
   document.getElementById('sqlAdvContent').innerHTML =
     '<div class="sql-adv-empty">প্রথমে উপরের filter সেট করে "Apply Filters" চাপুন।</div>';
-  advFeedbackRenderList();
   sqlCenterLog('Advanced report filters reset.');
 }
 
@@ -10316,7 +10305,6 @@ async function advReportApplyFilters(){
     advFeedbackPage = 1;
     sqlCenterLog(`Advanced report loaded — ${advReportRows.length} matching record(s).`);
     advReportRenderActiveTab();
-    advFeedbackRenderList();
   }catch(e){
     contentEl.innerHTML = `<div class="sql-adv-empty" style="color:var(--need);">Advanced report load failed: ${escapeHtml(e.message)}</div>`;
     sqlCenterLog('ADVANCED REPORT ERROR — ' + e.message);
@@ -10355,7 +10343,7 @@ function advFeedbackRenderList(){
   body.innerHTML=`<div class="adv-feedback-tab-head"><div><div class="adv-feedback-tab-title">📝 QA Feedback Sheets</div><div class="adv-feedback-tab-sub">Total Score 85%-এর নিচে থাকা audited calls — প্রতি page-এ সর্বোচ্চ 10টি।</div></div><div class="adv-feedback-count">${total} Call${total===1?'':'s'}</div></div>
   <div class="adv-feedback-table-wrap"><table class="adv-feedback-table"><thead><tr><th>#</th><th>AGENT NAME</th><th>PROCESS</th><th>CALL ID</th><th>TOTAL SCORE</th><th>ACTIONS</th></tr></thead><tbody>
   ${pageRows.map((r,i)=>{const idx=advReportRows.indexOf(r),score=advFeedbackNum(r.Total_Score),cls=score<70?'score-critical':score<80?'score-needs':'score-warning';return `<tr><td>${from+i+1}</td><td><span class="adv-feedback-agent">${escapeHtml(r.Associate_Name||'--')}</span></td><td>${escapeHtml(r.Process||'--')}</td><td class="mono">${escapeHtml(r.Call_ID||'--')}</td><td><span class="adv-feedback-score ${cls}">${score===null?'--':score.toFixed(2)+'%'}</span></td><td><div class="adv-feedback-actions"><button class="btn primary small" type="button" onclick="advFeedbackPreview(${idx})">👁 Preview PDF</button><button class="btn gold small" type="button" onclick="advFeedbackDownload(${idx})">⬇ Download PDF</button><button class="btn small" type="button" onclick="advFeedbackPrint(${idx})">🖨 Print PDF</button></div></td></tr>`}).join('')}
-  </tbody></table></div><div class="adv-feedback-pagination"><button class="adv-feedback-page-btn" type="button" ${advFeedbackPage<=1?'disabled':''} onclick="advFeedbackGoPage(${advFeedbackPage-1})">‹</button>${buttons.map(p=>p==='…'?'<span class="adv-feedback-page-info">…</span>':`<button class="adv-feedback-page-btn ${p===advFeedbackPage?'active':''}" type="button" onclick="advFeedbackGoPage(${p})">${p}</button>`).join('')}<button class="adv-feedback-page-btn" type="button" ${advFeedbackPage>=pages?'disabled':''} onclick="advFeedbackGoPage(${advFeedbackPage+1})">›</button><span class="adv-feedback-page-info">Page ${advFeedbackPage} / ${pages}</span></div><div class="adv-feedback-note">📌 প্রতিটি PDF-তে unique Feedback Sheet Number ও QR code থাকবে। QR scan করলে Feedback Sheet Number এবং Call ID দেখা যাবে।</div>`;
+  </tbody></table></div><div class="adv-feedback-pagination"><button class="adv-feedback-page-btn" type="button" ${advFeedbackPage<=1?'disabled':''} onclick="advFeedbackGoPage(${advFeedbackPage-1})">‹</button>${buttons.map(p=>p==='…'?'<span class="adv-feedback-page-info">…</span>':`<button class="adv-feedback-page-btn ${p===advFeedbackPage?'active':''}" type="button" onclick="advFeedbackGoPage(${p})">${p}</button>`).join('')}<button class="adv-feedback-page-btn" type="button" ${advFeedbackPage>=pages?'disabled':''} onclick="advFeedbackGoPage(${advFeedbackPage+1})">›</button><span class="adv-feedback-page-info">Page ${advFeedbackPage} / ${pages}</span></div><div class="adv-feedback-note">📌 প্রতিটি PDF-তে unique Feedback Sheet Number QR থাকবে। Recording Link box-এর QR scan করলে সরাসরি ওই Call Recording খুলবে।</div>`;
 }
 function advFeedbackGoPage(page){advFeedbackPage=page;advFeedbackRenderList();document.getElementById('sqlAdvContent')?.scrollIntoView({behavior:'smooth',block:'start'});}
 
@@ -10368,32 +10356,58 @@ function advFeedbackParamRows(row){return ADV_FEEDBACK_PARAMS.map((p,i)=>{const 
 function advFeedbackPdfDoc(){if(!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF library failed to load.');return new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});}
 function advFeedbackSafeFileName(v){return String(v||'Feedback_Sheet').replace(/[<>:"/\\|?*]+/g,'_').replace(/\s+/g,'_').slice(0,120);}
 function advFeedbackSheetNumber(row){const id=advFeedbackNormalizeCallId(row&&row.Call_ID)||'NO_CALL_ID';let h=2166136261;for(let i=0;i<id.length;i++){h^=id.charCodeAt(i);h=Math.imul(h,16777619);}h>>>=0;const d=advFeedbackText(row&&row.Call_Date).replace(/[^0-9]/g,'').slice(-8)||'00000000';return `QAF-${d}-${String(h).padStart(10,'0')}`;}
-async function advFeedbackQrDataUrl(sheetNo,callId){
+async function advFeedbackQrDataUrl(sheetNo,callId,recordingUrl=''){
   if(!window.QRCode || typeof window.QRCode.toDataURL!=='function'){
     throw new Error('Offline QR generator is unavailable.');
   }
+  // The top QR identifies the Feedback Sheet. The Recording QR contains
+  // ONLY the actual recording URL so a phone scanner opens the recording directly.
+  const payload = recordingUrl && /^https?:\/\//i.test(String(recordingUrl).trim())
+    ? String(recordingUrl).trim()
+    : `QA FEEDBACK SHEET\\nFeedback Sheet No: ${sheetNo}\\nCall ID: ${callId||'--'}`;
   return await window.QRCode.toDataURL(
-    `QA FEEDBACK SHEET\nFeedback Sheet No: ${sheetNo}\nCall ID: ${callId||'--'}`,
+    payload,
     {width:220,margin:1,errorCorrectionLevel:'M'}
   );
 }
 function advFeedbackPdfDoc(){if(!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF library failed to load.');return new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});}
 function advFeedbackSafeFileName(v){return String(v||'Feedback_Sheet').replace(/[<>:"/\\|?*]+/g,'_').replace(/\s+/g,'_').slice(0,120);}
-function advFeedbackBox(doc,x,y,w,h,label,value,opts={}){doc.setFillColor(...(opts.fill||[247,249,252]));doc.setDrawColor(180,191,205);doc.setLineWidth(.25);doc.roundedRect(x,y,w,h,1.3,1.3,'FD');doc.setFont('helvetica','bold');doc.setFontSize(5.1);doc.setTextColor(78,92,108);doc.text(label.toUpperCase(),x+2,y+3.5);doc.setFontSize(opts.size||6.4);doc.setTextColor(...(opts.color||[24,38,55]));doc.text(doc.splitTextToSize(String(value||'—'),w-4).slice(0,2),x+2,y+7.3,{lineHeightFactor:1});}
-function advFeedbackRenderPdfPage(doc,row,qrData){
+function advFeedbackBox(doc,x,y,w,h,label,value,opts={}){doc.setFillColor(...(opts.fill||[247,249,252]));doc.setDrawColor(180,191,205);doc.setLineWidth(.25);doc.roundedRect(x,y,w,h,1.3,1.3,'FD');doc.setFont('helvetica','bold');doc.setFontSize(5.5);doc.setTextColor(78,92,108);doc.text(label.toUpperCase(),x+2,y+3.5);doc.setFontSize(opts.size||6.8);doc.setTextColor(...(opts.color||[24,38,55]));doc.text(doc.splitTextToSize(String(value||'—'),w-4).slice(0,2),x+2,y+7.3,{lineHeightFactor:1});}
+function advFeedbackRenderPdfPage(doc,row,qrData,recordingQrData){
  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=7,G=2.2,bw=(W-2*M-3*G)/4,bh=10.8,y0=22.5,sheetNo=advFeedbackSheetNumber(row);
  if(ADV_FEEDBACK_LOGO_DATA)try{doc.addImage(ADV_FEEDBACK_LOGO_DATA,'JPEG',M,4,44,11);}catch(e){}
- doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(15,31,52);doc.text('QA FEEDBACK SHEET',W/2,9,{align:'center'});doc.setFontSize(5.7);doc.setTextColor(82,98,116);doc.text('QUALITY ASSURANCE REPORT',W/2,12.2,{align:'center'});doc.setFontSize(5.5);doc.setTextColor(35,55,77);doc.text('Below 85% — Improvement Required',W-29,9,{align:'right'});if(qrData)try{doc.addImage(qrData,'PNG',W-M-17,3,15,15);}catch(e){}doc.setFontSize(4.2);doc.setTextColor(70,80,92);doc.text(sheetNo,W-M-1,19,{align:'right'});doc.setDrawColor(20,54,91);doc.setLineWidth(.7);doc.line(M,20.5,W-M,20.5);
+ doc.setFont('helvetica','bold');doc.setFontSize(15.0);doc.setTextColor(15,31,52);doc.text('QA FEEDBACK SHEET',W/2,9,{align:'center'});doc.setFontSize(6.6);doc.setTextColor(82,98,116);doc.text('QUALITY ASSURANCE REPORT',W/2,12.2,{align:'center'});doc.setFontSize(6.3);doc.setTextColor(35,55,77);doc.text('Below 85% — Improvement Required',W-29,9,{align:'right'});if(qrData)try{doc.addImage(qrData,'PNG',W-M-17,3,15,15);}catch(e){}doc.setFontSize(4.2);doc.setTextColor(70,80,92);doc.text(sheetNo,W-M-1,19,{align:'right'});doc.setDrawColor(20,54,91);doc.setLineWidth(.7);doc.line(M,20.5,W-M,20.5);
  advFeedbackBox(doc,M,y0,bw,bh,'Agent Name',row.Associate_Name);advFeedbackBox(doc,M+bw+G,y0,bw,bh,'Call ID',row.Call_ID,{size:5.6});advFeedbackBox(doc,M+2*(bw+G),y0,bw,bh,'Recording Link',row.Call_Link?'Click to Open':'Not available',{color:row.Call_Link?[0,92,160]:[110,110,110],size:5.8});advFeedbackBox(doc,M+3*(bw+G),y0,bw,bh,'Feedback Sheet No.',sheetNo,{size:5.2});
+ // Recording QR: scanning this code opens the exact recording URL.
+ if(recordingQrData && row.Call_Link){
+   try{
+     const rx=M+2*(bw+G)+bw-10.2, ry=y0+0.7;
+     doc.addImage(recordingQrData,'PNG',rx,ry,9.1,9.1);
+     doc.setFont('helvetica','bold');doc.setFontSize(4.0);doc.setTextColor(20,54,91);
+     doc.text('SCAN TO PLAY',rx-0.5,ry+10,{align:'right'});
+   }catch(e){ console.warn('Recording QR render failed:',e); }
+ }
  advFeedbackBox(doc,M,y0+bh+G,bw,bh,'Process',row.Process);advFeedbackBox(doc,M+bw+G,y0+bh+G,bw,bh,'Disposition',row.Disposition);const total=advFeedbackNum(row.Total_Score),scoreLabel=total===null?'Not available':total.toFixed(2)+'%';advFeedbackBox(doc,M+2*(bw+G),y0+bh+G,bw,bh,'Total Score',scoreLabel,{fill:[255,241,238],color:[198,45,38],size:7.8});advFeedbackBox(doc,M+3*(bw+G),y0+bh+G,bw,bh,'TL / Team Leader',row.TL_Name);
- const metaY=y0+2*bh+2*G;doc.setFillColor(248,250,252);doc.setDrawColor(205,213,223);doc.roundedRect(M,metaY,W-2*M,8,1.2,1.2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(5.25);doc.setTextColor(78,92,108);[`Call Date: ${advFeedbackDate(row.Call_Date)||'—'}`,`Call Time: ${advFeedbackTime(row.Call_Time)||'—'}`,`Language: ${row.Language||'—'}`,`Duration: ${row.Call_Duration||'—'}`].forEach((v,i)=>doc.text(v,M+3+i*((W-2*M-6)/4),metaY+5));if(row.Call_Link)doc.link(M+2*(bw+G),y0,bw,bh,{url:String(row.Call_Link)});
- const tableY=metaY+10.2,cols=[6,47,10,15,14,17,70],TW=cols.reduce((a,b)=>a+b,0),HH=5.5,RH=5.05;let x=M;doc.setFillColor(17,43,77);doc.rect(M,tableY,TW,HH,'F');doc.setFont('helvetica','bold');doc.setFontSize(4.8);doc.setTextColor(255,255,255);['SL','PARAMETER','MAX','OBTAINED','SCORE %','PASS / FAIL','REMARKS'].forEach((h,i)=>{doc.text(h,x+1.1,tableY+3.7);x+=cols[i];});
- advFeedbackParamRows(row).forEach((r,i)=>{const y=tableY+HH+i*RH;x=M;doc.setFillColor(...(i%2?[248,250,252]:[255,255,255]));doc.setDrawColor(195,204,214);doc.rect(M,y,TW,RH,'FD');const vals=[String(r.sl),r.label,String(r.max||'—'),String(r.obtained),r.pct,r.result,r.remarks];vals.forEach((v,j)=>{doc.setFont('helvetica',j===1||j===6?'normal':'bold');doc.setFontSize(j===6?3.95:(j===1?4.35:4.5));const tc=j===5?(r.result==='FAIL'?[198,45,38]:[22,132,82]):(j===4&&r.pct!=='—'?(r.result==='FAIL'?[198,45,38]:[22,132,82]):[38,47,58]);doc.setTextColor(...tc);const lines=doc.splitTextToSize(v,cols[j]-2.6);doc.text(lines.slice(0,2),x+1.1,y+1.85,{lineHeightFactor:.8});x+=cols[j];});});
- const after=tableY+HH+29*RH,footY=after+2.3;doc.setFillColor(237,244,251);doc.setDrawColor(154,174,197);doc.roundedRect(M,footY,W-2*M,7.5,1.2,1.2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(5.7);doc.setTextColor(35,53,72);doc.text('TOTAL SCORE',M+2.5,footY+4.9);doc.setFontSize(7.4);doc.setTextColor(198,45,38);doc.text(scoreLabel,M+27,footY+4.9);doc.setFontSize(5.2);doc.setTextColor(88,101,117);doc.text(total!==null&&total<85?'NEEDS IMPROVEMENT':'—',W-M-2.5,footY+4.9,{align:'right'});
- const sy=footY+9.8,sh=20.5,sw=(W-2*M-G)/2;doc.setFillColor(248,250,252);doc.setDrawColor(190,200,212);doc.roundedRect(M,sy,sw,sh,1.2,1.2,'FD');doc.roundedRect(M+sw+G,sy,sw,sh,1.2,1.2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(5.7);doc.setTextColor(25,58,96);doc.text('CALL SUMMARY',M+2.7,sy+4.6);doc.setFont('helvetica','normal');doc.setFontSize(4.45);doc.setTextColor(55,65,76);const summary=advFeedbackText(row.Call_Summary)||'Not available in source data.';doc.text(doc.splitTextToSize(summary,sw-5.5).slice(0,7),M+2.7,sy+8,{lineHeightFactor:.95});doc.setFont('helvetica','bold');doc.setFontSize(5.7);doc.setTextColor(25,58,96);doc.text('QA REMARKS / ACTION',M+sw+G+2.7,sy+4.6);doc.setFont('helvetica','normal');doc.setFontSize(4.35);doc.setTextColor(55,65,76);const fails=advFeedbackParamRows(row).filter(r=>r.result==='FAIL'&&r.remarks!=='—').slice(0,5);const action=fails.length?fails.map(r=>`${r.label}: ${r.remarks}`).join(' | '):'Focus on consistent adherence to all QA parameters.';doc.text(doc.splitTextToSize(action,sw-5.5).slice(0,7),M+sw+G+2.7,sy+8,{lineHeightFactor:.95});
- const fy=H-7;doc.setDrawColor(150,160,172);doc.line(M,fy-4,M+50,fy-4);doc.line(W-M-50,fy-4,W-M,fy-4);doc.setFont('helvetica','normal');doc.setFontSize(4.8);doc.setTextColor(95,105,115);doc.text('Agent Signature & Date',M,fy);doc.text('Feedback Given By',W-M-50,fy);doc.setFontSize(4.2);doc.text(`Feedback Sheet No: ${sheetNo}`,W/2,fy-1,{align:'center'});doc.text('Generated from QA Control Room — exact Call ID matched Audit Sheet details',W/2,fy+3,{align:'center'});
+ const metaY=y0+2*bh+2*G;doc.setFillColor(248,250,252);doc.setDrawColor(205,213,223);doc.roundedRect(M,metaY,W-2*M,8,1.2,1.2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(6.0);doc.setTextColor(78,92,108);[`Call Date: ${advFeedbackDate(row.Call_Date)||'—'}`,`Call Time: ${advFeedbackTime(row.Call_Time)||'—'}`,`Language: ${row.Language||'—'}`,`Duration: ${row.Call_Duration||'—'}`].forEach((v,i)=>doc.text(v,M+3+i*((W-2*M-6)/4),metaY+5));if(row.Call_Link)doc.link(M+2*(bw+G),y0,bw,bh,{url:String(row.Call_Link)});
+ const tableY=metaY+10.2,cols=[6,47,10,15,14,17,70],TW=cols.reduce((a,b)=>a+b,0),HH=5.8,RH=5.20;let x=M;doc.setFillColor(17,43,77);doc.rect(M,tableY,TW,HH,'F');doc.setFont('helvetica','bold');doc.setFontSize(5.9);doc.setTextColor(255,255,255);['SL','PARAMETER','MAX','OBTAINED','SCORE %','PASS / FAIL','REMARKS'].forEach((h,i)=>{doc.text(h,x+1.1,tableY+3.7);x+=cols[i];});
+ advFeedbackParamRows(row).forEach((r,i)=>{const y=tableY+HH+i*RH;x=M;doc.setFillColor(...(i%2?[248,250,252]:[255,255,255]));doc.setDrawColor(195,204,214);doc.rect(M,y,TW,RH,'FD');const vals=[String(r.sl),r.label,String(r.max||'—'),String(r.obtained),r.pct,r.result,r.remarks];vals.forEach((v,j)=>{doc.setFont('helvetica',j===1||j===6?'normal':'bold');doc.setFontSize(j===6?5.0:(j===1?5.35:5.4));const tc=j===5?(r.result==='FAIL'?[198,45,38]:[22,132,82]):(j===4&&r.pct!=='—'?(r.result==='FAIL'?[198,45,38]:[22,132,82]):[38,47,58]);doc.setTextColor(...tc);const lines=doc.splitTextToSize(v,cols[j]-2.6);doc.text(lines.slice(0,2),x+1.1,y+1.85,{lineHeightFactor:.8});x+=cols[j];});});
+ const after=tableY+HH+29*RH,footY=after+2.3;doc.setFillColor(237,244,251);doc.setDrawColor(154,174,197);doc.roundedRect(M,footY,W-2*M,7.5,1.2,1.2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(35,53,72);doc.text('TOTAL SCORE',M+2.5,footY+4.9);doc.setFontSize(8.5);doc.setTextColor(198,45,38);doc.text(scoreLabel,M+27,footY+4.9);doc.setFontSize(6.0);doc.setTextColor(88,101,117);doc.text(total!==null&&total<85?'NEEDS IMPROVEMENT':'—',W-M-2.5,footY+4.9,{align:'right'});
+ const sy=footY+9.8,sh=20.5,sw=(W-2*M-G)/2;doc.setFillColor(248,250,252);doc.setDrawColor(190,200,212);doc.roundedRect(M,sy,sw,sh,1.2,1.2,'FD');doc.roundedRect(M+sw+G,sy,sw,sh,1.2,1.2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(6.6);doc.setTextColor(25,58,96);doc.text('CALL SUMMARY',M+2.7,sy+4.6);doc.setFont('helvetica','normal');doc.setFontSize(5.55);doc.setTextColor(55,65,76);const summary=advFeedbackText(row.Call_Summary)||'Not available in source data.';doc.text(doc.splitTextToSize(summary,sw-5.5).slice(0,6),M+2.7,sy+8,{lineHeightFactor:.92});doc.setFont('helvetica','bold');doc.setFontSize(6.6);doc.setTextColor(25,58,96);doc.text('QA REMARKS / ACTION',M+sw+G+2.7,sy+4.6);doc.setFont('helvetica','normal');doc.setFontSize(5.45);doc.setTextColor(55,65,76);const fails=advFeedbackParamRows(row).filter(r=>r.result==='FAIL'&&r.remarks!=='—').slice(0,5);const action=fails.length?fails.map(r=>`${r.label}: ${r.remarks}`).join(' | '):'Focus on consistent adherence to all QA parameters.';doc.text(doc.splitTextToSize(action,sw-5.5).slice(0,6),M+sw+G+2.7,sy+8,{lineHeightFactor:.92});
+ const fy=H-7;doc.setDrawColor(150,160,172);doc.line(M,fy-4,M+50,fy-4);doc.line(W-M-50,fy-4,W-M,fy-4);doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.setTextColor(95,105,115);doc.text('Agent Signature & Date',M,fy);doc.text('Feedback Given By',W-M-50,fy);doc.setFontSize(4.9);doc.text(`Feedback Sheet No: ${sheetNo}`,W/2,fy-1,{align:'center'});doc.text('Generated from QA Control Room — exact Call ID matched Audit Sheet details',W/2,fy+3,{align:'center'});
 }
-async function advFeedbackBuildPdf(row){let merged=row;try{merged=advFeedbackMergeRow(row,await advFeedbackFindAuditRow(row));}catch(e){console.warn('Audit Sheet detail lookup failed:',e);}const sheetNo=advFeedbackSheetNumber(merged);const qr=await advFeedbackQrDataUrl(sheetNo,merged.Call_ID);const doc=advFeedbackPdfDoc();advFeedbackRenderPdfPage(doc,merged,qr);return {doc,row:merged,sheetNo};}
+async function advFeedbackBuildPdf(row){
+  let merged=row;
+  try{merged=advFeedbackMergeRow(row,await advFeedbackFindAuditRow(row));}
+  catch(e){console.warn('Audit Sheet detail lookup failed:',e);}
+  const sheetNo=advFeedbackSheetNumber(merged);
+  const qr=await advFeedbackQrDataUrl(sheetNo,merged.Call_ID);
+  const recordingQr=merged.Call_Link
+    ? await advFeedbackQrDataUrl(sheetNo,merged.Call_ID,merged.Call_Link)
+    : null;
+  const doc=advFeedbackPdfDoc();
+  advFeedbackRenderPdfPage(doc,merged,qr,recordingQr);
+  return {doc,row:merged,sheetNo};
+}
 async function advFeedbackDownload(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);doc.save(`${advFeedbackSafeFileName(`${merged.Process||'Process'}_${merged.Associate_Name||'Agent'}_${merged.Call_ID||'Call'}_QA_Feedback`)}.pdf`);sqlCenterLog(`QA Feedback PDF downloaded — ${merged.Associate_Name||''} / ${merged.Call_ID||''}`);}catch(e){alert('Feedback PDF তৈরি করা যায়নি: '+e.message);}}
 async function advFeedbackPreview(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);advFeedbackPreviewRow=merged;if(advFeedbackPreviewUrl)URL.revokeObjectURL(advFeedbackPreviewUrl);advFeedbackPreviewUrl=URL.createObjectURL(doc.output('blob'));document.getElementById('advFeedbackPreviewFrame').src=advFeedbackPreviewUrl;document.getElementById('advFeedbackPreviewOverlay').classList.add('active');}catch(e){alert('PDF Preview তৈরি করা যায়নি: '+e.message);}}
 function advFeedbackClosePreview(){const ov=document.getElementById('advFeedbackPreviewOverlay');if(ov)ov.classList.remove('active');}
@@ -10403,11 +10417,17 @@ async function advFeedbackPrint(index){try{const row=advReportRows[index];if(!ro
 function advReportSwitchTab(tab){
   advReportActiveTab = tab;
   document.querySelectorAll('.sql-adv-tab').forEach(t => t.classList.toggle('active', t.dataset.adv === tab));
+  // QA Feedback Sheets is shown only when its own tab is selected.
   advReportRenderActiveTab();
+  if(tab === 'FEEDBACK'){
+    document.getElementById('sqlAdvContent')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
 }
 
 function advReportRenderActiveTab(){
   const contentEl = document.getElementById('sqlAdvContent');
+  const legacyFeedback = document.getElementById('advFeedbackSection');
+  if(legacyFeedback) legacyFeedback.style.display = 'none';
   if(!advReportRows.length){
     contentEl.innerHTML = '<div class="sql-adv-empty">এই filter-এর জন্য কোনো data পাওয়া যায়নি।</div>';
     return;
