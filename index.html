@@ -2134,100 +2134,6 @@ aside
 .sql-adv-rank-top{color:var(--agent);font-weight:800;}
 .sql-adv-rank-bottom{color:var(--need);font-weight:800;}
 
-
-/* ===================== FEEDBACK SHEET — BELOW 85 ===================== */
-.adv-feedback-wrap{
-  margin-top:18px;
-  border:1px solid var(--border);
-  border-radius:12px;
-  background:linear-gradient(180deg,rgba(14,26,43,.96),rgba(8,16,28,.96));
-  overflow:hidden;
-}
-.adv-feedback-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:14px 16px;
-  border-bottom:1px solid var(--border);
-}
-.adv-feedback-title{font-size:15px;font-weight:800;color:#fff;}
-.adv-feedback-subtitle{font-size:11px;color:var(--text-muted);margin-top:3px;}
-.adv-feedback-count{
-  min-width:70px;
-  text-align:center;
-  padding:8px 12px;
-  border-radius:9px;
-  border:1px solid rgba(224,82,74,.35);
-  background:rgba(224,82,74,.12);
-  color:#ff8d86;
-  font-weight:800;
-  font-size:12px;
-}
-.adv-feedback-process{
-  border-top:1px solid rgba(32,56,89,.7);
-  padding:14px 16px;
-}
-.adv-feedback-process:first-child{border-top:0;}
-.adv-feedback-process-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-.adv-feedback-process-name{font-weight:800;font-size:13px;color:#fff;}
-.adv-feedback-process-meta{font-size:10.5px;color:var(--text-muted);}
-.adv-feedback-list{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:9px;
-}
-.adv-feedback-card{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:10px 12px;
-  border:1px solid var(--border);
-  border-radius:9px;
-  background:rgba(20,37,61,.72);
-}
-.adv-feedback-card-main{min-width:0;}
-.adv-feedback-agent{font-weight:800;font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.adv-feedback-meta{font-size:10px;color:var(--text-muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.adv-feedback-score{
-  flex:0 0 auto;
-  min-width:48px;
-  text-align:center;
-  padding:5px 8px;
-  border-radius:7px;
-  background:rgba(224,82,74,.16);
-  color:#ff8d86;
-  font-weight:900;
-  font-size:12px;
-}
-.adv-feedback-actions{display:flex;gap:6px;flex:0 0 auto;}
-.adv-feedback-empty{
-  padding:18px;
-  text-align:center;
-  color:var(--agent);
-  font-size:12px;
-}
-.adv-feedback-note{
-  padding:10px 16px;
-  border-top:1px solid var(--border);
-  color:var(--text-muted);
-  font-size:10.5px;
-}
-@media(max-width:900px){
-  .adv-feedback-list{grid-template-columns:1fr;}
-  .adv-feedback-head,.adv-feedback-process-head{align-items:flex-start;flex-direction:column;}
-}
-
-/* Feedback PDF page helpers */
-.feedback-pdf-hidden{display:none !important;}
-
 /* Print / PDF export: only the active advanced-report content is printed */
 @media print{
   body *{visibility:hidden;}
@@ -4459,6 +4365,68 @@ transform:translateY(0);
   @media (max-width:900px){
     .sql-dup-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
   }
+
+/* Agent View — Total Score conditional formatting */
+.agent-score-cell{
+  font-weight:800;
+  text-align:center;
+  border-radius:6px;
+  white-space:nowrap;
+}
+.agent-score-cell.score-critical{
+  color:#ff5c5c;
+  background:rgba(255,60,60,.12);
+}
+.agent-score-cell.score-needs{
+  color:#ff9f43;
+  background:rgba(255,159,67,.12);
+}
+.agent-score-cell.score-average{
+  color:#ffd166;
+  background:rgba(255,209,102,.12);
+}
+.agent-score-cell.score-good{
+  color:#2dd4bf;
+  background:rgba(45,212,191,.10);
+}
+.agent-score-cell.score-excellent{
+  color:#4ade80;
+  background:rgba(74,222,128,.12);
+}
+.agent-score-cell.score-na{
+  color:var(--text-muted);
+}
+
+
+/* Advanced Reports is a separate Admin-only top-level tab */
+#panel-ADVANCEDREPORTS{width:100%;}
+
+
+/* ===================== QA FEEDBACK SHEETS — BELOW 85 ===================== */
+.adv-feedback-wrap{display:none;margin-top:20px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,rgba(13,25,42,.98),rgba(7,14,25,.98));overflow:hidden;}
+.adv-feedback-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 17px;border-bottom:1px solid var(--border);}
+.adv-feedback-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:900;color:#fff;}
+.adv-feedback-subtitle{font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;}
+.adv-feedback-count{min-width:76px;text-align:center;padding:8px 12px;border-radius:10px;border:1px solid rgba(224,82,74,.45);background:rgba(224,82,74,.12);color:#ff9b94;font-weight:900;font-size:12px;}
+.adv-feedback-table-wrap{padding:10px 14px 14px;overflow:auto;}
+.adv-feedback-table{width:100%;border-collapse:separate;border-spacing:0;min-width:780px;}
+.adv-feedback-table th{background:#122b4d;color:#dce9fa;font-size:10px;text-transform:uppercase;letter-spacing:.6px;padding:9px 8px;border-bottom:1px solid #2a4c75;text-align:left;}
+.adv-feedback-table td{padding:9px 8px;border-bottom:1px solid rgba(42,76,117,.55);font-size:11px;color:#d9e3ef;vertical-align:middle;}
+.adv-feedback-table tbody tr:hover td{background:rgba(51,201,176,.05);}
+.adv-feedback-agent{font-weight:850;color:#fff;}
+.adv-feedback-score{font-weight:950;font-family:'IBM Plex Mono',monospace;color:#ff746c;background:rgba(224,82,74,.12);padding:4px 7px;border-radius:6px;display:inline-block;}
+.adv-feedback-actions{display:flex;gap:5px;flex-wrap:wrap;}
+.adv-feedback-actions .btn{font-size:10px;padding:6px 8px;}
+.adv-feedback-empty{padding:22px;text-align:center;color:var(--agent);font-size:12px;}
+.adv-feedback-note{padding:10px 15px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text-muted);line-height:1.55;}
+.adv-feedback-preview-overlay{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.adv-feedback-preview-overlay.active{display:flex;}
+.adv-feedback-preview-box{width:min(1000px,96vw);height:min(92vh,900px);background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.55);display:flex;flex-direction:column;}
+.adv-feedback-preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#10213a;color:#fff;}
+.adv-feedback-preview-frame{flex:1;border:0;width:100%;background:#fff;}
+@media(max-width:800px){.adv-feedback-head{align-items:flex-start;flex-direction:column;}.adv-feedback-table-wrap{padding:8px;}}
+/* QA Feedback Sheets — paginated Admin report tab */
+.adv-feedback-tab-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.adv-feedback-tab-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:900;color:#fff}.adv-feedback-tab-sub{font-size:11px;color:var(--text-muted);margin-top:3px}.adv-feedback-pagination{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0 2px}.adv-feedback-page-info{font-size:11px;color:var(--text-muted);min-width:100px;text-align:center}.adv-feedback-page-btn{min-width:34px;padding:6px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);color:var(--text);cursor:pointer;font-weight:800}.adv-feedback-page-btn:disabled{opacity:.35;cursor:not-allowed}.adv-feedback-page-btn.active{background:#1d4f7a;color:#fff;border-color:#3a75aa}.adv-feedback-score.score-critical{color:#d52b2b;background:#ffe9e7}.adv-feedback-score.score-needs{color:#c85a13;background:#fff0df}.adv-feedback-score.score-warning{color:#9a6b00;background:#fff6d8}
 </style>
 
 </style>
@@ -4979,6 +4947,12 @@ transform:translateY(0);
     <span class="dot"></span>
     🗄️ SQL Control Center
   </div>
+<div class="nav-item sql-control-item"
+     data-tab="ADVANCEDREPORTS"
+     onclick="switchTab('ADVANCEDREPORTS')">
+  <span class="dot"></span>
+  📈 Advanced Reports
+</div>
 </div>
 
 <div class="nav-section admin-only" style="display:none;">
@@ -5239,6 +5213,15 @@ transform:translateY(0);
     <!-- ============================================================
          ADVANCED REPORTS — new, additive section inside SQL Control Center
          ============================================================ -->
+
+  </div>
+</div>
+
+
+<!-- ============================================================
+     ADVANCED REPORTS — ADMIN ONLY, SEPARATE TOP-LEVEL TAB
+     ============================================================ -->
+<div class="panel" id="panel-ADVANCEDREPORTS">
     <div class="sql-adv-wrap">
       <div class="sql-adv-title">📈 Advanced Reports</div>
       <div class="sql-adv-subtitle">
@@ -5280,6 +5263,7 @@ transform:translateY(0);
         <div class="sql-adv-tab" data-adv="COMPARE" onclick="advReportSwitchTab('COMPARE')">⚖️ Process / TL Compare</div>
         <div class="sql-adv-tab" data-adv="FATAL" onclick="advReportSwitchTab('FATAL')">☠️ FATAL Tracker</div>
         <div class="sql-adv-tab" data-adv="LEADER" onclick="advReportSwitchTab('LEADER')">🏆 Leaderboard</div>
+        <div class="sql-adv-tab" data-adv="FEEDBACK" onclick="advReportSwitchTab('FEEDBACK')">📝 QA Feedback Sheets</div>
       </div>
 
       <div id="sqlAdvPrintArea">
@@ -5288,27 +5272,18 @@ transform:translateY(0);
         </div>
       </div>
 
-      <div class="adv-feedback-wrap" id="advFeedbackSection">
+      <!-- QA FEEDBACK SHEETS — BELOW 85 -->
+      <section class="adv-feedback-wrap" id="advFeedbackSection">
         <div class="adv-feedback-head">
           <div>
-            <div class="adv-feedback-title">📝 Feedback Sheet — Below 85</div>
-            <div class="adv-feedback-subtitle">
-              Current filter-এর মধ্যে Total Score 85-এর নিচে হলে এই feedback sheet automatically তৈরি হবে।
-              Process-wise group করা থাকবে।
-            </div>
+            <div class="adv-feedback-title">📝 QA Feedback Sheets — Below 85 Score</div>
+            <div class="adv-feedback-subtitle">বর্তমান Advanced Reports filter-এর মধ্যে Total Score 85%-এর নিচে থাকা প্রতিটি audited call-এর জন্য আলাদা 1-page Feedback Sheet।</div>
           </div>
           <div class="adv-feedback-count" id="advFeedbackCount">0 Calls</div>
         </div>
-        <div id="advFeedbackBody">
-          <div class="adv-feedback-empty">প্রথমে Advanced Report load করুন।</div>
-        </div>
-        <div class="adv-feedback-note">
-          📄 PDF format attached Feedback Sheet-এর মতো হবে — উপরে GTPL KCBPL logo, call details, score, সব parameter, remarks এবং call summary থাকবে।
-          Download button চাপলে PDF save হবে।
-        </div>
-      </div>
+        <div id="advFeedbackBody"><div class="adv-feedback-empty">প্রথমে Advanced Report load করুন।</div></div>
+      </section>
     </div>
-  </div>
 </div>
 
 <div class="panel" id="panel-UPDATES">
@@ -5711,6 +5686,1341 @@ transform:translateY(0);
 <div class="floating-scroll-logo" id="floatingScrollLogo">
   <img src="logo2.png" alt="Logo" onerror="this.parentElement.style.display='none';">
 </div>
+<script>
+/* ============================================================
+   OFFLINE QR GENERATOR
+   Bundled into this HTML — no CDN/network dependency.
+   ============================================================ */
+(function(){
+  'use strict';
+  var __qrModules = {};
+  var __qrCache = {};
+
+__qrModules["QRMode.js"] = function(module, exports, __qrRequire){
+module.exports = {
+    MODE_NUMBER :       1 << 0,
+    MODE_ALPHA_NUM :    1 << 1,
+    MODE_8BIT_BYTE :    1 << 2,
+    MODE_KANJI :        1 << 3
+};
+
+};
+
+__qrModules["QRErrorCorrectLevel.js"] = function(module, exports, __qrRequire){
+module.exports = {
+	L : 1,
+	M : 0,
+	Q : 3,
+	H : 2
+};
+
+
+};
+
+__qrModules["QRMaskPattern.js"] = function(module, exports, __qrRequire){
+module.exports = {
+	PATTERN000 : 0,
+	PATTERN001 : 1,
+	PATTERN010 : 2,
+	PATTERN011 : 3,
+	PATTERN100 : 4,
+	PATTERN101 : 5,
+	PATTERN110 : 6,
+	PATTERN111 : 7
+};
+
+};
+
+__qrModules["QRMath.js"] = function(module, exports, __qrRequire){
+var QRMath = {
+
+	glog : function(n) {
+	
+		if (n < 1) {
+			throw new Error("glog(" + n + ")");
+		}
+		
+		return QRMath.LOG_TABLE[n];
+	},
+	
+	gexp : function(n) {
+	
+		while (n < 0) {
+			n += 255;
+		}
+	
+		while (n >= 256) {
+			n -= 255;
+		}
+	
+		return QRMath.EXP_TABLE[n];
+	},
+	
+	EXP_TABLE : new Array(256),
+	
+	LOG_TABLE : new Array(256)
+
+};
+	
+for (var i = 0; i < 8; i++) {
+	QRMath.EXP_TABLE[i] = 1 << i;
+}
+for (var i = 8; i < 256; i++) {
+	QRMath.EXP_TABLE[i] = QRMath.EXP_TABLE[i - 4]
+		^ QRMath.EXP_TABLE[i - 5]
+		^ QRMath.EXP_TABLE[i - 6]
+		^ QRMath.EXP_TABLE[i - 8];
+}
+for (var i = 0; i < 255; i++) {
+	QRMath.LOG_TABLE[QRMath.EXP_TABLE[i] ] = i;
+}
+
+module.exports = QRMath;
+
+};
+
+__qrModules["QR8bitByte.js"] = function(module, exports, __qrRequire){
+var QRMode = __qrRequire('QRMode.js');
+
+function QR8bitByte(data) {
+	this.mode = QRMode.MODE_8BIT_BYTE;
+	this.data = data;
+}
+
+QR8bitByte.prototype = {
+
+	getLength : function() {
+		return this.data.length;
+	},
+	
+	write : function(buffer) {
+		for (var i = 0; i < this.data.length; i++) {
+			// not JIS ...
+			buffer.put(this.data.charCodeAt(i), 8);
+		}
+	}
+};
+
+module.exports = QR8bitByte;
+
+};
+
+__qrModules["QRPolynomial.js"] = function(module, exports, __qrRequire){
+var QRMath = __qrRequire('QRMath.js');
+
+function QRPolynomial(num, shift) {
+	if (num.length === undefined) {
+		throw new Error(num.length + "/" + shift);
+	}
+
+	var offset = 0;
+
+	while (offset < num.length && num[offset] === 0) {
+		offset++;
+	}
+
+	this.num = new Array(num.length - offset + shift);
+	for (var i = 0; i < num.length - offset; i++) {
+		this.num[i] = num[i + offset];
+	}
+}
+
+QRPolynomial.prototype = {
+
+	get : function(index) {
+		return this.num[index];
+	},
+	
+	getLength : function() {
+		return this.num.length;
+	},
+	
+	multiply : function(e) {
+	
+		var num = new Array(this.getLength() + e.getLength() - 1);
+	
+		for (var i = 0; i < this.getLength(); i++) {
+			for (var j = 0; j < e.getLength(); j++) {
+				num[i + j] ^= QRMath.gexp(QRMath.glog(this.get(i) ) + QRMath.glog(e.get(j) ) );
+			}
+		}
+	
+		return new QRPolynomial(num, 0);
+	},
+	
+	mod : function(e) {
+	
+		if (this.getLength() - e.getLength() < 0) {
+			return this;
+		}
+	
+		var ratio = QRMath.glog(this.get(0) ) - QRMath.glog(e.get(0) );
+	
+		var num = new Array(this.getLength() );
+		
+		for (var i = 0; i < this.getLength(); i++) {
+			num[i] = this.get(i);
+		}
+		
+		for (var x = 0; x < e.getLength(); x++) {
+			num[x] ^= QRMath.gexp(QRMath.glog(e.get(x) ) + ratio);
+		}
+	
+		// recursive call
+		return new QRPolynomial(num, 0).mod(e);
+	}
+};
+
+module.exports = QRPolynomial;
+
+};
+
+__qrModules["QRRSBlock.js"] = function(module, exports, __qrRequire){
+var QRErrorCorrectLevel = __qrRequire('QRErrorCorrectLevel.js');
+
+function QRRSBlock(totalCount, dataCount) {
+	this.totalCount = totalCount;
+	this.dataCount  = dataCount;
+}
+
+QRRSBlock.RS_BLOCK_TABLE = [
+
+	// L
+	// M
+	// Q
+	// H
+
+	// 1
+	[1, 26, 19],
+	[1, 26, 16],
+	[1, 26, 13],
+	[1, 26, 9],
+	
+	// 2
+	[1, 44, 34],
+	[1, 44, 28],
+	[1, 44, 22],
+	[1, 44, 16],
+
+	// 3
+	[1, 70, 55],
+	[1, 70, 44],
+	[2, 35, 17],
+	[2, 35, 13],
+
+	// 4		
+	[1, 100, 80],
+	[2, 50, 32],
+	[2, 50, 24],
+	[4, 25, 9],
+	
+	// 5
+	[1, 134, 108],
+	[2, 67, 43],
+	[2, 33, 15, 2, 34, 16],
+	[2, 33, 11, 2, 34, 12],
+	
+	// 6
+	[2, 86, 68],
+	[4, 43, 27],
+	[4, 43, 19],
+	[4, 43, 15],
+	
+	// 7		
+	[2, 98, 78],
+	[4, 49, 31],
+	[2, 32, 14, 4, 33, 15],
+	[4, 39, 13, 1, 40, 14],
+	
+	// 8
+	[2, 121, 97],
+	[2, 60, 38, 2, 61, 39],
+	[4, 40, 18, 2, 41, 19],
+	[4, 40, 14, 2, 41, 15],
+	
+	// 9
+	[2, 146, 116],
+	[3, 58, 36, 2, 59, 37],
+	[4, 36, 16, 4, 37, 17],
+	[4, 36, 12, 4, 37, 13],
+	
+	// 10		
+	[2, 86, 68, 2, 87, 69],
+	[4, 69, 43, 1, 70, 44],
+	[6, 43, 19, 2, 44, 20],
+	[6, 43, 15, 2, 44, 16],
+
+	// 11
+	[4, 101, 81],
+	[1, 80, 50, 4, 81, 51],
+	[4, 50, 22, 4, 51, 23],
+	[3, 36, 12, 8, 37, 13],
+
+	// 12
+	[2, 116, 92, 2, 117, 93],
+	[6, 58, 36, 2, 59, 37],
+	[4, 46, 20, 6, 47, 21],
+	[7, 42, 14, 4, 43, 15],
+
+	// 13
+	[4, 133, 107],
+	[8, 59, 37, 1, 60, 38],
+	[8, 44, 20, 4, 45, 21],
+	[12, 33, 11, 4, 34, 12],
+
+	// 14
+	[3, 145, 115, 1, 146, 116],
+	[4, 64, 40, 5, 65, 41],
+	[11, 36, 16, 5, 37, 17],
+	[11, 36, 12, 5, 37, 13],
+
+	// 15
+	[5, 109, 87, 1, 110, 88],
+	[5, 65, 41, 5, 66, 42],
+	[5, 54, 24, 7, 55, 25],
+	[11, 36, 12],
+
+	// 16
+	[5, 122, 98, 1, 123, 99],
+	[7, 73, 45, 3, 74, 46],
+	[15, 43, 19, 2, 44, 20],
+	[3, 45, 15, 13, 46, 16],
+
+	// 17
+	[1, 135, 107, 5, 136, 108],
+	[10, 74, 46, 1, 75, 47],
+	[1, 50, 22, 15, 51, 23],
+	[2, 42, 14, 17, 43, 15],
+
+	// 18
+	[5, 150, 120, 1, 151, 121],
+	[9, 69, 43, 4, 70, 44],
+	[17, 50, 22, 1, 51, 23],
+	[2, 42, 14, 19, 43, 15],
+
+	// 19
+	[3, 141, 113, 4, 142, 114],
+	[3, 70, 44, 11, 71, 45],
+	[17, 47, 21, 4, 48, 22],
+	[9, 39, 13, 16, 40, 14],
+
+	// 20
+	[3, 135, 107, 5, 136, 108],
+	[3, 67, 41, 13, 68, 42],
+	[15, 54, 24, 5, 55, 25],
+	[15, 43, 15, 10, 44, 16],
+
+	// 21
+	[4, 144, 116, 4, 145, 117],
+	[17, 68, 42],
+	[17, 50, 22, 6, 51, 23],
+	[19, 46, 16, 6, 47, 17],
+
+	// 22
+	[2, 139, 111, 7, 140, 112],
+	[17, 74, 46],
+	[7, 54, 24, 16, 55, 25],
+	[34, 37, 13],
+
+	// 23
+	[4, 151, 121, 5, 152, 122],
+	[4, 75, 47, 14, 76, 48],
+	[11, 54, 24, 14, 55, 25],
+	[16, 45, 15, 14, 46, 16],
+
+	// 24
+	[6, 147, 117, 4, 148, 118],
+	[6, 73, 45, 14, 74, 46],
+	[11, 54, 24, 16, 55, 25],
+	[30, 46, 16, 2, 47, 17],
+
+	// 25
+	[8, 132, 106, 4, 133, 107],
+	[8, 75, 47, 13, 76, 48],
+	[7, 54, 24, 22, 55, 25],
+	[22, 45, 15, 13, 46, 16],
+
+	// 26
+	[10, 142, 114, 2, 143, 115],
+	[19, 74, 46, 4, 75, 47],
+	[28, 50, 22, 6, 51, 23],
+	[33, 46, 16, 4, 47, 17],
+
+	// 27
+	[8, 152, 122, 4, 153, 123],
+	[22, 73, 45, 3, 74, 46],
+	[8, 53, 23, 26, 54, 24],
+	[12, 45, 15, 28, 46, 16],
+
+	// 28
+	[3, 147, 117, 10, 148, 118],
+	[3, 73, 45, 23, 74, 46],
+	[4, 54, 24, 31, 55, 25],
+	[11, 45, 15, 31, 46, 16],
+
+	// 29
+	[7, 146, 116, 7, 147, 117],
+	[21, 73, 45, 7, 74, 46],
+	[1, 53, 23, 37, 54, 24],
+	[19, 45, 15, 26, 46, 16],
+
+	// 30
+	[5, 145, 115, 10, 146, 116],
+	[19, 75, 47, 10, 76, 48],
+	[15, 54, 24, 25, 55, 25],
+	[23, 45, 15, 25, 46, 16],
+
+	// 31
+	[13, 145, 115, 3, 146, 116],
+	[2, 74, 46, 29, 75, 47],
+	[42, 54, 24, 1, 55, 25],
+	[23, 45, 15, 28, 46, 16],
+
+	// 32
+	[17, 145, 115],
+	[10, 74, 46, 23, 75, 47],
+	[10, 54, 24, 35, 55, 25],
+	[19, 45, 15, 35, 46, 16],
+
+	// 33
+	[17, 145, 115, 1, 146, 116],
+	[14, 74, 46, 21, 75, 47],
+	[29, 54, 24, 19, 55, 25],
+	[11, 45, 15, 46, 46, 16],
+
+	// 34
+	[13, 145, 115, 6, 146, 116],
+	[14, 74, 46, 23, 75, 47],
+	[44, 54, 24, 7, 55, 25],
+	[59, 46, 16, 1, 47, 17],
+
+	// 35
+	[12, 151, 121, 7, 152, 122],
+	[12, 75, 47, 26, 76, 48],
+	[39, 54, 24, 14, 55, 25],
+	[22, 45, 15, 41, 46, 16],
+
+	// 36
+	[6, 151, 121, 14, 152, 122],
+	[6, 75, 47, 34, 76, 48],
+	[46, 54, 24, 10, 55, 25],
+	[2, 45, 15, 64, 46, 16],
+
+	// 37
+	[17, 152, 122, 4, 153, 123],
+	[29, 74, 46, 14, 75, 47],
+	[49, 54, 24, 10, 55, 25],
+	[24, 45, 15, 46, 46, 16],
+
+	// 38
+	[4, 152, 122, 18, 153, 123],
+	[13, 74, 46, 32, 75, 47],
+	[48, 54, 24, 14, 55, 25],
+	[42, 45, 15, 32, 46, 16],
+
+	// 39
+	[20, 147, 117, 4, 148, 118],
+	[40, 75, 47, 7, 76, 48],
+	[43, 54, 24, 22, 55, 25],
+	[10, 45, 15, 67, 46, 16],
+
+	// 40
+	[19, 148, 118, 6, 149, 119],
+	[18, 75, 47, 31, 76, 48],
+	[34, 54, 24, 34, 55, 25],
+	[20, 45, 15, 61, 46, 16]
+];
+
+QRRSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
+	
+	var rsBlock = QRRSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+	
+	if (rsBlock === undefined) {
+		throw new Error("bad rs block @ typeNumber:" + typeNumber + "/errorCorrectLevel:" + errorCorrectLevel);
+	}
+
+	var length = rsBlock.length / 3;
+	
+	var list = [];
+	
+	for (var i = 0; i < length; i++) {
+
+		var count = rsBlock[i * 3 + 0];
+		var totalCount = rsBlock[i * 3 + 1];
+		var dataCount  = rsBlock[i * 3 + 2];
+
+		for (var j = 0; j < count; j++) {
+			list.push(new QRRSBlock(totalCount, dataCount) );	
+		}
+	}
+	
+	return list;
+};
+
+QRRSBlock.getRsBlockTable = function(typeNumber, errorCorrectLevel) {
+
+	switch(errorCorrectLevel) {
+	case QRErrorCorrectLevel.L :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+	case QRErrorCorrectLevel.M :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+	case QRErrorCorrectLevel.Q :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+	case QRErrorCorrectLevel.H :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+	default :
+		return undefined;
+	}
+};
+
+module.exports = QRRSBlock;
+
+};
+
+__qrModules["QRUtil.js"] = function(module, exports, __qrRequire){
+var QRMode = __qrRequire('QRMode.js');
+var QRPolynomial = __qrRequire('QRPolynomial.js');
+var QRMath = __qrRequire('QRMath.js');
+var QRMaskPattern = __qrRequire('QRMaskPattern.js');
+
+var QRUtil = {
+
+    PATTERN_POSITION_TABLE : [
+        [],
+        [6, 18],
+        [6, 22],
+        [6, 26],
+        [6, 30],
+        [6, 34],
+        [6, 22, 38],
+        [6, 24, 42],
+        [6, 26, 46],
+        [6, 28, 50],
+        [6, 30, 54],        
+        [6, 32, 58],
+        [6, 34, 62],
+        [6, 26, 46, 66],
+        [6, 26, 48, 70],
+        [6, 26, 50, 74],
+        [6, 30, 54, 78],
+        [6, 30, 56, 82],
+        [6, 30, 58, 86],
+        [6, 34, 62, 90],
+        [6, 28, 50, 72, 94],
+        [6, 26, 50, 74, 98],
+        [6, 30, 54, 78, 102],
+        [6, 28, 54, 80, 106],
+        [6, 32, 58, 84, 110],
+        [6, 30, 58, 86, 114],
+        [6, 34, 62, 90, 118],
+        [6, 26, 50, 74, 98, 122],
+        [6, 30, 54, 78, 102, 126],
+        [6, 26, 52, 78, 104, 130],
+        [6, 30, 56, 82, 108, 134],
+        [6, 34, 60, 86, 112, 138],
+        [6, 30, 58, 86, 114, 142],
+        [6, 34, 62, 90, 118, 146],
+        [6, 30, 54, 78, 102, 126, 150],
+        [6, 24, 50, 76, 102, 128, 154],
+        [6, 28, 54, 80, 106, 132, 158],
+        [6, 32, 58, 84, 110, 136, 162],
+        [6, 26, 54, 82, 110, 138, 166],
+        [6, 30, 58, 86, 114, 142, 170]
+    ],
+
+    G15 : (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0),
+    G18 : (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0),
+    G15_MASK : (1 << 14) | (1 << 12) | (1 << 10)    | (1 << 4) | (1 << 1),
+
+    getBCHTypeInfo : function(data) {
+        var d = data << 10;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) {
+            d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) ) );    
+        }
+        return ( (data << 10) | d) ^ QRUtil.G15_MASK;
+    },
+
+    getBCHTypeNumber : function(data) {
+        var d = data << 12;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) {
+            d ^= (QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) ) );    
+        }
+        return (data << 12) | d;
+    },
+
+    getBCHDigit : function(data) {
+
+        var digit = 0;
+
+        while (data !== 0) {
+            digit++;
+            data >>>= 1;
+        }
+
+        return digit;
+    },
+
+    getPatternPosition : function(typeNumber) {
+        return QRUtil.PATTERN_POSITION_TABLE[typeNumber - 1];
+    },
+
+    getMask : function(maskPattern, i, j) {
+        
+        switch (maskPattern) {
+            
+        case QRMaskPattern.PATTERN000 : return (i + j) % 2 === 0;
+        case QRMaskPattern.PATTERN001 : return i % 2 === 0;
+        case QRMaskPattern.PATTERN010 : return j % 3 === 0;
+        case QRMaskPattern.PATTERN011 : return (i + j) % 3 === 0;
+        case QRMaskPattern.PATTERN100 : return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 === 0;
+        case QRMaskPattern.PATTERN101 : return (i * j) % 2 + (i * j) % 3 === 0;
+        case QRMaskPattern.PATTERN110 : return ( (i * j) % 2 + (i * j) % 3) % 2 === 0;
+        case QRMaskPattern.PATTERN111 : return ( (i * j) % 3 + (i + j) % 2) % 2 === 0;
+
+        default :
+            throw new Error("bad maskPattern:" + maskPattern);
+        }
+    },
+
+    getErrorCorrectPolynomial : function(errorCorrectLength) {
+
+        var a = new QRPolynomial([1], 0);
+
+        for (var i = 0; i < errorCorrectLength; i++) {
+            a = a.multiply(new QRPolynomial([1, QRMath.gexp(i)], 0) );
+        }
+
+        return a;
+    },
+
+    getLengthInBits : function(mode, type) {
+
+        if (1 <= type && type < 10) {
+
+            // 1 - 9
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 10;
+            case QRMode.MODE_ALPHA_NUM  : return 9;
+            case QRMode.MODE_8BIT_BYTE  : return 8;
+            case QRMode.MODE_KANJI      : return 8;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else if (type < 27) {
+
+            // 10 - 26
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 12;
+            case QRMode.MODE_ALPHA_NUM  : return 11;
+            case QRMode.MODE_8BIT_BYTE  : return 16;
+            case QRMode.MODE_KANJI      : return 10;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else if (type < 41) {
+
+            // 27 - 40
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 14;
+            case QRMode.MODE_ALPHA_NUM  : return 13;
+            case QRMode.MODE_8BIT_BYTE  : return 16;
+            case QRMode.MODE_KANJI      : return 12;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else {
+            throw new Error("type:" + type);
+        }
+    },
+
+    getLostPoint : function(qrCode) {
+        
+        var moduleCount = qrCode.getModuleCount();
+        var lostPoint = 0;
+        var row = 0; 
+        var col = 0;
+
+        
+        // LEVEL1
+        
+        for (row = 0; row < moduleCount; row++) {
+
+            for (col = 0; col < moduleCount; col++) {
+
+                var sameCount = 0;
+                var dark = qrCode.isDark(row, col);
+
+                for (var r = -1; r <= 1; r++) {
+
+                    if (row + r < 0 || moduleCount <= row + r) {
+                        continue;
+                    }
+
+                    for (var c = -1; c <= 1; c++) {
+
+                        if (col + c < 0 || moduleCount <= col + c) {
+                            continue;
+                        }
+
+                        if (r === 0 && c === 0) {
+                            continue;
+                        }
+
+                        if (dark === qrCode.isDark(row + r, col + c) ) {
+                            sameCount++;
+                        }
+                    }
+                }
+
+                if (sameCount > 5) {
+                    lostPoint += (3 + sameCount - 5);
+                }
+            }
+        }
+
+        // LEVEL2
+
+        for (row = 0; row < moduleCount - 1; row++) {
+            for (col = 0; col < moduleCount - 1; col++) {
+                var count = 0;
+                if (qrCode.isDark(row,     col    ) ) count++;
+                if (qrCode.isDark(row + 1, col    ) ) count++;
+                if (qrCode.isDark(row,     col + 1) ) count++;
+                if (qrCode.isDark(row + 1, col + 1) ) count++;
+                if (count === 0 || count === 4) {
+                    lostPoint += 3;
+                }
+            }
+        }
+
+        // LEVEL3
+
+        for (row = 0; row < moduleCount; row++) {
+            for (col = 0; col < moduleCount - 6; col++) {
+                if (qrCode.isDark(row, col) && 
+                        !qrCode.isDark(row, col + 1) && 
+                         qrCode.isDark(row, col + 2) && 
+                         qrCode.isDark(row, col + 3) && 
+                         qrCode.isDark(row, col + 4) && 
+                        !qrCode.isDark(row, col + 5) && 
+                         qrCode.isDark(row, col + 6) ) {
+                    lostPoint += 40;
+                }
+            }
+        }
+
+        for (col = 0; col < moduleCount; col++) {
+            for (row = 0; row < moduleCount - 6; row++) {
+                if (qrCode.isDark(row, col) &&
+                        !qrCode.isDark(row + 1, col) &&
+                         qrCode.isDark(row + 2, col) &&
+                         qrCode.isDark(row + 3, col) &&
+                         qrCode.isDark(row + 4, col) &&
+                        !qrCode.isDark(row + 5, col) &&
+                         qrCode.isDark(row + 6, col) ) {
+                    lostPoint += 40;
+                }
+            }
+        }
+
+        // LEVEL4
+        
+        var darkCount = 0;
+
+        for (col = 0; col < moduleCount; col++) {
+            for (row = 0; row < moduleCount; row++) {
+                if (qrCode.isDark(row, col) ) {
+                    darkCount++;
+                }
+            }
+        }
+        
+        var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+        lostPoint += ratio * 10;
+
+        return lostPoint;       
+    }
+
+};
+
+module.exports = QRUtil;
+
+};
+
+__qrModules["QRBitBuffer.js"] = function(module, exports, __qrRequire){
+function QRBitBuffer() {
+	this.buffer = [];
+	this.length = 0;
+}
+
+QRBitBuffer.prototype = {
+
+	get : function(index) {
+		var bufIndex = Math.floor(index / 8);
+		return ( (this.buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+	},
+	
+	put : function(num, length) {
+		for (var i = 0; i < length; i++) {
+			this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+		}
+	},
+	
+	getLengthInBits : function() {
+		return this.length;
+	},
+	
+	putBit : function(bit) {
+	
+		var bufIndex = Math.floor(this.length / 8);
+		if (this.buffer.length <= bufIndex) {
+			this.buffer.push(0);
+		}
+	
+		if (bit) {
+			this.buffer[bufIndex] |= (0x80 >>> (this.length % 8) );
+		}
+	
+		this.length++;
+	}
+};
+
+module.exports = QRBitBuffer;
+
+};
+
+__qrModules["index.js"] = function(module, exports, __qrRequire){
+//---------------------------------------------------------------------
+// QRCode for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//   http://www.opensource.org/licenses/mit-license.php
+//
+// The word "QR Code" is registered trademark of 
+// DENSO WAVE INCORPORATED
+//   http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+// Modified to work in node for this project (and some refactoring)
+//---------------------------------------------------------------------
+
+var QR8bitByte = __qrRequire('QR8bitByte.js');
+var QRUtil = __qrRequire('QRUtil.js');
+var QRPolynomial = __qrRequire('QRPolynomial.js');
+var QRRSBlock = __qrRequire('QRRSBlock.js');
+var QRBitBuffer = __qrRequire('QRBitBuffer.js');
+
+function QRCode(typeNumber, errorCorrectLevel) {
+	this.typeNumber = typeNumber;
+	this.errorCorrectLevel = errorCorrectLevel;
+	this.modules = null;
+	this.moduleCount = 0;
+	this.dataCache = null;
+	this.dataList = [];
+}
+
+QRCode.prototype = {
+	
+	addData : function(data) {
+		var newData = new QR8bitByte(data);
+		this.dataList.push(newData);
+		this.dataCache = null;
+	},
+	
+	isDark : function(row, col) {
+		if (row < 0 || this.moduleCount <= row || col < 0 || this.moduleCount <= col) {
+			throw new Error(row + "," + col);
+		}
+		return this.modules[row][col];
+	},
+
+	getModuleCount : function() {
+		return this.moduleCount;
+	},
+	
+	make : function() {
+		// Calculate automatically typeNumber if provided is < 1
+		if (this.typeNumber < 1 ){
+			var typeNumber = 1;
+			for (typeNumber = 1; typeNumber < 40; typeNumber++) {
+				var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, this.errorCorrectLevel);
+
+				var buffer = new QRBitBuffer();
+				var totalDataCount = 0;
+				for (var i = 0; i < rsBlocks.length; i++) {
+					totalDataCount += rsBlocks[i].dataCount;
+				}
+
+				for (var x = 0; x < this.dataList.length; x++) {
+					var data = this.dataList[x];
+					buffer.put(data.mode, 4);
+					buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber) );
+					data.write(buffer);
+				}
+				if (buffer.getLengthInBits() <= totalDataCount * 8)
+					break;
+			}
+			this.typeNumber = typeNumber;
+		}
+		this.makeImpl(false, this.getBestMaskPattern() );
+	},
+	
+	makeImpl : function(test, maskPattern) {
+		
+		this.moduleCount = this.typeNumber * 4 + 17;
+		this.modules = new Array(this.moduleCount);
+		
+		for (var row = 0; row < this.moduleCount; row++) {
+			
+			this.modules[row] = new Array(this.moduleCount);
+			
+			for (var col = 0; col < this.moduleCount; col++) {
+				this.modules[row][col] = null;//(col + row) % 3;
+			}
+		}
+	
+		this.setupPositionProbePattern(0, 0);
+		this.setupPositionProbePattern(this.moduleCount - 7, 0);
+		this.setupPositionProbePattern(0, this.moduleCount - 7);
+		this.setupPositionAdjustPattern();
+		this.setupTimingPattern();
+		this.setupTypeInfo(test, maskPattern);
+		
+		if (this.typeNumber >= 7) {
+			this.setupTypeNumber(test);
+		}
+	
+		if (this.dataCache === null) {
+			this.dataCache = QRCode.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
+		}
+	
+		this.mapData(this.dataCache, maskPattern);
+	},
+
+	setupPositionProbePattern : function(row, col)  {
+		
+		for (var r = -1; r <= 7; r++) {
+			
+			if (row + r <= -1 || this.moduleCount <= row + r) continue;
+			
+			for (var c = -1; c <= 7; c++) {
+				
+				if (col + c <= -1 || this.moduleCount <= col + c) continue;
+				
+				if ( (0 <= r && r <= 6 && (c === 0 || c === 6) ) || 
+                     (0 <= c && c <= 6 && (r === 0 || r === 6) ) || 
+                     (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+					this.modules[row + r][col + c] = true;
+				} else {
+					this.modules[row + r][col + c] = false;
+				}
+			}		
+		}		
+	},
+	
+	getBestMaskPattern : function() {
+	
+		var minLostPoint = 0;
+		var pattern = 0;
+	
+		for (var i = 0; i < 8; i++) {
+			
+			this.makeImpl(true, i);
+	
+			var lostPoint = QRUtil.getLostPoint(this);
+	
+			if (i === 0 || minLostPoint >  lostPoint) {
+				minLostPoint = lostPoint;
+				pattern = i;
+			}
+		}
+	
+		return pattern;
+	},
+	
+	createMovieClip : function(target_mc, instance_name, depth) {
+	
+		var qr_mc = target_mc.createEmptyMovieClip(instance_name, depth);
+		var cs = 1;
+	
+		this.make();
+
+		for (var row = 0; row < this.modules.length; row++) {
+			
+			var y = row * cs;
+			
+			for (var col = 0; col < this.modules[row].length; col++) {
+	
+				var x = col * cs;
+				var dark = this.modules[row][col];
+			
+				if (dark) {
+					qr_mc.beginFill(0, 100);
+					qr_mc.moveTo(x, y);
+					qr_mc.lineTo(x + cs, y);
+					qr_mc.lineTo(x + cs, y + cs);
+					qr_mc.lineTo(x, y + cs);
+					qr_mc.endFill();
+				}
+			}
+		}
+		
+		return qr_mc;
+	},
+
+	setupTimingPattern : function() {
+		
+		for (var r = 8; r < this.moduleCount - 8; r++) {
+			if (this.modules[r][6] !== null) {
+				continue;
+			}
+			this.modules[r][6] = (r % 2 === 0);
+		}
+	
+		for (var c = 8; c < this.moduleCount - 8; c++) {
+			if (this.modules[6][c] !== null) {
+				continue;
+			}
+			this.modules[6][c] = (c % 2 === 0);
+		}
+	},
+	
+	setupPositionAdjustPattern : function() {
+	
+		var pos = QRUtil.getPatternPosition(this.typeNumber);
+		
+		for (var i = 0; i < pos.length; i++) {
+		
+			for (var j = 0; j < pos.length; j++) {
+			
+				var row = pos[i];
+				var col = pos[j];
+				
+				if (this.modules[row][col] !== null) {
+					continue;
+				}
+				
+				for (var r = -2; r <= 2; r++) {
+				
+					for (var c = -2; c <= 2; c++) {
+					
+						if (Math.abs(r) === 2 || 
+                            Math.abs(c) === 2 ||
+                            (r === 0 && c === 0) ) {
+							this.modules[row + r][col + c] = true;
+						} else {
+							this.modules[row + r][col + c] = false;
+						}
+					}
+				}
+			}
+		}
+	},
+	
+	setupTypeNumber : function(test) {
+	
+		var bits = QRUtil.getBCHTypeNumber(this.typeNumber);
+        var mod;
+	
+		for (var i = 0; i < 18; i++) {
+			mod = (!test && ( (bits >> i) & 1) === 1);
+			this.modules[Math.floor(i / 3)][i % 3 + this.moduleCount - 8 - 3] = mod;
+		}
+	
+		for (var x = 0; x < 18; x++) {
+			mod = (!test && ( (bits >> x) & 1) === 1);
+			this.modules[x % 3 + this.moduleCount - 8 - 3][Math.floor(x / 3)] = mod;
+		}
+	},
+	
+	setupTypeInfo : function(test, maskPattern) {
+	
+		var data = (this.errorCorrectLevel << 3) | maskPattern;
+		var bits = QRUtil.getBCHTypeInfo(data);
+        var mod;
+	
+		// vertical		
+		for (var v = 0; v < 15; v++) {
+	
+			mod = (!test && ( (bits >> v) & 1) === 1);
+	
+			if (v < 6) {
+				this.modules[v][8] = mod;
+			} else if (v < 8) {
+				this.modules[v + 1][8] = mod;
+			} else {
+				this.modules[this.moduleCount - 15 + v][8] = mod;
+			}
+		}
+	
+		// horizontal
+		for (var h = 0; h < 15; h++) {
+	
+			mod = (!test && ( (bits >> h) & 1) === 1);
+			
+			if (h < 8) {
+				this.modules[8][this.moduleCount - h - 1] = mod;
+			} else if (h < 9) {
+				this.modules[8][15 - h - 1 + 1] = mod;
+			} else {
+				this.modules[8][15 - h - 1] = mod;
+			}
+		}
+	
+		// fixed module
+		this.modules[this.moduleCount - 8][8] = (!test);
+	
+	},
+	
+	mapData : function(data, maskPattern) {
+		
+		var inc = -1;
+		var row = this.moduleCount - 1;
+		var bitIndex = 7;
+		var byteIndex = 0;
+		
+		for (var col = this.moduleCount - 1; col > 0; col -= 2) {
+	
+			if (col === 6) col--;
+	
+			while (true) {
+	
+				for (var c = 0; c < 2; c++) {
+					
+					if (this.modules[row][col - c] === null) {
+						
+						var dark = false;
+	
+						if (byteIndex < data.length) {
+							dark = ( ( (data[byteIndex] >>> bitIndex) & 1) === 1);
+						}
+	
+						var mask = QRUtil.getMask(maskPattern, row, col - c);
+	
+						if (mask) {
+							dark = !dark;
+						}
+						
+						this.modules[row][col - c] = dark;
+						bitIndex--;
+	
+						if (bitIndex === -1) {
+							byteIndex++;
+							bitIndex = 7;
+						}
+					}
+				}
+								
+				row += inc;
+	
+				if (row < 0 || this.moduleCount <= row) {
+					row -= inc;
+					inc = -inc;
+					break;
+				}
+			}
+		}
+		
+	}
+
+};
+
+QRCode.PAD0 = 0xEC;
+QRCode.PAD1 = 0x11;
+
+QRCode.createData = function(typeNumber, errorCorrectLevel, dataList) {
+	
+	var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+	
+	var buffer = new QRBitBuffer();
+	
+	for (var i = 0; i < dataList.length; i++) {
+		var data = dataList[i];
+		buffer.put(data.mode, 4);
+		buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber) );
+		data.write(buffer);
+	}
+
+	// calc num max data.
+	var totalDataCount = 0;
+	for (var x = 0; x < rsBlocks.length; x++) {
+		totalDataCount += rsBlocks[x].dataCount;
+	}
+
+	if (buffer.getLengthInBits() > totalDataCount * 8) {
+		throw new Error("code length overflow. (" + 
+            buffer.getLengthInBits() + 
+            ">" +  
+            totalDataCount * 8 + 
+            ")");
+	}
+
+	// end code
+	if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+		buffer.put(0, 4);
+	}
+
+	// padding
+	while (buffer.getLengthInBits() % 8 !== 0) {
+		buffer.putBit(false);
+	}
+
+	// padding
+	while (true) {
+		
+		if (buffer.getLengthInBits() >= totalDataCount * 8) {
+			break;
+		}
+		buffer.put(QRCode.PAD0, 8);
+		
+		if (buffer.getLengthInBits() >= totalDataCount * 8) {
+			break;
+		}
+		buffer.put(QRCode.PAD1, 8);
+	}
+
+	return QRCode.createBytes(buffer, rsBlocks);
+};
+
+QRCode.createBytes = function(buffer, rsBlocks) {
+
+	var offset = 0;
+	
+	var maxDcCount = 0;
+	var maxEcCount = 0;
+	
+	var dcdata = new Array(rsBlocks.length);
+	var ecdata = new Array(rsBlocks.length);
+	
+	for (var r = 0; r < rsBlocks.length; r++) {
+
+		var dcCount = rsBlocks[r].dataCount;
+		var ecCount = rsBlocks[r].totalCount - dcCount;
+
+		maxDcCount = Math.max(maxDcCount, dcCount);
+		maxEcCount = Math.max(maxEcCount, ecCount);
+		
+		dcdata[r] = new Array(dcCount);
+		
+		for (var i = 0; i < dcdata[r].length; i++) {
+			dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+		}
+		offset += dcCount;
+		
+		var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+		var rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+		var modPoly = rawPoly.mod(rsPoly);
+		ecdata[r] = new Array(rsPoly.getLength() - 1);
+		for (var x = 0; x < ecdata[r].length; x++) {
+            var modIndex = x + modPoly.getLength() - ecdata[r].length;
+			ecdata[r][x] = (modIndex >= 0)? modPoly.get(modIndex) : 0;
+		}
+
+	}
+	
+	var totalCodeCount = 0;
+	for (var y = 0; y < rsBlocks.length; y++) {
+		totalCodeCount += rsBlocks[y].totalCount;
+	}
+
+	var data = new Array(totalCodeCount);
+	var index = 0;
+
+	for (var z = 0; z < maxDcCount; z++) {
+		for (var s = 0; s < rsBlocks.length; s++) {
+			if (z < dcdata[s].length) {
+				data[index++] = dcdata[s][z];
+			}
+		}
+	}
+
+	for (var xx = 0; xx < maxEcCount; xx++) {
+		for (var t = 0; t < rsBlocks.length; t++) {
+			if (xx < ecdata[t].length) {
+				data[index++] = ecdata[t][xx];
+			}
+		}
+	}
+
+	return data;
+
+};
+
+module.exports = QRCode;
+
+};
+
+
+  function __qrRequire(name){
+    if(!/\.js$/.test(name)) name += '.js';
+    if(__qrCache[name]) return __qrCache[name].exports;
+    if(!__qrModules[name]) throw new Error('QR module not found: ' + name);
+    var module = {exports:{}};
+    __qrCache[name] = module;
+    __qrModules[name](module, module.exports, __qrRequire);
+    return module.exports;
+  }
+
+  var __QRCodeCore = __qrRequire('index.js');
+  var __QRErrorCorrectLevel = __qrRequire('QRErrorCorrectLevel.js');
+
+  function __qrDataUrl(value, options){
+    options = options || {};
+    var size = Math.max(120, Number(options.width) || 220);
+    var margin = Math.max(1, Number(options.margin) || 1);
+
+    var qr = new __QRCodeCore(-1, __QRErrorCorrectLevel.M);
+    qr.addData(String(value || ''));
+    qr.make();
+
+    var count = qr.getModuleCount();
+    var total = count + margin * 2;
+    var scale = Math.max(1, Math.floor(size / total));
+    var canvasSize = total * scale;
+
+    var canvas = document.createElement('canvas');
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    var ctx = canvas.getContext('2d');
+    if(!ctx) throw new Error('Canvas is unavailable for QR generation.');
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,canvasSize,canvasSize);
+    ctx.fillStyle = '#000000';
+
+    for(var r=0;r<count;r++){
+      for(var c=0;c<count;c++){
+        if(qr.isDark(r,c)){
+          ctx.fillRect((c+margin)*scale,(r+margin)*scale,scale,scale);
+        }
+      }
+    }
+    return canvas.toDataURL('image/png');
+  }
+
+  window.QRCode = {
+    toDataURL: function(value, options){
+      return Promise.resolve(__qrDataUrl(value, options));
+    }
+  };
+
+  // Exposed only for a local integrity test; harmless to the application.
+  window.__QAQRCodeCore = __QRCodeCore;
+  window.__QAQRCodeReady = true;
+})();
+</script>
+
 <script>
 /* Declared here (top of the FIRST <script> block) rather than lower down with the other
    emp-session variables, because switchTab() can run synchronously during the initial
@@ -7994,6 +9304,7 @@ async function saveNewsTicker(){
 async function switchTab(tab){
   // Role guard: SQL Control Center is Admin-only; My QA Report is Agent-only.
   if(tab === 'SQLCONTROL' && currentRole !== 'admin'){ tab = 'HOME'; }
+  if(tab === 'ADVANCEDREPORTS' && currentRole !== 'admin'){ tab = 'HOME'; }
   if(tab === 'AGENTREPORT' && currentRole !== 'agent' && currentRole !== 'admin'){ tab = 'HOME'; }
   currentTab = tab;
   if(leadFormAutoLogoutPaused && tab !== 'LEADFORM' && typeof scheduleFixedAutoLogout === 'function'){
@@ -8028,6 +9339,8 @@ async function switchTab(tab){
       await renderFatalThisMonthPanel(fatalSubTab);
     } else if (tab === 'AGENTREPORT') {
       await renderAgentPersonalReport();
+    } else if (tab === 'ADVANCEDREPORTS') {
+      await advReportLoadFilterOptions();
     } else if (tab === 'AIINSIGHT') {
       renderAIInsightPanel();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -8263,11 +9576,71 @@ async function renderAgentPersonalReportLegacy(adminSelectedAgent = null){
 
         <div class="agent-report-section">
           <h3>📌 QA Feedback</h3>
-          <div style="font-size:13px;line-height:1.75;color:var(--text);">
-            ${status.cls === 'excellent' ? 'আপনার overall QA performance খুব ভালো। একই consistency বজায় রাখুন এবং যে parameter-গুলোতে fail হয়েছে সেগুলো শূন্যে নামানোর চেষ্টা করুন।' :
-              status.cls === 'good' ? 'আপনার overall performance ভালো। কয়েকটি parameter-এ আরও consistency আনলে score আরও বাড়বে।' :
-              status.cls === 'average' ? 'আপনার performance উন্নত করার যথেষ্ট সুযোগ আছে। উপরের improvement areas-এ বিশেষভাবে নজর দিন এবং পরবর্তী calls-এ সেগুলো practice করুন।' :
-              'আপনার QA score উন্নত করার জন্য parameter-wise feedback অনুসরণ করুন এবং repeated fail হওয়া বিষয়গুলো আগে ঠিক করুন.'}
+          <div style="font-size:13px;line-height:1.85;color:var(--text);">
+            ${
+              (() => {
+                const top1 = failEntries[0] || null;
+                const top2 = failEntries[1] || null;
+                const top3 = failEntries[2] || null;
+
+                const areaText = top1
+                  ? (
+                      '<strong>' + escapeHtml(top1.name) + '</strong> (' + top1.count + ' fail' + (top1.count === 1 ? '' : 's') + ')' +
+                      (top2
+                        ? ' এবং <strong>' + escapeHtml(top2.name) + '</strong> (' + top2.count + ' fail' + (top2.count === 1 ? '' : 's') + ')'
+                        : '') +
+                      (top3
+                        ? ' এবং <strong>' + escapeHtml(top3.name) + '</strong> (' + top3.count + ' fail' + (top3.count === 1 ? '' : 's') + ')'
+                        : '')
+                    )
+                  : '';
+
+                if(status.cls === 'excellent'){
+                  return `
+                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Excellent range-এ রয়েছে।
+                    Overall performance খুব ভালো এবং QA parameters-এ আপনার consistency প্রশংসনীয়।
+                    ${top1
+                      ? 'তবে ' + areaText + ' parameter-এ কিছু repeated observation রয়েছে। এই gap-গুলো নিয়মিতভাবে address করতে পারলে performance আরও consistent হবে।'
+                      : 'এই ভালো performance এবং consistency বজায় রাখুন।'}
+                    পরবর্তী audits-এ একই quality standard ধরে রাখার পাশাপাশি customer handling, process adherence এবং communication quality-তে একই level বজায় রাখার উপর গুরুত্ব দিন।
+                  `;
+                }
+
+                if(status.cls === 'good'){
+                  return `
+                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Good range-এ রয়েছে।
+                    Overall performance ভালো এবং basic QA standards যথেষ্টভাবে maintain হচ্ছে।
+                    ${top1
+                      ? 'তবে ' + areaText + ' parameter-এ repeated gaps লক্ষ্য করা যাচ্ছে। এই areas-এ একটু বেশি attention দিলে overall score আরও উন্নত করা সম্ভব।'
+                      : 'এখন মূল লক্ষ্য হওয়া উচিত এই performance-টি আরও consistent রাখা।'}
+                    প্রতিটি call-এ parameter-wise checklist follow করুন এবং যেসব area-তে observation বেশি হচ্ছে, call handling-এর সময় সেগুলো consciously maintain করুন।
+                  `;
+                }
+
+                if(status.cls === 'average'){
+                  return `
+                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Average range-এ রয়েছে।
+                    Performance-এ ভালো দিক রয়েছে, তবে কিছু parameter-এ repeated gaps-এর কারণে overall score আরও উন্নত করার সুযোগ রয়েছে।
+                    ${top1
+                      ? 'প্রধান improvement areas হলো ' + areaText + '।'
+                      : 'Parameter-wise performance আরও consistent করা প্রয়োজন।'}
+                    এই parameters-এ কেন repeated error হচ্ছে তা review করে প্রতিটি call-এ process এবং communication points consciously follow করুন।
+                    পরবর্তী audits-এ একই ধরনের observation কমানো এবং consistency বাড়ানোকে প্রধান focus হিসেবে রাখুন।
+                  `;
+                }
+
+                return `
+                  আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Needs Improvement range-এ রয়েছে।
+                  Overall performance উন্নত করার জন্য parameter-wise repeated issues-এর উপর immediate focus প্রয়োজন।
+                  ${top1
+                    ? 'প্রধান improvement areas হলো ' + areaText + '।'
+                    : 'Parameter-wise performance আরও consistent করা প্রয়োজন।'}
+                  এই parameters-এ repeated failures-এর কারণ review করে সংশ্লিষ্ট QA guidelines এবং process steps follow করার উপর বিশেষ গুরুত্ব দিন।
+                  প্রতিটি call-এর আগে এবং call handling-এর সময় relevant checklist points মনে রেখে কাজ করলে একই ধরনের observation কমানো সম্ভব হবে।
+                  পরবর্তী QA audits-এ repeated issue কমিয়ে score এবং overall call quality ধারাবাহিকভাবে উন্নত করাই মূল লক্ষ্য হওয়া উচিত।
+                `;
+              })()
+            }
           </div>
         </div>
 
@@ -8913,7 +10286,7 @@ function advReportResetFilters(){
   advReportRows = [];
   document.getElementById('sqlAdvContent').innerHTML =
     '<div class="sql-adv-empty">প্রথমে উপরের filter সেট করে "Apply Filters" চাপুন।</div>';
-  advFeedbackRender();
+  advFeedbackRenderList();
   sqlCenterLog('Advanced report filters reset.');
 }
 
@@ -8940,365 +10313,92 @@ async function advReportApplyFilters(){
     if(data.status !== 'success') throw new Error(data.message || 'Advanced report load failed');
 
     advReportRows = Array.isArray(data.rows) ? data.rows : [];
+    advFeedbackPage = 1;
     sqlCenterLog(`Advanced report loaded — ${advReportRows.length} matching record(s).`);
     advReportRenderActiveTab();
-    advFeedbackRender();
+    advFeedbackRenderList();
   }catch(e){
     contentEl.innerHTML = `<div class="sql-adv-empty" style="color:var(--need);">Advanced report load failed: ${escapeHtml(e.message)}</div>`;
     sqlCenterLog('ADVANCED REPORT ERROR — ' + e.message);
   }
 }
 
-
-/* ===================== AUTO FEEDBACK SHEET / PDF ===================== */
+/* ===================== QA FEEDBACK SHEETS — BELOW 85 ===================== */
 const ADV_FEEDBACK_THRESHOLD = 85;
-
-// Embedded copy of the GTPL KCBPL logo from the supplied Feedback Sheet template.
 const ADV_FEEDBACK_LOGO_DATA = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAhAIUDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD2PTtOt7mzEsyyM7O+SZm/vn3q1/Y9ln7kn/f5/wDGvI5dS8QeKPF0+gaXqUlha2rzITGxXhXOWOOSSe1T+F5nuNWu9Lt/Gd1eXV1bS26Ca3lxGf7wJbqMGuz6pJRu30v1OT60nKyXkeq/2PY/3JP+/wA/+NL/AGPY/wDPOT/v8/8AjXiF/o+s2HjW18NnxHeyNPt/f75ABuz23e3rWh4ys9X8PR6Jpk2v3crESBZYtylssPv/AD89ar6mm0lPfyJ+tuzbjsevHR7HtHJ/3+f/ABpf7Hsf+ecmf+uz/wCNeQWN3rXhn4hWOjRa/LqcUkqLOhYsoyeQQScEDnitn4ealfXXjrX4bm9uJoYzJ5cckpYJ+8xwD0qJ4SUYuV9LXKjilJqNtb2PRTo9iP8AlnIPrO/+NB0ixHWOQf8AbZ/8a4/4rXl3ZaPYvaXM0DNOVJicqT8p9K5s6pqXizxDpmk2GoXEVvBAgmkikILYALsT39B7150qqjLlse9QyudWiq6laOt/Kx6odIsgOY5B/wBt3/xo/sixC58uQ/8AbZ/8a8wvb7X/ABR4wuNE07UHs7e2LINrkfKvBJI5JJq74ltNa8PeCbeG51uZ2W75miLB2Ug4GSc8HP6Ue13dtEV/ZbUoQlNKUraa7M9C/sey/wCecn/f5/8AGj+yLHsj/wDf5/8AGvEr291jSTYyWniO6uLm4jWQQI7Ex5AIDAkgk56V03xCudQSTRPNvrm3aaLDpAxXD8ZJwR61P1jRu2xq8lanCHOrSv0fTyPRzpFiGx5cn/f5/wDGg6PZY4jkJ9POf/GvKLW61jw743s9Kj1qS/V5USVd5YcnkEEnBA5rX8Baje3XjbWobi8nmiQSFUkckL+9xwKqNa7tYyrZU4QdRTTSSfXW7LfimaeK5+x2Jns1b7pgV57qf18tM4Vf9pvwrnIrbWtOlFzJP4lgTOS2oIZ4P+BiN8oPcdK9A12/vLaeSLTLfMmAbiaPbv8AYDdwTjnmqlpq72DPvvmeTaJGjuJg3y+o6YFTWzqhhpKk1d9bWdvXqjwHSlOTd2jV8PTCRJHliWFmjjJAmMsbfe+aNz1UjH9aKtaTPb3DtNahfJeFCAnQHdJn9c0V0c8XqjoWx5drOk6v4b1+PxZocDXEUrv9piVScHcQ2QOcH17GqfhC6TUvi1Df22nvZQSB2EOzAU+UQe3rk/jXrelXdrHp6pJcRK4eTIdwCPnNUbjXjF4ot7FZIFsZIQ7XAOf3mWxH14yBnPtjuK7Fi3ycrWtrX8jleF/ecyel72OI8QQyt8btLkEUhjBh+cIcdD3pvxit5rjU9ESGOQkrIuVUnGSnpXV23iq7ksbyeWKCOSG382LnPmHe46deijjrRP4tP2EXiXFuYPtxRdgy80PbYD945+mQDilHFOMoytsrDlhuaMo33dw8JeALDwyDcu5u9RdcGdxjbnqFHb69a830HxDJ4T8Ya1dyabdXKTySoBGpGP3mc9K9U/4SGX/hI1s8QfYzcMnn+YOghDf+hE8/hVAeJ7x59Eb/AEcRXESPdnH3CWA9cjr/AI8VMcU/e51e45YZe7yO1jA+Id7NrPg3Rr4WU0LTy+Z5J+ZlBU4zisjVbO78Mavo+u2MMhSaGNpI1U/eCgOp+o/XNepa1q8Fppkk0NzBuVkBYndsUsAzYHXAJP4Viap4na3Ft9lvrWcNB5kTeVn7XJvA2DB+Xj+eegNcM6SlJyWh72GzSVCjGi43SvfzucvrVnqGi+IY/F+h2z3FldKJXRVJI3D5gw6gHrnsan8Xa6/ijwEt0lhPblb1U8tvmJwDk8dua6geJZl8VNp0nkGweby4pk/hxDvYMc45JGD7EdaoW/iy+NjqTTrbJcW9mZ4mVflclm29+oAAI9RnoRS9luk9GNZmm4SlC8obO/RdH/medarewanp+nRW2kXcOoW0axtcKn+sAGOgGc56GtvxrDqc2l+GUvUlN75TCU4JIOU64713beIYhcaZG2o2qQzxlvtBUOJXyBsGDgcE/l7GpJ9Zlg/teT7XBKIHUW6bR0IBPOeepH4VH1fR3e50f21aUHCn8N3vfdd7bFXwt4Es/DrtdSyG6vnHMrDAXPXaP69a8/0bXJPDHivVrt9OuLhJZJUAjUjHz5z09q9IPiM/8JGLIXNuU8/Z5OOfK8rf5u/OPvcf/XqHw94kn1C7lg1EW8WyLzVdBtV1MjheSeoC8j156EVo6S05dLHLSzOV5vELn5rLe2xSkkvbi4svEQgnisby3xcWx+YxH+FyB7Y+leaXtrqniHXpRp0FxO82VA8ooET0PYCvfTfWeOLuAf8AbQUfbrLr9qgz/wBdBWmHjTo1nX5byaS+7rtv/keHicMqzsnaN27evmZ3hzTm0mzhsHdXeC1iV3UYBbL5/Wir9vPDPfzmN0cCOMZVs93oqmbqNlYvUUUUuhQUUUUCCiiigA70lFFAxRSH+lFFCEIOlH8VFFA0L3o70UUCCiiigBRRRRQM/9k=";
-
-const ADV_FEEDBACK_REMARK_MAP = {
-  'Opening_Score':'Remarks_1',
-  'Enthusiastic_Tone_Score':'Remarks_2',
-  'Assurance_Score':'Remarks_3',
-  'Closing_Score':'Remarks_4',
-  'Account_Authentication_Security_Checks_Score':'Remarks_5',
-  'Query_System_Probing_Score':'Remarks_6',
-  'Empathy_Apology_Score':'Remarks_7',
-  'Paraphrasing_Acknowledgement_Score':'Remarks_8',
-  'Hold_Transfer_Procedure_Score':'Remarks_9',
-  'Dead_Air_Score':'Remarks_10',
-  'Active_Listening_Attentiveness_Score':'Remarks_11',
-  'Interruption_Score':'Remarks_12',
-  'Choice_of_Words_Sentence_Formation_Score':'Remarks_13',
-  'Clarity_of_Speech_Rate_of_Speech_Score':'Remarks_14',
-  'Lack_of_Confidence_Fumbling_Score':'Remarks_15',
-  'Using_Customer_Language_Score':'Remarks_16',
-  'Background_Noise_Score':'Remarks_17',
-  'Personalization_Rapport_Building_Score':'Remarks_18',
-  'Jargon_Abbreviations_Score':'Remarks_19',
-  'Enthusiasm_Energy_Willing_to_Help_Score':'Remarks_20',
-  'Impolite_Commanding_Casual_Flat_Tone_Score':'Remarks_21',
-  'Incorrect_Information_Score':'Remarks_22',
-  'Incomplete_Information_Score':'Remarks_23',
-  'Proactive_Information_Score':'Remarks_24',
-  'Tagging_Accuracy_Status_Dispo_Score':'Remarks_25',
-  'Disconnection_Call_Ignorance_Score':'Remarks_26',
-  'Unprofessional_Rude_Sarcastic_Slangs_Score':'Remarks_27',
-  'Escalation_Denial_Score':'Remarks_28',
-  'Cross_Talk_Laughing_Validation_Failure_Score':'Remarks_29'
-};
-
-function advFeedbackNum(v){
-  if(v === null || v === undefined || v === '') return null;
-  if(typeof v === 'string' && v.trim().toUpperCase() === 'FATAL') return 0;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
+const ADV_FEEDBACK_PARAM_MAX = [5,1,3,4,3,3,4,4,4,3,4,9,4,5,2,2,2,4,1,3,7,5,5,5,5,0,0,3,0];
+const ADV_FEEDBACK_PARAMS = [
+['Opening_Score','Opening'],['Enthusiastic_Tone_Score','Enthusiastic Tone'],['Assurance_Score','Assurance'],['Closing_Score','Closing'],
+['Account_Authentication_Security_Checks_Score','Account Authentication / Security Checks'],['Query_System_Probing_Score','Query System / Probing'],['Empathy_Apology_Score','Empathy / Apology'],['Paraphrasing_Acknowledgement_Score','Paraphrasing / Acknowledgement'],
+['Hold_Transfer_Procedure_Score','Hold / Transfer Procedure'],['Dead_Air_Score','Dead Air'],['Active_Listening_Attentiveness_Score','Active Listening / Attentiveness'],['Interruption_Score','Interruption'],
+['Choice_of_Words_Sentence_Formation_Score','Choice of Words / Sentence Formation'],['Clarity_of_Speech_Rate_of_Speech_Score','Clarity / Rate of Speech'],['Lack_of_Confidence_Fumbling_Score','Lack of Confidence / Fumbling'],['Using_Customer_Language_Score','Using Customer Language'],
+['Background_Noise_Score','Background Noise'],['Personalization_Rapport_Building_Score','Personalization / Rapport Building'],['Jargon_Abbreviations_Score','Jargon / Abbreviations'],['Enthusiasm_Energy_Willing_to_Help_Score','Enthusiasm / Energy / Willing to Help'],
+['Impolite_Commanding_Casual_Flat_Tone_Score','Impolite / Commanding / Casual Flat Tone'],['Incorrect_Information_Score','Incorrect Information'],['Incomplete_Information_Score','Incomplete Information'],['Proactive_Information_Score','Proactive Information'],
+['Tagging_Accuracy_Status_Dispo_Score','Tagging Accuracy / Status Dispo'],['Disconnection_Call_Ignorance_Score','Disconnection / Call Ignorance'],['Unprofessional_Rude_Sarcastic_Slangs_Score','Unprofessional / Rude / Sarcastic / Slangs'],['Escalation_Denial_Score','Escalation Denial'],['Cross_Talk_Laughing_Validation_Failure_Score','Cross Talk / Laughing / Validation Failure']
+];
+const ADV_FEEDBACK_REMARK_MAP=Object.fromEntries(ADV_FEEDBACK_PARAMS.map((p,i)=>[p[0],'Remarks_'+(i+1)]));
+let advFeedbackAuditRows=null, advFeedbackPreviewUrl=null, advFeedbackPreviewRow=null, advFeedbackPage=1;
+const ADV_FEEDBACK_PAGE_SIZE=10;
+function advFeedbackText(v){return v==null?'':String(v).trim();}
+function advFeedbackNum(v){if(v==null||v==='')return null;if(typeof v==='string'&&/^FATAL$/i.test(v.trim()))return null;const n=Number(v);return Number.isFinite(n)?n:null;}
+function advFeedbackNormalizeCallId(v){return advFeedbackText(v).replace(/^'+/,'');}
+function advFeedbackFindKey(obj,patterns){const keys=Object.keys(obj||{});for(const rx of patterns){const k=keys.find(x=>rx.test(String(x)));if(k)return k;}return null;}
+function advFeedbackLowRows(){const seen=new Set();return (Array.isArray(advReportRows)?advReportRows:[]).filter(r=>{const n=advFeedbackNum(r.Total_Score);if(n===null||n>=ADV_FEEDBACK_THRESHOLD)return false;const id=advFeedbackNormalizeCallId(r.Call_ID);if(id&&seen.has(id))return false;if(id)seen.add(id);return true;}).sort((a,b)=>(advFeedbackNum(a.Total_Score)||999)-(advFeedbackNum(b.Total_Score)||999));}
+function advFeedbackRenderList(){
+  const body=document.getElementById('sqlAdvContent'); if(!body)return;
+  if(!Array.isArray(advReportRows)||!advReportRows.length){body.innerHTML='<div class="sql-adv-empty">প্রথমে উপরের filter সেট করে "Apply Filters" চাপুন।</div>';return;}
+  const rows=advFeedbackLowRows(), total=rows.length;
+  if(!total){body.innerHTML='<div class="sql-adv-empty">✓ বর্তমান filter-এর মধ্যে 85%-এর নিচে কোনো call নেই।</div>';return;}
+  const pages=Math.max(1,Math.ceil(total/ADV_FEEDBACK_PAGE_SIZE)); advFeedbackPage=Math.min(Math.max(1,advFeedbackPage),pages);
+  const from=(advFeedbackPage-1)*ADV_FEEDBACK_PAGE_SIZE, pageRows=rows.slice(from,from+ADV_FEEDBACK_PAGE_SIZE), buttons=[];
+  for(let p=1;p<=pages;p++){if(p===1||p===pages||Math.abs(p-advFeedbackPage)<=1)buttons.push(p);else if(buttons[buttons.length-1]!=='…')buttons.push('…');}
+  body.innerHTML=`<div class="adv-feedback-tab-head"><div><div class="adv-feedback-tab-title">📝 QA Feedback Sheets</div><div class="adv-feedback-tab-sub">Total Score 85%-এর নিচে থাকা audited calls — প্রতি page-এ সর্বোচ্চ 10টি।</div></div><div class="adv-feedback-count">${total} Call${total===1?'':'s'}</div></div>
+  <div class="adv-feedback-table-wrap"><table class="adv-feedback-table"><thead><tr><th>#</th><th>AGENT NAME</th><th>PROCESS</th><th>CALL ID</th><th>TOTAL SCORE</th><th>ACTIONS</th></tr></thead><tbody>
+  ${pageRows.map((r,i)=>{const idx=advReportRows.indexOf(r),score=advFeedbackNum(r.Total_Score),cls=score<70?'score-critical':score<80?'score-needs':'score-warning';return `<tr><td>${from+i+1}</td><td><span class="adv-feedback-agent">${escapeHtml(r.Associate_Name||'--')}</span></td><td>${escapeHtml(r.Process||'--')}</td><td class="mono">${escapeHtml(r.Call_ID||'--')}</td><td><span class="adv-feedback-score ${cls}">${score===null?'--':score.toFixed(2)+'%'}</span></td><td><div class="adv-feedback-actions"><button class="btn primary small" type="button" onclick="advFeedbackPreview(${idx})">👁 Preview PDF</button><button class="btn gold small" type="button" onclick="advFeedbackDownload(${idx})">⬇ Download PDF</button><button class="btn small" type="button" onclick="advFeedbackPrint(${idx})">🖨 Print PDF</button></div></td></tr>`}).join('')}
+  </tbody></table></div><div class="adv-feedback-pagination"><button class="adv-feedback-page-btn" type="button" ${advFeedbackPage<=1?'disabled':''} onclick="advFeedbackGoPage(${advFeedbackPage-1})">‹</button>${buttons.map(p=>p==='…'?'<span class="adv-feedback-page-info">…</span>':`<button class="adv-feedback-page-btn ${p===advFeedbackPage?'active':''}" type="button" onclick="advFeedbackGoPage(${p})">${p}</button>`).join('')}<button class="adv-feedback-page-btn" type="button" ${advFeedbackPage>=pages?'disabled':''} onclick="advFeedbackGoPage(${advFeedbackPage+1})">›</button><span class="adv-feedback-page-info">Page ${advFeedbackPage} / ${pages}</span></div><div class="adv-feedback-note">📌 প্রতিটি PDF-তে unique Feedback Sheet Number ও QR code থাকবে। QR scan করলে Feedback Sheet Number এবং Call ID দেখা যাবে।</div>`;
 }
+function advFeedbackGoPage(page){advFeedbackPage=page;advFeedbackRenderList();document.getElementById('sqlAdvContent')?.scrollIntoView({behavior:'smooth',block:'start'});}
 
-function advFeedbackLowRows(){
-  return (Array.isArray(advReportRows) ? advReportRows : [])
-    .filter(r => {
-      const n = advFeedbackNum(r.Total_Score);
-      return n !== null && n < ADV_FEEDBACK_THRESHOLD;
-    })
-    .sort((a,b) => {
-      const pa = String(a.Process || '');
-      const pb = String(b.Process || '');
-      if(pa !== pb) return pa.localeCompare(pb);
-      return String(a.Call_Date || '').localeCompare(String(b.Call_Date || ''));
-    });
-}
-
-function advFeedbackRender(){
-  const body = document.getElementById('advFeedbackBody');
-  const count = document.getElementById('advFeedbackCount');
-  if(!body || !count) return;
-
-  const low = advFeedbackLowRows();
-  count.textContent = `${low.length} Call${low.length === 1 ? '' : 's'}`;
-
-  if(!advReportRows.length){
-    body.innerHTML = '<div class="adv-feedback-empty">প্রথমে Advanced Report load করুন।</div>';
-    return;
+async function advFeedbackLoadAuditRows(){if(Array.isArray(advFeedbackAuditRows))return advFeedbackAuditRows;const cached=rawDataCache&&rawDataCache.AUDITNEW;if(Array.isArray(cached)&&cached.length){advFeedbackAuditRows=cached;return cached;}const res=await fetch(RAW_SHEET_WEB_APP_URL+'?vertical='+encodeURIComponent('Audit sheet(NEW)'),{cache:'no-store',headers:{Accept:'application/json'}});if(!res.ok)throw new Error('Audit Sheet HTTP '+res.status);const raw=await res.json();const values=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.values)?raw.values:[]);if(!values.length)throw new Error('Audit sheet returned no data');const headers=values[0].map((h,i)=>String(h??'').trim()||('Column '+(i+1)));advFeedbackAuditRows=values.slice(1).map(row=>{const o={};headers.forEach((h,i)=>o[h]=row[i]===undefined?'':row[i]);return o;});rawDataCache.AUDITNEW=advFeedbackAuditRows;return advFeedbackAuditRows;}
+async function advFeedbackFindAuditRow(row){const id=advFeedbackNormalizeCallId(row&&row.Call_ID);if(!id)return null;const rows=await advFeedbackLoadAuditRows();return rows.find(r=>advFeedbackNormalizeCallId(r[advFeedbackFindKey(r,[/^\s*call\s*id\s*$/i,/call\s*id/i])]||'')===id)||null;}
+function advFeedbackMergeRow(sql,audit){const out=Object.assign({},sql||{});if(!audit)return out;const maps={Call_Date:[/^\s*call\s*date\s*$/i,/call\s*date/i],Call_Time:[/^\s*call\s*time\s*$/i,/call\s*time/i],Associate_Name:[/^\s*(associate|agent)\s*name\s*$/i,/(associate|agent).*name/i],Calling_Number:[/calling\s*(number|no)/i,/customer.*number/i],Language:[/^\s*language\s*$/i,/language/i],Call_Duration:[/call\s*duration/i,/duration/i],Call_Link:[/call\s*link/i,/recording/i,/audio/i],Call_Summary:[/call\s*summary/i,/summary/i],Disposition:[/^\s*disposition\s*$/i,/disposition/i],TL_Name:[/^\s*tl\s*name\s*$/i,/^\s*tl\s*$/i,/team\s*leader/i]};for(const [target,patterns] of Object.entries(maps)){const k=advFeedbackFindKey(audit,patterns);if(k&&advFeedbackText(audit[k]))out[target]=audit[k];}for(let i=1;i<=29;i++){const k=advFeedbackFindKey(audit,[new RegExp('^\\s*remarks\\s*'+i+'\\s*$','i')]);if(k)out['Remarks_'+i]=audit[k];}return out;}
+function advFeedbackDate(v){const s=advFeedbackText(v),m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}/${m[2]}/${m[1]}`:s;}
+function advFeedbackTime(v){const s=advFeedbackText(v),m=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(!m)return s;let h=+m[1];const ap=h>=12?'PM':'AM';h=h%12||12;return `${h}:${m[2]}:${m[3]||'00'} ${ap}`;}
+function advFeedbackParamRows(row){return ADV_FEEDBACK_PARAMS.map((p,i)=>{const max=ADV_FEEDBACK_PARAM_MAX[i],raw=advFeedbackText(row[p[0]]),remarks=advFeedbackText(row[ADV_FEEDBACK_REMARK_MAP[p[0]]]),fatal=/^FATAL$/i.test(raw),n=advFeedbackNum(raw),fail=fatal||!!remarks||(n!==null&&max>0&&n<max);return {sl:i+1,label:p[1],max:max||0,obtained:fatal?'FATAL':(raw||'0'),pct:(!fatal&&n!==null&&max>0)?((n/max)*100).toFixed(2)+'%':'—',result:fail?'FAIL':'PASS',remarks:remarks||'—'};});}
+function advFeedbackPdfDoc(){if(!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF library failed to load.');return new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});}
+function advFeedbackSafeFileName(v){return String(v||'Feedback_Sheet').replace(/[<>:"/\\|?*]+/g,'_').replace(/\s+/g,'_').slice(0,120);}
+function advFeedbackSheetNumber(row){const id=advFeedbackNormalizeCallId(row&&row.Call_ID)||'NO_CALL_ID';let h=2166136261;for(let i=0;i<id.length;i++){h^=id.charCodeAt(i);h=Math.imul(h,16777619);}h>>>=0;const d=advFeedbackText(row&&row.Call_Date).replace(/[^0-9]/g,'').slice(-8)||'00000000';return `QAF-${d}-${String(h).padStart(10,'0')}`;}
+async function advFeedbackQrDataUrl(sheetNo,callId){
+  if(!window.QRCode || typeof window.QRCode.toDataURL!=='function'){
+    throw new Error('Offline QR generator is unavailable.');
   }
-
-  if(!low.length){
-    body.innerHTML = '<div class="adv-feedback-empty">✓ এই filter-এর মধ্যে 85-এর নিচে কোনো call নেই।</div>';
-    return;
-  }
-
-  const groups = {};
-  low.forEach(r => {
-    const p = String(r.Process || 'Unknown Process').trim() || 'Unknown Process';
-    (groups[p] ||= []).push(r);
-  });
-
-  body.innerHTML = Object.keys(groups).sort().map(process => {
-    const rows = groups[process];
-    const safeProcess = encodeURIComponent(process);
-    return `
-      <div class="adv-feedback-process">
-        <div class="adv-feedback-process-head">
-          <div>
-            <div class="adv-feedback-process-name">${escapeHtml(process)}</div>
-            <div class="adv-feedback-process-meta">${rows.length} low-score feedback sheet${rows.length === 1 ? '' : 's'}</div>
-          </div>
-          <button class="btn gold small" type="button" onclick="advFeedbackDownloadProcess('${safeProcess}')">
-            ⬇ Download ${escapeHtml(process)} PDF
-          </button>
-        </div>
-        <div class="adv-feedback-list">
-          ${rows.map((r, i) => `
-            <div class="adv-feedback-card">
-              <div class="adv-feedback-card-main">
-                <div class="adv-feedback-agent">${escapeHtml(r.Associate_Name || '--')}</div>
-                <div class="adv-feedback-meta">
-                  ${escapeHtml(r.Call_Date || '--')} • ${escapeHtml(r.Call_ID || '--')}
-                </div>
-              </div>
-              <div class="adv-feedback-score">${escapeHtml(String(r.Total_Score ?? '--'))}</div>
-              <div class="adv-feedback-actions">
-                <button class="btn small" type="button" onclick="advFeedbackDownloadOne(${advReportRows.indexOf(r)})">⬇ PDF</button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function advFeedbackSafeFileName(value){
-  return String(value || 'feedback')
-    .replace(/[<>:"/\\|?*]+/g, '_')
-    .replace(/\s+/g, '_')
-    .slice(0, 100);
-}
-
-function advFeedbackPdfDoc(){
-  if(!window.jspdf || !window.jspdf.jsPDF){
-    throw new Error('PDF library failed to load.');
-  }
-  return new window.jspdf.jsPDF({
-    orientation:'portrait',
-    unit:'mm',
-    format:'a4',
-    compress:true
-  });
-}
-
-function advFeedbackAddHeader(doc, row, pageLabel){
-  const pageW = doc.internal.pageSize.getWidth();
-
-  if(ADV_FEEDBACK_LOGO_DATA){
-    try{
-      doc.addImage(ADV_FEEDBACK_LOGO_DATA, 'JPEG', 14, 8, 48, 12);
-    }catch(e){}
-  }
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(18);
-  doc.setTextColor(0,0,0);
-  const title = 'FEEDBACK SHEET';
-  const titleX = pageW - 14 - doc.getTextWidth(title);
-  doc.text(title, titleX, 17);
-  doc.setLineWidth(0.5);
-  doc.line(titleX, 18.5, pageW - 14, 18.5);
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(100,100,100);
-  doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 24);
-  if(pageLabel){
-    doc.text(pageLabel, pageW - 14 - doc.getTextWidth(pageLabel), 24);
-  }
-}
-
-function advFeedbackValue(v){
-  if(v === null || v === undefined) return '';
-  return String(v);
-}
-
-function advFeedbackFormatDate(v){
-  const s = advFeedbackValue(v);
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  return m ? `${Number(m[2])}/${Number(m[3])}/${m[1]}` : s;
-}
-
-function advFeedbackFormatTime(v){
-  const s = advFeedbackValue(v);
-  const m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
-  if(!m) return s;
-  let h = Number(m[1]);
-  const min = m[2];
-  const sec = m[3] || '00';
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  return `${h}:${min}:${sec} ${ampm}`;
-}
-
-function advFeedbackTableRows(row){
-  // Matches the supplied Feedback Sheet template structure.
-  return [
-    ['Process', advFeedbackValue(row.Process)],
-    ['Associate Name', advFeedbackValue(row.Associate_Name)],
-    ['Calling Number', advFeedbackValue(row.Calling_Number)],
-    ['Call Date', advFeedbackFormatDate(row.Call_Date)],
-    ['Call time', advFeedbackFormatTime(row.Call_Time)],
-    ['Call ID', advFeedbackValue(row.Call_ID)],
-    ['Language', advFeedbackValue(row.Language)],
-    ['Call Duration', advFeedbackValue(row.Call_Duration)],
-    ['Disposition', advFeedbackValue(row.Disposition)],
-    ['Scores', advFeedbackValue(row.Total_Score)],
-    ['Call Link', advFeedbackValue(row.Call_Link)],
-
-    ['Opening', advFeedbackValue(row.Opening_Score)],
-    ['Remarks 1', advFeedbackValue(row.Remarks_1)],
-
-    ['Assurance', advFeedbackValue(row.Assurance_Score)],
-    ['Remarks 3', advFeedbackValue(row.Remarks_3)],
-
-    ['Closing', advFeedbackValue(row.Closing_Score)],
-    ['Remarks 4', advFeedbackValue(row.Remarks_4)],
-
-    ['Account Authentication/Security Checks', advFeedbackValue(row.Account_Authentication_Security_Checks_Score)],
-    ['Remarks 5', advFeedbackValue(row.Remarks_5)],
-
-    ['Empathy/Apology', advFeedbackValue(row.Empathy_Apology_Score)],
-    ['Remarks 7', advFeedbackValue(row.Remarks_7)],
-
-    ['Paraphrasing/ Acknowledgement', advFeedbackValue(row.Paraphrasing_Acknowledgement_Score)],
-    ['Remarks 8', advFeedbackValue(row.Remarks_8)],
-
-    ['Remarks 10', advFeedbackValue(row.Remarks_10)],
-
-    ['Interruption', advFeedbackValue(row.Interruption_Score)],
-    ['Remarks 12', advFeedbackValue(row.Remarks_12)],
-
-    ['Remarks 15', advFeedbackValue(row.Remarks_15)],
-
-    ['Incorrect information', advFeedbackValue(row.Incorrect_Information_Score)],
-    ['Remarks 22', advFeedbackValue(row.Remarks_22)],
-
-    ['Incomplete information', advFeedbackValue(row.Incomplete_Information_Score)],
-    ['Remarks 23', advFeedbackValue(row.Remarks_23)],
-
-    ['Tagging accuracy/Tagging Status/Dispo', advFeedbackValue(row.Tagging_Accuracy_Status_Dispo_Score)],
-    ['Remarks 25', advFeedbackValue(row.Remarks_25)],
-
-    ['Call Summary', advFeedbackValue(row.Call_Summary)]
-  ];
-}
-
-function advFeedbackRenderPdfPage(doc, row, pageNo, totalPages){
-  const pageW = doc.internal.pageSize.getWidth();
-  const rows = advFeedbackTableRows(row);
-
-  advFeedbackAddHeader(
-    doc,
-    row,
-    `${String(row.Process || 'Process')} • Page ${pageNo}/${totalPages}`
+  return await window.QRCode.toDataURL(
+    `QA FEEDBACK SHEET\nFeedback Sheet No: ${sheetNo}\nCall ID: ${callId||'--'}`,
+    {width:220,margin:1,errorCorrectionLevel:'M'}
   );
-
-  doc.autoTable({
-    body: rows,
-    startY: 30,
-    margin: {left:14,right:14,bottom:18},
-    theme: 'grid',
-    tableWidth: 'auto',
-    styles: {
-      font: 'helvetica',
-      fontSize: 8.2,
-      cellPadding: 2.1,
-      lineColor: [120,120,120],
-      lineWidth: 0.25,
-      textColor: [35,35,35],
-      valign: 'middle',
-      overflow: 'linebreak'
-    },
-    columnStyles: {
-      0: {cellWidth: 47, fontStyle:'bold', textColor:[255,255,255]},
-      1: {cellWidth: 'auto'}
-    },
-    didParseCell: function(data){
-      if(data.section !== 'body') return;
-      const label = String(data.row.raw?.[0] || '');
-      if(data.column.index === 0){
-        data.cell.styles.fillColor = [143,68,8]; // template brown
-      }
-
-      if(label === 'Associate Name' && data.column.index === 1){
-        data.cell.styles.fillColor = [246,177,132];
-        data.cell.styles.textColor = [215,35,25];
-        data.cell.styles.fontStyle = 'bold';
-      }
-
-      if(label === 'Scores' && data.column.index === 1){
-        const n = advFeedbackNum(row.Total_Score);
-        data.cell.styles.fillColor = (n !== null && n <= 0) ? [255,102,102] : [91,191,116];
-        data.cell.styles.textColor = [0,0,0];
-        data.cell.styles.fontStyle = 'bold';
-      }
-
-      if(label === 'Call Link' && data.column.index === 1){
-        data.cell.styles.textColor = [0,102,170];
-        data.cell.styles.fontSize = 7.4;
-      }
-    },
-    didDrawCell: function(data){
-      if(data.section !== 'body' || data.column.index !== 1) return;
-      const label = String(data.row.raw?.[0] || '');
-      if(label === 'Call Link' && row.Call_Link){
-        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, {url:String(row.Call_Link)});
-      }
-    },
-    didDrawPage: function(){
-      const h = doc.internal.pageSize.getHeight();
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(90,90,90);
-      doc.text('Agent Signature & Date', 35, h - 8);
-      doc.line(14, h - 14, 92, h - 14);
-      doc.text('FEEDBACK GIVEN BY :', pageW - 62, h - 8);
-    }
-  });
 }
-
-function advFeedbackDownloadOne(index){
-  try{
-    const row = advReportRows[index];
-    if(!row) throw new Error('Feedback record not found.');
-    const doc = advFeedbackPdfDoc();
-    advFeedbackRenderPdfPage(doc, row, 1, 1);
-    const name = advFeedbackSafeFileName(
-      `${row.Process || 'Process'}_${row.Associate_Name || 'Agent'}_${row.Call_ID || 'Call'}_Feedback_Sheet`
-    );
-    doc.save(`${name}.pdf`);
-    sqlCenterLog(`Feedback PDF downloaded — ${row.Associate_Name || ''} / ${row.Call_ID || ''}`);
-  }catch(e){
-    alert('Feedback PDF তৈরি করা যায়নি: ' + e.message);
-  }
+function advFeedbackPdfDoc(){if(!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF library failed to load.');return new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});}
+function advFeedbackSafeFileName(v){return String(v||'Feedback_Sheet').replace(/[<>:"/\\|?*]+/g,'_').replace(/\s+/g,'_').slice(0,120);}
+function advFeedbackBox(doc,x,y,w,h,label,value,opts={}){doc.setFillColor(...(opts.fill||[247,249,252]));doc.setDrawColor(180,191,205);doc.setLineWidth(.25);doc.roundedRect(x,y,w,h,1.3,1.3,'FD');doc.setFont('helvetica','bold');doc.setFontSize(5.1);doc.setTextColor(78,92,108);doc.text(label.toUpperCase(),x+2,y+3.5);doc.setFontSize(opts.size||6.4);doc.setTextColor(...(opts.color||[24,38,55]));doc.text(doc.splitTextToSize(String(value||'—'),w-4).slice(0,2),x+2,y+7.3,{lineHeightFactor:1});}
+function advFeedbackRenderPdfPage(doc,row,qrData){
+ const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=7,G=2.2,bw=(W-2*M-3*G)/4,bh=10.8,y0=22.5,sheetNo=advFeedbackSheetNumber(row);
+ if(ADV_FEEDBACK_LOGO_DATA)try{doc.addImage(ADV_FEEDBACK_LOGO_DATA,'JPEG',M,4,44,11);}catch(e){}
+ doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(15,31,52);doc.text('QA FEEDBACK SHEET',W/2,9,{align:'center'});doc.setFontSize(5.7);doc.setTextColor(82,98,116);doc.text('QUALITY ASSURANCE REPORT',W/2,12.2,{align:'center'});doc.setFontSize(5.5);doc.setTextColor(35,55,77);doc.text('Below 85% — Improvement Required',W-29,9,{align:'right'});if(qrData)try{doc.addImage(qrData,'PNG',W-M-17,3,15,15);}catch(e){}doc.setFontSize(4.2);doc.setTextColor(70,80,92);doc.text(sheetNo,W-M-1,19,{align:'right'});doc.setDrawColor(20,54,91);doc.setLineWidth(.7);doc.line(M,20.5,W-M,20.5);
+ advFeedbackBox(doc,M,y0,bw,bh,'Agent Name',row.Associate_Name);advFeedbackBox(doc,M+bw+G,y0,bw,bh,'Call ID',row.Call_ID,{size:5.6});advFeedbackBox(doc,M+2*(bw+G),y0,bw,bh,'Recording Link',row.Call_Link?'Click to Open':'Not available',{color:row.Call_Link?[0,92,160]:[110,110,110],size:5.8});advFeedbackBox(doc,M+3*(bw+G),y0,bw,bh,'Feedback Sheet No.',sheetNo,{size:5.2});
+ advFeedbackBox(doc,M,y0+bh+G,bw,bh,'Process',row.Process);advFeedbackBox(doc,M+bw+G,y0+bh+G,bw,bh,'Disposition',row.Disposition);const total=advFeedbackNum(row.Total_Score),scoreLabel=total===null?'Not available':total.toFixed(2)+'%';advFeedbackBox(doc,M+2*(bw+G),y0+bh+G,bw,bh,'Total Score',scoreLabel,{fill:[255,241,238],color:[198,45,38],size:7.8});advFeedbackBox(doc,M+3*(bw+G),y0+bh+G,bw,bh,'TL / Team Leader',row.TL_Name);
+ const metaY=y0+2*bh+2*G;doc.setFillColor(248,250,252);doc.setDrawColor(205,213,223);doc.roundedRect(M,metaY,W-2*M,8,1.2,1.2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(5.25);doc.setTextColor(78,92,108);[`Call Date: ${advFeedbackDate(row.Call_Date)||'—'}`,`Call Time: ${advFeedbackTime(row.Call_Time)||'—'}`,`Language: ${row.Language||'—'}`,`Duration: ${row.Call_Duration||'—'}`].forEach((v,i)=>doc.text(v,M+3+i*((W-2*M-6)/4),metaY+5));if(row.Call_Link)doc.link(M+2*(bw+G),y0,bw,bh,{url:String(row.Call_Link)});
+ const tableY=metaY+10.2,cols=[6,47,10,15,14,17,70],TW=cols.reduce((a,b)=>a+b,0),HH=5.5,RH=5.05;let x=M;doc.setFillColor(17,43,77);doc.rect(M,tableY,TW,HH,'F');doc.setFont('helvetica','bold');doc.setFontSize(4.8);doc.setTextColor(255,255,255);['SL','PARAMETER','MAX','OBTAINED','SCORE %','PASS / FAIL','REMARKS'].forEach((h,i)=>{doc.text(h,x+1.1,tableY+3.7);x+=cols[i];});
+ advFeedbackParamRows(row).forEach((r,i)=>{const y=tableY+HH+i*RH;x=M;doc.setFillColor(...(i%2?[248,250,252]:[255,255,255]));doc.setDrawColor(195,204,214);doc.rect(M,y,TW,RH,'FD');const vals=[String(r.sl),r.label,String(r.max||'—'),String(r.obtained),r.pct,r.result,r.remarks];vals.forEach((v,j)=>{doc.setFont('helvetica',j===1||j===6?'normal':'bold');doc.setFontSize(j===6?3.95:(j===1?4.35:4.5));const tc=j===5?(r.result==='FAIL'?[198,45,38]:[22,132,82]):(j===4&&r.pct!=='—'?(r.result==='FAIL'?[198,45,38]:[22,132,82]):[38,47,58]);doc.setTextColor(...tc);const lines=doc.splitTextToSize(v,cols[j]-2.6);doc.text(lines.slice(0,2),x+1.1,y+1.85,{lineHeightFactor:.8});x+=cols[j];});});
+ const after=tableY+HH+29*RH,footY=after+2.3;doc.setFillColor(237,244,251);doc.setDrawColor(154,174,197);doc.roundedRect(M,footY,W-2*M,7.5,1.2,1.2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(5.7);doc.setTextColor(35,53,72);doc.text('TOTAL SCORE',M+2.5,footY+4.9);doc.setFontSize(7.4);doc.setTextColor(198,45,38);doc.text(scoreLabel,M+27,footY+4.9);doc.setFontSize(5.2);doc.setTextColor(88,101,117);doc.text(total!==null&&total<85?'NEEDS IMPROVEMENT':'—',W-M-2.5,footY+4.9,{align:'right'});
+ const sy=footY+9.8,sh=20.5,sw=(W-2*M-G)/2;doc.setFillColor(248,250,252);doc.setDrawColor(190,200,212);doc.roundedRect(M,sy,sw,sh,1.2,1.2,'FD');doc.roundedRect(M+sw+G,sy,sw,sh,1.2,1.2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(5.7);doc.setTextColor(25,58,96);doc.text('CALL SUMMARY',M+2.7,sy+4.6);doc.setFont('helvetica','normal');doc.setFontSize(4.45);doc.setTextColor(55,65,76);const summary=advFeedbackText(row.Call_Summary)||'Not available in source data.';doc.text(doc.splitTextToSize(summary,sw-5.5).slice(0,7),M+2.7,sy+8,{lineHeightFactor:.95});doc.setFont('helvetica','bold');doc.setFontSize(5.7);doc.setTextColor(25,58,96);doc.text('QA REMARKS / ACTION',M+sw+G+2.7,sy+4.6);doc.setFont('helvetica','normal');doc.setFontSize(4.35);doc.setTextColor(55,65,76);const fails=advFeedbackParamRows(row).filter(r=>r.result==='FAIL'&&r.remarks!=='—').slice(0,5);const action=fails.length?fails.map(r=>`${r.label}: ${r.remarks}`).join(' | '):'Focus on consistent adherence to all QA parameters.';doc.text(doc.splitTextToSize(action,sw-5.5).slice(0,7),M+sw+G+2.7,sy+8,{lineHeightFactor:.95});
+ const fy=H-7;doc.setDrawColor(150,160,172);doc.line(M,fy-4,M+50,fy-4);doc.line(W-M-50,fy-4,W-M,fy-4);doc.setFont('helvetica','normal');doc.setFontSize(4.8);doc.setTextColor(95,105,115);doc.text('Agent Signature & Date',M,fy);doc.text('Feedback Given By',W-M-50,fy);doc.setFontSize(4.2);doc.text(`Feedback Sheet No: ${sheetNo}`,W/2,fy-1,{align:'center'});doc.text('Generated from QA Control Room — exact Call ID matched Audit Sheet details',W/2,fy+3,{align:'center'});
 }
-
-function advFeedbackDownloadProcess(encodedProcess){
-  try{
-    const process = decodeURIComponent(encodedProcess || '');
-    const rows = advFeedbackLowRows().filter(r => String(r.Process || '') === process);
-    if(!rows.length) throw new Error('এই process-এর জন্য 85-এর নিচে কোনো call নেই.');
-
-    const doc = advFeedbackPdfDoc();
-    rows.forEach((row, i) => {
-      if(i > 0) doc.addPage();
-      advFeedbackRenderPdfPage(doc, row, i + 1, rows.length);
-    });
-
-    doc.save(`${advFeedbackSafeFileName(process)}_Feedback_Sheets_Below_85.pdf`);
-    sqlCenterLog(`Process feedback PDF downloaded — ${process} / ${rows.length} sheet(s).`);
-  }catch(e){
-    alert('Process Feedback PDF তৈরি করা যায়নি: ' + e.message);
-  }
-}
-
+async function advFeedbackBuildPdf(row){let merged=row;try{merged=advFeedbackMergeRow(row,await advFeedbackFindAuditRow(row));}catch(e){console.warn('Audit Sheet detail lookup failed:',e);}const sheetNo=advFeedbackSheetNumber(merged);const qr=await advFeedbackQrDataUrl(sheetNo,merged.Call_ID);const doc=advFeedbackPdfDoc();advFeedbackRenderPdfPage(doc,merged,qr);return {doc,row:merged,sheetNo};}
+async function advFeedbackDownload(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);doc.save(`${advFeedbackSafeFileName(`${merged.Process||'Process'}_${merged.Associate_Name||'Agent'}_${merged.Call_ID||'Call'}_QA_Feedback`)}.pdf`);sqlCenterLog(`QA Feedback PDF downloaded — ${merged.Associate_Name||''} / ${merged.Call_ID||''}`);}catch(e){alert('Feedback PDF তৈরি করা যায়নি: '+e.message);}}
+async function advFeedbackPreview(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);advFeedbackPreviewRow=merged;if(advFeedbackPreviewUrl)URL.revokeObjectURL(advFeedbackPreviewUrl);advFeedbackPreviewUrl=URL.createObjectURL(doc.output('blob'));document.getElementById('advFeedbackPreviewFrame').src=advFeedbackPreviewUrl;document.getElementById('advFeedbackPreviewOverlay').classList.add('active');}catch(e){alert('PDF Preview তৈরি করা যায়নি: '+e.message);}}
+function advFeedbackClosePreview(){const ov=document.getElementById('advFeedbackPreviewOverlay');if(ov)ov.classList.remove('active');}
+async function advFeedbackDownloadPreviewPdf(){if(!advFeedbackPreviewRow)return;try{const {doc,row}=await advFeedbackBuildPdf(advFeedbackPreviewRow);doc.save(`${advFeedbackSafeFileName(`${row.Process||'Process'}_${row.Associate_Name||'Agent'}_${row.Call_ID||'Call'}_QA_Feedback`)}.pdf`);}catch(e){alert('PDF download failed: '+e.message);}}
+async function advFeedbackPrint(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);const url=URL.createObjectURL(doc.output('blob'));const win=window.open(url,'_blank');if(!win)throw new Error('Browser blocked the PDF window. Allow pop-ups for this portal.');sqlCenterLog(`QA Feedback PDF opened for print — ${merged.Associate_Name||''} / ${merged.Call_ID||''}`);}catch(e){alert('Print PDF করা যায়নি: '+e.message);}}
 
 function advReportSwitchTab(tab){
   advReportActiveTab = tab;
@@ -9317,6 +10417,7 @@ function advReportRenderActiveTab(){
   if(advReportActiveTab === 'COMPARE') return advReportRenderCompare(contentEl);
   if(advReportActiveTab === 'FATAL') return advReportRenderFatal(contentEl);
   if(advReportActiveTab === 'LEADER') return advReportRenderLeader(contentEl);
+  if(advReportActiveTab === 'FEEDBACK') return advFeedbackRenderList();
 }
 
 /* ---- A) Agent-wise performance trend (avg Total_Score per day) ---- */
@@ -9353,53 +10454,192 @@ function advReportRenderTrend(contentEl){
 
 /* ---- B) Parameter-wise weak area analysis ---- */
 function advReportRenderWeak(contentEl){
-  const stats = ADV_SCORE_COLUMNS.map(([col,label]) => {
-    let sum=0, count=0, fatal=0;
-    advReportRows.forEach(r => {
-      const raw = r[col];
-      if(advReportIsFatal(raw)){ fatal++; return; }
-      const n = advReportNumOrNull(raw);
-      if(n !== null){ sum += n; count++; }
-    });
-    return { col, label, avg: count ? sum/count : null, count, fatal };
-  }).filter(s => s.count > 0 || s.fatal > 0);
+  /*
+   * Parameter-wise Weak Area is based on the SAME failure definition used
+   * by Agent View / Parameter Wise Fail Count: a parameter fails when its
+   * paired Remarks_N field is non-blank.
+   *
+   * Do NOT use the raw 0.00 / 1.00 / 2.00 parameter score as a fail count.
+   * The score is only a score; the Remarks field is the failure indicator.
+   */
+  const ADV_PARAMETER_MAX_MARKS = [5,1,3,4,3,3,4,4,4,3,4,9,4,5,2,2,2,4,1,3,7,5,5,5,5,0,0,3,0];
 
-  stats.sort((a,b) => (a.avg ?? 999) - (b.avg ?? 999));
-  const weakest5 = stats.slice(0,5);
+  const stats = ADV_SCORE_COLUMNS.map(([scoreCol,label], i) => {
+    const remarkCol = 'Remarks_' + (i + 1);
+    const maxMarks = Number(ADV_PARAMETER_MAX_MARKS[i] || 0);
+    let failCount = 0;
+    let fatalCount = 0;
+    let scoreSum = 0;
+    let scoreCount = 0;
+
+    advReportRows.forEach(r => {
+      const remark = r[remarkCol];
+      if(
+        remark !== null &&
+        remark !== undefined &&
+        String(remark).trim() !== ''
+      ){
+        failCount++;
+      }
+
+      const raw = r[scoreCol];
+      if(advReportIsFatal(raw)){
+        fatalCount++;
+      }else{
+        const n = advReportNumOrNull(raw);
+        if(n !== null){
+          scoreSum += n;
+          scoreCount++;
+        }
+      }
+    });
+
+    return {
+      col: scoreCol,
+      label,
+      failCount,
+      failPct: advReportRows.length ? (failCount / advReportRows.length) * 100 : 0,
+      fatalCount,
+      avg: scoreCount ? scoreSum / scoreCount : null,
+      avgPct: (scoreCount && maxMarks > 0) ? (scoreSum / scoreCount / maxMarks) * 100 : null,
+      maxMarks
+    };
+  });
+
+  /* Weakest = highest failure count. FATAL is a secondary tie-breaker. */
+  stats.sort((a,b) =>
+    b.failCount - a.failCount ||
+    b.fatalCount - a.fatalCount ||
+    (a.avgPct ?? 999) - (b.avgPct ?? 999) ||
+    String(a.label).localeCompare(String(b.label))
+  );
+
+  const weakOnly = stats.filter(s => s.failCount > 0 || s.fatalCount > 0);
+  const weakest8 = weakOnly.slice(0,8);
+
+  const totalFails = stats.reduce((sum,s) => sum + s.failCount, 0);
+  const totalFatal = stats.reduce((sum,s) => sum + s.fatalCount, 0);
 
   contentEl.innerHTML = `
-    <div class="sql-adv-chart-box"><canvas id="advWeakChart"></canvas></div>
+    <div class="sql-adv-summary-strip">
+      <div class="sql-status-card">
+        <div class="sql-status-label">Calls Analysed</div>
+        <div class="sql-status-value">${advReportRows.length}</div>
+      </div>
+      <div class="sql-status-card">
+        <div class="sql-status-label">Parameters With Fails</div>
+        <div class="sql-status-value">${weakOnly.length}</div>
+      </div>
+      <div class="sql-status-card">
+        <div class="sql-status-label">Total Parameter Fails</div>
+        <div class="sql-status-value">${totalFails}</div>
+      </div>
+      <div class="sql-status-card">
+        <div class="sql-status-label">FATAL Observations</div>
+        <div class="sql-status-value">${totalFatal}</div>
+      </div>
+    </div>
+
+    <div class="sql-adv-chart-box" style="height:${Math.max(340, weakest8.length * 58 + 90)}px;">
+      <canvas id="advWeakChart"></canvas>
+    </div>
+
     <div class="sql-report-box">
-      <h3>Weakest 5 Parameters (নিচের দিকে থাকা parameter-এ সবচেয়ে বেশি নজর দরকার)</h3>
+      <h3>Weakest Parameters — Highest Failure Count First</h3>
       <table class="sql-report-table">
-        <thead><tr><th>#</th><th>Parameter</th><th>Avg Score</th><th>Sample Size</th><th>FATAL Count</th></tr></thead>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Parameter</th>
+            <th>Fail Count</th>
+            <th>Fail %</th>
+            <th>Avg Score</th>
+            <th>FATAL Count</th>
+          </tr>
+        </thead>
         <tbody>
-          ${weakest5.map((s,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(s.label)}</td><td>${s.avg===null?'--':s.avg.toFixed(2)}</td><td>${s.count}</td><td>${s.fatal ? `<span class="sql-adv-badge-fatal">${s.fatal} FATAL</span>` : '0'}</td></tr>`).join('')}
+          ${weakest8.length ? weakest8.map((s,i)=>`
+            <tr>
+              <td>${i+1}</td>
+              <td>${escapeHtml(s.label)}</td>
+              <td><strong>${s.failCount}</strong></td>
+              <td>${s.failPct.toFixed(2)}%</td>
+              <td>${s.avgPct === null ? '--' : s.avgPct.toFixed(2) + '%'}</td>
+              <td>${s.fatalCount ? `<span class="sql-adv-badge-fatal">${s.fatalCount} FATAL</span>` : '0'}</td>
+            </tr>
+          `).join('') : `
+            <tr><td colspan="6" style="text-align:center;">No parameter-wise failures found for this filter.</td></tr>
+          `}
         </tbody>
       </table>
     </div>
+
     <div class="sql-report-box" style="margin-top:14px;">
-      <h3>All Parameters — Full Breakdown</h3>
+      <h3>All Parameters — Failure Breakdown</h3>
       <table class="sql-report-table">
-        <thead><tr><th>Parameter</th><th>Avg Score</th><th>Sample Size</th><th>FATAL Count</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Fail Count</th>
+            <th>Fail %</th>
+            <th>Avg Score</th>
+            <th>FATAL Count</th>
+          </tr>
+        </thead>
         <tbody>
-          ${stats.map(s=>`<tr><td>${escapeHtml(s.label)}</td><td>${s.avg===null?'--':s.avg.toFixed(2)}</td><td>${s.count}</td><td>${s.fatal ? `<span class="sql-adv-badge-fatal">${s.fatal} FATAL</span>` : '0'}</td></tr>`).join('')}
+          ${stats.map(s=>`
+            <tr>
+              <td>${escapeHtml(s.label)}</td>
+              <td>${s.failCount}</td>
+              <td>${s.failPct.toFixed(2)}%</td>
+              <td>${s.avgPct === null ? '--' : s.avgPct.toFixed(2) + '%'}</td>
+              <td>${s.fatalCount ? `<span class="sql-adv-badge-fatal">${s.fatalCount} FATAL</span>` : '0'}</td>
+            </tr>
+          `).join('')}
         </tbody>
       </table>
     </div>
   `;
+
   const ctx = document.getElementById('advWeakChart');
   if(chartInstances['adv-weak']) chartInstances['adv-weak'].destroy();
   chartInstances['adv-weak'] = new Chart(ctx, {
     type:'bar',
     data:{
-      labels: stats.map(s=>s.label),
-      datasets:[{ label:'Average Score', data: stats.map(s=>s.avg===null?0:+s.avg.toFixed(2)), backgroundColor: stats.map((s,i)=> i<5 ? '#E04A4A' : '#4A7FE0') }]
+      labels: weakest8.map(s=>s.label),
+      datasets:[{
+        label:'Failure Count',
+        data: weakest8.map(s=>s.failCount),
+        backgroundColor:'#E04A4A'
+      }]
     },
-    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#999'}}, y:{ticks:{color:'#999',font:{size:9}}} } }
+    options:{
+      indexAxis:'y',
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:function(context){
+              const s = weakest8[context.dataIndex];
+              return `Fails: ${s.failCount} (${s.failPct.toFixed(2)}%)`;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          beginAtZero:true,
+          ticks:{color:'#999', precision:0}
+        },
+        y:{
+          ticks:{color:'#999',font:{size:9}}
+        }
+      }
+    }
   });
 }
-
 /* ---- C) Process / TL comparison ---- */
 function advReportRenderCompare(contentEl){
   const byProcess = {}, byTL = {};
@@ -14052,6 +15292,17 @@ updateWelcome();
 
 setInterval(updateWelcome,1000);
 </script>
+<!-- QA Feedback PDF preview -->
+<div class="adv-feedback-preview-overlay" id="advFeedbackPreviewOverlay" onclick="if(event.target===this) advFeedbackClosePreview()">
+  <div class="adv-feedback-preview-box">
+    <div class="adv-feedback-preview-head">
+      <div>📄 QA Feedback Sheet — PDF Preview</div>
+      <div style="display:flex;gap:6px;"><button class="btn gold small" type="button" onclick="advFeedbackDownloadPreviewPdf()">⬇ Download PDF</button><button class="btn small" type="button" onclick="advFeedbackClosePreview()">✕ Close</button></div>
+    </div>
+    <iframe class="adv-feedback-preview-frame" id="advFeedbackPreviewFrame" title="QA Feedback PDF Preview"></iframe>
+  </div>
+</div>
+
 <div class="login-popup-overlay" id="loginPopupOverlay" onclick="if(event.target===this) closeLoginPopup()">
   <div class="login-popup-box">
     <button class="login-popup-close" onclick="closeLoginPopup()" title="Close">✕</button>
@@ -16261,55 +17512,105 @@ async function qaRenderSqlAgentReport(agent){
     const processes = Array.from(new Set(
       rows.map(r => String(r.Process || '').trim()).filter(Boolean)
     ));
-    const tls = Array.from(new Set(
-      rows.map(r => String(r.TL_Name || '').trim()).filter(Boolean)
-    ));
+
+    /*
+     * TL DISPLAY FIX
+     * An Agent can have historical records under more than one TL.
+     * The report should show the TL from the Agent's latest audit,
+     * rather than joining every historical TL into one line.
+     */
+    const sortedByLatestAudit = rows.slice().sort((a,b) => {
+      const dateA = String(a.Call_Date || '');
+      const dateB = String(b.Call_Date || '');
+      if(dateA !== dateB) return dateB.localeCompare(dateA);
+
+      const timeA = String(a.Call_Time || '');
+      const timeB = String(b.Call_Time || '');
+      return timeB.localeCompare(timeA);
+    });
+
+    const primaryTL = sortedByLatestAudit.length
+      ? String(sortedByLatestAudit[0].TL_Name || '').trim()
+      : '';
 
     const status = qaScoreStatus(avgScore);
 
-    /* All score fields except Total_Score. Lowest averages are shown
-       as improvement areas; FATAL values are tracked separately. */
-    const parameterMap = {};
+    /*
+     * IMPROVEMENT AREAS
+     *
+     * A parameter is considered failed when its corresponding Remarks_N
+     * field is non-blank. This avoids displaying raw parameter scores
+     * such as 0.00 / 1.00 as if they were failure counts.
+     */
+    const improvementMap = {};
+
+    const ADV_REMARK_COLUMNS = Array.from(
+      {length: 29},
+      (_, i) => 'Remarks_' + (i + 1)
+    );
+
+    const ADV_PARAMETER_LABELS = Object.fromEntries(
+      ADV_SCORE_COLUMNS.map((x, i) => [
+        'Remarks_' + (i + 1),
+        x[1]
+      ])
+    );
+
     let fatalCount = 0;
 
-    rows.forEach(r=>{
-      Object.keys(r).forEach(key=>{
-        if(!/_Score$/i.test(key) || key === 'Total_Score') return;
-        const raw = r[key];
+    rows.forEach(r => {
+      ADV_SCORE_COLUMNS.forEach(([scoreColumn]) => {
+        const raw = r[scoreColumn];
         if(String(raw ?? '').trim().toUpperCase() === 'FATAL'){
           fatalCount++;
-          return;
         }
-        const n = qaSqlNumber(raw);
-        if(n === null) return;
-        if(!parameterMap[key]) parameterMap[key] = {sum:0,count:0};
-        parameterMap[key].sum += n;
-        parameterMap[key].count += 1;
+      });
+
+      ADV_REMARK_COLUMNS.forEach(remarkColumn => {
+        const remark = r[remarkColumn];
+
+        if(
+          remark !== null &&
+          remark !== undefined &&
+          String(remark).trim() !== ''
+        ){
+          if(!improvementMap[remarkColumn]){
+            improvementMap[remarkColumn] = {
+              name: ADV_PARAMETER_LABELS[remarkColumn] || remarkColumn,
+              count: 0
+            };
+          }
+
+          improvementMap[remarkColumn].count++;
+        }
       });
     });
 
-    const lowest = Object.entries(parameterMap)
-      .map(([key,v])=>({
-        key,
-        avg:v.count ? v.sum/v.count : null,
-        label:key
-          .replace(/_Score$/i,'')
-          .replace(/_/g,' ')
-          .replace(/\b\w/g,m=>m.toUpperCase())
-      }))
-      .filter(x=>x.avg !== null)
-      .sort((a,b)=>a.avg-b.avg)
-      .slice(0,5);
+    const improvementAreas = Object.values(improvementMap)
+      .filter(x => x.count > 0)
+      .sort((a,b) =>
+        b.count - a.count ||
+        String(a.name).localeCompare(String(b.name))
+      )
+      .slice(0, 8);
 
-    const scoreText = avgScore === null ? '--' : avgScore.toFixed(2) + '%';
+    const scoreText = avgScore === null
+      ? '--'
+      : avgScore.toFixed(2) + '%';
 
     const recent = rows
       .slice()
-      .sort((a,b)=>String(b.Call_Date||'').localeCompare(String(a.Call_Date||'')))
+      .sort((a,b) => {
+        const da = String(b.Call_Date || '');
+        const db = String(a.Call_Date || '');
+        if(da !== db) return da.localeCompare(db);
+        return String(b.Call_Time || '').localeCompare(String(a.Call_Time || ''));
+      })
       .slice(0,10);
 
     body.innerHTML = `
       <div class="agent-report-wrap">
+
         <div class="agent-report-hero">
           <div>
             <div class="agent-report-name">${escapeHtml(agent)}</div>
@@ -16318,68 +17619,144 @@ async function qaRenderSqlAgentReport(agent){
               &nbsp;•&nbsp; Personal QA Performance
             </p>
           </div>
-          <div class="agent-report-status ${status.cls}">${status.label}</div>
+          <div class="agent-report-status ${status.cls}">
+            ${status.label}
+          </div>
         </div>
 
         <div class="agent-report-grid">
+
           <div class="agent-report-card">
             <div class="label">Total Audits</div>
             <div class="value">${totalAudits.toLocaleString('en-IN')}</div>
           </div>
+
           <div class="agent-report-card">
             <div class="label">Average Score</div>
             <div class="value">${escapeHtml(scoreText)}</div>
           </div>
+
           <div class="agent-report-card">
             <div class="label">LOB / Process</div>
-            <div class="value" style="font-size:18px;">${escapeHtml(processes.join(' • ') || '--')}</div>
+            <div class="value" style="font-size:18px;">
+              ${escapeHtml(processes.join(' • ') || '--')}
+            </div>
           </div>
+
           <div class="agent-report-card">
             <div class="label">FATAL Count</div>
-            <div class="value" style="font-size:18px;">${fatalCount}</div>
+            <div class="value" style="font-size:18px;">
+              ${fatalCount}
+            </div>
           </div>
+
         </div>
 
         <div class="agent-report-section">
           <h3>⚠️ My Improvement Areas</h3>
+
           ${
-            lowest.length
+            improvementAreas.length
             ? `<div class="agent-report-fail-list">
-                ${lowest.map(x=>`
+                ${improvementAreas.map(x => `
                   <div class="agent-report-fail-item">
-                    <span class="fail-name">${escapeHtml(x.label)}</span>
-                    <span class="fail-count">${x.avg.toFixed(2)}</span>
-                  </div>`).join('')}
+                    <span class="fail-name">
+                      ${escapeHtml(x.name)}
+                    </span>
+                    <span class="fail-count">
+                      ${x.count} fail${x.count === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                `).join('')}
               </div>`
-            : `<div class="agent-report-empty">Parameter score data পাওয়া যায়নি।</div>`
+            : `<div class="agent-report-empty">
+                কোনো parameter-wise fail data পাওয়া যায়নি।
+              </div>`
           }
+
           <div class="agent-report-note">
-            
+            এই Agent-এর QA data-তে সবচেয়ে বেশি fail হওয়া parameter-গুলো আগে দেখানো হচ্ছে।
           </div>
         </div>
 
         <div class="agent-report-section">
           <h3>📌 QA Feedback</h3>
-          <div style="font-size:13px;line-height:1.75;color:var(--text);">
+
+          <div style="font-size:13px;line-height:1.85;color:var(--text);">
             ${
-              status.cls === 'excellent'
-              ? 'আপনার overall QA performance খুব ভালো। একই consistency বজায় রাখুন এবং improvement areas আরও শক্ত করুন।'
-              : status.cls === 'good'
-              ? 'আপনার overall performance ভালো। নিচের improvement areas-এ consistency বাড়ালে score আরও উন্নত হবে।'
-              : status.cls === 'average'
-              ? 'আপনার performance উন্নত করার সুযোগ আছে। নিচের lowest-scoring parameter-গুলোতে বিশেষভাবে নজর দিন।'
-              : 'আপনার QA score উন্নত করার জন্য lowest-scoring parameter-গুলো আগে ঠিক করুন এবং repeated issues কমানোর চেষ্টা করুন।'
+              (() => {
+                const top1 = improvementAreas[0] || null;
+                const top2 = improvementAreas[1] || null;
+                const top3 = improvementAreas[2] || null;
+
+                const areaText = top1
+                  ? (
+                      '<strong>' + escapeHtml(top1.name) + '</strong> (' + top1.count + ' fail' + (top1.count === 1 ? '' : 's') + ')' +
+                      (top2
+                        ? ' এবং <strong>' + escapeHtml(top2.name) + '</strong> (' + top2.count + ' fail' + (top2.count === 1 ? '' : 's') + ')'
+                        : '') +
+                      (top3
+                        ? ' এবং <strong>' + escapeHtml(top3.name) + '</strong> (' + top3.count + ' fail' + (top3.count === 1 ? '' : 's') + ')'
+                        : '')
+                    )
+                  : '';
+
+                if(status.cls === 'excellent'){
+                  return `
+                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Excellent range-এ রয়েছে।
+                    Overall performance খুব ভালো এবং QA parameters-এ আপনার consistency প্রশংসনীয়।
+                    ${top1
+                      ? 'তবে ' + areaText + ' parameter-এ কিছু repeated observation রয়েছে। এই gap-গুলো নিয়মিতভাবে address করতে পারলে performance আরও consistent হবে।'
+                      : 'এই ভালো performance এবং consistency বজায় রাখুন।'}
+                    পরবর্তী audits-এ একই quality standard ধরে রাখার পাশাপাশি customer handling, process adherence এবং communication quality-তে একই level বজায় রাখার উপর গুরুত্ব দিন।
+                  `;
+                }
+
+                if(status.cls === 'good'){
+                  return `
+                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Good range-এ রয়েছে।
+                    Overall performance ভালো এবং basic QA standards যথেষ্টভাবে maintain হচ্ছে।
+                    ${top1
+                      ? 'তবে ' + areaText + ' parameter-এ repeated gaps লক্ষ্য করা যাচ্ছে। এই areas-এ একটু বেশি attention দিলে overall score আরও উন্নত করা সম্ভব।'
+                      : 'এখন মূল লক্ষ্য হওয়া উচিত এই performance-টি আরও consistent রাখা।'}
+                    প্রতিটি call-এ parameter-wise checklist follow করুন এবং যেসব area-তে observation বেশি হচ্ছে, call handling-এর সময় সেগুলো consciously maintain করুন।
+                  `;
+                }
+
+                if(status.cls === 'average'){
+                  return `
+                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Average range-এ রয়েছে।
+                    Performance-এ ভালো দিক রয়েছে, তবে কিছু parameter-এ repeated gaps-এর কারণে overall score আরও উন্নত করার সুযোগ রয়েছে।
+                    ${top1
+                      ? 'প্রধান improvement areas হলো ' + areaText + '।'
+                      : 'Parameter-wise performance আরও consistent করা প্রয়োজন।'}
+                    এই parameters-এ কেন repeated error হচ্ছে তা review করে প্রতিটি call-এ process এবং communication points consciously follow করুন।
+                    পরবর্তী audits-এ একই ধরনের observation কমানো এবং consistency বাড়ানোকে প্রধান focus হিসেবে রাখুন।
+                  `;
+                }
+
+                return `
+                  আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Needs Improvement range-এ রয়েছে।
+                  Overall performance উন্নত করার জন্য parameter-wise repeated issues-এর উপর immediate focus প্রয়োজন।
+                  ${top1
+                    ? 'প্রধান improvement areas হলো ' + areaText + '।'
+                    : 'Parameter-wise performance আরও consistent করা প্রয়োজন।'}
+                  এই parameters-এ repeated failures-এর কারণ review করে সংশ্লিষ্ট QA guidelines এবং process steps follow করার উপর বিশেষ গুরুত্ব দিন।
+                  প্রতিটি call-এর আগে এবং call handling-এর সময় relevant checklist points মনে রেখে কাজ করলে একই ধরনের observation কমানো সম্ভব হবে।
+                  পরবর্তী QA audits-এ repeated issue কমিয়ে score এবং overall call quality ধারাবাহিকভাবে উন্নত করাই মূল লক্ষ্য হওয়া উচিত।
+                `;
+              })()
             }
           </div>
         </div>
 
         <div class="agent-report-section">
           <h3>📞 Recent Audits</h3>
+
           <div class="table-wrapper" style="overflow:auto;">
             <table class="score-table">
               <thead>
                 <tr>
-                  <th>Call Date</th>
                   <th>Process</th>
                   <th>TL</th>
                   <th>Call ID</th>
@@ -16387,16 +17764,29 @@ async function qaRenderSqlAgentReport(agent){
                   <th>Disposition</th>
                 </tr>
               </thead>
+
               <tbody>
-                ${recent.map(r=>`
+                ${recent.map(r => `
                   <tr>
-                    <td>${escapeHtml(r.Call_Date || '--')}</td>
                     <td>${escapeHtml(r.Process || '--')}</td>
                     <td>${escapeHtml(r.TL_Name || '--')}</td>
                     <td class="mono">${escapeHtml(r.Call_ID || '--')}</td>
-                    <td style="font-weight:700;">${escapeHtml(r.Total_Score ?? '--')}</td>
+                    <td class="agent-score-cell ${
+                      (() => {
+                        const s = qaSqlNumber(r.Total_Score);
+                        if(s === null) return 'score-na';
+                        if(s < 70) return 'score-critical';
+                        if(s < 85) return 'score-needs';
+                        if(s < 90) return 'score-average';
+                        if(s < 95) return 'score-good';
+                        return 'score-excellent';
+                      })()
+                    }">
+                      ${escapeHtml(r.Total_Score ?? '--')}
+                    </td>
                     <td>${escapeHtml(r.Disposition || '--')}</td>
-                  </tr>`).join('')}
+                  </tr>
+                `).join('')}
               </tbody>
             </table>
           </div>
@@ -16404,17 +17794,20 @@ async function qaRenderSqlAgentReport(agent){
 
         <div class="agent-report-note">
           Source: FastAPI → SQL Server → dbo.QA_Call_Data
-          ${tls.length ? ` • TL: ${escapeHtml(tls.join(' • '))}` : ''}
+          ${primaryTL ? ` • TL: ${escapeHtml(primaryTL)}` : ''}
         </div>
+
       </div>`;
 
     if(typeof runCountUps === 'function') runCountUps(body);
 
   }catch(e){
     console.error('SQL Agent report data failed:', e);
+
     body.innerHTML = `
       <div class="agent-report-empty" style="color:var(--need);">
-        Agent report load করতে সমস্যা হয়েছে: ${escapeHtml(e.message)}
+        Agent report load করতে সমস্যা হয়েছে:
+        ${escapeHtml(e.message)}
       </div>`;
   }
 }
