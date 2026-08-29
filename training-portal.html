@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>45-Day Training Journey | CATV · BB TECH SUPPORT · BB RENEWAL · SOFT SKILL</title>
+<title>Training Journey | CATV · BB TECH SUPPORT · BB RENEWAL · SOFT SKILL</title>
 <link rel="icon" href="https://raw.githubusercontent.com/qualityanalystkcbpl-collab/call-quality/main/GTPL_KCBPL_favicon_32x32.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -210,25 +210,30 @@
   .tab-btn.active svg{ stroke: #0A0F1C; }
   .tab-btn.active .count{ background: rgba(10,15,28,.2); color: #0A0F1C; font-weight: 700; }
 
-  /* Staff Menu Bar (QA / Team Leader / HR / HOD only) */
+  /* Staff Menu Bar (QA / Team Leader / HR / HOD only) — flat text-link
+     navbar style (plain words, underline on hover/active), not boxed pills. */
   .staff-menu{
     position: relative; z-index: 3;
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-    padding: 6px 24px; max-width: 1050px; margin: 20px auto 0;
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 30px;
+    padding: 16px 24px; max-width: 1050px; margin: 20px auto 0;
+    border-bottom: 1px solid var(--line);
   }
   .staff-menu-btn{
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 18px; border-radius: 12px; cursor: pointer;
-    background: var(--bg-panel); border: 1px solid var(--line);
-    color: var(--text-muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12.5px;
-    backdrop-filter: blur(16px); transition: all .2s ease;
-    box-shadow: 0 8px 18px -6px rgba(0,0,0,0.4);
+    display: flex; align-items: center; gap: 7px;
+    padding: 4px 2px; cursor: pointer; position: relative;
+    background: none; border: none; border-radius: 0; box-shadow: none; backdrop-filter: none;
+    color: var(--text-muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px;
+    transition: color .2s ease;
   }
-  .staff-menu-btn:hover{ color: var(--text-primary); border-color: var(--accent); transform: translateY(-2px); }
-  .staff-menu-btn.active{
-    color: #0A0F1C; background: linear-gradient(120deg, #a855f7, #ec4899); border-color: transparent;
-    box-shadow: 0 10px 22px -6px rgba(236,72,153,.5);
+  .staff-menu-btn::after{
+    content: ''; position: absolute; left: 0; right: 0; bottom: -17px; height: 2px;
+    background: var(--accent); transform: scaleX(0); transform-origin: center;
+    transition: transform .25s ease;
   }
+  .staff-menu-btn:hover{ color: var(--text-primary); }
+  .staff-menu-btn:hover::after{ transform: scaleX(1); }
+  .staff-menu-btn.active{ color: var(--accent); }
+  .staff-menu-btn.active::after{ transform: scaleX(1); }
 
   /* Home Dashboard */
   .dash-grid{
@@ -258,6 +263,16 @@
   .ring-num{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; color: var(--text-primary); }
   .chart-card .lbl{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing:.04em; text-align:center; }
 
+  /* Home dashboard / All New Employees / Agent Progress containers sit in
+     normal document flow with no position of their own, which put them
+     BEHIND the fixed decorative .bg-fx layer (shapes/particles) in the
+     default stacking order — this is why the floating wireframe shapes
+     were rendering on top of employee-row text. Lifting them into their
+     own stacking context above bg-fx fixes it for all three views. */
+  #homeView, #employeesView, #progressView{
+    position: relative; z-index: 2;
+  }
+
   /* Employees view */
   .emp-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; max-width:920px; margin:0 auto 18px; }
   .emp-search{
@@ -270,8 +285,13 @@
     background: var(--bg-panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px;
     box-shadow: 0 8px 18px -4px rgba(0,0,0,0.5);
   }
-  .emp-row .nm{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; }
-  .emp-row .meta{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color: var(--text-faint); margin-top:3px; }
+  .emp-row .nm{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; color: var(--text-primary); }
+  .emp-row .meta{ font-family:'JetBrains Mono',monospace; font-size:11px; color: var(--text-muted); margin-top:5px; display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+  .emp-row .meta .sep{ color: var(--text-faint); }
+  .emp-row .meta .meta-dept{ font-weight:700; }
+  .emp-row .meta .meta-status{ font-weight:700; padding:1px 8px; border-radius:999px; font-size:10px; letter-spacing:.03em; }
+  .emp-row .meta .meta-status.is-active{ color:#22c55e; background:rgba(34,197,94,.14); }
+  .emp-row .meta .meta-status.is-disabled{ color:#f87171; background:rgba(248,113,113,.14); }
   .emp-form{
     max-width:920px; margin: 0 auto 20px; background: var(--bg-panel-2); border:1px solid var(--line);
     border-radius:14px; padding:18px 20px; display:none;
@@ -294,6 +314,21 @@
   }
   .path-heading h2{ font-family: 'Space Grotesk', sans-serif; font-size: 20px; margin: 0; color: var(--text-primary); }
   .path-heading small{ color: var(--text-faint); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+
+  /* New Employees / Old Employees toggle pill, shown only to staff/admin
+     roles above the timeline so they can view or manage either track. */
+  .emp-mode-pill{
+    display: inline-flex; gap: 4px; padding: 4px; margin: -22px 0 26px;
+    background: var(--surface-2, rgba(255,255,255,0.04)); border: 1px solid var(--line);
+    border-radius: 999px; width: fit-content;
+  }
+  .emp-mode-btn{
+    font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 7px 16px; border-radius: 999px; border: 0; cursor: pointer;
+    background: transparent; color: var(--text-muted); transition: all .18s ease;
+  }
+  .emp-mode-btn:hover{ color: var(--text-primary); }
+  .emp-mode-btn.active{ background: var(--accent); color: #06120f; }
 
   /* 3D Timeline & Pulsing Laser Track */
   .timeline{ position: relative; transform-style: preserve-3d; overflow: visible; }
@@ -1321,7 +1356,7 @@
         <div class="cert-logo-plate" style="margin-bottom:0;"><img class="brand-logo" id="authLogo" alt="GTPL KCBPL" style="height:32px;" /></div>
       </div>
       <div class="auth-greeting" id="authGreeting">Hi, Good Morning! 👋</div>
-      <h1>🎉 Welcome to Your 45-Day Training Journey!</h1>
+      <h1>🎉 Welcome to Your Training Journey!</h1>
       <p>Welcome to the team! 👋 Over the next 45 days you'll learn, practice, and build the skills to deliver a great customer experience.</p>
 
       <div class="expect-block">
@@ -1343,7 +1378,7 @@
 
   <div class="auth-side">
     <div class="auth-card">
-      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#ec4899; margin-bottom:8px;">45-Day Training Portal</div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#ec4899; margin-bottom:8px;">Training Portal</div>
 
       <div class="auth-switch">
         <button type="button" id="authTabLogin" class="active">Log In</button>
@@ -1417,6 +1452,13 @@
             <option value="sales">SALES TEAM</option>
           </select>
         </div>
+        <div class="field" id="regEmployeeTypeField">
+          <label for="regEmployeeType">Employee Type</label>
+          <select id="regEmployeeType">
+            <option value="new">New Employee</option>
+            <option value="old">Old Employee</option>
+          </select>
+        </div>
         <div class="field" id="regCodeField">
           <label for="regCode">Registration Code</label>
           <input id="regCode" type="text" placeholder="Get code from Admin team" />
@@ -1451,7 +1493,7 @@
 <header>
   <div class="brand-logo-wrap"><img class="brand-logo" id="appLogo" alt="GTPL KCBPL" /></div>
   <span class="eyebrow"><span class="dot"></span> Learning Journey for New Joinees</span>
-  <h1>45-Day <span class="accent-word" id="titleAccent">Training Journey</span></h1>
+  <h1><span class="accent-word" id="titleAccent">Training Journey</span></h1>
   <p class="sub">Step-by-step training for Support Executives, from day of joining through Day 45 — each stage links directly to reference material in Google Sheets and Google Drive (PPT).</p>
 </header>
 
@@ -1468,7 +1510,7 @@
 <div id="homeView" style="display:none;">
   <div class="dash-welcome">
     <h2>Welcome, <span id="dashName" style="color:var(--accent);">—</span></h2>
-    <p>This is your training portal dashboard. Use the menu above to review every process, manage new employees, or check any agent's 45-Day Journey progress.</p>
+    <p>This is your training portal dashboard. Use the menu above to review every process, manage new employees, or check any agent's Journey progress.</p>
   </div>
   <div class="dash-grid" id="dashStats">
     <div class="dash-card chart-card">
@@ -1526,6 +1568,13 @@
           <option value="sales">SALES TEAM</option>
         </select>
       </div>
+      <div class="field">
+        <label for="empEmployeeType">Employee Type</label>
+        <select id="empEmployeeType">
+          <option value="new">New Employee</option>
+          <option value="old">Old Employee</option>
+        </select>
+      </div>
     </div>
     <div class="modal-actions" style="margin-top:6px;">
       <button type="button" class="btn" id="empFormCancelBtn">Cancel</button>
@@ -1550,7 +1599,7 @@
       <button type="button" class="btn" id="agentListLoadMoreBtn" style="display:none; margin-top:10px; width:100%;">Load more agents</button>
     </div>
     <div class="agents-detail" id="agentsDetail">
-      <div class="empty-state">Select an agent from the list to view their 45-Day Journey progress across all four processes.</div>
+      <div class="empty-state">Select an agent from the list to view their Journey progress across all four processes.</div>
     </div>
   </div>
 </div>
@@ -1561,8 +1610,12 @@
 
 <main>
   <div class="path-heading">
-    <h2>Learning Journey — <span id="activeTabName" style="color:var(--accent);">CATV</span></h2>
+    <h2><span id="journeyHeadingLabel">Learning Journey</span> — <span id="activeTabName" style="color:var(--accent);">CATV</span></h2>
     <small id="progressText">0 / 6 completed</small>
+  </div>
+  <div class="emp-mode-pill" id="empModePill" style="display:none;">
+    <button type="button" class="emp-mode-btn active" data-mode="new" id="empModeNewBtn">New Employees</button>
+    <button type="button" class="emp-mode-btn" data-mode="old" id="empModeOldBtn">Old Employees</button>
   </div>
   <div class="timeline" id="timeline"></div>
 </main>
@@ -1882,7 +1935,7 @@
       <div class="nc-certify" id="ncCertify">This is to certify that</div>
       <div class="nc-name" id="certAgentName">Agent Name</div>
       <div class="nc-name-line"></div>
-      <div class="nc-desc" id="ncDescBlock">This certifies that <b id="certAgentNameInline">Agent Name</b> has successfully completed the assessment for <b id="certStageTitleInline">Stage</b> as part of the 45-Day Training Journey, achieving a passing score.</div>
+      <div class="nc-desc" id="ncDescBlock">This certifies that <b id="certAgentNameInline">Agent Name</b> has successfully completed the assessment for <b id="certStageTitleInline">Stage</b> as part of the Training Journey, achieving a passing score.</div>
       <div class="nc-meta-row">
         <div><div class="lbl">Employee ID</div><div class="val" id="certEmployeeId">—</div></div>
         <div><div class="lbl">Score</div><div class="val" id="certScore">—</div></div>
@@ -2295,9 +2348,38 @@ function toggleRegCodeField(){
   deptField.style.display = isAgentRole ? '' : 'none';
   deptSelect.required = isAgentRole;
   if(!isAgentRole) deptSelect.value = '';
+
+  const empTypeField = document.getElementById('regEmployeeTypeField');
+  empTypeField.style.display = isAgentRole ? '' : 'none';
+  if(!isAgentRole) document.getElementById('regEmployeeType').value = 'new';
 }
 regRoleSelect.addEventListener('change', toggleRegCodeField);
 toggleRegCodeField();
+
+// Employee Type (New/Old) client-side cache. The backend Apps Script may not
+// yet have a column for this new field - if it doesn't store/return
+// `employeeType`, this local cache (keyed by username, on this browser only)
+// is used as a fallback so the New/Old split still works for accounts
+// created or logged into on this device. For it to work reliably across
+// every device/browser, the backend's register/login/create-employee
+// handlers need to be updated to store and return `employeeType` too.
+const EMP_TYPE_CACHE_KEY = 'trainingPortalEmployeeTypeCache';
+function cacheEmployeeType(username, employeeType){
+  if(!username) return;
+  try{
+    const raw = localStorage.getItem(EMP_TYPE_CACHE_KEY);
+    const map = raw ? JSON.parse(raw) : {};
+    map[username] = employeeType === 'old' ? 'old' : 'new';
+    localStorage.setItem(EMP_TYPE_CACHE_KEY, JSON.stringify(map));
+  } catch(ignore){}
+}
+function getCachedEmployeeType(username){
+  try{
+    const raw = localStorage.getItem(EMP_TYPE_CACHE_KEY);
+    const map = raw ? JSON.parse(raw) : {};
+    return map[username] || null;
+  } catch(ignore){ return null; }
+}
 
 async function callBackend(payload){
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE_YOUR') === 0){
@@ -2329,7 +2411,8 @@ loginForm.addEventListener('submit', async (e)=>{
   try{
     const data = await callBackend({ action:'login', username, password });
     if(data.success){
-      currentUser = { fullName: data.fullName, username: data.username || username, role: data.role, employeeId: data.employeeId || '', department: data.department || '', status: 'active' };
+      const employeeType = data.employeeType || getCachedEmployeeType(data.username || username) || 'new';
+      currentUser = { fullName: data.fullName, username: data.username || username, role: data.role, employeeId: data.employeeId || '', department: data.department || '', employeeType, status: 'active' };
       enterApp();
     } else {
       showAuthError(data.message || 'Incorrect username or password.');
@@ -2351,6 +2434,7 @@ registerForm.addEventListener('submit', async (e)=>{
   const code        = regCodeInput.value.trim();
   const employeeId  = document.getElementById('regEmployeeId').value.trim();
   const department  = document.getElementById('regDepartment').value;
+  const employeeType = document.getElementById('regEmployeeType').value || 'new';
   const btn = document.getElementById('registerSubmitBtn');
 
   if(CODE_REQUIRED_ROLES.includes(role) && !code){
@@ -2368,9 +2452,10 @@ registerForm.addEventListener('submit', async (e)=>{
 
   btn.disabled = true; btn.textContent = 'Creating account…';
   try{
-    const data = await callBackend({ action:'register', fullName, username, password, role, code, employeeId, department });
+    const data = await callBackend({ action:'register', fullName, username, password, role, code, employeeId, department, employeeType });
     if(data.success){
-      currentUser = { fullName, username, role, employeeId, department: data.department || department, status: 'active' };
+      cacheEmployeeType(username, employeeType);
+      currentUser = { fullName, username, role, employeeId, department: data.department || department, employeeType: data.employeeType || employeeType, status: 'active' };
       enterApp();
     } else {
       showAuthError(data.message || 'Could not create the account.');
@@ -2496,7 +2581,7 @@ async function renderHomeDashboard(){
       document.getElementById('dashActiveCount').textContent = activeCount;
     }
     if(certsRes && certsRes.success){
-      certCount = (certsRes.certificates || []).filter(c=> downloadKindForStage(Number(c.stageIndex)) === 'certificate').length;
+      certCount = (certsRes.certificates || []).filter(c=> downloadKindForStage(c.tab, Number(c.stageIndex)) === 'certificate').length;
       document.getElementById('dashCertCount').textContent = certCount;
     }
     setTimeout(()=>{
@@ -2561,16 +2646,63 @@ function blankJourney(){
   ));
 }
 
+// "Old Employees" get a single, simple Training track instead of the fixed
+// 6-stage New Employee journey - staff add one block of content themselves,
+// with no "Day 1 / Day 2 / Day 3..." breakdown. We reuse the exact same
+// stage data shape (title, timeline, purpose, accountability, sheetId,
+// driveId) and the exact same admin editor / assessment / certificate
+// machinery as the New Employee journey, just under a "<dept>_old" config
+// key with a single initially-blank slot. Kept as an array (length 1)
+// rather than a single object so no backend changes are required (the
+// backend only needs to support saving/reading a (tab, stageIndex) pair,
+// which it already does for every existing stage).
+const OLD_EMPLOYEE_DAY_COUNT = 1;
+function dayJourney(n){
+  return Array.from({length:n}, ()=>(
+    { title:`Training`, timeline:"", purpose:"", accountability:"", sheetId:"", driveId:"" }
+  ));
+}
+
 const JOURNEY_CONFIG = {
   catv:      baseJourney(),
   tech:      baseJourney(),
   renewal:   baseJourney(),
   retention: baseJourney(),
   sales:     baseJourney(),
+  catv_old:      dayJourney(OLD_EMPLOYEE_DAY_COUNT),
+  tech_old:      dayJourney(OLD_EMPLOYEE_DAY_COUNT),
+  renewal_old:   dayJourney(OLD_EMPLOYEE_DAY_COUNT),
+  retention_old: dayJourney(OLD_EMPLOYEE_DAY_COUNT),
+  sales_old:     dayJourney(OLD_EMPLOYEE_DAY_COUNT),
   soft:      blankJourney(),
 };
 
+// Resolves a top-level department key (e.g. 'catv') to the actual
+// JOURNEY_CONFIG key that should be read/written for a given employee mode
+// ('new' or 'old'). Soft Skill is shared by everyone regardless of employee
+// type, so it never resolves to an "_old" variant.
+function resolveJourneyTab(tabKey, mode){
+  if(tabKey === 'soft') return tabKey;
+  const m = mode || activeEmployeeMode;
+  if(m === 'old' && JOURNEY_CONFIG[tabKey + '_old']) return tabKey + '_old';
+  return tabKey;
+}
+// The resolved storage/backend key for whatever department tab is currently
+// displayed, given the current viewer's employee mode.
+function activeJourneyKey(){
+  return resolveJourneyTab(activeTab);
+}
+function isOldTrack(resolvedKey){
+  return /_old$/.test(resolvedKey != null ? resolvedKey : activeJourneyKey());
+}
+
 let activeTab = 'catv';
+// 'new' or 'old'. For agents this always mirrors their own account's
+// employeeType (set on login/registration) and is not user-toggleable. For
+// staff/admin it defaults to 'new' and is switched with the New/Old
+// Employees pill above the timeline, so they can view or manage content for
+// either track of any department.
+let activeEmployeeMode = 'new';
 const doneMap = {};
 const passedMap = {};
 
@@ -2579,10 +2711,11 @@ async function loadMyPassedStages(){
   const visible = visibleTabsForCurrentUser();
   const calls = [];
   visible.forEach(t=>{
-    (JOURNEY_CONFIG[t.key] || []).forEach((_, idx)=>{
+    const rt = resolveJourneyTab(t.key, currentUser.employeeType === 'old' ? 'old' : 'new');
+    (JOURNEY_CONFIG[rt] || []).forEach((_, idx)=>{
       calls.push(
-        callBackend({ action:'getCertificate', username: currentUser.username, tab: t.key, stageIndex: idx })
-          .then(res=>{ if(res && res.success) passedMap[`${t.key}-${idx}`] = true; })
+        callBackend({ action:'getCertificate', username: currentUser.username, tab: rt, stageIndex: idx })
+          .then(res=>{ if(res && res.success) passedMap[`${rt}-${idx}`] = true; })
           .catch(()=>{})
       );
     });
@@ -2625,10 +2758,45 @@ function switchTab(key){
   document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.key===key));
   document.getElementById('activeTabName').textContent = t.label;
   if(window.update3DThemeColor && t.hex) window.update3DThemeColor(t.hex);
+
+  // Agents always see their own account's employee track, non-toggleable.
+  // Staff/admin can browse or manage either track via the pill; their last
+  // chosen mode persists as they move between department tabs.
+  const pill = document.getElementById('empModePill');
+  const isAgentViewer = currentUser && currentUser.role === 'agent';
+  const hasOldTrack = key !== 'soft' && !!JOURNEY_CONFIG[key + '_old'];
+  if(isAgentViewer){
+    activeEmployeeMode = (currentUser.employeeType === 'old') ? 'old' : 'new';
+    pill.style.display = 'none';
+  } else {
+    pill.style.display = hasOldTrack ? '' : 'none';
+    if(!hasOldTrack) activeEmployeeMode = 'new';
+  }
+  document.getElementById('empModeNewBtn').classList.toggle('active', activeEmployeeMode==='new');
+  document.getElementById('empModeOldBtn').classList.toggle('active', activeEmployeeMode==='old');
+  document.getElementById('journeyHeadingLabel').textContent = isOldTrack() ? 'Training' : 'Learning Journey';
+
   renderTimeline();
   setup3DTilt();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+document.getElementById('empModeNewBtn').addEventListener('click', ()=>{
+  if(currentUser && currentUser.role === 'agent') return; // agents can't toggle their own track
+  activeEmployeeMode = 'new';
+  document.getElementById('empModeNewBtn').classList.add('active');
+  document.getElementById('empModeOldBtn').classList.remove('active');
+  document.getElementById('journeyHeadingLabel').textContent = 'Learning Journey';
+  renderTimeline();
+});
+document.getElementById('empModeOldBtn').addEventListener('click', ()=>{
+  if(currentUser && currentUser.role === 'agent') return;
+  activeEmployeeMode = 'old';
+  document.getElementById('empModeOldBtn').classList.add('active');
+  document.getElementById('empModeNewBtn').classList.remove('active');
+  document.getElementById('journeyHeadingLabel').textContent = 'Training';
+  renderTimeline();
+});
 
 const timelineEl = document.getElementById('timeline');
 
@@ -2646,8 +2814,9 @@ function showToast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=> toast.classList.remove('show'), 2600);
 }
-function showLockedToast(idx){
-  showToast(`Complete Stage ${idx} first to unlock Stage ${idx+1}.`);
+function showLockedToast(idx, unitLabel){
+  const u = unitLabel || 'Stage';
+  showToast(`Complete ${u} ${idx} first to unlock ${u} ${idx+1}.`);
 }
 function escapeHtml(str){
   return String(str==null?'':str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -2656,14 +2825,17 @@ function escapeHtml(str){
 function renderTimeline(){
   timelineEl.innerHTML = '';
   timelineEl.insertAdjacentHTML('beforeend', '<svg id="timelinePathSvg" class="timeline-path-svg"></svg>');
-  const stages = JOURNEY_CONFIG[activeTab];
+  const journeyKey = activeJourneyKey();
+  const oldTrack = isOldTrack(journeyKey);
+  const unitLabel = oldTrack ? 'Training' : 'Stage';
+  const stages = JOURNEY_CONFIG[journeyKey] || [];
   let doneCount = 0;
 
   stages.forEach((stage, idx)=>{
-    const key = `${activeTab}-${idx}`;
+    const key = `${journeyKey}-${idx}`;
     const isDone = !!doneMap[key];
     const isPassed = !!passedMap[key];
-    const unlocked = isUnlocked(activeTab, idx);
+    const unlocked = isUnlocked(journeyKey, idx);
     if(isDone) doneCount++;
 
     const row = document.createElement('div');
@@ -2674,20 +2846,20 @@ function renderTimeline(){
     row.innerHTML = `
       <div class="stage-badge">
         ${unlocked
-          ? `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${STAGE_ICONS[idx] || ''}</svg>`
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${STAGE_ICONS[idx % STAGE_ICONS.length] || ''}</svg>`
           : `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>`}
       </div>
       <div class="stage-card">
-        <h3>${stage.title ? stage.title : `Stage ${idx+1}`}</h3>
+        <h3>${stage.title ? stage.title : `${unitLabel} ${idx+1}`}</h3>
         ${unlocked
           ? (stage.purpose ? `<p>${stage.purpose}</p>` : `<p style="opacity:.5;">No content added yet — upload from Google Sheet or Drive.</p>`)
-          : `<p style="opacity:.5;">Locked — complete Stage ${idx} to unlock.</p>`}
+          : `<p style="opacity:.5;">Locked — complete ${unitLabel} ${idx} to unlock.</p>`}
         ${unlocked && stage.accountability ? `<div class="who">Accountability: <b>${stage.accountability}</b></div>` : ``}
       </div>
     `;
     row.addEventListener('click', ()=>{
       if(unlocked){ openStage(idx); }
-      else{ showLockedToast(idx); }
+      else{ showLockedToast(idx, unitLabel); }
     });
     timelineEl.appendChild(row);
   });
@@ -3696,8 +3868,10 @@ async function loadAndRenderMaterials(tab, idx){
     let materials = Array.isArray(res.materials) ? res.materials.slice() : [];
 
     // Product Training (Stage 2): always show the internal Digital TV Package
-    // viewer in every training tab, independent of backend material records.
-    if(Number(idx) === 1 && activeTab !== 'soft'){
+    // viewer in every New Employee training tab, independent of backend
+    // material records. Old Employee "Day" tracks don't have this fixed
+    // Stage-2-is-Product-Training assumption, so it's skipped there.
+    if(Number(idx) === 1 && tab !== 'soft' && !isOldTrack(tab)){
       const hasDigitalTvMaterial = materials.some(m => isProductCatalogMaterial(m));
       if(!hasDigitalTvMaterial){
         materials.unshift({
@@ -3714,7 +3888,7 @@ async function loadAndRenderMaterials(tab, idx){
   } catch(err){
     // Even if the backend material list fails, Product Training still gets
     // the Digital TV Package viewer.
-    if(Number(idx) === 1 && activeTab !== 'soft'){
+    if(Number(idx) === 1 && tab !== 'soft' && !isOldTrack(tab)){
       renderMaterialsView([{
         type: 'website',
         title: 'Digital TV Package',
@@ -3731,20 +3905,25 @@ async function loadAndRenderMaterials(tab, idx){
 function openStage(idx){
   window.scrollTo({ top: 0, behavior: 'smooth' });
   const t = TABS.find(x=>x.key===activeTab);
-  const stage = Object.assign({}, JOURNEY_CONFIG[activeTab][idx] || {});
+  const journeyKey = activeJourneyKey();
+  const oldTrack = isOldTrack(journeyKey);
+  const unitLabel = oldTrack ? 'TRAINING' : 'STAGE';
+  const stage = Object.assign({}, JOURNEY_CONFIG[journeyKey][idx] || {});
 
-  // Product Training is Stage 2 and is available in every process tab.
-  if(Number(idx) === 1){
+  // Product Training is Stage 2 and is available in every New Employee
+  // process tab. Old Employee "Day" tracks are plain staff-authored content,
+  // so this fixed injection doesn't apply there.
+  if(Number(idx) === 1 && !oldTrack){
     stage.title = 'Product Training (with assessment)';
     stage.timeline = stage.timeline || 'Within 3 days of joining';
     stage.purpose = stage.purpose || 'Understanding of packages, schemes, and pricing in CATV and Broadband.';
     stage.accountability = stage.accountability || 'Kalyan Sarkar';
   }
 
-  currentModalRef = { tab: activeTab, idx };
+  currentModalRef = { tab: journeyKey, idx };
 
-  document.getElementById('modalTag').textContent = `${t.label} · STAGE ${idx+1}`;
-  document.getElementById('modalTitle').textContent = stage.title ? stage.title : `Stage ${idx+1}`;
+  document.getElementById('modalTag').textContent = `${t.label} · ${unitLabel} ${idx+1}`;
+  document.getElementById('modalTitle').textContent = stage.title ? stage.title : `${oldTrack ? 'Training' : ('Stage ' + (idx+1))}`;
   document.getElementById('modalTimeline').textContent = stage.timeline || '—';
   document.getElementById('modalAccountability').textContent = stage.accountability || '—';
   document.getElementById('modalPurpose').textContent = stage.purpose || '—';
@@ -3756,15 +3935,15 @@ function openStage(idx){
   const isAgentRole = currentUser.role === 'agent';
   const manageMatBtn = document.getElementById('manageMaterialsBtn');
   manageMatBtn.style.display = isAgentRole ? 'none' : '';
-  manageMatBtn.onclick = ()=> openMaterialsBuilder(activeTab, idx, stage);
-  loadAndRenderMaterials(activeTab, idx);
+  manageMatBtn.onclick = ()=> openMaterialsBuilder(journeyKey, idx, stage);
+  loadAndRenderMaterials(journeyKey, idx);
 
-  const key = `${activeTab}-${idx}`;
+  const key = `${journeyKey}-${idx}`;
   const doneBtn = document.getElementById('markDoneBtn');
   doneBtn.textContent = doneMap[key] ? '✓ Completed' : '✓ Mark as completed';
   doneBtn.style.display = isAgentRole ? '' : 'none';
 
-  renderAssessmentBox(activeTab, idx, stage);
+  renderAssessmentBox(journeyKey, idx, stage);
   dayOverlay.classList.add('open');
 }
 
@@ -3814,12 +3993,12 @@ async function renderAssessmentBox(tab, idx, stage){
         pill.textContent = `Passed · ${res.certificate.score}/${res.certificate.total}`;
         pill.classList.add('pass');
 
-        const kind = downloadKindForStage(idx);
+        const kind = downloadKindForStage(tab, idx);
 
         if(kind !== 'certificate'){
           // Intermediate stages: passing is tracked, but nothing is downloadable here —
-          // the real Certificate only unlocks once the full 45-Day Journey is complete.
-          actions.innerHTML = `<div class="empty-state" style="padding:6px 2px; text-align:left; font-size:12px;">✅ Stage passed and saved to your progress. The downloadable Certificate unlocks once you complete the full 45-Day Journey (final stage).</div>`;
+          // the real Certificate only unlocks once the full Journey is complete.
+          actions.innerHTML = `<div class="empty-state" style="padding:6px 2px; text-align:left; font-size:12px;">✅ Stage passed and saved to your progress. The downloadable Certificate unlocks once you complete the full Journey (final stage).</div>`;
         } else {
           const allowance = await callBackend({ action:'checkDownloadAllowance', username: currentUser.username, tab, stageIndex: idx, type: kind }).catch(()=>null);
           const remaining = allowance && allowance.success ? allowance.remaining : null;
@@ -3961,8 +4140,12 @@ async function startQuizTimer(tab, idx, stage, timerInfo){
 async function startQuiz(tab, idx, stage){
   clearQuizTimer();
   quizOverlay.classList.add('open');
-  document.getElementById('quizTag').textContent = `${TABS.find(x=>x.key===tab).label} · STAGE ${idx+1}`;
-  document.getElementById('quizStageTitle').textContent = (stage.title || `Stage ${idx+1}`) + ' — Assessment';
+  const oldTrackQ = isOldTrack(tab);
+  const baseKeyQ = oldTrackQ ? tab.replace(/_old$/, '') : tab;
+  const tQ = TABS.find(x=>x.key===baseKeyQ) || { label: tab };
+  const unitLabelQ = oldTrackQ ? 'TRAINING' : 'STAGE';
+  document.getElementById('quizTag').textContent = `${tQ.label} · ${unitLabelQ} ${idx+1}`;
+  document.getElementById('quizStageTitle').textContent = (stage.title || `${oldTrackQ ? 'Training' : ('Stage ' + (idx+1))}`) + ' — Assessment';
   document.getElementById('quizLoading').style.display = '';
   document.getElementById('quizLoading').textContent = 'Loading questions…';
   document.getElementById('quizPlay').style.display = 'none';
@@ -4130,7 +4313,7 @@ function showQuizResult(tab, idx, stage, res){
   document.getElementById('quizPlay').style.display = 'none';
   const box = document.getElementById('quizResultBox');
   box.style.display = '';
-  const kind = downloadKindForStage(idx);
+  const kind = downloadKindForStage(tab, idx);
 
   if(res.passed){
     // Trigger celebration confetti blast!
@@ -4142,8 +4325,8 @@ function showQuizResult(tab, idx, stage, res){
       : `<button class="btn primary" data-close style="padding:12px 24px; font-size:14px;">Continue</button>`;
 
     const msgHtml = kind === 'certificate'
-      ? `Outstanding work, <b>${escapeHtml(currentUser.fullName || currentUser.username)}</b>! You have passed the assessment for <b>${escapeHtml(stage.title || `Stage ${idx+1}`)}</b> and completed the full 45-Day Journey. Your Certificate is ready to download below.`
-      : `Outstanding work, <b>${escapeHtml(currentUser.fullName || currentUser.username)}</b>! You have passed the assessment for <b>${escapeHtml(stage.title || `Stage ${idx+1}`)}</b>. Keep going — your downloadable Certificate unlocks once you complete the full 45-Day Journey.`;
+      ? `Outstanding work, <b>${escapeHtml(currentUser.fullName || currentUser.username)}</b>! You have passed the assessment for <b>${escapeHtml(stage.title || `Stage ${idx+1}`)}</b> and completed the full Journey. Your Certificate is ready to download below.`
+      : `Outstanding work, <b>${escapeHtml(currentUser.fullName || currentUser.username)}</b>! You have passed the assessment for <b>${escapeHtml(stage.title || `Stage ${idx+1}`)}</b>. Keep going — your downloadable Certificate unlocks once you complete the full Journey.`;
 
     box.innerHTML = `
       <div class="celebrate-card">
@@ -4201,8 +4384,11 @@ let stageEditState = { tab:null, idx:null };
 
 function openStageEditor(tab, idx, stage){
   stageEditState = { tab, idx };
-  const t = TABS.find(x=>x.key===tab) || { label: tab };
-  document.getElementById('stageEditTag').textContent = `${t.label} · STAGE ${idx+1}`;
+  const oldTrack = isOldTrack(tab);
+  const baseKey = oldTrack ? tab.replace(/_old$/, '') : tab;
+  const t = TABS.find(x=>x.key===baseKey) || { label: tab };
+  const unitLabel = oldTrack ? 'TRAINING' : 'STAGE';
+  document.getElementById('stageEditTag').textContent = `${t.label}${oldTrack ? ' · Old Employees' : ''} · ${unitLabel} ${idx+1}`;
   document.getElementById('seTitle').value = stage.title || '';
   document.getElementById('seTimeline').value = stage.timeline || '';
   document.getElementById('seAccountability').value = stage.accountability || '';
@@ -4250,9 +4436,12 @@ let matState = { tab:null, idx:null, stage:null, materials:[] };
 
 async function openMaterialsBuilder(tab, idx, stage){
   matState = { tab, idx, stage, materials: [] };
-  const t = TABS.find(x=>x.key===tab) || { label: tab };
-  document.getElementById('matTag').textContent = `${t.label} · STAGE ${idx+1}`;
-  document.getElementById('matStageTitle').textContent = (stage.title || `Stage ${idx+1}`) + ' — Materials';
+  const oldTrack = isOldTrack(tab);
+  const baseKey = oldTrack ? tab.replace(/_old$/, '') : tab;
+  const t = TABS.find(x=>x.key===baseKey) || { label: tab };
+  const unitLabel = oldTrack ? 'TRAINING' : 'STAGE';
+  document.getElementById('matTag').textContent = `${t.label}${oldTrack ? ' · Old Employees' : ''} · ${unitLabel} ${idx+1}`;
+  document.getElementById('matStageTitle').textContent = (stage.title || `${oldTrack ? 'Training' : ('Stage ' + (idx+1))}`) + ' — Materials';
   document.getElementById('matLoading').style.display = '';
   document.getElementById('matLoading').textContent = 'Loading…';
   document.getElementById('matBuilder').style.display = 'none';
@@ -4452,8 +4641,12 @@ qbTabSettings.addEventListener('click', ()=>{
 async function openQuestionBuilder(tab, idx, stage){
   qbOverlay.classList.add('open');
   qbTabQuestions.click();
-  document.getElementById('qbTag').textContent = `${TABS.find(x=>x.key===tab).label} · STAGE ${idx+1}`;
-  document.getElementById('qbStageTitle').textContent = (stage.title || `Stage ${idx+1}`) + ' — Question Set';
+  const oldTrack = isOldTrack(tab);
+  const baseKey = oldTrack ? tab.replace(/_old$/, '') : tab;
+  const t = TABS.find(x=>x.key===baseKey) || { label: tab };
+  const unitLabel = oldTrack ? 'TRAINING' : 'STAGE';
+  document.getElementById('qbTag').textContent = `${t.label}${oldTrack ? ' · Old Employees' : ''} · ${unitLabel} ${idx+1}`;
+  document.getElementById('qbStageTitle').textContent = (stage.title || `${oldTrack ? 'Training' : ('Stage ' + (idx+1))}`) + ' — Question Set';
   document.getElementById('qbLoading').style.display = '';
   document.getElementById('qbLoading').textContent = 'Loading…';
   document.getElementById('qbBuilder').style.display = 'none';
@@ -4760,9 +4953,9 @@ async function openCertificateList(){
       document.getElementById('certListLoading').textContent = res.message || 'Could not load certificates.';
       return;
     }
-    // Only the real 45-Day completion Certificate is ever downloadable now, so only
+    // Only the real Journey completion Certificate is ever downloadable now, so only
     // show final-stage records here — intermediate per-stage passes aren't certificates.
-    allCertificates = (res.certificates || []).filter(c=> downloadKindForStage(Number(c.stageIndex)) === 'certificate');
+    allCertificates = (res.certificates || []).filter(c=> downloadKindForStage(c.tab, Number(c.stageIndex)) === 'certificate');
     document.getElementById('certListLoading').style.display = 'none';
     renderCertificateList(allCertificates);
   } catch(err){
@@ -4777,7 +4970,9 @@ function renderCertificateList(list){
     return;
   }
   container.innerHTML = list.map(c=>{
-    const tLabel = (TABS.find(x=>x.key===c.tab) || { label:c.tab }).label;
+    const oldC = /_old$/.test(c.tab || '');
+    const baseC = oldC ? c.tab.replace(/_old$/, '') : c.tab;
+    const tLabel = (TABS.find(x=>x.key===baseC) || { label:c.tab }).label + (oldC ? ' (Old Employees)' : '');
     const dateLabel = new Date(c.date).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
     const stageLabel = c.stageTitle || `Stage ${Number(c.stageIndex)+1}`;
     return `
@@ -4821,23 +5016,34 @@ document.getElementById('certListSearch').addEventListener('input', (e)=>{
   ));
 });
 
+// FINAL_STAGE_INDEX used to be a hardcoded 5, assuming every journey has
+// exactly 6 fixed stages. With the New/Old-employee split, an "old employee"
+// training track can have a different number of Day entries, so the real
+// certificate must trigger on whichever stage is actually last for that
+// specific tab - not a fixed index. Kept as a fallback only for safety.
 const FINAL_STAGE_INDEX = 5;
+function finalStageIndexFor(tab){
+  const stages = JOURNEY_CONFIG[tab];
+  return (stages && stages.length) ? stages.length - 1 : FINAL_STAGE_INDEX;
+}
 const CONGRATS_MESSAGES = [
-  "has completed <b>Induction Training</b> — the very first step of the 45-Day Training Journey. A great start!",
+  "has completed <b>Induction Training</b> — the very first step of the Training Journey. A great start!",
   "has completed <b>Product Training</b> and demonstrated a solid understanding of the packages, schemes, and pricing.",
   "has completed <b>Process Training</b> and shown a clear grasp of the process flow for the role.",
   "has completed <b>Behavioural Skills Training</b> and sharpened the communication and customer-handling skills needed on the floor.",
   "has completed <b>Shadow Training</b> and is now ready to start handling live calls independently."
 ];
 
-function downloadKindForStage(idx){
-  return idx === FINAL_STAGE_INDEX ? 'certificate' : 'message';
+function downloadKindForStage(tab, idx){
+  return idx === finalStageIndexFor(tab) ? 'certificate' : 'message';
 }
 
 async function fillCertificateTemplate(tab, idx, stage, cert){
-  const kind = downloadKindForStage(idx);
-  const tLabel = (TABS.find(x=>x.key===tab) || {label:tab}).label;
-  const stageTitle = stage.title || `Stage ${idx+1}`;
+  const kind = downloadKindForStage(tab, idx);
+  const oldTrackC = isOldTrack(tab);
+  const baseKeyC = oldTrackC ? tab.replace(/_old$/, '') : tab;
+  const tLabel = (TABS.find(x=>x.key===baseKeyC) || {label:tab}).label + (oldTrackC ? ' (Old Employees)' : '');
+  const stageTitle = stage.title || `${oldTrackC ? 'Training' : ('Stage ' + (idx+1))}`;
   const agentName = cert.fullName || currentUser.fullName;
   const empId = cert.employeeId || currentUser.employeeId || '—';
   const certDate = new Date(cert.date || Date.now());
@@ -4858,12 +5064,20 @@ async function fillCertificateTemplate(tab, idx, stage, cert){
     document.getElementById('certNumber').textContent = cert.certificateNumber || '—';
     titleEl.textContent = 'CERTIFICATE';
     certifyEl.textContent = 'This is to certify that';
-    descEl.innerHTML = `has successfully completed the full <b>45-Day Training Journey</b> for <b>${tLabel}</b> — Induction, Product Training, Process Training, Behavioural Skills, Shadow Training, and On the Job Training — and has met all assessment requirements throughout, scoring <b>${cert.score}/${cert.total}</b> on the final stage.`;
+    descEl.innerHTML = oldTrackC
+      ? `has successfully completed the full <b>Training</b> program for <b>${tLabel}</b> and has met all assessment requirements throughout, scoring <b>${cert.score}/${cert.total}</b> on the final day.`
+      : `has successfully completed the full <b>Training Journey</b> for <b>${tLabel}</b> — Induction, Product Training, Process Training, Behavioural Skills, Shadow Training, and On the Job Training — and has met all assessment requirements throughout, scoring <b>${cert.score}/${cert.total}</b> on the final stage.`;
   } else {
     certNoBlock.style.display = 'none';
     titleEl.textContent = 'CONGRATULATIONS!';
     certifyEl.textContent = 'Presented to';
-    descEl.innerHTML = CONGRATS_MESSAGES[idx] || `has successfully completed <b>${stageTitle}</b> as part of the 45-Day Training Journey.`;
+    // CONGRATS_MESSAGES is a fixed 5-entry narrative written for the New
+    // Employee journey's specific named stages (Induction, Product Training,
+    // etc). It doesn't apply to Old Employee "Day N" content, which is
+    // freeform staff-authored material, so that track always uses the
+    // generic stageTitle-based message instead.
+    descEl.innerHTML = (!oldTrackC && CONGRATS_MESSAGES[idx])
+      || `has successfully completed <b>${stageTitle}</b> as part of the Training Journey.`;
   }
 
   return { agentName, empId, stageTitle, kind };
@@ -4949,7 +5163,7 @@ function triggerPdfDownload(pdf, fileName){
 }
 
 async function downloadCertificate(tab, idx, stage, cert){
-  const kind = downloadKindForStage(idx);
+  const kind = downloadKindForStage(tab, idx);
   const label = kind === 'certificate' ? 'certificate' : 'congratulations message';
   try{
     const allowance = await callBackend({ action:'checkDownloadAllowance', username: currentUser.username, tab, stageIndex: idx, type: kind });
@@ -4974,7 +5188,7 @@ async function downloadCertificate(tab, idx, stage, cert){
 }
 
 async function autoSaveCertificateToDrive(tab, idx, stage, cert){
-  if(downloadKindForStage(idx) !== 'certificate') return;
+  if(downloadKindForStage(tab, idx) !== 'certificate') return;
   try{
     const { pdf, agentName, stageTitle } = await buildCertificatePdf(tab, idx, stage, cert);
     const base64 = pdf.output('datauristring').split(',')[1];
@@ -5023,12 +5237,19 @@ function renderEmployeesList(list){
     return;
   }
   container.innerHTML = list.map(a=>{
-    const deptLabel = (TABS.find(t=>t.key===a.department) || {}).label || 'No department';
+    const dept = TABS.find(t=>t.key===a.department) || {};
+    const deptLabel = dept.label || 'No department';
+    const isDisabled = a.status === 'disabled';
     return `
     <div class="emp-row">
       <div>
         <div class="nm">${escapeHtml(a.fullName || a.username)}</div>
-        <div class="meta">${escapeHtml(a.employeeId || '—')} · @${escapeHtml(a.username)} · ${escapeHtml(deptLabel)} · ${a.status==='disabled' ? 'Disabled' : 'Active'}</div>
+        <div class="meta">
+          <span>${escapeHtml(a.employeeId || '—')}</span><span class="sep">·</span>
+          <span>@${escapeHtml(a.username)}</span><span class="sep">·</span>
+          <span class="meta-dept" style="color:${dept.color || 'inherit'}">${escapeHtml(deptLabel)}</span><span class="sep">·</span>
+          <span class="meta-status ${isDisabled ? 'is-disabled' : 'is-active'}">${isDisabled ? 'Disabled' : 'Active'}</span>
+        </div>
       </div>
       <button type="button" class="row-mini-btn danger" data-del-username="${escapeHtml(a.username)}" data-del-name="${escapeHtml(a.fullName || a.username)}">🗑 Delete</button>
     </div>
@@ -5062,6 +5283,7 @@ document.getElementById('empFormSaveBtn').addEventListener('click', async ()=>{
   const password   = document.getElementById('empPassword').value;
   const employeeId = document.getElementById('empEmployeeId').value.trim();
   const department = document.getElementById('empDepartment').value;
+  const employeeType = document.getElementById('empEmployeeType').value || 'new';
 
   if(!fullName || !username || !password || !employeeId || !department){
     showToast('Please fill in every field, including Department.');
@@ -5075,14 +5297,16 @@ document.getElementById('empFormSaveBtn').addEventListener('click', async ()=>{
   const saveBtn = document.getElementById('empFormSaveBtn');
   saveBtn.disabled = true; saveBtn.textContent = 'Creating…';
   try{
-    const res = await callBackend({ action:'register', fullName, username, password, role:'agent', employeeId, department });
+    const res = await callBackend({ action:'register', fullName, username, password, role:'agent', employeeId, department, employeeType });
     if(!res.success){
       showToast(res.message || 'Could not create the employee.');
       return;
     }
+    cacheEmployeeType(username, employeeType);
     showToast(`${fullName} was added as a new agent.`);
     ['empFullName','empUsername','empPassword','empEmployeeId'].forEach(id=> document.getElementById(id).value = '');
     document.getElementById('empDepartment').value = '';
+    document.getElementById('empEmployeeType').value = 'new';
     document.getElementById('empForm').classList.remove('open');
     openEmployeesView();
   } catch(err){
@@ -5121,7 +5345,7 @@ async function openAgentProgressView(){
   document.getElementById('agentListLoadMoreBtn').style.display = 'none';
   document.getElementById('agentCountText').textContent = '';
   document.getElementById('agentsDetail').innerHTML =
-    `<div class="empty-state">Select an agent from the list to view their 45-Day Journey progress across all four processes.</div>`;
+    `<div class="empty-state">Select an agent from the list to view their Journey progress across all four processes.</div>`;
   selectedAgentUsername = null;
 
   try{
@@ -5239,17 +5463,29 @@ function renderAgentDetail(agent, progress, results, downloads){
 
   const relevantTabs = TABS.filter(t=> t.key === 'soft' || t.key === agent.department);
   const deptLabel = (TABS.find(t=>t.key===agent.department) || {}).label || 'No department set';
+  // Stages must be resolved using THIS agent's own employeeType, not the
+  // admin's own New/Old toggle preference - an Old Employee agent's progress
+  // always lives under the "_old" Day-based track regardless of what an
+  // admin happens to be browsing elsewhere in the app.
+  const agentMode = agent.employeeType === 'old' ? 'old' : 'new';
+  const agentIsOld = agentMode === 'old';
 
   let totalStages = 0, totalDone = 0;
-  relevantTabs.forEach(t=> JOURNEY_CONFIG[t.key].forEach((_, idx)=>{
-    totalStages++;
-    if(progress[`${t.key}-${idx}`]) totalDone++;
-  }));
+  relevantTabs.forEach(t=>{
+    const resolvedKey = resolveJourneyTab(t.key, agentMode);
+    (JOURNEY_CONFIG[resolvedKey] || []).forEach((_, idx)=>{
+      totalStages++;
+      if(progress[`${resolvedKey}-${idx}`]) totalDone++;
+    });
+  });
 
   const tabsHtml = relevantTabs.map(t=>{
-    const stages = JOURNEY_CONFIG[t.key];
+    const resolvedKey = resolveJourneyTab(t.key, agentMode);
+    const oldTrack = isOldTrack(resolvedKey);
+    const unitLabel = oldTrack ? 'Training' : 'Stage';
+    const stages = JOURNEY_CONFIG[resolvedKey] || [];
     const rowsHtml = stages.map((stage, idx)=>{
-      const key = `${t.key}-${idx}`;
+      const key = `${resolvedKey}-${idx}`;
       const isDone = !!progress[key];
       const result = resultByKey[key];
       let statusHtml;
@@ -5263,22 +5499,22 @@ function renderAgentDetail(agent, progress, results, downloads){
         statusHtml = `<span class="st-status pending">NOT STARTED</span>`;
       }
 
-      const dlKind = downloadKindForStage(idx);
-      const dlKey = `${t.key}-${idx}-${dlKind}`;
+      const dlKind = downloadKindForStage(resolvedKey, idx);
+      const dlKey = `${resolvedKey}-${idx}-${dlKind}`;
       const dl = downloads[dlKey];
       const dlCountHtml = (result && result.passed && dlKind === 'certificate')
         ? `<span class="st-dl-count">Certificate: ${dl ? dl.used : 0}/${dl ? dl.limit : 3}</span>
-           <button type="button" class="row-mini-btn" data-grant-tab="${t.key}" data-grant-idx="${idx}" data-grant-type="${dlKind}">+1 Download</button>`
+           <button type="button" class="row-mini-btn" data-grant-tab="${resolvedKey}" data-grant-idx="${idx}" data-grant-type="${dlKind}">+1 Download</button>`
         : '';
 
       return `
         <div class="agent-stage-row">
-          <div class="st-name">Stage ${idx+1} — ${escapeHtml(stage.title || `Stage ${idx+1}`)}</div>
+          <div class="st-name">${unitLabel} ${idx+1} — ${escapeHtml(stage.title || `${unitLabel} ${idx+1}`)}</div>
           <div class="st-right" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             ${statusHtml}
             ${dlCountHtml}
-            <button type="button" class="row-mini-btn" data-open-tab="${t.key}" data-open-idx="${idx}">Open</button>
-            ${result ? `<button type="button" class="row-mini-btn danger" data-reset-tab="${t.key}" data-reset-idx="${idx}">Reset assessment</button>` : ``}
+            <button type="button" class="row-mini-btn" data-open-tab="${t.key}" data-open-idx="${idx}" data-open-mode="${agentMode}">Open</button>
+            ${result ? `<button type="button" class="row-mini-btn danger" data-reset-tab="${resolvedKey}" data-reset-idx="${idx}">Reset assessment</button>` : ``}
           </div>
         </div>
       `;
@@ -5287,7 +5523,7 @@ function renderAgentDetail(agent, progress, results, downloads){
     return `
       <div class="agent-tab-block" style="margin-bottom:18px;">
         <h4 style="font-family:'Space Grotesk',sans-serif; font-size:13.5px; margin:0 0 10px; display:flex; align-items:center; gap:8px;">
-          <span class="sw" style="width:8px; height:8px; border-radius:2px; background:${t.color};"></span>${escapeHtml(t.label)}
+          <span class="sw" style="width:8px; height:8px; border-radius:2px; background:${t.color};"></span>${escapeHtml(t.label)}${(oldTrack ? ' <span style="opacity:.6; font-weight:500;">(Old Employees · Training)</span>' : '')}
         </h4>
         ${rowsHtml}
       </div>
@@ -5299,7 +5535,7 @@ function renderAgentDetail(agent, progress, results, downloads){
   detail.innerHTML = `
     <div class="agent-detail-head" style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--line);">
       <div class="nm" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px;">${escapeHtml(agent.fullName || agent.username)}</div>
-      <div class="meta" style="font-size:12px; color:var(--text-faint); margin-top:3px; font-family:'JetBrains Mono',monospace;">${escapeHtml(agent.employeeId || '—')} · @${escapeHtml(agent.username)} · ${escapeHtml(deptLabel)}</div>
+      <div class="meta" style="font-size:12px; color:var(--text-faint); margin-top:3px; font-family:'JetBrains Mono',monospace;">${escapeHtml(agent.employeeId || '—')} · @${escapeHtml(agent.username)} · ${escapeHtml(deptLabel)}${agentIsOld ? ' · Old Employee' : ' · New Employee'}</div>
       <div class="agent-progress-summary" style="font-size:12.5px; color:var(--text-muted); margin-top:6px;">${totalDone} / ${totalStages} stages completed (department + shared Soft Skill journey)</div>
     </div>
     ${tabsHtml}
@@ -5309,8 +5545,14 @@ function renderAgentDetail(agent, progress, results, downloads){
     btn.addEventListener('click', ()=>{
       const tab = btn.dataset.openTab;
       const idx = Number(btn.dataset.openIdx);
+      const mode = btn.dataset.openMode === 'old' ? 'old' : 'new';
       switchStaffView('process');
+      // Staff/admin browsing an agent's detail must land on that specific
+      // agent's own track (New or Old), not whatever the admin's own pill
+      // toggle happened to be set to elsewhere in the app.
+      activeEmployeeMode = mode;
       if(activeTab !== tab){ switchTab(tab); renderTabs(); }
+      else { switchTab(tab); } // still re-apply so the mode/pill state refreshes even if already on this tab
       openStage(idx);
     });
   });
