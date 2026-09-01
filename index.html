@@ -4847,7 +4847,6 @@ transform:translateY(0);
     <span class="dot"></span>
     Process Update
 </div>
-<div class="nav-item" data-tab="AUDITNEW" onclick="switchTab('AUDITNEW')"><span class="dot"></span>Parameter wise fail count</div>
 <div class="nav-item" data-tab="CATVDISPO" onclick="switchTab('CATVDISPO')"><span class="dot"></span>CATV DISPO</div>
 <div class="nav-item" data-tab="BBTECHDISPO" onclick="switchTab('BBTECHDISPO')"><span class="dot"></span>BB TECH DISPO</div>
 <div class="nav-item" data-tab="BBRENEWALDISPO" onclick="switchTab('BBRENEWALDISPO')"><span class="dot"></span>BB RENEWAL DISPO</div>
@@ -5003,7 +5002,6 @@ transform:translateY(0);
       <div class="panel" id="panel-ANS3SEC"></div>
       <div class="panel" id="panel-FATALTM"></div>
       <!-- System: live Google Sheet DISPO / Audit tabs -->
-      <div class="panel" id="panel-AUDITNEW"></div>
       <div class="panel" id="panel-CATVDISPO"></div>
       <div class="panel" id="panel-BBTECHDISPO"></div>
       <div class="panel" id="panel-BBRENEWALDISPO"></div>
@@ -7081,7 +7079,7 @@ const ANS3SEC_SHEETS = {
   BBRENEWAL: 'BBRENEWAL_ANSWERED_3SEC'
 };
 
-const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbynuWG1pmogLgWrrWV3PliaoouH4zUQMP3On-stBbh3abS1-Ya5IJoNy75mYrzZzE1GUw/exec";
+const RAW_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby1uzb2xdlwya20hOv3fKB2qXn-JL_Kw3-lHwSifeYi3bHPYRSIpYS4vZlNFWjB3ipl/exec";
 
 /* Month wise Data (Previous Month) tab — TWO separate Google Sheets, so TWO separate Apps Script
    deployments. Deploy the matching Code.gs inside each spreadsheet (Extensions > Apps Script),
@@ -7099,7 +7097,6 @@ const LOBDATA_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxOGm2OUBGu
 const LOBDATA_SHEET_NAME = 'LOB WISE DATA'; // change this to match your actual sheet/tab name
 let lobDataCache = null;
 const RAW_SHEET_TABS = {
-  AUDITNEW:        { label: 'Parameter wise fail count',              sheetName: 'Parameter wise fail count',        icon: '🗂️' },
   CATVDISPO:       { label: 'CATV DISPO',                     sheetName: 'CATV DISPO',               icon: '📋' },
   BBTECHDISPO:     { label: 'BB TECH DISPO',                  sheetName: 'BB TECH DISPO',            icon: '🛠️' },
   BBRENEWALDISPO:  { label: 'BB RENEWAL DISPO',               sheetName: 'BB RENEWAL DISPO',         icon: '🔄' },
