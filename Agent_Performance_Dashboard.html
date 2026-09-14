@@ -404,21 +404,18 @@ function populateAgentDropdown(){
   });
 }
 
-// FastAPI CORS এলাউ করায় সরাসরি fetch কল করা হচ্ছে
+// Simple GET Request - URL Query Param দিয়ে api_key পাঠানো হচ্ছে (No CORS Preflight Block)
 async function getScore(id, start, end){
   const key = id + "|" + start + "|" + end;
   if(cache[key]) return cache[key];
   
-  const u = API_BASE + "?employee_id=" + encodeURIComponent(id) + "&start=" + start + "&end=" + end;
+  const u = API_BASE + "?employee_id=" + encodeURIComponent(id) + 
+            "&start=" + start + 
+            "&end=" + end + 
+            "&api_key=" + encodeURIComponent(API_KEY);
 
   try{
-    const r = await fetch(u, {
-      method: "GET",
-      headers: {
-        "Accept": "application/json",
-        "X-API-Key": API_KEY
-      }
-    });
+    const r = await fetch(u);
 
     if(!r.ok) throw new Error("HTTP " + r.status);
     const d = await r.json();
