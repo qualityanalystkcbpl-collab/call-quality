@@ -296,15 +296,15 @@ tr:hover td { background: #eff6ff !important; }
 .table-search-bar .search-count { font-size: 12px; font-weight: 700; color: var(--text-muted); }
 
 /* LOB-wise Deep Analytics Cards */
-.lob-deep-card { animation: popIn 0.5s ease backwards; }
-.lob-deep-card h3 { font-size: 16px; }
-.lob-deep-stats { display: flex; justify-content: space-between; gap: 10px; margin: 14px 0 10px; }
-.lob-deep-stats > div { display: flex; flex-direction: column; gap: 3px; }
-.ld-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
-.ld-val { font-size: 18px; font-weight: 900; color: var(--text-main); }
-.ld-progress { height: 10px; border-radius: 99px; background: #e2e8f0; overflow: hidden; margin-bottom: 12px; }
-.ld-progress-fill { height: 100%; border-radius: 99px; transition: width 1s cubic-bezier(.22,1,.36,1); }
-.ld-top { font-size: 13px; font-weight: 600; color: var(--text-muted); padding-top: 10px; border-top: 1px dashed var(--border-color); }
+.lob-deep-card { animation: popIn 0.5s ease backwards; text-align: center; }
+.lob-deep-card h3 { font-size: 16px; margin-bottom: 8px; }
+.lob-deep-card .lob-tag { margin-bottom: 4px; }
+.ld-ring-wrap { position: relative; width: 128px; height: 128px; margin: 8px auto 18px; }
+.ld-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ld-ring-bg { fill: none; stroke: #eef2f7; stroke-width: 10; }
+.ld-ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1); }
+.ld-ring-value { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: var(--text-main); }
+.ld-top { font-size: 12.5px; font-weight: 600; color: var(--text-muted); padding-top: 14px; border-top: 1px solid var(--border-color); }
 
 input[type="date"] {
   border: 1px solid #cbd5e1; background: #f8fafc; padding: 9px 12px;
@@ -887,6 +887,7 @@ function renderLobDeepAnalytics(rows, idxs){
     "BB Renewal Agent": ["#059669","#10b981","tag-renewal"]
   };
   const presentLobs = Object.keys(teams).filter(t => rows.some(r => r.lob === t));
+  const CIRC = 2 * Math.PI * 50; // r=50
   let html = "";
   presentLobs.forEach(t => {
     const lRows = rows.filter(r => r.lob === t);
@@ -894,18 +895,21 @@ function renderLobDeepAnalytics(rows, idxs){
     const summaries = lRows.map(r => agentSummary(r, idxs)).filter(x => x.available > 0).sort((a,b) => b.p - a.p);
     const top = summaries[0];
     const barColor = !s.available ? "#94a3b8" : s.p >= 100 ? "#10b981" : s.p >= 80 ? "#f59e0b" : "#ef4444";
-    const [c1, c2, tagCls] = lobColors[t] || ["#2563eb","#3b82f6","tag-catv"];
+    const [c1, , tagCls] = lobColors[t] || ["#2563eb","#3b82f6","tag-catv"];
+    const pct = Math.max(0, Math.min(s.p, 100));
+    const offset = CIRC * (1 - pct / 100);
     html += `
       <div class="chart-card lob-deep-card" style="border-top:5px solid ${c1};">
         <h3>${t}</h3>
-        <span class="lob-tag ${tagCls}" style="margin-bottom:8px; display:inline-block;">${lRows.length} Agents</span>
-        <div class="lob-deep-stats">
-          <div><span class="ld-label">Target</span><span class="ld-val">${s.t.toLocaleString()}</span></div>
-          <div><span class="ld-label">Achievement</span><span class="ld-val">${s.a.toLocaleString()}</span></div>
-          <div><span class="ld-label">Achv %</span><span class="ld-val" style="color:${barColor}">${s.available ? s.p.toFixed(1)+"%" : "—"}</span></div>
+        <span class="lob-tag ${tagCls}">${lRows.length} Agents</span>
+        <div class="ld-ring-wrap">
+          <svg viewBox="0 0 120 120" class="ld-ring">
+            <circle cx="60" cy="60" r="50" class="ld-ring-bg"/>
+            <circle cx="60" cy="60" r="50" class="ld-ring-fill" style="stroke:${barColor}; stroke-dasharray:${CIRC}; stroke-dashoffset:${s.available ? offset : CIRC};"/>
+          </svg>
+          <div class="ld-ring-value">${s.available ? s.p.toFixed(1)+"%" : "—"}</div>
         </div>
-        <div class="ld-progress"><div class="ld-progress-fill" style="width:${Math.min(s.p,100)}%; background:linear-gradient(90deg,${c1},${c2});"></div></div>
-        <div class="ld-top">🏆 Top Performer: <b>${top ? escapeHtml(top.name) : "No Data"}</b>${top ? " — " + top.p.toFixed(1) + "%" : ""}</div>
+        <div class="ld-top">🏆 ${top ? escapeHtml(top.name) + " — " + top.p.toFixed(1) + "%" : "No data yet"}</div>
       </div>`;
   });
   grid.innerHTML = html || `<div class="chart-card" style="text-align:center;color:#94a3b8;">No LOB data available for the current filter.</div>`;
