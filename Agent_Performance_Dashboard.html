@@ -404,13 +404,12 @@ function populateAgentDropdown(){
   });
 }
 
+// FastAPI CORS এলাউ করায় সরাসরি fetch কল করা হচ্ছে
 async function getScore(id, start, end){
   const key = id + "|" + start + "|" + end;
   if(cache[key]) return cache[key];
   
-  // CORS Proxy URL-এ API কল বাইপাস করা হচ্ছে
-  const rawUrl = API_BASE + "?employee_id=" + encodeURIComponent(id) + "&start=" + start + "&end=" + end;
-  const u = "https://corsproxy.io/?" + encodeURIComponent(rawUrl);
+  const u = API_BASE + "?employee_id=" + encodeURIComponent(id) + "&start=" + start + "&end=" + end;
 
   try{
     const r = await fetch(u, {
