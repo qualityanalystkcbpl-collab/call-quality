@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KCBPL | Master LOB & Agent Performance Analytics (%) • 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+/* ===== ULTRA COLORFUL & VIBRANT UI ===== */
+:root {
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  
+  /* Vibrant Gradients */
+  --blue-grad: linear-gradient(135deg, #2563eb, #3b82f6);
+  --green-grad: linear-gradient(135deg, #059669, #10b981);
+  --purple-grad: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  --orange-grad: linear-gradient(135deg, #ea580c, #f59e0b);
+  --cyan-grad: linear-gradient(135deg, #0891b2, #06b6d4);
+  
+  --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #f0f4f9;
+  background-image: 
+    radial-gradient(circle at 5% 5%, rgba(59,130,246,0.12), transparent 30%),
+    radial-gradient(circle at 95% 15%, rgba(139,92,246,0.12), transparent 30%),
+    radial-gradient(circle at 50% 90%, rgba(236,72,153,0.08), transparent 40%);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+/* Header */
+.header {
+  background: var(--bg-gradient);
+  color: #fff;
+  padding: 24px 36px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+.brand { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.brand-left { display: flex; align-items: center; gap: 16px; }
+.logo {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff, #e2e8f0);
+  color: #2563eb; display: grid; place-items: center;
+  font-weight: 900; font-size: 24px; box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+.header h1 { margin: 0; font-size: 26px; letter-spacing: -0.5px; font-weight: 800; }
+.header p { margin: 4px 0 0; opacity: 0.85; font-size: 13px; font-weight: 400; }
+.badge-live {
+  background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981;
+  color: #34d399; padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 700;
+}
+
+/* Container & Toolbar */
+.container { max-width: 1600px; margin: auto; padding: 28px 20px; }
+.toolbar {
+  background: #ffffff;
+  padding: 16px 20px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.filter-group { display: flex; flex-direction: column; gap: 4px; }
+.filter-group label { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; }
+
+select, button {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px; font-weight: 600; color: var(--text-main);
+  outline: none; transition: all 0.2s ease;
+}
+select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+button { cursor: pointer; }
+.btn-primary {
+  background: var(--blue-grad); color: #fff; border: 0;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.35); font-weight: 700;
+}
+.btn-primary:hover { opacity: 0.95; transform: translateY(-1px); }
+.status-indicator { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--text-muted); }
+
+/* KPI Cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px; margin-bottom: 28px;
+}
+.kpi-card {
+  padding: 22px; border-radius: 20px; color: #fff;
+  position: relative; overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.kpi-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0,0,0,0.15); }
+.kpi-card .kpi-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.9; }
+.kpi-card .kpi-value { font-size: 32px; font-weight: 900; margin: 8px 0 4px; letter-spacing: -0.5px; }
+.kpi-card .kpi-sub { font-size: 12px; opacity: 0.85; }
+
+.kpi-blue { background: var(--blue-grad); }
+.kpi-green { background: var(--green-grad); }
+.kpi-purple { background: var(--purple-grad); }
+.kpi-orange { background: var(--orange-grad); }
+.kpi-cyan { background: var(--cyan-grad); }
+
+/* Layout Grid */
+.grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-bottom: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
+.chart-card {
+  background: var(--card-bg); border-radius: 20px; padding: 22px;
+  border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);
+  position: relative;
+}
+.chart-card h3 { margin: 0 0 18px; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; justify-content: space-between; align-items: center; }
+.chart-wrap { height: 290px; position: relative; }
+
+/* Section Header */
+.section-header {
+  margin: 36px 0 18px; display: flex; justify-content: space-between; align-items: flex-end;
+  border-bottom: 2px solid var(--border-color); padding-bottom: 12px;
+}
+.section-header h2 { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0; }
+
+/* Table Styling */
+.table-card { background: #fff; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); overflow: hidden; }
+.table-wrap { overflow-x: auto; max-height: 600px; }
+table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+th, td { padding: 14px 16px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border-color); }
+th {
+  background: #f8fafc; color: #475569; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.6px; font-weight: 800; position: sticky; top: 0; z-index: 10;
+}
+tr:nth-child(even) td { background: #fbfdff; }
+tr:hover td { background: #eff6ff !important; }
+
+/* Status Badges */
+.pill { display: inline-flex; padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 800; }
+.good { background: #dcfce7; color: #15803d; }
+.mid { background: #fef3c7; color: #b45309; }
+.bad { background: #fee2e2; color: #b91c1c; }
+.no-data { background: #f1f5f9; color: #64748b; }
+.api-error { background: #fee2e2; color: #991b1b; }
+.lob-tag { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; margin-top: 2px; }
+.tag-catv { background: #dbeafe; color: #1e40af; }
+.tag-tech { background: #f3e8ff; color: #6b21a8; }
+.tag-renewal { background: #d1fae5; color: #065f46; }
+
+footer { padding: 36px 0; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 500; }
+
+@media(max-width: 1200px) { .grid-3 { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    <div class="brand-left">
+      <div class="logo">K</div>
+      <div>
+        <h1>Master LOB & Agent Performance Analytics (%)</h1>
+        <p>Enterprise Percentage View • April–August 2026</p>
+      </div>
+    </div>
+    <div class="badge-live">● LIVE API CONNECTED</div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- TOOLBAR FILTERS -->
+  <div class="toolbar">
+    <div class="filter-group">
+      <label>Select LOB / Group</label>
+      <select id="teamSelect"></select>
+    </div>
+    <div class="filter-group">
+      <label>Filter Agent</label>
+      <select id="agentSelect">
+        <option value="all">All Agents</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Selected Period</label>
+      <select id="monthSelect">
+        <option value="all">All Months — Apr to Aug 2026</option>
+        <option value="2026-04">April 2026</option>
+        <option value="2026-05">May 2026</option>
+        <option value="2026-06">June 2026</option>
+        <option value="2026-07">July 2026</option>
+        <option value="2026-08">August 2026</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Performance Status</label>
+      <select id="statusFilter">
+        <option value="all">All Statuses</option>
+        <option value="Excellent">Excellent (≥ 100%)</option>
+        <option value="On Track">On Track (80% - 99%)</option>
+        <option value="Needs Attention">Needs Attention (&lt; 80%)</option>
+      </select>
+    </div>
+
+    <div class="filter-group" style="margin-top: auto;">
+      <button class="btn-primary" onclick="loadDashboard()">↻ Refresh Analytics</button>
+    </div>
+    <div class="status-indicator" id="status">Ready</div>
+  </div>
+
+  <!-- PERCENTAGE FOCUS KPIS -->
+  <section class="kpi-grid">
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-label">Active Agents Count</div>
+      <div class="kpi-value" id="kAgents">—</div>
+      <div class="kpi-sub" id="kAgentsSub">selected agents</div>
+    </div>
+    <div class="kpi-card kpi-cyan">
+      <div class="kpi-label">Average Monthly %</div>
+      <div class="kpi-value" id="kAvg">—</div>
+      <div class="kpi-sub">average month-wise achievement %</div>
+    </div>
+    <div class="kpi-card kpi-purple">
+      <div class="kpi-label">Overall Achievement %</div>
+      <div class="kpi-value" id="kPct">—</div>
+      <div class="kpi-sub">total achieved ÷ total target</div>
+    </div>
+    <div class="kpi-card kpi-green">
+      <div class="kpi-label">Top Agent Achv %</div>
+      <div class="kpi-value" id="kTop" style="font-size: 28px;">—</div>
+      <div class="kpi-sub" id="kTopSub">—</div>
+    </div>
+    <div class="kpi-card kpi-orange">
+      <div class="kpi-label">Top LOB Achv %</div>
+      <div class="kpi-value" id="kLobLeader" style="font-size: 28px;">—</div>
+      <div class="kpi-sub" id="kLobSub">highest performing LOB</div>
+    </div>
+  </section>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <h3>1. Monthly Achievement Rate (%)</h3>
+      <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>2. LOB-wise Performance Comparison (%)</h3>
+      <div class="chart-wrap"><canvas id="lobCompareChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="grid-3">
+    <div class="chart-card">
+      <h3>3. Achievement % Trend</h3>
+      <div class="chart-wrap"><canvas id="pctChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>4. Performance Status Distribution</h3>
+      <div class="chart-wrap"><canvas id="statusDistChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>5. Target Gap Utilization (%)</h3>
+      <div class="chart-wrap"><canvas id="compareChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 3 -->
+  <div class="grid-3">
+    <div class="chart-card">
+      <h3>6. Top Performers Ranking (%)</h3>
+      <div class="chart-wrap"><canvas id="agentChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>7. Month-on-Month Growth (% Change)</h3>
+      <div class="chart-wrap"><canvas id="momChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>8. Agent Consistency Score (%)</h3>
+      <div class="chart-wrap"><canvas id="consistencyChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- HEATMAP -->
+  <div class="chart-card" style="margin-bottom: 28px;">
+    <h3>9. Performance Heatmap (Agent × Month %)</h3>
+    <div id="heatmap" style="overflow:auto; max-height: 480px;"></div>
+  </div>
+
+  <!-- DETAILED TABLE -->
+  <div class="section-header">
+    <div>
+      <h2>Agent-wise Monthly Achievement (%)</h2>
+      <span style="font-size: 13px; color: var(--text-muted);">All values represented as Achievement Percentage (%)</span>
+    </div>
+  </div>
+  
+  <div class="table-card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Agent Name & LOB</th>
+            <th>April (%)</th>
+            <th>May (%)</th>
+            <th>June (%)</th>
+            <th>July (%)</th>
+            <th>August (%)</th>
+            <th>Target Share %</th>
+            <th>Achv Share %</th>
+            <th>Overall %</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="agentTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>KCBPL Agent Analytics Engine • Enterprise Percentage Report • 2026</footer>
+</main>
+
+<script>
+const API_BASE = "https://larger-digit-creator-dive.trycloudflare.com/third-party/employee-score";
+const API_KEY = "KCBPL-CC-API-2026-9xT7mQ4pL8";
+
+const teams = {
+ "CATV Agent":[
+ ["SC1311","ARIJIT ROY"],["GK0233","ASGAR ALI"],["GK0049","SHAMBHUNATH MONDAL"],["GK0400","RAJU BISWAS"],
+ ["GK0921","SUBHANKAR SARMA"],["GK0235","SUBIR MAJHI"],["SC1316","AKASH MONDAL"],["SC980","BHASKAR KOLEY"],
+ ["SC981","SHUVAM NANDI"],["SC978","SAMRAT DAS"],["SC1277","ABHRAJIT DAS"],["GK0406","SHAMPA PANJA"],
+ ["GK1077","URMITA PAUL"],["SC1284","Ayan Sarkar"],["SC1078","SUMANA CHOWDHURY"],["SC862","PRIYADARSANI PATRA"],
+ ["SC1129","PRIYANKA BAKSHI"]
+ ],
+ "BB Tech":[
+ ["2075","SONIA BARMAN DAS"],["2182","SUJIT PAUL"],["2179","PRIYANKA MONDAL"],["2219","CHIRANJIT NASKAR"],
+ ["2224","SUKANTA GHOSH"],["SC794","MRITYUNJOY PAL"],["SC1134","SHREYA DAS"],["SC1211","LOKNATH ADHIKARI"],
+ ["SC1218","PINKY MONDAL"],["SC1231","DEBOJYOTI KUNDU"],["SC1280","SANJIB DAS"],["SC1259","SOUVIK MONDAL"],
+ ["SC1265","TANMOY MAITY"],["SC1267","DIASHA SAMANTA"]
+ ],
+ "BB Renewal":[
+ ["2183","RUMA MONDAL"],["2155","PUJA SARKAR"],["SC960","RIJU DUTTA"],["SC1127","ARPITA DHARA"],
+ ["SC1167","SOHAM SAHA"],["SC1175","ANWESHA CHAKRABORTY"],["SC1203","SOUVIK PAUL"],["SC1253","BEAUTY CHAKRABORTY"]
+ ]
+};
+
+const months = [
+ ["2026-04-01","2026-04-30","April"],
+ ["2026-05-01","2026-05-31","May"],
+ ["2026-06-01","2026-06-30","June"],
+ ["2026-07-01","2026-07-31","July"],
+ ["2026-08-01","2026-08-31","August"]
+];
+
+let cache = {}, charts = {};
+
+function init(){
+  const sel = document.getElementById("teamSelect");
+  sel.innerHTML = '<option value="all">🚀 All LOBs Combined (Home Dashboard)</option>';
+  Object.keys(teams).forEach(t => {
+    const o = document.createElement("option"); o.value = t; o.textContent = t; sel.appendChild(o);
+  });
+
+  populateAgentDropdown();
+
+  sel.onchange = () => { populateAgentDropdown(); loadDashboard(); };
+  document.getElementById("agentSelect").onchange = loadDashboard;
+  document.getElementById("monthSelect").onchange = loadDashboard;
+  document.getElementById("statusFilter").onchange = loadDashboard;
+
+  loadDashboard();
+}
+
+function populateAgentDropdown(){
+  const teamVal = document.getElementById("teamSelect").value;
+  const agentSel = document.getElementById("agentSelect");
+  agentSel.innerHTML = '<option value="all">All Agents</option>';
+
+  let list = [];
+  if(teamVal === "all") {
+    Object.keys(teams).forEach(t => {
+      teams[t].forEach(a => list.push({id: a[0], name: a[1], lob: t}));
+    });
+  } else {
+    teams[teamVal].forEach(a => list.push({id: a[0], name: a[1], lob: teamVal}));
+  }
+
+  list.forEach(a => {
+    const o = document.createElement("option");
+    o.value = a.id;
+    o.textContent = `${a.name} (${a.lob})`;
+    agentSel.appendChild(o);
+  });
+}
+
+async function getScore(id, start, end){
+  const key = id + "|" + start + "|" + end;
+  if(cache[key]) return cache[key];
+  
+  // CORS Proxy URL-এ API কল বাইপাস করা হচ্ছে
+  const rawUrl = API_BASE + "?employee_id=" + encodeURIComponent(id) + "&start=" + start + "&end=" + end;
+  const u = "https://corsproxy.io/?" + encodeURIComponent(rawUrl);
+
+  try{
+    const r = await fetch(u, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "X-API-Key": API_KEY
+      }
+    });
+
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    
+    const result = {
+      target: Number(d.target) || 0,
+      achievement: Number(d.achievement) || 0,
+      status: d.status !== false,
+      error: false
+    };
+    
+    cache[key] = result; 
+    return result;
+  }catch(e){
+    console.error(`Error fetching score for ${id}:`, e);
+    return { target: 0, achievement: 0, status: false, error: true };
+  }
+}
+
+async function loadDashboard(){
+  const selectedTeam = document.getElementById("teamSelect").value;
+  const selectedAgent = document.getElementById("agentSelect").value;
+  const selectedMonth = document.getElementById("monthSelect").value;
+
+  document.getElementById("status").textContent = "Fetching live analytics...";
+
+  let targetAgents = [];
+  if(selectedTeam === "all") {
+    Object.keys(teams).forEach(t => {
+      teams[t].forEach(([id, name]) => targetAgents.push({id, name, lob: t}));
+    });
+  } else {
+    teams[selectedTeam].forEach(([id, name]) => targetAgents.push({id, name, lob: selectedTeam}));
+  }
+
+  if(selectedAgent !== "all") {
+    targetAgents = targetAgents.filter(a => a.id === selectedAgent);
+  }
+
+  const rows = await Promise.all(targetAgents.map(async (agent) => {
+    const m = await Promise.all(months.map(x => getScore(agent.id, x[0], x[1])));
+    return {...agent, m};
+  }));
+
+  let idxs = selectedMonth === "all" ? [0,1,2,3,4] : [months.findIndex(x => x[0].slice(0,7) === selectedMonth)];
+
+  updateKPIs(rows, idxs);
+  drawCharts(rows, idxs);
+  renderHeatmap(rows);
+  renderTable(rows);
+
+  document.getElementById("status").textContent = "Updated • " + new Date().toLocaleTimeString();
+}
+
+function hasData(x){ return !!x && !x.error && Number(x.target) > 0; }
+
+function sums(rows, idxs){
+  let t=0, a=0, available=0;
+  rows.forEach(r => idxs.forEach(i => {
+    const x = r.m[i];
+    if(hasData(x)){ t += Number(x.target)||0; a += Number(x.achievement)||0; available++; }
+  }));
+  return {t, a, p: t ? (100 * a / t) : 0, available};
+}
+
+function agentSummary(r, idxs){
+  const s = sums([r], idxs);
+  return {...r, t: s.t, a: s.a, p: s.p, available: s.available};
+}
+
+function updateKPIs(rows, idxs){
+  const s = sums(rows, idxs);
+  document.getElementById("kAgents").textContent = rows.length;
+  document.getElementById("kAvg").textContent = s.p ? s.p.toFixed(1) + "%" : "—";
+  document.getElementById("kPct").textContent = s.t ? s.p.toFixed(1) + "%" : "—";
+
+  const ranked = rows.map(r => agentSummary(r, idxs)).filter(x => x.available > 0).sort((a,b) => b.p - a.p);
+  document.getElementById("kTop").textContent = ranked[0] ? `${ranked[0].p.toFixed(1)}%` : "—";
+  document.getElementById("kTopSub").textContent = ranked[0] ? `${ranked[0].name} (${ranked[0].lob})` : "No Data";
+
+  let lobStats = {};
+  Object.keys(teams).forEach(t => {
+    const lobRows = rows.filter(r => r.lob === t);
+    const ls = sums(lobRows, idxs);
+    lobStats[t] = ls.p;
+  });
+  let topLob = Object.keys(lobStats).sort((a,b) => lobStats[b] - lobStats[a])[0];
+  document.getElementById("kLobLeader").textContent = topLob ? `${lobStats[topLob].toFixed(1)}%` : "—";
+  document.getElementById("kLobSub").textContent = topLob ? `${topLob} LOB Leader` : "—";
+}
+
+function destroy(name){ if(charts[name]) charts[name].destroy(); }
+
+function makeChart(name, id, type, data, options){
+  destroy(name);
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  charts[name] = new Chart(document.getElementById(id), {type, data, options});
+}
+
+function drawCharts(rows, idxs){
+  const labels = idxs.map(i => months[i][2]);
+  const monthly = idxs.map(i => { const s = sums(rows, [i]); return [s.t, s.a, s.p, s.available]; });
+
+  // 1. Monthly Achievement Rate (%)
+  makeChart("monthly","monthlyChart","bar",{labels, datasets:[
+    {label:"Achievement Rate (%)", data:monthly.map(x=>x[3]?x[2]:null), backgroundColor:"#2563eb", borderRadius:6}
+  ]},{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, ticks:{callback:v=>v+"%"}}}, plugins:{legend:{display:false}}});
+
+  // 2. LOB Comparison
+  const lobNames = ["CATV Agent", "BB Tech", "BB Renewal"];
+  const lobPcts = lobNames.map(t => {
+    const lRows = rows.filter(r => r.lob === t);
+    return sums(lRows, idxs).p;
+  });
+  makeChart("lobCompare","lobCompareChart","bar",{labels:lobNames, datasets:[
+    {label:"Achievement %", data:lobPcts, backgroundColor:["#3b82f6","#8b5cf6","#10b981"], borderRadius:8}
+  ]},{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, ticks:{callback:v=>v+"%"}}}, plugins:{legend:{display:false}}});
+
+  // 3. Trend Line (%)
+  makeChart("pct","pctChart","line",{labels, datasets:[
+    {label:"Achievement %", data:monthly.map(x=>x[3]?x[2]:null), borderColor:"#7c3aed", backgroundColor:"rgba(124, 58, 237, 0.15)", fill:true, tension:0.4, pointRadius:5}
+  ]},{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, ticks:{callback:v=>v+"%"}}}, plugins:{legend:{display:false}}});
+
+  // 4. Status Distribution
+  const summaries = rows.map(r => agentSummary(r, idxs)).filter(x => x.available > 0);
+  const excCount = summaries.filter(s => s.p >= 100).length;
+  const trackCount = summaries.filter(s => s.p >= 80 && s.p < 100).length;
+  const needCount = summaries.filter(s => s.p < 80).length;
+
+  makeChart("statusDist","statusDistChart","doughnut",{labels:["Excellent (≥100%)","On Track (80-99%)","Needs Attention (<80%)"], datasets:[
+    {data:[excCount, trackCount, needCount], backgroundColor:["#10b981","#f59e0b","#ef4444"]}
+  ]},{responsive:true, maintainAspectRatio:false, cutout:"70%", plugins:{legend:{position:"bottom"}}});
+
+  // 5. Target Gap Utilization (%)
+  const s = sums(rows, idxs);
+  const achvPct = Math.min(s.p, 100);
+  const gapPct = Math.max(100 - achvPct, 0);
+  makeChart("compare","compareChart","doughnut",{labels:["% Achieved Target", "% Target Gap"], datasets:[
+    {data:[achvPct, gapPct], backgroundColor:["#2563eb","#e2e8f0"]}
+  ]},{responsive:true, maintainAspectRatio:false, cutout:"70%", plugins:{legend:{position:"bottom"}}});
+
+  // 6. Top Performers Ranking (%)
+  const ranked = summaries.sort((a,b) => b.p - a.p).slice(0, 8);
+  makeChart("agent","agentChart","bar",{labels:ranked.map(x=>x.name), datasets:[
+    {label:"Achievement %", data:ranked.map(x=>x.p), backgroundColor:"#10b981", borderRadius:6}
+  ]},{indexAxis:"y", responsive:true, maintainAspectRatio:false, scales:{x:{beginAtZero:true, ticks:{callback:v=>v+"%"}}}, plugins:{legend:{display:false}}});
+
+  // 7. MoM Change
+  const momLabels = [], momData = [];
+  for(let j=1; j<idxs.length; j++){
+    const prev = sums(rows, [idxs[j-1]]);
+    const cur = sums(rows, [idxs[j]]);
+    momLabels.push(months[idxs[j]][2]);
+    momData.push(prev.t && cur.t ? cur.p - prev.p : null);
+  }
+  makeChart("mom","momChart","bar",{labels:momLabels, datasets:[
+    {label:"MoM Change (pp)", data:momData, backgroundColor:c=>c.raw>=0?"#10b981":"#ef4444", borderRadius:6}
+  ]},{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>v+" pp"}}}});
+
+  // 8. Consistency (%)
+  const consistency = rows.map(r => {
+    const vals = idxs.filter(i => hasData(r.m[i])).map(i => 100 * r.m[i].achievement / r.m[i].target);
+    if(!vals.length) return {name:r.name, score:null};
+    const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+    const sd = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/vals.length);
+    return {name:r.name, score:Math.max(0, Math.min(100, 100 - sd))};
+  }).filter(x=>x.score!==null).sort((a,b)=>b.score-a.score).slice(0, 8);
+
+  makeChart("consistency","consistencyChart","bar",{labels:consistency.map(x=>x.name), datasets:[
+    {label:"Consistency Score (%)", data:consistency.map(x=>x.score), backgroundColor:"#f59e0b", borderRadius:6}
+  ]},{indexAxis:"y", responsive:true, maintainAspectRatio:false, scales:{x:{max:100, ticks:{callback:v=>v+"%"}}}, plugins:{legend:{display:false}}});
+}
+
+function renderHeatmap(rows){
+  const box = document.getElementById("heatmap");
+  let out = `<table><thead><tr><th>Agent Name</th>${months.map(x => `<th>${x[2]}</th>`).join("")}</tr></thead><tbody>`;
+  rows.forEach(r => {
+    let tagClass = r.lob === "CATV Agent" ? "tag-catv" : r.lob === "BB Tech" ? "tag-tech" : "tag-renewal";
+    out += `<tr><td><b>${escapeHtml(r.name)}</b><br><span class="lob-tag ${tagClass}">${r.lob}</span></td>`;
+    r.m.forEach(x => {
+      if(x.error){ out += `<td><span class="pill api-error">ERR</span></td>`; return; }
+      if(!hasData(x)){ out += `<td><span class="pill no-data">0.0%</span></td>`; return; }
+      const p = 100 * x.achievement / x.target;
+      let cls = p >= 100 ? "good" : p >= 80 ? "mid" : "bad";
+      out += `<td><span class="pill ${cls}">${p.toFixed(1)}%</span></td>`;
+    });
+    out += "</tr>";
+  });
+  out += "</tbody></table>";
+  box.innerHTML = out;
+}
+
+function status(p){
+  if(p >= 100) return ["Excellent", "good"];
+  if(p >= 80) return ["On Track", "mid"];
+  return ["Needs Attention", "bad"];
+}
+
+function renderTable(rows){
+  const tb = document.getElementById("agentTable");
+  tb.innerHTML = "";
+  const statFilter = document.getElementById("statusFilter").value;
+  let count = 0;
+
+  const grandTotal = sums(rows, [0,1,2,3,4]);
+
+  rows.forEach(r => {
+    const overall = sums([r], [0,1,2,3,4]);
+    const st = overall.available ? status(overall.p) : ["No Data", "no-data"];
+
+    if(statFilter !== "all" && st[0] !== statFilter) return;
+    count++;
+
+    let tagClass = r.lob === "CATV Agent" ? "tag-catv" : r.lob === "BB Tech" ? "tag-tech" : "tag-renewal";
+
+    const targetShare = grandTotal.t ? ((overall.t / grandTotal.t) * 100).toFixed(1) + "%" : "0%";
+    const achvShare = grandTotal.a ? ((overall.a / grandTotal.a) * 100).toFixed(1) + "%" : "0%";
+
+    const cells = r.m.map(x => {
+      if(x.error) return `<td><span class="pill api-error">ERR</span></td>`;
+      if(!hasData(x)) return `<td><span class="pill no-data">0.0%</span></td>`;
+      const p = 100 * x.achievement / x.target;
+      let cls = p >= 100 ? "good" : p >= 80 ? "mid" : "bad";
+      return `<td><span class="pill ${cls}">${p.toFixed(1)}%</span></td>`;
+    }).join("");
+
+    tb.innerHTML += `<tr>
+      <td><b>${escapeHtml(r.name)}</b><br><span class="lob-tag ${tagClass}">${r.lob}</span></td>
+      ${cells}
+      <td><b>${targetShare}</b></td>
+      <td><b>${achvShare}</b></td>
+      <td style="font-weight:900; font-size:15px; color:#2563eb">${overall.available ? overall.p.toFixed(1) + "%" : "—"}</td>
+      <td><span class="pill ${st[1]}">${st[0]}</span></td>
+    </tr>`;
+  });
+
+  if(count === 0){
+    tb.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px; color:#64748b">No agents found for selected criteria.</td></tr>`;
+  }
+}
+
+function escapeHtml(val){
+  return String(val ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+}
+
+init();
+</script>
+</body>
+</html>
