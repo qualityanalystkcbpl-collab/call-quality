@@ -92,15 +92,11 @@ h1, h2, h3, .kpi-value { font-family: 'Manrope', 'Inter', sans-serif; }
 .brand { position: relative; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
 .brand-left { display: flex; align-items: center; gap: 18px; }
 .logo {
-  width: 76px; height: 76px; border-radius: 18px;
-  background: linear-gradient(135deg, #ffffff, #f1f5f9);
-  color: #2563eb; display: grid; place-items: center;
-  font-weight: 900; font-size: 30px; box-shadow: 0 8px 22px rgba(0,0,0,0.35), 0 0 0 3px rgba(255,255,255,0.15);
-  overflow: hidden; flex-shrink: 0;
+  height: 64px; display: flex; align-items: center; flex-shrink: 0;
   transition: transform 0.3s ease;
 }
-.logo:hover { transform: scale(1.05) rotate(-2deg); }
-.logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+.logo:hover { transform: scale(1.04); }
+.logo img { height: 100%; width: auto; object-fit: contain; display: block; }
 .header h1 {
   margin: 0; font-size: 27px; letter-spacing: -0.5px; font-weight: 800;
   background: linear-gradient(90deg, #fff, #bfdbfe, #fbcfe8, #fff);
@@ -122,6 +118,44 @@ h1, h2, h3, .kpi-value { font-family: 'Manrope', 'Inter', sans-serif; }
   backdrop-filter: blur(6px); transition: all 0.2s ease;
 }
 .btn-home:hover { background: rgba(255,255,255,0.22); transform: translateY(-1px); }
+
+/* Top Performers Scrolling Ticker */
+.ticker-bar {
+  display: flex; align-items: center;
+  background: linear-gradient(90deg, #1e1b4b, #4c1d95, #831843, #1e1b4b);
+  background-size: 300% 100%;
+  animation: gradientShift 14s ease infinite;
+  padding: 10px 0;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.ticker-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.14); color: #fbbf24;
+  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;
+  padding: 5px 14px; border-radius: 99px; margin: 0 14px 0 20px; flex-shrink: 0;
+  white-space: nowrap; position: relative; z-index: 2;
+}
+.ticker-viewport { flex: 1; overflow: hidden; position: relative; min-width: 0; }
+.ticker-track {
+  display: inline-flex; white-space: nowrap;
+  animation: tickerScroll 32s linear infinite;
+  will-change: transform;
+}
+.ticker-track.static { animation: none; }
+.ticker-bar:hover .ticker-track { animation-play-state: paused; }
+.ticker-item {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: #fff; font-weight: 700; font-size: 13px;
+  padding: 0 26px; border-right: 1px solid rgba(255,255,255,0.18);
+}
+.ticker-item .rank { font-size: 16px; }
+.ticker-item .pill { padding: 3px 10px; }
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; overflow-x: auto; } }
 
 /* Container & Toolbar */
 .container { max-width: 1600px; margin: auto; padding: 28px 20px; }
@@ -208,6 +242,16 @@ button { cursor: pointer; }
 }
 .section-header h2 { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0; }
 
+/* Info / Legend Note Box */
+.info-note {
+  background: linear-gradient(135deg, #eff6ff, #f5f3ff);
+  border: 1px solid #dbeafe; border-left: 4px solid #2563eb;
+  border-radius: 14px; padding: 14px 18px; margin-top: 14px;
+  font-size: 12.5px; color: #334155; line-height: 1.6;
+}
+.info-note b { color: #1e293b; }
+.info-note .formula { display: block; margin: 4px 0 8px; font-family: 'Inter', monospace; font-size: 12px; color: #2563eb; font-weight: 700; }
+
 /* Table Styling */
 .table-card { background: #fff; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); overflow: hidden; }
 .table-wrap { overflow-x: auto; max-height: 600px; }
@@ -283,11 +327,11 @@ footer { padding: 36px 0; text-align: center; color: var(--text-muted); font-siz
   <div class="brand">
     <div class="brand-left">
       <div class="logo" id="brandLogo">
-        <img src="logo2.png" alt="GTPL KCBPL" onerror="this.onerror=null; this.parentElement.innerHTML='K';">
+        <img src="logo2.png" alt="GTPL KCBPL">
       </div>
       <div>
         <h1>Master LOB & Agent Performance Analytics (%)</h1>
-        <p>Enterprise Percentage View • April–August 2026</p>
+        <p>Enterprise Percentage View</p>
       </div>
     </div>
     <div class="brand-right">
@@ -296,6 +340,15 @@ footer { padding: 36px 0; text-align: center; color: var(--text-muted); font-siz
     </div>
   </div>
 </header>
+
+<div class="ticker-bar" id="tickerBar">
+  <span class="ticker-label">📊 Live Insights</span>
+  <div class="ticker-viewport">
+    <div class="ticker-track" id="tickerTrack">
+      <span class="ticker-item">Loading dashboard insights…</span>
+    </div>
+  </div>
+</div>
 
 <main class="container">
 
@@ -497,8 +550,6 @@ footer { padding: 36px 0; text-align: center; color: var(--text-muted); font-siz
             <th>June (%)</th>
             <th>July (%)</th>
             <th>August (%)</th>
-            <th>Target Share %</th>
-            <th>Achv Share %</th>
             <th>Overall %</th>
             <th>Status</th>
           </tr>
@@ -648,6 +699,8 @@ async function loadDashboard(){
   renderHeatmap(rows);
   renderTable(rows);
 
+  renderInsightTicker(rows, idxs);
+
   document.getElementById("status").textContent = "Updated • " + new Date().toLocaleTimeString();
   scrollToTop();
 }
@@ -784,6 +837,47 @@ function scrollToTop(){
   window.scrollTo({top: 0, behavior: "smooth"});
 }
 
+function renderInsightTicker(rows, idxs){
+  const track = document.getElementById("tickerTrack");
+  if(!track) return;
+
+  const s = sums(rows, idxs);
+  const summaries = rows.map(r => agentSummary(r, idxs)).filter(x => x.available > 0);
+
+  if(!summaries.length){
+    track.classList.add("static");
+    track.innerHTML = `<span class="ticker-item" style="border-right:none;">📊 No performance data available for the current filter</span>`;
+    return;
+  }
+  track.classList.remove("static");
+
+  const excellent = summaries.filter(x => x.p >= 100).length;
+  const onTrack = summaries.filter(x => x.p >= 80 && x.p < 100).length;
+  const attention = summaries.filter(x => x.p < 80).length;
+  const top = summaries.slice().sort((a,b) => b.p - a.p)[0];
+
+  let lobStats = {};
+  Object.keys(teams).forEach(t => {
+    const lr = rows.filter(r => r.lob === t);
+    const ls = sums(lr, idxs);
+    if(ls.available) lobStats[t] = ls.p;
+  });
+  const topLob = Object.keys(lobStats).sort((a,b) => lobStats[b] - lobStats[a])[0];
+
+  const items = [
+    `📈 Overall Achievement: <b>${s.available ? s.p.toFixed(1) + "%" : "No Data"}</b>`,
+    `👥 Active Agents: <b>${rows.length}</b> across ${Object.keys(teams).length} LOBs`,
+    topLob ? `🚀 Leading LOB: <b>${topLob}</b> (${lobStats[topLob].toFixed(1)}%)` : `🚀 Leading LOB: —`,
+    top ? `🌟 Best Achievement: <b>${escapeHtml(top.name)}</b> at ${top.p.toFixed(1)}%` : `🌟 Best Achievement: —`,
+    `✅ Excellent (≥100%): <b>${excellent}</b> &nbsp; 🟡 On Track: <b>${onTrack}</b>`,
+    attention > 0 ? `⚠️ Needs Attention: <b>${attention}</b> agent(s) below 80%` : `🎉 Great news — no agents below 80%!`,
+    `🎯 Total Target: <b>${s.t.toLocaleString()}</b> &nbsp; Achieved: <b>${s.a.toLocaleString()}</b>`
+  ];
+
+  const itemsHtml = items.map(t => `<span class="ticker-item">${t}</span>`).join("");
+  track.innerHTML = itemsHtml + itemsHtml; // duplicated for a seamless continuous loop
+}
+
 function renderLobDeepAnalytics(rows, idxs){
   const grid = document.getElementById("lobDeepGrid");
   if(!grid) return;
@@ -868,6 +962,23 @@ function renderCustomRange(results, from, to){
   const ranked = avail.slice().sort((x, y) => (100 * y.x.achievement / y.x.target) - (100 * x.x.achievement / x.x.target));
   const top = ranked[0];
 
+  const excellentC = avail.filter(r => (100*r.x.achievement/r.x.target) >= 100).length;
+  const attentionC = avail.filter(r => (100*r.x.achievement/r.x.target) < 80).length;
+  const tickerTrack = document.getElementById("tickerTrack");
+  if(tickerTrack){
+    const items = [
+      `📅 Range: <b>${from} → ${to}</b>`,
+      `📈 Achievement: <b>${avail.length ? p.toFixed(1) + "%" : "No Data"}</b>`,
+      `👥 Agents With Data: <b>${avail.length}</b> of ${results.length}`,
+      top ? `🌟 Best: <b>${escapeHtml(top.name)}</b> at ${(100*top.x.achievement/top.x.target).toFixed(1)}%` : `🌟 Best: —`,
+      `✅ Excellent: <b>${excellentC}</b>`,
+      attentionC > 0 ? `⚠️ Needs Attention: <b>${attentionC}</b> agent(s)` : `🎉 No agents below 80%!`,
+      `🎯 Target: <b>${t.toLocaleString()}</b> &nbsp; Achieved: <b>${a.toLocaleString()}</b>`
+    ];
+    const itemsHtml = items.map(x => `<span class="ticker-item">${x}</span>`).join("");
+    tickerTrack.innerHTML = itemsHtml + itemsHtml;
+  }
+
   document.getElementById("customKpiGrid").innerHTML = `
     <div class="kpi-card kpi-blue"><div class="kpi-label">Agents With Data</div><div class="kpi-value">${avail.length}</div><div class="kpi-sub">of ${results.length} selected</div></div>
     <div class="kpi-card kpi-cyan"><div class="kpi-label">Total Target</div><div class="kpi-value">${t.toLocaleString()}</div><div class="kpi-sub">selected date range</div></div>
@@ -932,8 +1043,6 @@ function renderTable(rows){
   const statFilter = document.getElementById("statusFilter").value;
   let count = 0;
 
-  const grandTotal = sums(rows, [0,1,2,3,4]);
-
   rows.forEach(r => {
     const overall = sums([r], [0,1,2,3,4]);
     const st = overall.available ? status(overall.p) : ["No Data", "no-data"];
@@ -943,23 +1052,18 @@ function renderTable(rows){
 
     let tagClass = r.lob === "CATV Agent" ? "tag-catv" : r.lob === "BB Tech Agent" ? "tag-tech" : "tag-renewal";
 
-    const targetShare = grandTotal.t ? ((overall.t / grandTotal.t) * 100).toFixed(1) + "%" : "0%";
-    const achvShare = grandTotal.a ? ((overall.a / grandTotal.a) * 100).toFixed(1) + "%" : "0%";
-
     const cells = r.m.map(x => `<td>${scorePill(x)}</td>`).join("");
 
     tb.innerHTML += `<tr>
       <td><b>${escapeHtml(r.name)}</b><br><span class="lob-tag ${tagClass}">${r.lob}</span></td>
       ${cells}
-      <td><b>${targetShare}</b></td>
-      <td><b>${achvShare}</b></td>
       <td style="font-weight:900; font-size:15px; color:#2563eb">${overall.available ? overall.p.toFixed(1) + "%" : "—"}</td>
       <td><span class="pill ${st[1]}">${st[0]}</span></td>
     </tr>`;
   });
 
   if(count === 0){
-    tb.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px; color:#64748b">No agents found for selected criteria.</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b">No agents found for selected criteria.</td></tr>`;
   }
 
   filterTableRows('agentTable', document.getElementById('tableSearch') ? document.getElementById('tableSearch').value : '', 'tableCount');
