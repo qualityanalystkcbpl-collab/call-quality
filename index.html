@@ -4817,6 +4817,7 @@ transform:translateY(0);
       <div class="nav-section agent-only" style="display:none;">
       <div class="nav-label">MY PERFORMANCE</div>
       <div class="nav-item" data-tab="AGENTREPORT" onclick="switchTab('AGENTREPORT')"><span class="dot"></span>📊 My QA Report</div>
+      <div class="nav-item" data-tab="AIINSIGHT" onclick="switchTab('AIINSIGHT')"><span class="dot"></span>🤖 Get feedback from AI Agent</div>
       </div>
 
       <div class="nav-section admin-only" style="display:none;">
@@ -12293,6 +12294,9 @@ function isSupabaseConfigured(){
 
 /* Builds the "AI Insight" tab: a LOB dropdown + Agent dropdown, then a result card below */
 function renderAIInsightPanel(){
+  if(currentRole === 'agent'){
+    return renderAIInsightPanelForAgent();
+  }
   const panel = document.getElementById('panel-AIINSIGHT');
   const lobOptions = Object.keys(VERTICALS)
     .map(k => `<option value="${escapeAttr(k)}">${escapeHtml(VERTICALS[k].label)}</option>`).join('');
@@ -12346,6 +12350,118 @@ function renderAIInsightPanel(){
     </div>`;
 
   setupAIRobot();
+}
+
+/* Agent-facing version: no LOB/Agent picker — locked to the logged-in agent's own name.
+   If the agent has data under more than one LOB, a small LOB switcher is shown (name stays fixed). */
+async function renderAIInsightPanelForAgent(){
+  const panel = document.getElementById('panel-AIINSIGHT');
+  const agent = String(
+    (typeof empAgentName !== 'undefined' && empAgentName) ||
+    localStorage.getItem('qa_emp_name') || ''
+  ).trim();
+
+  if(!agent){
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div><h1>🤖 Get feedback from AI Agent</h1><p>AI আপনার পারফরম্যান্স বিশ্লেষণ করে সংক্ষিপ্ত summary, দুর্বল জায়গা ও কোচিং সাজেশন দেবে।</p></div>
+      </div>
+      <div class="agent-report-empty">Agent session information পাওয়া যায়নি। আবার লগইন করে দেখুন।</div>`;
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div><h1>🤖 Get feedback from AI Agent</h1><p>AI আপনার পারফরম্যান্স বিশ্লেষণ করে সংক্ষিপ্ত summary, দুর্বল জায়গা ও কোচিং সাজেশন দেবে।</p></div>
+    </div>
+    <div class="ai-insight-picker-box" id="aiInsightAgentLobBox" style="display:none;">
+      <div class="ai-insight-picker-row">
+        <div class="ai-field">
+          <label>LOB / Process</label>
+          <select id="aiInsightLobSelect" onchange="onAiInsightAgentLobChange()"></select>
+        </div>
+      </div>
+    </div>
+    <div class="empty-state" id="aiInsightEmptyState">ডাটা লোড হচ্ছে...</div>
+    <div class="ai-insight-panel-card" id="aiInsightPanelCard" style="display:none;">
+      <div class="ai-insight-panel-head">
+        <div id="aiInsightHeaderBlock">
+          <h3 id="aiInsightPanelAgentName">—</h3>
+          <p class="hint" id="aiInsightPanelAgentMeta"></p>
+        </div>
+        <button class="btn primary" id="aiInsightGenBtn" onclick="generateAgentInsight()">✨ Generate New Insight</button>
+      </div>
+      <div class="ai-insight-body">
+        <div class="ai-insight-loading" id="aiInsightLoading" style="display:none;">
+          <span class="ai-insight-loading-icon">✨</span>
+          <span class="ai-insight-loading-text-wrap">
+            <span id="aiInsightLoadingText">Analyzing patterns...</span>
+            <span id="aiInsightLoadingTextBn">প্যাটার্ন বিশ্লেষণ করা হচ্ছে...</span>
+          </span>
+        </div>
+        <div class="ai-insight-text" id="aiInsightText"></div>
+        <div class="ai-insight-meta" id="aiInsightMeta" style="display:none;"></div>
+        <div class="ai-insight-error login-error" id="aiInsightError" style="display:none;"></div>
+      </div>
+    </div>`;
+
+  setupAIRobot();
+
+  // Find which LOB(s) this agent has data under — the agent never gets to pick a different name.
+  const matchedLobs = [];
+  for(const lobKey of Object.keys(VERTICALS)){
+    try{
+      const { rows } = await ensureVerticalDataLoaded(lobKey);
+      if(rows.some(r => String(r.agent).trim() === agent)) matchedLobs.push(lobKey);
+    }catch(e){
+      console.error('AI Insight: load failed for', lobKey, e);
+    }
+  }
+
+  const emptyEl = document.getElementById('aiInsightEmptyState');
+  if(!matchedLobs.length){
+    if(emptyEl) emptyEl.textContent = 'আপনার নামে কোনো QA audit ডাটা পাওয়া যায়নি।';
+    return;
+  }
+
+  if(matchedLobs.length > 1){
+    const box = document.getElementById('aiInsightAgentLobBox');
+    const select = document.getElementById('aiInsightLobSelect');
+    select.innerHTML = matchedLobs.map(k => `<option value="${escapeAttr(k)}">${escapeHtml(VERTICALS[k].label)}</option>`).join('');
+    if(box) box.style.display = 'block';
+  }
+
+  selectAgentInsightLob(matchedLobs[0], agent);
+}
+
+function onAiInsightAgentLobChange(){
+  const agent = String(
+    (typeof empAgentName !== 'undefined' && empAgentName) ||
+    localStorage.getItem('qa_emp_name') || ''
+  ).trim();
+  const lob = document.getElementById('aiInsightLobSelect').value;
+  if(lob) selectAgentInsightLob(lob, agent);
+}
+
+function selectAgentInsightLob(lob, agent){
+  document.getElementById('aiInsightEmptyState').style.display = 'none';
+  document.getElementById('aiInsightPanelCard').style.display = 'block';
+
+  aiInsightCurrentTab = lob;
+  aiInsightCurrentAgent = agent;
+
+  const summaryRow = (agentRowsCache[lob] || []).find(r => String(r.agent).trim() === agent);
+  document.getElementById('aiInsightPanelAgentName').textContent = agent;
+  document.getElementById('aiInsightPanelAgentMeta').textContent =
+    `LOB: ${(VERTICALS[lob] && VERTICALS[lob].label) || lob}` +
+    (summaryRow ? `  •  Audit Count: ${summaryRow.auditCount}  •  Avg Score: ${summaryRow.avgScore}%` : '');
+  triggerAIHeaderAnim();
+
+  document.getElementById('aiInsightText').textContent = '';
+  document.getElementById('aiInsightMeta').style.display = 'none';
+  document.getElementById('aiInsightError').style.display = 'none';
+
+  loadExistingAgentInsight(lob, agent);
 }
 
 /* ===================== AI ROBOT MASCOT (AI Insight tab only) ===================== */
