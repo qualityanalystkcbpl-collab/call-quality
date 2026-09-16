@@ -391,6 +391,8 @@ footer { padding: 36px 0; text-align: center; color: var(--text-muted); font-siz
     <div class="status-indicator" id="status">Ready</div>
   </div>
 
+  <div id="apiErrorBanner" style="display:none; background:linear-gradient(135deg,#fef2f2,#fff1f2); border:1px solid #fecaca; border-left:4px solid #dc2626; border-radius:14px; padding:14px 18px; margin-bottom:20px; font-size:13px; color:#991b1b; line-height:1.6;"></div>
+
   <!-- CUSTOM DATE RANGE SEARCH -->
   <div class="toolbar" id="dateRangeBar">
     <div class="filter-group">
@@ -594,7 +596,7 @@ const months = [
  ["2026-08-01","2026-08-31","August"]
 ];
 
-let cache = {}, charts = {};
+let cache = {}, charts = {}, lastApiError = null, lastApiErrorCount = 0;
 
 function init(){
   const sel = document.getElementById("teamSelect");
@@ -661,6 +663,8 @@ async function getScore(id, start, end){
     cache[key] = result; 
     return result;
   }catch(e){
+    lastApiError = (e && e.message) ? e.message : String(e);
+    lastApiErrorCount++;
     console.error(`Error fetching score for ${id}:`, e);
     return { target: 0, achievement: 0, status: false, error: true };
   }
@@ -672,6 +676,8 @@ async function loadDashboard(){
   const selectedMonth = document.getElementById("monthSelect").value;
 
   document.getElementById("status").textContent = "Fetching live analytics...";
+  lastApiError = null;
+  lastApiErrorCount = 0;
 
   let targetAgents = [];
   if(selectedTeam === "all") {
@@ -703,6 +709,16 @@ async function loadDashboard(){
 
   document.getElementById("status").textContent = "Updated • " + new Date().toLocaleTimeString();
   scrollToTop();
+
+  const banner = document.getElementById("apiErrorBanner");
+  if(lastApiErrorCount > 0 && lastApiErrorCount >= targetAgents.length * months.length * 0.5){
+    banner.style.display = "block";
+    banner.innerHTML = `⚠️ <b>API not reachable — this is why you're seeing "No Data".</b><br>
+      Last error: <code>${escapeHtml(lastApiError || "Unknown error")}</code><br>
+      সবচেয়ে সম্ভাব্য কারণ ২টা: (1) <b>CORS ব্লক</b> — আপনার লোকাল API সার্ভার এই ড্যাশবোর্ডের ডোমেইন (<code>qualityanalystkcbpl-collab.github.io</code>) থেকে রিকোয়েস্ট এলাউ করছে না, ব্যাকএন্ডে <code>Access-Control-Allow-Origin</code> হেডার যোগ করতে হবে। (2) <b>Tunnel/Server বন্ধ</b> — cloudflared বা লোকাল সার্ভার রিস্টার্ট/বন্ধ হয়ে গেছে। ব্রাউজারে F12 চেপে Console/Network ট্যাবে exact এরর দেখে নিশ্চিত করুন।`;
+  } else {
+    banner.style.display = "none";
+  }
 }
 
 function hasData(x){ return !!x && !x.error && Number(x.target) > 0; }
