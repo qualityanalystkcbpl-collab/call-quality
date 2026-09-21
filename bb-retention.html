@@ -229,6 +229,10 @@ flex-wrap:wrap;
   .chart-legend span{ display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
   .chart-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
   .chart-area{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+  .chart-grid{ display:grid; grid-template-columns:1.4fr 1fr; gap:20px; margin-bottom:24px; }
+  @media(max-width:900px){ .chart-grid{ grid-template-columns:1fr; } }
+  .chart-canvas-wrap{ position:relative; height:300px; }
+  .chart-canvas-wrap.donut{ height:280px; }
   .chart-y-axis{
     display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end;
     height:230px; padding-bottom:44px; font-size:10.5px; color:var(--muted); flex-shrink:0;
@@ -1361,20 +1365,22 @@ Dashboard Navigation
     <div class="stat-card red"><div class="label">Under Performance</div><div class="value">—</div></div>
   </div>
 
-  <div class="chart-panel">
-    <h2>Agent-wise Average Score</h2>
-    <p class="chart-sub">প্রতিটি এজেন্টের গড় অডিট স্কোর, পারফরম্যান্স অনুযায়ী</p>
-    <div class="chart-legend">
-      <span><i style="background:var(--accent-orange)"></i>Top Performer (99%+)</span>
-      <span><i style="background:var(--accent-green)"></i>Excellent / Good (90%+)</span>
-      <span><i style="background:var(--accent-red)"></i>Needs Improvement (&lt;90%)</span>
-    </div>
-    <div class="chart-area">
-      <div class="chart-y-axis"><span>100</span><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span></div>
-      <div class="bars" id="chartBars">
-        <div class="gridlines"><div></div><div></div><div></div><div></div><div></div><div></div></div>
-        <div class="state-msg">ডেটা লোড হচ্ছে...</div>
+  <div class="chart-grid">
+    <div class="chart-panel">
+      <h2>Agent-wise Average Score</h2>
+      <p class="chart-sub">প্রতিটি এজেন্টের গড় অডিট স্কোর, পারফরম্যান্স অনুযায়ী</p>
+      <div class="chart-legend">
+        <span><i style="background:var(--accent-orange)"></i>Top Performer (99%+)</span>
+        <span><i style="background:var(--accent-green)"></i>Excellent / Good (90%+)</span>
+        <span><i style="background:var(--accent-red)"></i>Needs Improvement (&lt;90%)</span>
       </div>
+      <div class="chart-canvas-wrap"><canvas id="agentScoreChart"></canvas></div>
+    </div>
+
+    <div class="chart-panel">
+      <h2>Performance Tier Distribution</h2>
+      <p class="chart-sub">কতজন এজেন্ট কোন পারফরম্যান্স স্তরে আছেন</p>
+      <div class="chart-canvas-wrap donut"><canvas id="tierDonutChart"></canvas></div>
     </div>
   </div>
 
@@ -1423,13 +1429,7 @@ Dashboard Navigation
       <span><i style="background:var(--accent-green)"></i>Excellent / Good (90%+)</span>
       <span><i style="background:var(--accent-red)"></i>Needs Improvement (&lt;90%)</span>
     </div>
-    <div class="chart-area">
-      <div class="chart-y-axis"><span>100</span><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span></div>
-      <div class="bars" id="monthlyOverallBars">
-        <div class="gridlines"><div></div><div></div><div></div><div></div><div></div><div></div></div>
-        <div class="state-msg">ডেটা লোড হচ্ছে...</div>
-      </div>
-    </div>
+    <div class="chart-canvas-wrap"><canvas id="monthlyTrendChart"></canvas></div>
   </div>
 
   <div class="panel-title">Month-wise Overall Summary</div>
@@ -1449,6 +1449,7 @@ Dashboard Navigation
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script>
 /* ====================== CONFIG ======================
    এখানে আপনার Apps Script Web App URL বসান (Deploy -> Web app -> URL)
@@ -1459,6 +1460,168 @@ const CONFIG = {
 };
 
 let DASHBOARD_DATA = null;
+
+/* ================= CHART.JS SETUP (3 charts: Overview x2, Monthly Summary x1) ================= */
+if(window.Chart){
+  Chart.defaults.color = '#8592ab';
+  Chart.defaults.borderColor = 'rgba(255,255,255,.08)';
+  Chart.defaults.font.family = "'Segoe UI','Noto Sans Bengali',system-ui,-apple-system,sans-serif";
+}
+
+let agentScoreChartInstance = null;
+let tierDonutChartInstance = null;
+let monthlyTrendChartInstance = null;
+
+function tierColorHex(tier){
+  if(tier === 'Top Performer') return '#e0a458';
+  if(tier === 'Excellent' || tier === 'Good') return '#3ecf8e';
+  return '#e2685f';
+}
+
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: '#0f1729',
+  borderColor: '#1e2a44',
+  borderWidth: 1,
+  padding: 10,
+  titleColor: '#e8ecf5',
+  bodyColor: '#e8ecf5',
+  displayColors: false
+};
+
+function renderAgentScoreChart(data){
+  const canvas = document.getElementById('agentScoreChart');
+  if(!canvas || !window.Chart) return;
+  const agents = data.agents || [];
+
+  if(agentScoreChartInstance){ agentScoreChartInstance.destroy(); agentScoreChartInstance = null; }
+  if(!agents.length) return;
+
+  agentScoreChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: agents.map(a => a.name),
+      datasets: [{
+        label: 'Average Score',
+        data: agents.map(a => a.avgScore),
+        backgroundColor: agents.map(a => tierColorHex(a.tier)),
+        borderRadius: 8,
+        maxBarThickness: 46
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 900, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: Object.assign({}, CHART_TOOLTIP_STYLE, {
+          callbacks: { label: (ctx) => ' ' + ctx.parsed.y + '% avg score' }
+        })
+      },
+      scales: {
+        y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,.06)' }, ticks: { stepSize: 20 } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderTierDonutChart(data){
+  const canvas = document.getElementById('tierDonutChart');
+  if(!canvas || !window.Chart) return;
+  const agents = data.agents || [];
+  let top = 0, good = 0, needs = 0;
+  agents.forEach(a => {
+    if(a.tier === 'Top Performer') top++;
+    else if(a.tier === 'Excellent' || a.tier === 'Good') good++;
+    else needs++;
+  });
+
+  if(tierDonutChartInstance){ tierDonutChartInstance.destroy(); tierDonutChartInstance = null; }
+  if(!agents.length) return;
+
+  tierDonutChartInstance = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['Top Performer', 'Excellent / Good', 'Needs Improvement'],
+      datasets: [{
+        data: [top, good, needs],
+        backgroundColor: ['#e0a458', '#3ecf8e', '#e2685f'],
+        borderColor: '#0f1729',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      animation: { duration: 900, easing: 'easeOutQuart' },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#8592ab', boxWidth: 10, padding: 14, font: { size: 11 } }
+        },
+        tooltip: Object.assign({}, CHART_TOOLTIP_STYLE, {
+          callbacks: { label: (ctx) => ' ' + ctx.label + ': ' + ctx.parsed + ' agents' }
+        })
+      }
+    }
+  });
+}
+
+function renderMonthlyTrendChart(monthKeys, monthMap){
+  const canvas = document.getElementById('monthlyTrendChart');
+  if(!canvas || !window.Chart) return;
+
+  if(monthlyTrendChartInstance){ monthlyTrendChartInstance.destroy(); monthlyTrendChartInstance = null; }
+  if(!monthKeys.length) return;
+
+  const labels = monthKeys.map(monthLabel);
+  const avgs = monthKeys.map(k => avgOf(monthMap[k].sum, monthMap[k].count));
+  const counts = monthKeys.map(k => monthMap[k].count);
+  const pointColors = avgs.map(a => tierColorHex(tierForAvg(a)));
+
+  const gctx = canvas.getContext('2d');
+  const gradient = gctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(91,141,239,.35)');
+  gradient.addColorStop(1, 'rgba(91,141,239,0)');
+
+  monthlyTrendChartInstance = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Average Score',
+        data: avgs,
+        borderColor: '#5b8def',
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.35,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#0f1729',
+        pointBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 900, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: Object.assign({}, CHART_TOOLTIP_STYLE, {
+          callbacks: { label: (ctx) => ' ' + ctx.parsed.y + '% avg • ' + counts[ctx.dataIndex] + ' calls' }
+        })
+      },
+      scales: {
+        y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,.06)' }, ticks: { stepSize: 20 } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
 
 function tierClass(tier){
   if(tier === 'Top Performer') return 'top';
@@ -1495,6 +1658,46 @@ function fmtDate(iso){
   }catch(e){ return iso; }
 }
 
+/* ---- Google Sheet-style Timestamp / Call Date / Call Time / Call Duration formatting ----
+   The backend sends these as raw ISO datetime strings (e.g. "2026-08-29T08:02:36.000Z" or,
+   for pure time-of-day values, the Sheets/Excel epoch "1899-12-30T06:37:50.000Z"). Reading
+   these with the browser's local timezone is unreliable (varies by viewer, and pre-1906
+   dates hit a historical Kolkata timezone quirk in some browsers), so instead we apply a
+   fixed +5:30 (Asia/Kolkata) offset ourselves and read the UTC fields back out. Change
+   SHEET_TZ_OFFSET_MIN if the sheet's timezone is ever not IST. */
+const SHEET_TZ_OFFSET_MIN = 330; // Asia/Kolkata, UTC+5:30
+
+function pad2(n){ return String(n).padStart(2, '0'); }
+
+function toSheetLocal(v){
+  if(v === undefined || v === null || v === '') return null;
+  const d = new Date(v);
+  if(isNaN(d)) return null;
+  return new Date(d.getTime() + SHEET_TZ_OFFSET_MIN * 60000);
+}
+
+function fmtTimestampCell(v){
+  const d = toSheetLocal(v);
+  if(!d) return (v === undefined || v === null) ? '' : v;
+  return (d.getUTCMonth()+1) + '/' + d.getUTCDate() + '/' + d.getUTCFullYear() + ' ' +
+    pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+}
+function fmtDateCell(v){
+  const d = toSheetLocal(v);
+  if(!d) return (v === undefined || v === null) ? '' : v;
+  return (d.getUTCMonth()+1) + '/' + d.getUTCDate() + '/' + d.getUTCFullYear();
+}
+function fmtTimeCell(v){
+  const d = toSheetLocal(v);
+  if(!d) return (v === undefined || v === null) ? '' : v;
+  return d.getUTCHours() + ':' + pad2(d.getUTCMinutes());
+}
+function fmtDurationCell(v){
+  const d = toSheetLocal(v);
+  if(!d) return (v === undefined || v === null) ? '' : v;
+  return d.getUTCHours() + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+}
+
 async function loadData(){
   try{
     const url = CONFIG.API_URL + (CONFIG.API_URL.includes('?') ? '&' : '?') + 'sheet=' + encodeURIComponent(CONFIG.SHEET_TAB);
@@ -1522,14 +1725,10 @@ document.getElementById("updatedAt").textContent =
         hour12:true
     });
   }catch(err){
-    document.getElementById('chartBars').innerHTML =
-      '<div class="state-msg">ডেটা লোড করা যায়নি। CONFIG.API_URL ঠিকমতো বসিয়েছেন কিনা চেক করুন।<br><small>' + err.message + '</small></div>';
     document.getElementById('agentTableBody').innerHTML =
-      '<tr><td colspan="5" class="state-msg">ডেটা লোড করা যায়নি।</td></tr>';
+      '<tr><td colspan="5" class="state-msg">ডেটা লোড করা যায়নি। CONFIG.API_URL ঠিকমতো বসিয়েছেন কিনা চেক করুন।<br><small>' + err.message + '</small></td></tr>';
     document.getElementById('logsTableBody').innerHTML =
       '<tr><td colspan="9" class="state-msg">ডেটা লোড করা যায়নি।</td></tr>';
-    document.getElementById('monthlyOverallBars').innerHTML =
-      '<div class="state-msg">ডেটা লোড করা যায়নি।</div>';
     document.getElementById('monthlyOverallBody').innerHTML =
       '<tr><td colspan="3" class="state-msg">ডেটা লোড করা যায়নি।</td></tr>';
     document.getElementById('monthlyAgentBody').innerHTML =
@@ -1549,21 +1748,8 @@ function renderOverview(data){
     <div class="stat-card red"><div class="label">Under Performance</div><div class="value">${s.underPerformance} Agents</div></div>
   `;
 
-  const bars = document.getElementById('chartBars');
-  if(!data.agents.length){
-    bars.innerHTML = '<div class="state-msg">কোনো এজেন্ট ডেটা নেই।</div>';
-  } else {
-    const gridlines = '<div class="gridlines"><div></div><div></div><div></div><div></div><div></div><div></div></div>';
-    bars.innerHTML = gridlines + data.agents.map(a => `
-      <div class="bar-col" title="${a.name} — ${a.avgScore}% (${a.tier})">
-        <div class="bar-value">${a.avgScore}%</div>
-        <div class="bar-track">
-          <div class="bar-fill" style="height:${Math.min(a.avgScore,100)}%; background:linear-gradient(180deg, ${barColorLight(a.tier)}, ${barColor(a.tier)});"></div>
-        </div>
-        <div class="bar-name">${a.name}</div>
-      </div>
-    `).join('');
-  }
+  renderAgentScoreChart(data);
+  renderTierDonutChart(data);
 
   const tbody = document.getElementById('agentTableBody');
   tbody.innerHTML = data.agents.map(a => `
@@ -1667,6 +1853,10 @@ function paintPage(data){
         const num = Number(val) || 0;
         return `<td class="${scoreClass(num)}">${val}%</td>`;
       }
+      if(h === 'Timestamp') return `<td>${fmtTimestampCell(val)}</td>`;
+      if(h === 'Call Date') return `<td>${fmtDateCell(val)}</td>`;
+      if(h === 'Call Time') return `<td>${fmtTimeCell(val)}</td>`;
+      if(h === 'Call Duration') return `<td>${fmtDurationCell(val)}</td>`;
       return `<td>${val === undefined || val === null ? '' : val}</td>`;
     }).join('');
     return `<tr>${cells}</tr>`;
@@ -1751,13 +1941,12 @@ function renderMonthly(data){
   const headers = data.headers || [];
   const scoreHeader = data.meta ? data.meta.scoreHeader : null;
   const dateHeader = findDateHeader(headers);
-  const barsEl = document.getElementById('monthlyOverallBars');
   const overallBody = document.getElementById('monthlyOverallBody');
   const thead = document.getElementById('monthlyAgentThead');
   const tbody = document.getElementById('monthlyAgentBody');
 
   if(!scoreHeader || !data.logs || !data.logs.length){
-    barsEl.innerHTML = '<div class="state-msg">কোনো ডেটা নেই।</div>';
+    if(monthlyTrendChartInstance){ monthlyTrendChartInstance.destroy(); monthlyTrendChartInstance = null; }
     overallBody.innerHTML = '<tr><td colspan="3" class="state-msg">কোনো ডেটা নেই।</td></tr>';
     thead.innerHTML = '';
     tbody.innerHTML = '<tr><td class="state-msg">কোনো ডেটা নেই।</td></tr>';
@@ -1796,24 +1985,7 @@ function renderMonthly(data){
   if(!monthKeys.length) monthKeys = allKeys; // fallback if no month >= April found
 
   // ---- Trend chart ----
-  if(!monthKeys.length){
-    barsEl.innerHTML = '<div class="state-msg">কোনো ডেটা নেই।</div>';
-  } else {
-    const gridlines = '<div class="gridlines"><div></div><div></div><div></div><div></div><div></div><div></div></div>';
-    barsEl.innerHTML = gridlines + monthKeys.map(k => {
-      const d = monthMap[k];
-      const avg = avgOf(d.sum, d.count);
-      const tier = tierForAvg(avg);
-      return `
-        <div class="bar-col" title="${monthLabel(k)} — ${avg}% (${d.count} calls)">
-          <div class="bar-value">${avg}%</div>
-          <div class="bar-track">
-            <div class="bar-fill" style="height:${Math.min(avg,100)}%; background:linear-gradient(180deg, ${barColorLight(tier)}, ${barColor(tier)});"></div>
-          </div>
-          <div class="bar-name">${monthLabel(k)}</div>
-        </div>`;
-    }).join('');
-  }
+  renderMonthlyTrendChart(monthKeys, monthMap);
 
   // ---- Month-wise overall table ----
   if(!monthKeys.length){
