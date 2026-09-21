@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BB Retention | Call Quality Audit</title>
+<title>Business Dev BB | Call Quality Audit</title>
 <script>
 /* =====================================================================
    FORCEFUL LOGIN-GATE (runs first, before anything else on this page)
@@ -1299,7 +1299,7 @@ opacity:0;
 <h1>
 GTPL KCBPL
 <span class="vertical-tag">
-BB Retention Dashboard
+Business Dev BB Dashboard
 </span>
 </h1>
 
@@ -1481,7 +1481,7 @@ Dashboard Navigation
 ========================================================*/
 const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbwfA4gjCFYizJsyTCUIGU2FAC9NVHFV6jobF0aPuWrDcQxuMh5AUEpkT-MZkKuxB42aBw/exec",
-  SHEET_TAB: "BB-Retention"
+  SHEET_TAB: "business-dev-bb"
 };
 
 let DASHBOARD_DATA = null;
@@ -2493,7 +2493,7 @@ function startEmployeeSessionTracking(){
 async function sendEmpHeartbeat(){
   if(!empEmployeeId) return;
   try{
-    await empApiPost('heartbeat', { employeeId: empEmployeeId, page: 'BB Retention', status: 'Active' });
+    await empApiPost('heartbeat', { employeeId: empEmployeeId, page: 'Business Dev BB', status: 'Active' });
   }catch(e){ console.error('Heartbeat failed', e); }
 }
 
