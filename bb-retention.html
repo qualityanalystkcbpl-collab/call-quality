@@ -1343,6 +1343,12 @@ Dashboard Navigation
 📋 Call-Level Logs Detail
 
 </button>
+
+<button class="tab-btn" data-view="monthly">
+
+📅 Monthly Summary
+
+</button>
 </div>
 
 <!-- ================= OVERVIEW VIEW ================= -->
@@ -1405,6 +1411,42 @@ Dashboard Navigation
   <div class="pagination" id="pagination"></div>
 </div>
 
+<!-- ================= MONTHLY SUMMARY VIEW ================= -->
+<div class="view" id="view-monthly">
+  <div class="chart-panel">
+    <h2>Monthly Average Score Trend</h2>
+    <p class="chart-sub">এপ্রিল থেকে মাস অনুযায়ী ভার্টিকাল গড় স্কোরের ট্রেন্ড</p>
+    <div class="chart-legend">
+      <span><i style="background:var(--accent-orange)"></i>Top Performer (99%+)</span>
+      <span><i style="background:var(--accent-green)"></i>Excellent / Good (90%+)</span>
+      <span><i style="background:var(--accent-red)"></i>Needs Improvement (&lt;90%)</span>
+    </div>
+    <div class="chart-area">
+      <div class="chart-y-axis"><span>100</span><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span></div>
+      <div class="bars" id="monthlyOverallBars">
+        <div class="gridlines"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        <div class="state-msg">ডেটা লোড হচ্ছে...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-title">Month-wise Overall Summary</div>
+  <div class="table-wrap" style="margin-bottom:24px;">
+    <table>
+      <thead><tr><th>Month</th><th>Total Calls</th><th>Average Score</th></tr></thead>
+      <tbody id="monthlyOverallBody"><tr><td colspan="3" class="state-msg">ডেটা লোড হচ্ছে...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="panel-title">Agent-wise Month-wise Average Score</div>
+  <div class="table-box">
+    <table>
+      <thead id="monthlyAgentThead"></thead>
+      <tbody id="monthlyAgentBody"><tr><td class="state-msg">ডেটা লোড হচ্ছে...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
 <script>
 /* ====================== CONFIG ======================
    এখানে আপনার Apps Script Web App URL বসান (Deploy -> Web app -> URL)
@@ -1460,6 +1502,7 @@ async function loadData(){
     DASHBOARD_DATA = data;
     renderOverview(data);
     renderLogs(data);
+    renderMonthly(data);
     const now = new Date();
 
 document.getElementById("updatedAt").textContent =
@@ -1483,6 +1526,12 @@ document.getElementById("updatedAt").textContent =
       '<tr><td colspan="5" class="state-msg">ডেটা লোড করা যায়নি।</td></tr>';
     document.getElementById('logsTableBody').innerHTML =
       '<tr><td colspan="9" class="state-msg">ডেটা লোড করা যায়নি।</td></tr>';
+    document.getElementById('monthlyOverallBars').innerHTML =
+      '<div class="state-msg">ডেটা লোড করা যায়নি।</div>';
+    document.getElementById('monthlyOverallBody').innerHTML =
+      '<tr><td colspan="3" class="state-msg">ডেটা লোড করা যায়নি।</td></tr>';
+    document.getElementById('monthlyAgentBody').innerHTML =
+      '<tr><td class="state-msg">ডেটা লোড করা যায়নি।</td></tr>';
     document.getElementById('updatedAt').textContent = 'লোড ব্যর্থ';
   }
 }
@@ -1628,6 +1677,150 @@ function goToPage(p){
   paintPage(window.__PAGE_DATA__);
   document.querySelector('.table-box').scrollTop = 0;
 }
+/* ================= MONTHLY SUMMARY (from April onward) ================= */
+
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function findDateHeader(headers){
+  if(headers.indexOf('Call Date') !== -1) return 'Call Date';
+  const found = headers.find(h => /date/i.test(h));
+  return found || 'Timestamp';
+}
+
+function parseYearMonth(v){
+  if(v === undefined || v === null || v === '') return null;
+  // Handles ISO "YYYY-MM-DD" (and most native-parseable formats) directly.
+  let d = new Date(v);
+  if(!isNaN(d)) return { y: d.getFullYear(), m: d.getMonth() + 1 };
+  // Fallback for "DD/MM/YYYY" or "DD-MM-YYYY" style text.
+  const m = String(v).match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m){
+    const day = Number(m[1]), mon = Number(m[2]), yr = Number(m[3]);
+    if(mon >= 1 && mon <= 12) return { y: yr, m: mon };
+  }
+  return null;
+}
+
+function monthKey(y, m){ return y + '-' + String(m).padStart(2, '0'); }
+function monthLabel(key){
+  const parts = key.split('-');
+  return MONTH_NAMES[Number(parts[1]) - 1] + ' ' + parts[0];
+}
+function avgOf(sum, count){ return count ? Math.round((sum / count) * 10) / 10 : 0; }
+function tierForAvg(avg){
+  if(avg >= 99) return 'Top Performer';
+  if(avg >= 90) return 'Excellent';
+  if(avg >= 70) return 'Good';
+  return 'Needs Improvement';
+}
+
+function renderMonthly(data){
+  const headers = data.headers || [];
+  const scoreHeader = data.meta ? data.meta.scoreHeader : null;
+  const dateHeader = findDateHeader(headers);
+  const barsEl = document.getElementById('monthlyOverallBars');
+  const overallBody = document.getElementById('monthlyOverallBody');
+  const thead = document.getElementById('monthlyAgentThead');
+  const tbody = document.getElementById('monthlyAgentBody');
+
+  if(!scoreHeader || !data.logs || !data.logs.length){
+    barsEl.innerHTML = '<div class="state-msg">কোনো ডেটা নেই।</div>';
+    overallBody.innerHTML = '<tr><td colspan="3" class="state-msg">কোনো ডেটা নেই।</td></tr>';
+    thead.innerHTML = '';
+    tbody.innerHTML = '<tr><td class="state-msg">কোনো ডেটা নেই।</td></tr>';
+    return;
+  }
+
+  const monthMap = {};        // key -> { count, sum }
+  const agentMonthMap = {};   // agent -> key -> { count, sum }
+  const agentsSet = new Set();
+
+  data.logs.forEach(l => {
+    const dv = l.cells ? l.cells[dateHeader] : null;
+    const ym = parseYearMonth(dv);
+    if(!ym) return;
+    const key = monthKey(ym.y, ym.m);
+    const score = Number(l.cells[scoreHeader]) || 0;
+    const agent = l.agent || 'Unknown';
+    agentsSet.add(agent);
+
+    if(!monthMap[key]) monthMap[key] = { count: 0, sum: 0 };
+    monthMap[key].count++;
+    monthMap[key].sum += score;
+
+    if(!agentMonthMap[agent]) agentMonthMap[agent] = {};
+    if(!agentMonthMap[agent][key]) agentMonthMap[agent][key] = { count: 0, sum: 0 };
+    agentMonthMap[agent][key].count++;
+    agentMonthMap[agent][key].sum += score;
+  });
+
+  const allKeys = Object.keys(monthMap).sort(); // "YYYY-MM" strings sort chronologically
+  let startIdx = allKeys.length;
+  for(let i = 0; i < allKeys.length; i++){
+    if(Number(allKeys[i].split('-')[1]) >= 4){ startIdx = i; break; }
+  }
+  let monthKeys = allKeys.slice(startIdx);
+  if(!monthKeys.length) monthKeys = allKeys; // fallback if no month >= April found
+
+  // ---- Trend chart ----
+  if(!monthKeys.length){
+    barsEl.innerHTML = '<div class="state-msg">কোনো ডেটা নেই।</div>';
+  } else {
+    const gridlines = '<div class="gridlines"><div></div><div></div><div></div><div></div><div></div><div></div></div>';
+    barsEl.innerHTML = gridlines + monthKeys.map(k => {
+      const d = monthMap[k];
+      const avg = avgOf(d.sum, d.count);
+      const tier = tierForAvg(avg);
+      return `
+        <div class="bar-col" title="${monthLabel(k)} — ${avg}% (${d.count} calls)">
+          <div class="bar-value">${avg}%</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="height:${Math.min(avg,100)}%; background:linear-gradient(180deg, ${barColorLight(tier)}, ${barColor(tier)});"></div>
+          </div>
+          <div class="bar-name">${monthLabel(k)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ---- Month-wise overall table ----
+  if(!monthKeys.length){
+    overallBody.innerHTML = '<tr><td colspan="3" class="state-msg">কোনো ডেটা নেই।</td></tr>';
+  } else {
+    let totalCalls = 0, totalSum = 0;
+    let rows = monthKeys.map(k => {
+      const d = monthMap[k];
+      const avg = avgOf(d.sum, d.count);
+      totalCalls += d.count; totalSum += d.sum;
+      return `<tr><td>${monthLabel(k)}</td><td>${d.count}</td><td class="${scoreClass(avg)}">${avg}%</td></tr>`;
+    }).join('');
+    const grandAvg = avgOf(totalSum, totalCalls);
+    rows += `<tr style="font-weight:700; background:rgba(255,255,255,.04);"><td>Overall</td><td>${totalCalls}</td><td class="${scoreClass(grandAvg)}">${grandAvg}%</td></tr>`;
+    overallBody.innerHTML = rows;
+  }
+
+  // ---- Agent-wise x month matrix ----
+  const agents = Array.from(agentsSet).sort();
+  thead.innerHTML = '<tr><th>Agent Name</th>' + monthKeys.map(k => `<th>${monthLabel(k)}</th>`).join('') + '<th>Overall Avg</th></tr>';
+
+  if(!agents.length){
+    tbody.innerHTML = '<tr><td class="state-msg">কোনো এজেন্ট ডেটা নেই।</td></tr>';
+  } else {
+    tbody.innerHTML = agents.map(agent => {
+      const m = agentMonthMap[agent] || {};
+      let rowSum = 0, rowCount = 0;
+      const cells = monthKeys.map(k => {
+        const d = m[k];
+        if(!d) return `<td style="color:var(--muted);">—</td>`;
+        const avg = avgOf(d.sum, d.count);
+        rowSum += d.sum; rowCount += d.count;
+        return `<td class="${scoreClass(avg)}">${avg}%<br><small style="color:var(--muted); font-weight:400;">${d.count} calls</small></td>`;
+      }).join('');
+      const overallAvg = avgOf(rowSum, rowCount);
+      return `<tr><td>${agent}</td>${cells}<td class="${scoreClass(overallAvg)}" style="font-weight:700;">${overallAvg}%</td></tr>`;
+    }).join('');
+  }
+}
+
 /* ================= TAB SWITCH ================= */
 
 document.querySelectorAll(".tab-btn").forEach(function(btn){
