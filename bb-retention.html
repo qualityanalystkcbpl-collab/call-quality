@@ -1397,6 +1397,8 @@ Dashboard Navigation
     <div class="filter-left">
       <label for="agentFilter" style="color:var(--muted); font-size:13px;">Filter By Agent</label>
       <select id="agentFilter"><option value="__all__">(All)</option></select>
+      <label for="monthFilter" style="color:var(--muted); font-size:13px;">Month</label>
+      <select id="monthFilter"></select>
     </div>
     <div class="result-count" id="resultCount"></div>
   </div>
@@ -1587,22 +1589,53 @@ const PAGE_SIZE = 10;
 let currentPage = 1;
 let currentRows = [];
 
+let LOGS_DATE_HEADER = null;
+
 function renderLogs(data){
   // টেবিলের হেডার ডাইনামিক ভাবে বসানো হচ্ছে — শিটে যে কলামগুলো আছে ঠিক সেগুলোই দেখাবে
   const headers = data.headers || [];
   const head = document.getElementById('logsTableHead');
   head.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
 
-  const select = document.getElementById('agentFilter');
+  const agentSelect = document.getElementById('agentFilter');
   const names = [...new Set(data.logs.map(l => l.agent))].sort();
-  select.innerHTML = '<option value="__all__">(All)</option>' +
+  agentSelect.innerHTML = '<option value="__all__">(All)</option>' +
     names.map(n => `<option value="${n}">${n}</option>`).join('');
-  select.onchange = () => { currentPage = 1; filterAndPaint(data, select.value); };
-  filterAndPaint(data, '__all__');
+  agentSelect.onchange = () => { currentPage = 1; filterAndPaint(data); };
+
+  // মাস ড্রপডাউন — "All" নেই, ডিফল্ট সবসময় সর্বশেষ (latest) মাস
+  LOGS_DATE_HEADER = findDateHeader(headers);
+  const monthSelect = document.getElementById('monthFilter');
+  const monthKeysSet = new Set();
+  data.logs.forEach(l => {
+    const ym = parseYearMonth(l.cells ? l.cells[LOGS_DATE_HEADER] : null);
+    if(ym) monthKeysSet.add(monthKey(ym.y, ym.m));
+  });
+  const monthKeys = Array.from(monthKeysSet).sort();
+  if(monthKeys.length){
+    monthSelect.innerHTML = monthKeys.map(k => `<option value="${k}">${monthLabel(k)}</option>`).join('');
+    monthSelect.value = monthKeys[monthKeys.length - 1]; // ডিফল্ট: সর্বশেষ মাস
+  } else {
+    monthSelect.innerHTML = '<option value="">—</option>';
+  }
+  monthSelect.onchange = () => { currentPage = 1; filterAndPaint(data); };
+
+  filterAndPaint(data);
 }
 
-function filterAndPaint(data, agentFilter){
-  currentRows = agentFilter === '__all__' ? data.logs : data.logs.filter(l => l.agent === agentFilter);
+function filterAndPaint(data){
+  const agentVal = document.getElementById('agentFilter').value;
+  const monthVal = document.getElementById('monthFilter').value;
+
+  currentRows = data.logs.filter(l => {
+    if(agentVal !== '__all__' && l.agent !== agentVal) return false;
+    if(monthVal){
+      const ym = parseYearMonth(l.cells ? l.cells[LOGS_DATE_HEADER] : null);
+      const key = ym ? monthKey(ym.y, ym.m) : null;
+      if(key !== monthVal) return false;
+    }
+    return true;
+  });
   document.getElementById('resultCount').textContent = currentRows.length + ' calls';
   paintPage(data);
 }
