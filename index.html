@@ -4585,6 +4585,19 @@ transform:translateY(0);
   font:800 13px 'Inter',sans-serif;cursor:pointer;
 }
 #aiAnalystChatSend:disabled{opacity:.55;cursor:not-allowed}
+.ai-analyst-guided-options{
+  display:flex;flex-direction:column;gap:7px;margin:2px 0 5px;max-width:92%;
+}
+.ai-analyst-guided-option{
+  width:100%;text-align:left;padding:9px 11px;border:1px solid rgba(51,201,176,.35);
+  border-radius:10px;background:linear-gradient(135deg,rgba(20,37,61,.96),rgba(23,51,59,.96));
+  color:var(--text,#EAF0F6);font:700 12px 'Inter',sans-serif;cursor:pointer;
+  transition:transform .15s ease,border-color .15s ease,background .15s ease;
+}
+.ai-analyst-guided-option:hover{transform:translateX(2px);border-color:var(--agent,#33C9B0);background:linear-gradient(135deg,rgba(20,53,68,.98),rgba(20,67,60,.98));}
+.ai-analyst-guided-option:active{transform:scale(.98)}
+.ai-analyst-guided-option:disabled{opacity:.5;cursor:not-allowed}
+.ai-analyst-chat-input-row.guided-hidden{display:none}
 @media(max-width:600px){
   #aiAnalystChatBtn{right:14px;bottom:14px}
   #aiAnalystChatPanel{right:14px;bottom:66px;width:calc(100vw - 28px);height:calc(100vh - 90px);min-height:380px}
@@ -11480,9 +11493,8 @@ function renderLeadFormPanel(){
           </div>
           <div class="field">
             <label>Post Office <span class="req">*</span></label>
-            <select id="leadPostOffice">
-              <option value="">-- Enter pincode first --</option>
-            </select>
+            <input type="text" id="leadPostOffice" list="leadPostOfficeList" placeholder="Enter pincode first (or type manually)" autocomplete="off">
+            <datalist id="leadPostOfficeList"></datalist>
           </div>
           <div class="field">
             <label>Village/Area/Ward Number <span class="req">*</span></label>
@@ -11556,8 +11568,10 @@ function renderLeadFormPanel(){
     e.target.value = e.target.value.replace(/\D/g,'').slice(0,6);
     const statusEl = document.getElementById('leadPincodeStatus');
     const poEl = document.getElementById('leadPostOffice');
+    const poListEl = document.getElementById('leadPostOfficeList');
     if(statusEl) statusEl.textContent = '';
-    if(poEl) poEl.innerHTML = '<option value="">-- Enter pincode first --</option>';
+    if(poEl){ poEl.value = ''; poEl.placeholder = 'Enter pincode first (or type manually)'; }
+    if(poListEl) poListEl.innerHTML = '';
     leadLastLookup = null;
     leadAddressParts.postOffice = '';
     leadAddressParts.district = '';
@@ -11574,8 +11588,8 @@ function renderLeadFormPanel(){
       if(lcoCard) lcoCard.style.display = 'none';
     }
   });
-  document.getElementById('leadPostOffice').addEventListener('change', e=>{
-    leadAddressParts.postOffice = e.target.value || '';
+  document.getElementById('leadPostOffice').addEventListener('input', e=>{
+    leadAddressParts.postOffice = e.target.value.trim() || '';
     rebuildLeadAddressSuffix();
   });
   document.getElementById('leadVillageWard').addEventListener('input', e=>{
@@ -11637,22 +11651,39 @@ function rebuildLeadAddressSuffix(){
 let leadPincodeLookupToken = 0;
 let leadLastLookup = null; // {district, state, pincode}
 let leadSubmitInFlight = false; // hard guard against a lead being submitted twice from a rapid double-click
+async function fetchPincodeWithRetry(pincode, attempts = 2){
+  let lastErr = null;
+  for(let i = 0; i < attempts; i++){
+    try{
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      return await res.json();
+    }catch(e){
+      lastErr = e;
+      if(i < attempts - 1) await new Promise(r => setTimeout(r, 600)); // brief pause before retrying once
+    }
+  }
+  throw lastErr;
+}
+
 async function lookupLeadPincode(pincode){
   const statusEl = document.getElementById('leadPincodeStatus');
   const districtEl = document.getElementById('leadDistrict');
   const poEl = document.getElementById('leadPostOffice');
+  const poListEl = document.getElementById('leadPostOfficeList');
   const myToken = ++leadPincodeLookupToken; // guards against out-of-order responses if user edits fast
   if(statusEl) statusEl.textContent = '🔎 Looking up pincode...';
-  if(poEl) poEl.innerHTML = '<option value="">-- Searching... --</option>';
+  if(poEl) poEl.placeholder = 'Searching...';
   try{
-    const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-    const data = await res.json();
+    const data = await fetchPincodeWithRetry(pincode);
     if(myToken !== leadPincodeLookupToken) return; // a newer lookup superseded this one
 
     const result = Array.isArray(data) ? data[0] : null;
     if(!result || result.Status !== 'Success' || !result.PostOffice || !result.PostOffice.length){
-      if(statusEl) statusEl.textContent = '⚠️ No data found for this pincode, please enter manually.';
-      if(poEl) poEl.innerHTML = '<option value="">-- No post office found --</option>';
+      // No record in the API for this pincode. Field stays a normal text box —
+      // agent can still type the Post Office name themselves and submit normally.
+      if(statusEl) statusEl.textContent = '⚠️ No data found for this pincode — please type District/Post Office manually below.';
+      if(poEl) poEl.placeholder = 'Type Post Office name manually';
+      if(poListEl) poListEl.innerHTML = '';
       leadLastLookup = null;
       return;
     }
@@ -11664,11 +11695,13 @@ async function lookupLeadPincode(pincode){
     leadAddressParts.state = po.State || '';
     leadAddressParts.pincode = pincode;
 
-    if(poEl){
-      const options = result.PostOffice
-        .map(o => `<option value="${o.Name}">${o.Name}${o.BranchType ? ' (' + o.BranchType + ')' : ''}</option>`)
+    if(poListEl){
+      poListEl.innerHTML = result.PostOffice
+        .map(o => `<option value="${escapeHtml(o.Name)}">${o.BranchType ? escapeHtml(o.BranchType) : ''}</option>`)
         .join('');
-      poEl.innerHTML = '<option value="">-- Select --</option>' + options;
+    }
+    if(poEl){
+      poEl.placeholder = 'Select from suggestions or type manually';
       if(result.PostOffice.length === 1){
         poEl.value = po.Name;
         leadAddressParts.postOffice = po.Name;
@@ -11680,8 +11713,10 @@ async function lookupLeadPincode(pincode){
   }catch(e){
     if(myToken !== leadPincodeLookupToken) return;
     console.error('Pincode lookup failed', e);
-    if(statusEl) statusEl.textContent = '⚠️ Pincode lookup failed, please enter manually.';
-    if(poEl) poEl.innerHTML = '<option value="">-- No post office found --</option>';
+    // Network/API failure — again, never lock the field. Agent can type everything by hand.
+    if(statusEl) statusEl.textContent = '⚠️ Pincode lookup failed (network/API issue) — please type District/Post Office manually below.';
+    if(poEl) poEl.placeholder = 'Type Post Office name manually';
+    if(poListEl) poListEl.innerHTML = '';
     leadLastLookup = null;
   }
 }
@@ -12037,7 +12072,10 @@ async function submitLeadForm(){
     document.getElementById('leadCustomerName').value = '';
     document.getElementById('leadAltMobile').value = '';
     document.getElementById('leadPincode').value = '';
-    document.getElementById('leadPostOffice').innerHTML = '<option value="">-- Enter pincode first --</option>';
+    const resetPoEl = document.getElementById('leadPostOffice');
+    if(resetPoEl){ resetPoEl.value = ''; resetPoEl.placeholder = 'Enter pincode first (or type manually)'; }
+    const resetPoListEl = document.getElementById('leadPostOfficeList');
+    if(resetPoListEl) resetPoListEl.innerHTML = '';
     document.getElementById('leadVillageWard').value = '';
     document.getElementById('leadLandmark').value = '';
     document.getElementById('leadAddress').value = '';
@@ -18370,14 +18408,15 @@ async function adminPreviewAgentReport(){
     <div class="ai-analyst-chat-head-top">
       <div>
         <div class="ai-analyst-chat-title">🤖 AI Analyst</div>
-        <div class="ai-analyst-chat-sub" id="aiAnalystChatSub">CALL QUALITY DATA Assistant</div>
+        <div class="ai-analyst-chat-sub" id="aiAnalystChatSub">GUIDED QUALITY ASSISTANT</div>
       </div>
       <button class="ai-analyst-chat-close" type="button" onclick="toggleAIAnalystChat()" aria-label="Close">✕</button>
     </div>
   </div>
   <div class="ai-analyst-chat-messages" id="aiAnalystChatMessages"></div>
-  <div class="ai-analyst-chat-input-row">
-    <input id="aiAnalystChatInput" type="text" placeholder="মেসেজ লিখুন..." autocomplete="off">
+  <div class="ai-analyst-guided-options" id="aiAnalystGuidedOptions"></div>
+  <div class="ai-analyst-chat-input-row" id="aiAnalystChatInputRow">
+    <input id="aiAnalystChatInput" type="text" placeholder="Please enter your name..." autocomplete="off">
     <button id="aiAnalystChatSend" type="button" onclick="sendAIAnalystChat()">Send</button>
   </div>
 </div>
@@ -18387,6 +18426,8 @@ async function adminPreviewAgentReport(){
   const AI_ANALYST_WEBHOOK_URL = 'https://kalyan.tail6d8d1c.ts.net/webhook/chat-agent';
   const AI_CHAT_SESSION_KEY = 'qa_ai_chat_session_id';
   let aiChatSending = false;
+  let aiChatStep = 'name';
+  let aiChatVerifiedName = '';
 
   function aiChatSessionId(){
     const empId = (typeof empEmployeeId !== 'undefined' && empEmployeeId) ||
@@ -18441,110 +18482,299 @@ async function adminPreviewAgentReport(){
     return { employeeId, employeeName };
   }
 
-  function aiChatShowWelcome(){
-    const box = document.getElementById('aiAnalystChatMessages');
-    if(!box || box.dataset.welcomeShown === '1') return;
-    const { employeeName } = aiChatEmployeeInfo();
-    const greeting = aiChatGreetingWord() + (employeeName ? `, ${employeeName}` : '') + '! 👋';
-    const welcome = [
-      greeting,
-      '',
-      'আমি Quality Team-এর AI Agent। আমি আপনাকে কীভাবে সাহায্য করতে পারি?'
-    ].join('\n');
-    aiChatAddMessage(welcome, 'bot');
-    box.dataset.welcomeShown = '1';
+  function aiChatNormalizeName(v){
+    return String(v || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\u0980-\u09ff]+/gi,'')
+      .trim();
   }
 
-  window.toggleAIAnalystChat = function(){
-    const panel = document.getElementById('aiAnalystChatPanel');
-    if(!panel) return;
-    const opening = !panel.classList.contains('open');
-    panel.classList.toggle('open', opening);
-    if(opening){
-      const sub = document.getElementById('aiAnalystChatSub');
-      const { employeeId, employeeName } = aiChatEmployeeInfo();
-      if(sub && (employeeName || employeeId)) sub.textContent = (employeeName || 'Employee') + (employeeId ? ' • ' + employeeId : '');
-      aiChatShowWelcome();
-      setTimeout(()=>document.getElementById('aiAnalystChatInput')?.focus(),80);
-    }
-  };
+  function aiChatNameMatches(typed, official){
+    const a = aiChatNormalizeName(typed);
+    const b = aiChatNormalizeName(official);
+    if(!a || !b) return false;
+    if(a === b) return true;
+    // Allows a short/first-name entry when it uniquely belongs to the logged-in name.
+    return a.length >= 3 && (b.startsWith(a) || b.endsWith(a));
+  }
 
-  window.sendAIAnalystChat = async function(){
-    if(aiChatSending) return;
+  function aiChatSetInputMode(show, placeholder){
+    const row = document.getElementById('aiAnalystChatInputRow');
     const input = document.getElementById('aiAnalystChatInput');
-    const send = document.getElementById('aiAnalystChatSend');
-    if(!input) return;
-    const message = input.value.trim();
-    if(!message) return;
+    if(!row || !input) return;
+    row.classList.toggle('guided-hidden', !show);
+    input.placeholder = placeholder || 'মেসেজ লিখুন...';
+    if(show) setTimeout(()=>input.focus(),80);
+  }
 
-    aiChatSending = true;
-    input.value = '';
-    input.disabled = true;
-    if(send){ send.disabled = true; send.textContent = '...'; }
-    aiChatAddMessage(message, 'user');
+  function aiChatClearOptions(){
+    const box = document.getElementById('aiAnalystGuidedOptions');
+    if(box) box.innerHTML = '';
+  }
+
+  function aiChatShowOptions(options){
+    const box = document.getElementById('aiAnalystGuidedOptions');
+    if(!box) return;
+    box.innerHTML = '';
+    (options || []).forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ai-analyst-guided-option';
+      btn.textContent = opt.label;
+      btn.onclick = ()=>opt.action();
+      box.appendChild(btn);
+    });
+  }
+
+  function aiChatDisableOptions(){
+    document.querySelectorAll('#aiAnalystGuidedOptions .ai-analyst-guided-option')
+      .forEach(b=>b.disabled=true);
+  }
+
+  function aiChatShowWelcome(){
+    const box = document.getElementById('aiAnalystChatMessages');
+    if(!box || box.dataset.guidedStarted === '1') return;
+
+    const greeting = aiChatGreetingWord() + '! 👋';
+    aiChatAddMessage([
+      greeting,
+      '',
+      'আমি Quality Team-এর AI Assistant।',
+      '',
+      'Please enter your name.'
+    ].join('\n'),'bot');
+
+    box.dataset.guidedStarted = '1';
+    aiChatStep = 'name';
+    aiChatVerifiedName = '';
+    aiChatClearOptions();
+    aiChatSetInputMode(true,'Please enter your name...');
+  }
+
+  function aiChatResetFlow(){
+    const box = document.getElementById('aiAnalystChatMessages');
+    if(box){
+      box.innerHTML = '';
+      box.dataset.guidedStarted = '';
+    }
+    aiChatStep = 'name';
+    aiChatVerifiedName = '';
+    aiChatClearOptions();
+    aiChatShowWelcome();
+  }
+
+  function aiChatShowNameConfirmation(canonicalName){
+    aiChatStep = 'confirm-name';
+    aiChatVerifiedName = canonicalName;
+    aiChatSetInputMode(false);
+    aiChatShowOptions([
+      {
+        label:'✅ YES, CONTINUE',
+        action:()=>{
+          aiChatAddMessage('YES, CONTINUE','user');
+          aiChatDisableOptions();
+          aiChatShowMainMenu();
+        }
+      },
+      {
+        label:'✏️ NO, ENTER AGAIN',
+        action:()=>{
+          aiChatAddMessage('NO, ENTER AGAIN','user');
+          aiChatDisableOptions();
+          aiChatStep='name';
+          aiChatVerifiedName='';
+          aiChatAddMessage('ঠিক আছে। আবার আপনার নামটি লিখুন।','bot');
+          aiChatSetInputMode(true,'Please enter your name...');
+          aiChatClearOptions();
+        }
+      }
+    ]);
+  }
+
+  function aiChatShowMainMenu(){
+    aiChatStep='menu';
+    aiChatSetInputMode(false);
+    aiChatClearOptions();
+    aiChatAddMessage([
+      'Great! 👋',
+      '',
+      'আপনি কী জানতে চান?'
+    ].join('\n'),'bot');
+
+    aiChatShowOptions([
+      {label:'📊 My Average Score', action:()=>aiChatRunGuidedQuery('আমার Average Score দেখান')},
+      {label:'⚠️ Parameter-wise Fail Count', action:()=>aiChatRunGuidedQuery('আমার parameter-wise fail count দেখান')},
+      {label:'📞 My Call Details', action:()=>aiChatRunGuidedQuery('আমার call details দেখান')},
+      {label:'📈 My Performance', action:()=>aiChatRunGuidedQuery('আমার performance report দেখান')},
+      {label:'📘 QA Guidelines', action:()=>aiChatRunGuidedQuery('QA Guidelines সম্পর্কে বলুন')},
+      {label:'✍️ Ask Another Question', action:()=>{
+        aiChatAddMessage('✍️ Ask Another Question','user');
+        aiChatDisableOptions();
+        aiChatStep='free';
+        aiChatAddMessage('অবশ্যই। আপনার প্রশ্নটি লিখুন।','bot');
+        aiChatSetInputMode(true,'আপনার প্রশ্ন লিখুন...');
+        aiChatClearOptions();
+      }}
+    ]);
+  }
+
+  async function aiChatRunGuidedQuery(query){
+    if(aiChatSending) return;
+    aiChatDisableOptions();
+    aiChatAddMessage(query,'user');
+    await aiChatCallWebhook(query);
+    if(aiChatStep !== 'name'){
+      aiChatAddMessage('আর কী জানতে চান?','bot');
+      aiChatShowOptions([
+        {label:'🏠 Main Menu', action:()=>{
+          aiChatAddMessage('🏠 Main Menu','user');
+          aiChatShowMainMenu();
+        }},
+        {label:'✍️ Ask Another Question', action:()=>{
+          aiChatAddMessage('✍️ Ask Another Question','user');
+          aiChatStep='free';
+          aiChatAddMessage('আপনার প্রশ্নটি লিখুন।','bot');
+          aiChatSetInputMode(true,'আপনার প্রশ্ন লিখুন...');
+          aiChatClearOptions();
+        }}
+      ]);
+    }
+  }
+
+  async function aiChatCallWebhook(message){
     const typing = aiChatShowTyping();
+    aiChatSending = true;
 
     try{
-      const res = await fetch(AI_ANALYST_WEBHOOK_URL, {
+      const info = aiChatEmployeeInfo();
+      const guidedContext = aiChatVerifiedName
+        ? `Verified employee name: ${aiChatVerifiedName}. `
+        : '';
+
+      const res = await fetch(AI_ANALYST_WEBHOOK_URL,{
         method:'POST',
         headers:{'Content-Type':'application/json','Accept':'application/json'},
         body:JSON.stringify({
-          sessionId: aiChatSessionId(),
-          employeeId: aiChatEmployeeInfo().employeeId,
-          employeeName: aiChatEmployeeInfo().employeeName,
-          message: message
+          sessionId:aiChatSessionId(),
+          employeeId:info.employeeId,
+          employeeName:info.employeeName || aiChatVerifiedName,
+          guidedEmployeeName:aiChatVerifiedName,
+          message:guidedContext + message
         })
       });
 
       const raw = await res.text();
-      let data = null;
-      try{ data = JSON.parse(raw); }catch(_){}
+      let data=null;
+      try{data=JSON.parse(raw);}catch(_){}
 
       if(typing) typing.remove();
 
       if(!res.ok){
-        throw new Error((data && (data.message || data.error)) || raw || ('HTTP ' + res.status));
+        throw new Error((data && (data.message || data.error)) || raw || ('HTTP '+res.status));
       }
 
-      const reply = data && (data.reply ?? data.output ?? data.response);
+      const reply=data && (data.reply ?? data.output ?? data.response);
       if(reply !== undefined && reply !== null && String(reply).trim()){
-        aiChatAddMessage(String(reply), 'bot');
+        aiChatAddMessage(String(reply),'bot');
       }else{
-        aiChatAddMessage('QA সিস্টেম থেকে কোনো ডাটা পাওয়া যাচ্ছে না।', 'bot');
+        aiChatAddMessage('AI থেকে কোনো উত্তর পাওয়া যায়নি। আবার চেষ্টা করুন।','bot');
       }
+      return true;
     }catch(err){
-      console.error('AI Analyst Chat error:', err);
+      console.error('AI Analyst Chat error:',err);
       if(typing) typing.remove();
-      aiChatAddMessage('QA সিস্টেম থেকে কোনো ডাটা পাওয়া যাচ্ছে না।', 'bot');
+      aiChatAddMessage('AI সিস্টেমে সাময়িক সমস্যা হয়েছে। আবার চেষ্টা করুন।','bot');
+      return false;
     }finally{
-      aiChatSending = false;
-      input.disabled = false;
-      if(send){ send.disabled = false; send.textContent = 'Send'; }
-      input.focus();
+      aiChatSending=false;
+    }
+  }
+
+  window.toggleAIAnalystChat=function(){
+    const panel=document.getElementById('aiAnalystChatPanel');
+    if(!panel) return;
+    const opening=!panel.classList.contains('open');
+    panel.classList.toggle('open',opening);
+
+    if(opening){
+      const sub=document.getElementById('aiAnalystChatSub');
+      const {employeeId,employeeName}=aiChatEmployeeInfo();
+      if(sub && (employeeName || employeeId)){
+        sub.textContent=(employeeName || 'Employee') + (employeeId ? ' • '+employeeId : '');
+      }
+      aiChatResetFlow();
     }
   };
 
-  document.addEventListener('keydown', function(e){
-    const input = document.getElementById('aiAnalystChatInput');
-    if(e.target === input && e.key === 'Enter' && !e.shiftKey){
+  window.sendAIAnalystChat=async function(){
+    if(aiChatSending) return;
+
+    const input=document.getElementById('aiAnalystChatInput');
+    if(!input) return;
+
+    const message=input.value.trim();
+    if(!message) return;
+
+    input.value='';
+
+    if(aiChatStep==='name'){
+      aiChatAddMessage(message,'user');
+
+      const {employeeName}=aiChatEmployeeInfo();
+
+      if(employeeName && aiChatNameMatches(message,employeeName)){
+        aiChatVerifiedName=employeeName;
+        aiChatAddMessage(`আপনার নাম: ${employeeName}\n\nIs this correct?`,'bot');
+        aiChatShowNameConfirmation(employeeName);
+      }else if(!employeeName){
+        // If the page has no logged-in employee name, keep the guided flow
+        // but let the existing AI webhook perform the data lookup.
+        aiChatVerifiedName=message;
+        aiChatAddMessage(`আপনি লিখেছেন: ${message}\n\nIs this your name?`,'bot');
+        aiChatShowNameConfirmation(message);
+      }else{
+        aiChatAddMessage(
+          'এই নামটি আপনার logged-in profile-এর সঙ্গে মেলেনি।\n\nদয়া করে আপনার সঠিক নামটি আবার লিখুন।',
+          'bot'
+        );
+        aiChatSetInputMode(true,'Please enter your name...');
+      }
+      return;
+    }
+
+    if(aiChatStep==='free'){
+      aiChatAddMessage(message,'user');
+      aiChatSetInputMode(false);
+      await aiChatCallWebhook(message);
+      aiChatAddMessage('আর কী জানতে চান?','bot');
+      aiChatShowOptions([
+        {label:'🏠 Main Menu',action:()=>{aiChatAddMessage('🏠 Main Menu','user');aiChatShowMainMenu();}},
+        {label:'✍️ Ask Another Question',action:()=>{aiChatAddMessage('✍️ Ask Another Question','user');aiChatStep='free';aiChatAddMessage('আপনার প্রশ্নটি লিখুন।','bot');aiChatSetInputMode(true,'আপনার প্রশ্ন লিখুন...');aiChatClearOptions();}}
+      ]);
+    }
+  };
+
+  document.addEventListener('keydown',function(e){
+    const input=document.getElementById('aiAnalystChatInput');
+    if(e.target===input && e.key==='Enter' && !e.shiftKey){
       e.preventDefault();
       window.sendAIAnalystChat();
     }
   });
 
-  // Chatbot is available once the main application is visible.
   function syncAIAnalystChatVisibility(){
-    const btn = document.getElementById('aiAnalystChatBtn');
-    const panel = document.getElementById('aiAnalystChatPanel');
-    const main = document.getElementById('mainScreen');
-    const visible = !!(main && getComputedStyle(main).display !== 'none');
-    if(btn) btn.style.display = visible ? '' : 'none';
+    const btn=document.getElementById('aiAnalystChatBtn');
+    const panel=document.getElementById('aiAnalystChatPanel');
+    const main=document.getElementById('mainScreen');
+    const visible=!!(main && getComputedStyle(main).display!=='none');
+    if(btn) btn.style.display=visible?'':'none';
     if(!visible && panel) panel.classList.remove('open');
   }
-  window.addEventListener('load', function(){
+
+  window.addEventListener('load',function(){
     syncAIAnalystChatVisibility();
-    setTimeout(syncAIAnalystChatVisibility, 1200);
-    setInterval(syncAIAnalystChatVisibility, 2500);
+    setTimeout(syncAIAnalystChatVisibility,1200);
+    setInterval(syncAIAnalystChatVisibility,2500);
   });
 })();
 </script>
