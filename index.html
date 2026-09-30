@@ -4587,6 +4587,9 @@ transform:translateY(0);
   box-shadow:0 0 20px rgba(51,201,176,.28),0 8px 28px rgba(0,0,0,.35);
   transition:transform .2s ease, box-shadow .2s ease;
 }
+/* The floating "AI Analyst" pill is replaced by sidebar menu items (AI Tools / MY PERFORMANCE).
+   The chat panel itself opens in exactly the same place as before. */
+#aiAnalystChatBtn{ display:none !important; }
 #aiAnalystChatBtn:hover{
   transform:translateY(-2px) scale(1.03);
   box-shadow:0 0 28px rgba(51,201,176,.45),0 10px 32px rgba(0,0,0,.4);
@@ -5046,11 +5049,13 @@ transform:translateY(0);
       <div class="nav-label">MY PERFORMANCE</div>
       <div class="nav-item" data-tab="AGENTREPORT" onclick="switchTab('AGENTREPORT')"><span class="dot"></span>📊 My QA Report</div>
       <div class="nav-item" data-tab="AIINSIGHT" onclick="switchTab('AIINSIGHT')"><span class="dot"></span>🤖 Get feedback from AI Agent</div>
+      <div class="nav-item" onclick="toggleAIAnalystChat()"><span class="dot"></span>🤖 AI Analyst</div>
       </div>
 
       <div class="nav-section admin-only" style="display:none;">
       <div class="nav-label">AI Tools</div>
       <div class="nav-item" data-tab="AIINSIGHT" onclick="switchTab('AIINSIGHT')"><span class="dot"></span>🤖 Get feedback from AI Agent</div>
+      <div class="nav-item" onclick="toggleAIAnalystChat()"><span class="dot"></span>🤖 AI Analyst</div>
       </div>
 
       <div class="nav-section">
