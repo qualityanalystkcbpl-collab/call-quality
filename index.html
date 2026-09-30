@@ -9223,6 +9223,7 @@ localStorage.removeItem("qa_role");
   // otherwise they stay stuck visible on top of the login screen after logout.
   document.querySelectorAll('.agent-only').forEach(el=> el.style.display = 'none');
   document.querySelectorAll('.admin-only').forEach(el=> el.style.display = 'none');
+  document.querySelectorAll('.superadmin-only').forEach(el=> el.style.display = 'none');
   const empChatPanelEl = document.getElementById('empChatPanel');
   if(empChatPanelEl) empChatPanelEl.classList.remove('open');
   const empPassEl = document.getElementById('empPassword');
@@ -9283,12 +9284,22 @@ async function enterApp(){
         .querySelectorAll(".agent-only")
         .forEach(el=>el.style.display="none");
 
+    // Super Admin Panel menu item: visible to Admin and Super Admin logins
+    document
+        .querySelectorAll(".nav-item.superadmin-only")
+        .forEach(el=>el.style.display="");
+
 }
 
 if(currentRole==="agent"){
 
     document
         .querySelectorAll(".admin-only")
+        .forEach(el=>el.style.display="none");
+
+    // Agents must never see anything Super Admin related
+    document
+        .querySelectorAll(".superadmin-only")
         .forEach(el=>el.style.display="none");
 
     document
@@ -9681,6 +9692,9 @@ async function saveNewsTicker(){
 }
 /* ===================== NAVIGATION & TABS ===================== */
 async function switchTab(tab){
+  // Super Admin Panel: only Admin / Super Admin logins may open it (never Agents)
+  if(tab === 'SUPERADMIN' && currentRole !== 'admin'){ return; }
+  if(tab === 'SUPERADMIN' && typeof saLoadAgents === 'function'){ setTimeout(saLoadAgents, 0); }
   // Role guard: SQL Control Center is Admin-only; My QA Report is Agent-only.
   if(tab === 'SQLCONTROL' && currentRole !== 'admin'){ tab = 'HOME'; }
   if(tab === 'ADVANCEDREPORTS' && currentRole !== 'admin'){ tab = 'HOME'; }
@@ -17292,6 +17306,8 @@ async function superAdminLogin(){
 
 async function saLoadAgents(){
   const tbody = document.getElementById('saAgentTableBody');
+  if(!tbody) return;
+  if(!superAdminToken){ tbody.innerHTML = '<tr><td colspan="7">🔒 Agents ম্যানেজ করতে Super Admin হিসেবে লগইন করতে হবে।</td></tr>'; return; }
   tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
   try{
     const data = await empApiGet('listAgents', { token: superAdminToken });
