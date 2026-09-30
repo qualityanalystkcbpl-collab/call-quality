@@ -2785,6 +2785,43 @@ table.raw-sheet-table tr:not(.rs-header-row) td:first-child{
   to{opacity:1; transform:translateY(0);}
 }
 
+
+/* ---------- Month wise Data: compact, neat, taller table (only this tab) ---------- */
+.raw-sheet-wrap.md-table{
+  height:max(820px, calc(100vh - 120px));
+  max-height:none;
+  min-height:820px;
+  padding:0;
+}
+.md-table table.raw-sheet-table{ min-width:100%; }
+.md-table table.raw-sheet-table td{
+  padding:4px 7px;
+  font-size:11.5px;
+  line-height:1.25;
+  min-width:42px;
+  max-width:170px;
+  text-align:center;
+  transition:none;
+}
+.md-table table.raw-sheet-table td:first-child{
+  text-align:left;
+  white-space:nowrap;
+  max-width:220px;
+  font-weight:700;
+}
+.md-table table.raw-sheet-table td.rs-head{
+  font-size:10px;
+  padding:5px 6px;
+  line-height:1.2;
+  white-space:normal;
+  letter-spacing:.3px;
+}
+.md-table table.raw-sheet-table tr:not(.rs-header-row):hover td:not(.rs-head){
+  transform:none;
+  filter:brightness(1.12);
+}
+.md-table .rs-anim-row{ animation-duration:.25s; }
+
 .badge{
   padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;
 }
@@ -3841,6 +3878,47 @@ transform:translateY(0);
   outline-offset:2px;
 }
 
+
+/* ---------- Month wise Data: animated colour-flowing borders on all tabs/buttons ---------- */
+@property --md-ang{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
+@keyframes mdBorderSpin{ to{ --md-ang:360deg; } }
+#panel-MONTHDATA .lob-tab,
+#panel-MONTHDATA #monthDataSheetTabs .btn{
+  border:2px solid transparent;
+  background:
+    linear-gradient(var(--surface-2), var(--surface-2)) padding-box,
+    conic-gradient(from var(--md-ang), #33C9B0, #4C9BFF, #B36BFF, #FF5E7E, #E3A857, #3FBF7F, #33C9B0) border-box;
+  animation:tabPop .45s cubic-bezier(.34,1.56,.64,1) both, mdBorderSpin 4s linear infinite;
+  box-shadow:0 0 10px rgba(76,155,255,0.18);
+  overflow:visible;
+}
+#panel-MONTHDATA .lob-tab:nth-child(2n),
+#panel-MONTHDATA #monthDataSheetTabs .btn{ animation-duration:.45s, 5s; }
+#panel-MONTHDATA .lob-tab:nth-child(3n){ animation-duration:.45s, 6s; }
+/* Not-selected tabs: slightly dimmer so the selected one stands out clearly */
+#panel-MONTHDATA .lob-tab:not(.active){
+  opacity:.72;
+  color:#9fb4c8;
+  box-shadow:none;
+}
+#panel-MONTHDATA .lob-tab:not(.active):hover{ opacity:1; color:#fff; }
+/* Selected tab: solid bright fill, dark bold text, tick mark, glow, slightly bigger */
+#panel-MONTHDATA .lob-tab.active{
+  outline:none;
+  opacity:1;
+  background:
+    linear-gradient(135deg,#33C9B0,#3FBF7F) padding-box,
+    conic-gradient(from var(--md-ang), #ffffff, #FFE066, #ffffff, #FF5E7E, #ffffff, #4C9BFF, #ffffff) border-box;
+  color:#04211C;
+  font-weight:800;
+  scale:1.07;
+  box-shadow:0 0 0 3px rgba(51,201,176,0.30), 0 0 20px rgba(51,201,176,0.65);
+}
+#panel-MONTHDATA .lob-tab.active::before{
+  content:"✔ ";
+  font-weight:900;
+}
+
 /* ============================================================
    Data Sheets tabs (CATV / BB Tech / BB Renewal in sidebar-driven
    panels) — animated colorful entrance for their section headers
@@ -3962,6 +4040,15 @@ transform:translateY(0);
 .banner-mgr-thumb{ width:110px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0; }
 .banner-mgr-meta{ flex:1; font-size:13px; }
 .banner-mgr-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+.banner-sched{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:8px; }
+.banner-always{ font-weight:700; color:#cfe0ee !important; padding:5px 10px; border-radius:8px; border:1px solid var(--border); cursor:pointer; }
+.banner-always.on{ background:rgba(51,201,176,0.15); border-color:#33C9B0; color:#7ff0da !important; }
+.banner-sched input:disabled{ opacity:.4; cursor:not-allowed; }
+.banner-sched label{ font-size:11.5px; color:var(--text-muted); display:flex; align-items:center; gap:5px; }
+.banner-sched input[type="datetime-local"]{
+  padding:5px 7px; font-size:12px; border-radius:6px; color:var(--text);
+  background:var(--surface); border:1px solid var(--border); color-scheme:dark;
+}
 
 .chat-bubble-btn{
   position:fixed; left:24px; bottom:36px; z-index:10050;
@@ -7201,7 +7288,6 @@ const BANNER_MAX_VIDEO_MB = 15;  // videos above this are rejected client-side �
 function isVideoUrl(url){
   return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(String(url || ''));
 }
-const BANNER_MAX_COUNT = 10;
 
 const NEW_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwynUu1nChgzn5oJYILitU_O1ce4uIZ_Nnr899xdXlWWMFCRe7UDa74CLg5HFCS551Xug/exec";
 const NEW_BACKEND_PROCESS_KEY = {
@@ -7474,7 +7560,56 @@ async function storageSet(key, value){
 }
 
 let homeBannerList = [];
+let homeBannerAll = [];
 let homeBannerIndex = 0;
+
+/* ---- Banner schedule (start_at / end_at) ----
+   Empty start_at = show from the beginning; empty end_at = never expires. */
+function bannerIsLiveNow(b){
+  const now = Date.now();
+  if(b.start_at && new Date(b.start_at).getTime() > now) return false;
+  if(b.end_at && new Date(b.end_at).getTime() < now) return false;
+  return true;
+}
+function bannerScheduleStatus(b){
+  const now = Date.now();
+  if(b.start_at && new Date(b.start_at).getTime() > now) return 'upcoming';
+  if(b.end_at && new Date(b.end_at).getTime() < now) return 'expired';
+  return 'live';
+}
+function bannerFmtDT(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  return d.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true });
+}
+function bannerToInputValue(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+// Every minute: if a banner's start/end time has just passed, update the Home carousel automatically
+setInterval(()=>{
+  if(!homeBannerAll.length) return;
+  const wrap = document.getElementById('bannerCarouselWrap');
+  if(!wrap) return;
+  const fresh = homeBannerAll.filter(bannerIsLiveNow);
+  const sameSet = fresh.length === homeBannerList.length && fresh.every((b,i)=> b.id === homeBannerList[i].id);
+  if(sameSet) return;
+  homeBannerList = fresh;
+  if(!fresh.length){
+    wrap.style.display = 'none';
+    if(homeBannerAutoTimer){ clearInterval(homeBannerAutoTimer); homeBannerAutoTimer = null; }
+    return;
+  }
+  wrap.style.display = '';
+  homeBannerIndex = 0;
+  renderHomeBannerCarousel();
+  if(homeBannerAutoTimer) clearInterval(homeBannerAutoTimer);
+  homeBannerAutoTimer = setInterval(()=> goToHomeBanner(homeBannerIndex+1), 10000);
+}, 60000);
 let homeBannerAutoTimer = null;
 
 async function loadHomeBannerCarousel(){
@@ -7484,12 +7619,14 @@ async function loadHomeBannerCarousel(){
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}?select=*&is_active=eq.true&order=sort_order.asc`, {
       headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
     });
-    homeBannerList = await res.json();
-    if(!Array.isArray(homeBannerList)) homeBannerList = [];
+    homeBannerAll = await res.json();
+    if(!Array.isArray(homeBannerAll)) homeBannerAll = [];
   }catch(e){
     console.error('Banner load failed', e);
-    homeBannerList = [];
+    homeBannerAll = [];
   }
+  // Only banners whose scheduled Start/End time covers "now" are shown
+  homeBannerList = homeBannerAll.filter(bannerIsLiveNow);
   if(!homeBannerList.length){
     wrap.style.display = 'none';
     if(homeBannerAutoTimer){ clearInterval(homeBannerAutoTimer); homeBannerAutoTimer = null; }
@@ -7575,7 +7712,7 @@ async function renderBannerManagerPanel(){
   if(!panel) return;
   panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>🖼️ Banner Manager</h1><p>Employee Home পেজের উপরে যেসব ব্যানার ছবি ঘুরতে থাকবে, সেগুলো এখান থেকে আপলোড/ম্যানেজ করুন (সর্বোচ্চ ${BANNER_MAX_COUNT}টা)।</p></div>
+      <div><h1>🖼️ Banner Manager</h1><p>Employee Home পেজের উপরে যেসব ব্যানার ছবি ঘুরতে থাকবে, সেগুলো এখান থেকে আপলোড/ম্যানেজ করুন।</p></div>
       <div>
         <input type="file" id="bannerFileInput" accept="image/*,video/mp4,video/webm,video/quicktime" style="display:none;" onchange="handleBannerUpload(this)">
         <button class="btn primary" onclick="document.getElementById('bannerFileInput').click()">⬆️ নতুন ব্যানার আপলোড</button>
@@ -7609,8 +7746,20 @@ async function loadBannerMgrList(){
         ? `<video src="${escapeAttr(b.image_url)}" class="banner-mgr-thumb" muted loop autoplay playsinline></video>`
         : `<img src="${escapeAttr(b.image_url)}" class="banner-mgr-thumb">`}
       <div class="banner-mgr-meta">
-        <div>${b.is_active ? '🟢 Active (Home-এ দেখা যাচ্ছে)' : '⚪ Hidden'}</div>
+        <div>${!b.is_active ? '⚪ Hidden (বন্ধ করা আছে)'
+          : (bannerScheduleStatus(b)==='upcoming' ? '⏳ Scheduled — শুরু হবে ' + escapeHtml(bannerFmtDT(b.start_at))
+          : (bannerScheduleStatus(b)==='expired' ? '⌛ মেয়াদ শেষ — ' + escapeHtml(bannerFmtDT(b.end_at)) + '-এ বন্ধ হয়েছে'
+          : ((!b.start_at && !b.end_at) ? '🟢 Active ♾️ Always (Home-এ সবসময় দেখা যাচ্ছে)' : '🟢 Active (Home-এ দেখা যাচ্ছে)')))}</div>
         <div style="font-size:11px;color:var(--text-muted);">Order: ${i+1}</div>
+        <div class="banner-sched">
+          <label class="banner-always ${(!b.start_at && !b.end_at)?'on':''}" id="bannerAlwaysLbl-${b.id}">
+            <input type="checkbox" id="bannerAlways-${b.id}" ${(!b.start_at && !b.end_at)?'checked':''} onchange="toggleBannerAlways('${b.id}', this.checked)"> ♾️ Always (সবসময় দেখাবে)
+          </label>
+          <label>📅 শুরু <input type="datetime-local" id="bannerStart-${b.id}" value="${bannerToInputValue(b.start_at)}" ${(!b.start_at && !b.end_at)?'disabled':''}></label>
+          <label>🏁 শেষ <input type="datetime-local" id="bannerEnd-${b.id}" value="${bannerToInputValue(b.end_at)}" ${(!b.start_at && !b.end_at)?'disabled':''}></label>
+          <button class="btn primary" style="padding:6px 12px;" onclick="saveBannerSchedule('${b.id}')">💾 Save</button>
+        </div>
+        <div style="font-size:10.5px;color:var(--text-muted);margin-top:4px;">♾️ Always টিক থাকলে ব্যানার সবসময় চলবে। টিক তুলে তারিখ দিলে শুধু সেই সময়ের মধ্যে চলবে (শুধু শুরু দিলে = শুরু থেকে কখনো বন্ধ হবে না, শুধু শেষ দিলে = এখনই থেকে শেষ পর্যন্ত)।</div>
       </div>
       <div class="banner-mgr-actions">
         <button class="btn" title="উপরে সরান" onclick="moveBanner('${b.id}', -1)" ${i===0?'disabled':''}>⬆️</button>
@@ -7655,11 +7804,6 @@ function compressImageFile(file, maxDim = 1600, quality = 0.82) {
 async function handleBannerUpload(input){
   const file = input.files && input.files[0];
   if(!file) return;
-  if(bannerMgrItems.length >= BANNER_MAX_COUNT){
-    showToast(`সর্বোচ্চ ${BANNER_MAX_COUNT}টা ব্যানার আপলোড করা যাবে। নতুন যোগ করতে আগে একটা ডিলিট করুন।`);
-    input.value = '';
-    return;
-  }
   const isImage = file.type && file.type.startsWith('image/');
   const isVideo = file.type && file.type.startsWith('video/');
   const isGif = file.type === 'image/gif';
@@ -7742,6 +7886,58 @@ async function deleteBanner(id, storagePath){
   }catch(e){
     console.error(e);
     showToast('ডিলিট ব্যর্থ হয়েছে, আবার চেষ্টা করুন।');
+  }
+}
+async function patchBannerSchedule(id, startIso, endIso){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}?id=eq.${id}`, {
+    method:'PATCH',
+    headers:{
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type':'application/json',
+      Prefer:'return=minimal'
+    },
+    body: JSON.stringify({ start_at: startIso, end_at: endIso })
+  });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+}
+function toggleBannerAlways(id, on){
+  const st = document.getElementById('bannerStart-'+id), en = document.getElementById('bannerEnd-'+id);
+  const lbl = document.getElementById('bannerAlwaysLbl-'+id);
+  if(st) st.disabled = on;
+  if(en) en.disabled = on;
+  if(lbl) lbl.classList.toggle('on', on);
+  if(on){ if(st) st.value = ''; if(en) en.value = ''; }
+}
+async function saveBannerSchedule(id){
+  const alwaysEl = document.getElementById('bannerAlways-'+id);
+  if(alwaysEl && alwaysEl.checked){ return clearBannerSchedule(id); }
+  const sv = (document.getElementById('bannerStart-'+id)||{}).value || '';
+  const ev = (document.getElementById('bannerEnd-'+id)||{}).value || '';
+  if(!sv && !ev){ showToast('কমপক্ষে একটা তারিখ দিন, অথবা ♾️ Always টিক দিন।'); return; }
+  const startIso = sv ? new Date(sv).toISOString() : null;
+  const endIso   = ev ? new Date(ev).toISOString() : null;
+  if(startIso && endIso && new Date(endIso) <= new Date(startIso)){
+    showToast('শেষের সময় অবশ্যই শুরুর সময়ের পরে হতে হবে।');
+    return;
+  }
+  try{
+    await patchBannerSchedule(id, startIso, endIso);
+    showToast('ব্যানারের সময়সূচি সেভ হয়েছে ✅');
+    await loadBannerMgrList();
+  }catch(e){
+    console.error(e);
+    showToast('সেভ ব্যর্থ! Supabase-এর banners টেবিলে start_at ও end_at কলাম যোগ করা হয়েছে কিনা চেক করুন।');
+  }
+}
+async function clearBannerSchedule(id){
+  try{
+    await patchBannerSchedule(id, null, null);
+    showToast('♾️ Always সেট হয়েছে — ব্যানার সবসময় চলবে।');
+    await loadBannerMgrList();
+  }catch(e){
+    console.error(e);
+    showToast('আপডেট ব্যর্থ হয়েছে। start_at / end_at কলাম আছে কিনা চেক করুন।');
   }
 }
 async function toggleBannerActive(id, newActive){
@@ -11343,7 +11539,7 @@ function renderLeadFormPanel(){
 
       .lead-net-spin-wrap{
         position:fixed;
-        bottom:34px;
+        bottom:100px;  /* raised so it sits ABOVE the floating "AI Analyst" button */
         right:22px;
         z-index:10070;
         animation: leadNetSlide 20s ease-in-out infinite;
@@ -11378,7 +11574,7 @@ function renderLeadFormPanel(){
         75%{ transform:translateY(-12px) rotate(-0.6deg); }
       }
       @media (max-width:900px){
-        .lead-net-spin-wrap{ bottom:20px; right:14px; }
+        .lead-net-spin-wrap{ bottom:88px; right:14px; }
         .lead-net-card{ padding:4px 10px 5px; }
         .lead-net-stats-viewport{ width:88px !important; }
       }
@@ -11448,7 +11644,7 @@ function renderLeadFormPanel(){
 
     <div class="lead-page-card">
       <div class="panel-header" style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
-        <div><h1>📝 Lead Entry Form</h1><p>Data entered here goes directly to the Business Development team.</p></div>
+        <div><h1 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">📝 Lead Entry Form <img src="logo2.png" alt="GTPL KCBPL" style="height:26px;width:auto;object-fit:contain;" onerror="this.style.display='none'"></h1><p>Data entered here goes directly to the Business Development team.</p></div>
         <div class="lead-net-spin-wrap">
         <div class="lead-net-card" id="leadNetCard">
           <div class="lead-net-title"><span class="lead-net-dot" id="leadNetDot"></span> Internet Speed</div>
@@ -14617,7 +14813,7 @@ async function renderMonthDataPanel(section){
 
   panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>📅 Month wise Data (Previous Month)</h1><p>প্রতি মাসের ডাটা এখান থেকে দেখা যাবে। Google Sheet-এ নতুন মাসের ট্যাব যোগ হলে, এখানেও নিজে থেকে নতুন ট্যাব চলে আসবে।</p></div>
+      <div><h1>📅 Month wise Data (Previous Month)</h1></div>
     </div>
     <div class="lob-tab-row">
       <button class="lob-tab ${monthDataSection==='RAW'?'active':''}" onclick="renderMonthDataPanel('RAW')">📁 Raw data</button>
@@ -14717,7 +14913,7 @@ async function monthDataLoadSheetTable(section, sheetName){
         <span class="table-search-icon">🔎</span>
         <input type="text" class="table-search-input" id="monthDataSearch" placeholder="যেকোনো তথ্য দিয়ে খুঁজুন..." oninput="filterRawSheetTable(this,'${searchTargetId}')">
       </div>
-      <div class="raw-sheet-wrap">
+      <div class="raw-sheet-wrap md-table">
         ${xlsxDownloadBtnHtml(searchTargetId, sheetName)}
         ${tableHtml}
         <div class="table-no-match" style="display:none;">😕 কোনো তথ্য পাওয়া যায়নি।</div>
@@ -14726,6 +14922,26 @@ async function monthDataLoadSheetTable(section, sheetName){
     console.error('Month wise data: table fetch failed', err);
     tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা আনতে ব্যর্থ!</b><br><button class="btn" onclick="monthDataLoadSheetTable('${section}','${escapeAttr(sheetName)}')">↻ আবার চেষ্টা করুন</button></div>`;
   }
+}
+
+/* Colour helpers so text is always readable on the sheet's coloured cells */
+function mdParseColor(c){
+  c = String(c||'').trim();
+  let m = c.match(/^#([0-9a-f]{3})$/i);
+  if(m){ const h=m[1]; return [parseInt(h[0]+h[0],16),parseInt(h[1]+h[1],16),parseInt(h[2]+h[2],16)]; }
+  m = c.match(/^#([0-9a-f]{6})/i);
+  if(m){ const h=m[1]; return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+  m = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if(m) return [+m[1],+m[2],+m[3]];
+  return null;
+}
+function mdLuminance(rgb){
+  const f = v => { v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); };
+  return 0.2126*f(rgb[0]) + 0.7152*f(rgb[1]) + 0.0722*f(rgb[2]);
+}
+function mdContrast(a,b){
+  const l1=mdLuminance(a), l2=mdLuminance(b);
+  return (Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05);
 }
 
 /* Renders a table that also carries each cell's background/font colour + bold weight,
@@ -14747,8 +14963,17 @@ function buildColoredSheetTableHtml(values, backgrounds, fontColors, fontWeights
       const fg = (fontColors[r] && fontColors[r][c]) ? String(fontColors[r][c]) : null;
       const fw = (fontWeights[r] && fontWeights[r][c]) ? String(fontWeights[r][c]) : null;
       let style = '';
-      if(bg && !/^#(ffffff|fff)$/i.test(bg)) style += `background:${bg};`;
-      if(fg && !/^#(000000|000)$/i.test(fg)) style += `color:${fg};`;
+      const hasBg = bg && !/^#(ffffff|fff)$/i.test(bg);
+      if(hasBg) style += `background:${bg};`;
+      // Text colour: always keep it readable against the cell background
+      const bgRgb = hasBg ? mdParseColor(bg) : null;
+      const fgRgb = (fg && !/^#(000000|000)$/i.test(fg)) ? mdParseColor(fg) : null;
+      if(bgRgb){
+        if(fgRgb && mdContrast(fgRgb, bgRgb) >= 4) style += `color:${fg};`;
+        else style += `color:${mdLuminance(bgRgb) > 0.4 ? '#101418' : '#ffffff'};`;
+      }else if(fgRgb){
+        style += `color:${fg};`;
+      }
       if(fw === 'bold') style += 'font-weight:700;';
       const cls = isHeaderRow ? ' class="rs-head"' : '';
       cellsHtml += `<td${cls}${style?` style="${escapeAttr(style)}"`:''}>${escapeHtml(cellText)}</td>`;
