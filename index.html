@@ -4694,6 +4694,45 @@ transform:translateY(0);
 }
 </style>
 
+<style id="syncLoaderCss">
+/* ===== Animated "data syncing" loader (used wherever live data is being fetched) ===== */
+.sync-loader{position:relative;overflow:hidden;border:1px dashed var(--border);border-radius:var(--radius);background:var(--surface);padding:34px 20px 28px;text-align:center;color:var(--text-muted);}
+.sync-loader::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 0%,rgba(51,201,176,.14),transparent 62%);}
+.sync-orb{position:relative;width:100px;height:100px;margin:0 auto 18px;}
+.sync-orb .ring{position:absolute;inset:0;border-radius:50%;border:3px solid transparent;}
+.sync-orb .r1{border-top-color:var(--agent);border-right-color:var(--agent);animation:syncSpin 1.2s linear infinite;}
+.sync-orb .r2{inset:13px;border-bottom-color:var(--admin);border-left-color:var(--admin);animation:syncSpin 1.8s linear infinite reverse;}
+.sync-orb .r3{inset:26px;border-top-color:#4A7FE0;border-left-color:#B94AE0;animation:syncSpin 2.4s linear infinite;}
+.sync-orb .core{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;animation:syncPulse 1.4s ease-in-out infinite;}
+.sync-orb i.dot{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;animation:syncOrbit 2.8s linear infinite;}
+.sync-orb i.d1{background:var(--agent);box-shadow:0 0 10px var(--agent);}
+.sync-orb i.d2{background:var(--admin);box-shadow:0 0 10px var(--admin);animation-delay:-.93s;}
+.sync-orb i.d3{background:#B94AE0;box-shadow:0 0 10px #B94AE0;animation-delay:-1.86s;}
+.sync-title{position:relative;font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--text);}
+.sync-title .sync-dots i{font-style:normal;animation:syncBlink 1.2s infinite;}
+.sync-title .sync-dots i:nth-child(2){animation-delay:.2s;}
+.sync-title .sync-dots i:nth-child(3){animation-delay:.4s;}
+.sync-msgs{position:relative;height:20px;margin:8px 0 16px;font-size:13px;}
+.sync-msgs span{position:absolute;left:0;right:0;opacity:0;animation:syncMsg 6s infinite;}
+.sync-msgs span:nth-child(2){animation-delay:2s;}
+.sync-msgs span:nth-child(3){animation-delay:4s;}
+.sync-bar{position:relative;height:6px;max-width:360px;margin:0 auto 22px;border-radius:6px;background:var(--surface-3);overflow:hidden;}
+.sync-bar i{position:absolute;top:0;bottom:0;left:-40%;width:40%;border-radius:6px;background:linear-gradient(90deg,transparent,var(--agent),#4A7FE0,transparent);animation:syncSlide 1.3s ease-in-out infinite;}
+.sync-skel{position:relative;max-width:560px;margin:0 auto;display:grid;gap:9px;}
+.sync-skel b{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:syncShimmer 1.4s linear infinite;}
+.sync-skel b:nth-child(1){width:100%;}
+.sync-skel b:nth-child(2){width:86%;animation-delay:.15s;}
+.sync-skel b:nth-child(3){width:94%;animation-delay:.3s;}
+.sync-skel b:nth-child(4){width:70%;animation-delay:.45s;}
+@keyframes syncSpin{to{transform:rotate(360deg);}}
+@keyframes syncPulse{0%,100%{transform:scale(.88);opacity:.75;}50%{transform:scale(1.12);opacity:1;}}
+@keyframes syncOrbit{from{transform:rotate(0deg) translateX(55px);}to{transform:rotate(360deg) translateX(55px);}}
+@keyframes syncBlink{0%,80%,100%{opacity:.2;}40%{opacity:1;}}
+@keyframes syncMsg{0%{opacity:0;transform:translateY(8px);}6%,30%{opacity:1;transform:none;}36%,100%{opacity:0;transform:translateY(-8px);}}
+@keyframes syncSlide{from{left:-40%;}to{left:100%;}}
+@keyframes syncShimmer{from{background-position:200% 0;}to{background-position:-200% 0;}}
+@media (prefers-reduced-motion: reduce){ .sync-loader *{animation-duration:6s !important;} }
+</style>
 </head>
 <body>
 
@@ -12400,6 +12439,18 @@ function statusFor(score){
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
 
+/* Animated sync/loading placeholder — pass a title (HTML allowed; escape user text first). */
+function syncLoaderHtml(title, msgs){
+  const m = (msgs && msgs.length === 3) ? msgs : ['🔗 সার্ভারে সংযোগ হচ্ছে', '📥 লাইভ ডাটা আনা হচ্ছে', '🧮 ডাটা সাজানো হচ্ছে'];
+  return `<div class="sync-loader" role="status" aria-live="polite">
+    <div class="sync-orb"><span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span><span class="core">⚡</span><i class="dot d1"></i><i class="dot d2"></i><i class="dot d3"></i></div>
+    <div class="sync-title">${title || 'ডাটা সিঙ্ক হচ্ছে'}<span class="sync-dots"><i>.</i><i>.</i><i>.</i></span></div>
+    <div class="sync-msgs"><span>${m[0]}</span><span>${m[1]}</span><span>${m[2]}</span></div>
+    <div class="sync-bar"><i></i></div>
+    <div class="sync-skel"><b></b><b></b><b></b><b></b></div>
+  </div>`;
+}
+
 /* ===================== GENERIC EXCEL DOWNLOAD (used above every table in the app) ===================== */
 /* Exports whatever is currently rendered inside a <table id="tableId"> to an .xlsx file — reads the
    table exactly as shown (values, merged cells) rather than needing a separate copy of the data. */
@@ -12600,7 +12651,7 @@ async function renderVerticalPanel(tab){
     <div class="panel-header">
       <div><h1>${meta.label} Sheet Logs</h1><p>অনুগ্রহ করে অপেক্ষা করুন... লাইভ ডাটা লোড হচ্ছে।...</p></div>
     </div>
-    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+    ${syncLoaderHtml('ডাটা সিঙ্ক হচ্ছে')}`;
 
   const { json, rows } = await fetchVerticalData(tab);
   updateLoginAgentCount();
@@ -13934,7 +13985,7 @@ async function renderDedicatedDashboard(vKey) {
     <div class="panel-header">
       <div><h1>📊 ${meta.label} Live Analytics Dashboard</h1><p>System (${meta.dashSheet}) থেকে লাইভ ডাটা জেনারেট হচ্ছে...</p></div>
     </div>
-    <div class="empty-state"><b>রিয়েল-টাইম ডাটা সিঙ্ক হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b></div>`;
+    ${syncLoaderHtml('রিয়েল-টাইম ডাটা সিঙ্ক হচ্ছে')}`;
     
   try {
     const response = await fetch(WEB_APP_URL + "?vertical=" + meta.dashSheet);
@@ -14087,9 +14138,9 @@ async function renderHomePage(isManualRefresh){
       <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
       <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
     </div>
-    <div class="empty-state">${isManualRefresh
-      ? `<b>Refreshing...... Please wait...</b><br>Data is being synced from the Quality Server.`
-      : `<b>লাইভ ডাটা লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</b>`}</div>`;
+    ${isManualRefresh
+      ? syncLoaderHtml('Refreshing — Quality Server থেকে ডাটা সিঙ্ক হচ্ছে')
+      : syncLoaderHtml('লাইভ ডাটা লোড হচ্ছে')}`;
 
   const vKeys = Object.keys(VERTICALS); // CATV, BBTECH, BBRENEWAL
 
@@ -14431,7 +14482,7 @@ async function renderAnswered3SecPanel(sub){
       <div><h1>☎️ Percentage of Calls Answered within 3 Seconds</h1><p>সিস্টেম (${sheetName}) থেকে লাইভ ডাটা সিঙ্ক হচ্ছে...</p></div>
     </div>
     ${ans3secSubTabsHtml(sub)}
-    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+    ${syncLoaderHtml('ডাটা সিঙ্ক হচ্ছে')}`;
 
   try{
     const response = await fetch(WEB_APP_URL + "?vertical=" + sheetName);
@@ -14581,7 +14632,7 @@ async function renderFatalThisMonthPanel(sub){
       <div><h1>🚨 FATAL This Month</h1><p>লাইভ ডাটা সিঙ্ক হচ্ছে...</p></div>
     </div>
     ${fatalSubTabsHtml(sub)}
-    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+    ${syncLoaderHtml('ডাটা সিঙ্ক হচ্ছে')}`;
 
   try{
     await ensureVerticalDataLoaded(sub);
@@ -14625,7 +14676,7 @@ async function renderRawSheetTabPanel(tab){
     <div class="panel-header">
       <div><h1>${meta.icon} ${meta.label}</h1><p>লাইভ ডাটা লোড হচ্ছে...</p></div>
     </div>
-    <div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+    ${syncLoaderHtml('ডাটা সিঙ্ক হচ্ছে')}`;
 
   try{
     const response = await fetch(RAW_SHEET_WEB_APP_URL + "?vertical=" + encodeURIComponent(meta.sheetName));
@@ -14863,11 +14914,55 @@ function monthDataFetchList(section){
   p.catch(() => { monthDataListPromise[section] = null; });
   return p;
 }
+/* ---- অল্প অল্প করে (১৫০০ সারির টুকরোয়) ডাটা আনা: প্রতি টুকরো আসতেই স্ক্রিনে বিশ্লেষণ আপডেট হয় ----
+   পুরোনো Apps Script (totalRows না পাঠালে) হলে আগের মতো পুরোটা একবারে আসে। */
+const monthDataProg = {};   // key -> { values, merges, total, loaded, done, subs:[] }
+function monthDataNotify(st){ (st.subs || []).slice().forEach(fn => { try{ fn(st); }catch(e){ console.error(e); } }); }
+async function monthDataFetchChunked(url, sheet, key){
+  const CH = 1500, enc = encodeURIComponent(sheet), fresh = monthDataForceFresh ? '&nocache=1' : '';
+  const mk = st => `${url}?action=data&sheet=${enc}&from=${st}&count=${CH}${fresh}`;
+  const st = monthDataProg[key] = { values: [], merges: [], total: 0, loaded: 0, done: false, subs: (monthDataProg[key] && monthDataProg[key].subs) || [] };
+  const first = await monthDataFetchJson(mk(1));
+  if(first.totalRows == null || !Array.isArray(first.values)){      // পুরোনো স্ক্রিপ্ট
+    st.values = Array.isArray(first.values) ? first.values : [];
+    st.merges = first.merges || [];
+    st.total = st.loaded = st.values.length; st.done = true;
+    monthDataNotify(st);
+    return first;
+  }
+  st.values = first.values.slice(); st.merges = first.merges || [];
+  st.total = first.totalRows; st.loaded = st.values.length;
+  monthDataNotify(st);
+  const starts = [];
+  for(let p = 1 + CH; p <= st.total; p += CH) starts.push(p);
+  const parts = new Array(starts.length), ready = [];
+  let next = 0, emitted = 0;
+  const flush = () => {
+    while(emitted < starts.length && ready[emitted]){ st.values = st.values.concat(parts[emitted]); parts[emitted] = null; emitted++; }
+    st.loaded = st.values.length;
+    monthDataNotify(st);
+  };
+  const worker = async () => {
+    while(next < starts.length){
+      const i = next++;
+      const d = await monthDataFetchJson(mk(starts[i]));
+      parts[i] = Array.isArray(d.values) ? d.values : [];
+      ready[i] = true;
+      flush();
+    }
+  };
+  await Promise.all([worker(), worker()]);
+  st.done = true; st.loaded = st.values.length;
+  monthDataNotify(st);
+  return { values: st.values, merges: st.merges };
+}
 function monthDataFetchData(section, sheetName){
   const key = section + '|' + sheetName;
   if(monthDataDataPromise[key]) return monthDataDataPromise[key];
   const cfg = monthDataConfig(section);
-  const p = monthDataFetchJson(cfg.url + "?action=data&sheet=" + encodeURIComponent(sheetName) + (monthDataForceFresh ? "&nocache=1" : ""));
+  const p = section === 'RAW'
+    ? monthDataFetchChunked(cfg.url, sheetName, key)
+    : monthDataFetchJson(cfg.url + "?action=data&sheet=" + encodeURIComponent(sheetName) + (monthDataForceFresh ? "&nocache=1" : ""));
   monthDataDataPromise[key] = p;
   p.catch(() => { delete monthDataDataPromise[key]; });
   return p;
@@ -14898,6 +14993,476 @@ async function monthDataPrefetch(){
   }
 }
 window.addEventListener('load', () => setTimeout(monthDataPrefetch, 1000));
+
+/* ===================== MONTH WISE RAW DATA — SMART ANALYTICS VIEW =====================
+   কাঁচা টেবিলের বদলে বিশ্লেষণ: KPI, গ্রুপ/ক্রস-টেবিল (Pivot), কলাম-প্রোফাইল, সংখ্যার সারাংশ।
+   কোনো সারি বাদ যায় না — যেকোনো ঘরে ক্লিক করলে নিচে হুবহু সেই রেকর্ডগুলো দেখায়,
+   আর "সব ডাটা" ট্যাবে আগের মতো পুরো টেবিলও আছে। */
+let mdCtx = null;
+
+function mdInjectCss(){
+  if(document.getElementById('mdSmartCss')) return;
+  const st = document.createElement('style');
+  st.id = 'mdSmartCss';
+  st.textContent = `
+  .md-tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 14px}
+  .md-note{font-size:12px;color:var(--text-muted);margin:-6px 0 12px}
+  .md-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
+  .md-kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+  .md-kpi small{color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.8px}
+  .md-kpi b{display:block;font-size:22px;margin-top:4px;font-family:'Space Grotesk',sans-serif;word-break:break-word}
+  .md-kpi span{font-size:12px;color:var(--text-muted)}
+  .md-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px}
+  .md-card h3{font-size:14px;margin-bottom:10px;font-family:'Space Grotesk',sans-serif}
+  .md-ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px}
+  .md-ctrl label{display:flex;flex-direction:column;font-size:11px;color:var(--text-muted);gap:4px}
+  .md-sel,.md-inp{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;max-width:260px}
+  .md-scroll{overflow:auto;max-height:520px;border:1px solid var(--border);border-radius:10px}
+  table.md-t{width:100%;border-collapse:collapse}
+  table.md-t th{position:sticky;top:0;z-index:2;background:var(--surface-2);padding:9px 12px;font-size:11px;text-align:left;white-space:nowrap;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid var(--border)}
+  table.md-t td{padding:8px 12px;font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap}
+  table.md-t tr.md-total td{font-weight:700;background:var(--surface-2);position:sticky;bottom:0}
+  .md-num{text-align:right;font-variant-numeric:tabular-nums}
+  .md-click{cursor:pointer}
+  .md-click:hover{outline:1px solid var(--agent);outline-offset:-1px}
+  .md-bar{display:inline-block;height:8px;border-radius:4px;background:var(--agent);vertical-align:middle;margin-left:8px}
+  .md-prof{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  .md-prof>div{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface-2)}
+  .md-prof h4{font-size:12.5px;margin-bottom:4px}
+  .md-prof .row{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-top:7px;cursor:pointer}
+  .md-prof .row:hover span:first-child{color:var(--agent)}
+  .md-prof .track{height:6px;background:var(--surface-3);border-radius:4px;margin-top:3px;overflow:hidden}
+  .md-prof .fill{height:100%;background:var(--agent)}
+  .md-chip{display:inline-flex;gap:6px;align-items:center;background:var(--agent-dim);color:var(--agent);border:1px solid var(--agent);border-radius:999px;padding:3px 10px;font-size:12px;margin:0 6px 6px 0;cursor:pointer}
+  .md-pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px;font-size:12.5px;flex-wrap:wrap}
+  .md-partial{border:1px solid var(--agent);background:var(--agent-dim);border-radius:10px;padding:10px 14px;margin:10px 0 4px;font-size:13px;color:var(--text)}
+  .md-partial.err{border-color:var(--need);background:rgba(224,82,74,.12)}
+  .md-partial.ok{border-color:var(--excellent);background:rgba(63,191,127,.12)}
+  .md-partial .tr{height:6px;border-radius:6px;background:var(--surface-3);margin-top:8px;overflow:hidden}
+  .md-partial .tr i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--agent),#4A7FE0);transition:width .4s ease}
+  .md-spin{display:inline-block;width:12px;height:12px;border:2px solid var(--agent);border-top-color:transparent;border-radius:50%;vertical-align:-2px;margin-right:6px;animation:syncSpin .8s linear infinite}
+  `;
+  document.head.appendChild(st);
+}
+
+function mdNum(v){
+  const t = String(v == null ? '' : v).replace(/[,%₹\s]/g, '');
+  return /^-?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : NaN;
+}
+function mdFmt(n){
+  if(!isFinite(n)) return '-';
+  return Number.isInteger(n) ? n.toLocaleString('en-IN') : (Math.round(n * 100) / 100).toLocaleString('en-IN');
+}
+function mdT(v){ return String(v == null ? '' : v).trim(); }
+function mdLabel(v){ return v === '' ? '(ফাঁকা)' : formatSheetCellValue(v); }
+
+function mdAnalyze(values){
+  const nz = r => r.filter(c => mdT(c) !== '').length;
+  const top = values.slice(0, 6).map(nz);
+  const mx = Math.max(1, ...top);
+  let hr = top.findIndex(c => c >= 0.6 * mx);
+  if(hr < 0) hr = 0;
+
+  const ncAll = values.reduce((m, r) => Math.max(m, r.length), 0);
+  const keep = [];
+  for(let c = 0; c < ncAll; c++){
+    if(values.some(r => mdT(r[c]) !== '')) keep.push(c);   // পুরোপুরি ফাঁকা কলাম বাদ
+  }
+  const seen = {};
+  const headers = keep.map((c, i) => {
+    let h = mdT(values[hr] && values[hr][c]) || ('Col ' + (i + 1));
+    if(seen[h]){ seen[h]++; h += ' (' + seen[h] + ')'; } else seen[h] = 1;
+    return h;
+  });
+  const rows = values.slice(hr + 1)
+    .map(r => keep.map(c => (r[c] == null ? '' : r[c])))
+    .filter(r => nz(r) > 0);
+
+  const cols = headers.map((h, c) => {
+    let filled = 0, numc = 0;
+    const map = new Map();
+    rows.forEach(r => {
+      const v = mdT(r[c]);
+      if(v === '') return;
+      filled++;
+      if(!isNaN(mdNum(v))) numc++;
+      map.set(v, (map.get(v) || 0) + 1);
+    });
+    const distinct = map.size;
+    const isId = filled > 20 && distinct / filled > 0.95;
+    const isNum = !isId && filled > 0 && numc / filled >= 0.8;
+    const isCat = !isId && distinct >= 2 && distinct <= Math.max(2, Math.min(100, rows.length * 0.6)) && !(isNum && distinct > 30);
+    return { h, filled, distinct, map, isId, isNum, isCat };
+  });
+  return { hr, headers, rows, cols, preamble: hr, txt: null };
+}
+
+function mdPickDefaultGroup(a){
+  const keys = ['agent','employee','name','parameter','status','result','category','type','lob','team','queue','disposition','fatal','remark'];
+  for(const k of keys){
+    const i = a.cols.findIndex(c => c.isCat && c.h.toLowerCase().includes(k));
+    if(i >= 0) return i;
+  }
+  const j = a.cols.findIndex(c => c.isCat);
+  return j >= 0 ? j : 0;
+}
+
+function mdRenderSmart(wrap, values, merges, sheetName, partial){
+  mdInjectCss();
+  const a = mdAnalyze(values);
+  mdCtx = { a, values, merges, sheetName, filters: [], q: '', page: 0, pageSize: 50,
+            sel: { group: mdPickDefaultGroup(a), split: -1, measure: { k: 'count', c: -1 } }, sort: 'desc', fullBuilt: false, partial: !!partial };
+
+  wrap.innerHTML = `
+    <div id="mdPartialBar"></div>
+    <div class="md-tabs">
+      <button class="btn primary" id="mdTabSmart" onclick="mdView('smart')">📊 বিশ্লেষণ (Summary)</button>
+      <button class="btn" id="mdTabFull" onclick="mdView('full')">📋 সব ডাটা (${a.rows.length.toLocaleString('en-IN')} সারি)</button>
+      <span style="flex:1"></span>
+      <button class="btn" onclick="mdDownloadAll()">⬇ সব ডাটা Excel</button>
+    </div>
+    ${a.preamble > 0 ? `<div class="md-note">শিটের উপরের ${a.preamble}টি শিরোনাম-লাইন বিশ্লেষণে ধরা হয়নি; সেগুলো সহ সবকিছু "সব ডাটা" ট্যাবে ও Excel-এ আছে।</div>` : ''}
+    <div id="mdSmart"></div>
+    <div id="mdFull" style="display:none;"></div>`;
+
+  const box = document.getElementById('mdSmart');
+  if(!a.rows.length){ box.innerHTML = `<div class="empty-state"><b>কোনো ডাটা সারি পাওয়া যায়নি</b></div>`; return; }
+
+  box.innerHTML = `
+    <div id="mdKpi" class="md-kpis"></div>
+    <div class="md-card"><h3>🧮 গ্রুপ অনুযায়ী বিশ্লেষণ <small style="font-weight:400;color:var(--text-muted);">— যেকোনো ঘরে ক্লিক করলে নিচে সেই রেকর্ডগুলো দেখাবে</small></h3>
+      <div class="md-ctrl" id="mdCtrl"></div>
+      <div id="mdPivotBox"></div>
+    </div>
+    <div class="md-card"><h3>🔍 কলাম-ভিত্তিক সংক্ষিপ্ত চিত্র (শীর্ষ মান)</h3><div id="mdProfiles" class="md-prof"></div></div>
+    <div id="mdNumCard"></div>
+    <div class="md-card" id="mdDetailCard"><h3>🗂️ রেকর্ড বিস্তারিত (কোনো সারি বাদ নেই)</h3><div id="mdDetail"></div></div>`;
+
+  mdRenderKpi(); mdRenderCtrl(); mdRenderPivot(); mdRenderProfiles(); mdRenderNum(); mdRenderDetail();
+}
+
+
+/* ---- অল্প অল্প করে আসা ডাটা স্ক্রিনে বসানো (ইউজারের বাছাই করা গ্রুপ/ফিল্টার ঠিক রেখে) ---- */
+let mdDoneTimer = null;
+function mdApplyPartial(wrap, st, sheetName){
+  if(!st.values.length) return;
+  const exists = mdCtx && mdCtx.sheetName === sheetName && document.getElementById('mdSmart');
+  if(exists){ mdCtx.partial = !st.done; mdUpdateData(st.values, st.merges); }
+  else { mdRenderSmart(wrap, st.values, st.merges, sheetName, !st.done); }
+  mdSetPartial(st);
+}
+function mdUpdateData(values, merges){
+  const c = mdCtx, a = mdAnalyze(values), prevN = c.a.headers.length;
+  c.a = a; c.values = values; c.merges = merges; c.fullBuilt = false;
+  const n = a.headers.length;
+  if(c.sel.group >= n || (a.cols[c.sel.group] && a.cols[c.sel.group].isId)) c.sel.group = mdPickDefaultGroup(a);
+  if(c.sel.split >= n) c.sel.split = -1;
+  if(c.sel.measure.k !== 'count' && (c.sel.measure.c >= n || !a.cols[c.sel.measure.c].isNum)) c.sel.measure = { k: 'count', c: -1 };
+  c.filters = c.filters.filter(f => f.c < n);
+  const tf = document.getElementById('mdTabFull');
+  if(tf) tf.textContent = '📋 সব ডাটা (' + a.rows.length.toLocaleString('en-IN') + ' সারি)';
+  const hadFocus = document.activeElement && document.activeElement.id === 'mdQ';
+  mdRenderKpi(); if(n !== prevN) mdRenderCtrl();
+  mdRenderPivot(); mdRenderProfiles(); mdRenderNum(); mdRenderDetail();
+  if(hadFocus){ const q = document.getElementById('mdQ'); if(q){ q.focus(); const l = q.value.length; q.setSelectionRange(l, l); } }
+}
+function mdSetPartial(st){
+  const bar = document.getElementById('mdPartialBar');
+  if(!bar) return;
+  clearTimeout(mdDoneTimer);
+  const pct = st.total ? Math.min(100, Math.round(st.loaded / st.total * 100)) : 0;
+  if(!st.done){
+    bar.innerHTML = `<div class="md-partial"><span class="md-spin"></span>ডাটা অল্প অল্প করে আসছে: <b>${st.loaded.toLocaleString('en-IN')} / ${st.total.toLocaleString('en-IN')} সারি</b> (${pct}%) — এখন পর্যন্ত আসা ডাটার বিশ্লেষণ দেখানো হচ্ছে
+      <div class="tr"><i style="width:${Math.max(4, pct)}%"></i></div></div>`;
+  }else{
+    bar.innerHTML = `<div class="md-partial ok">✅ সব ডাটা লোড সম্পূর্ণ (${mdCtx.a.rows.length.toLocaleString('en-IN')} রেকর্ড)</div>`;
+    mdDoneTimer = setTimeout(() => { const b = document.getElementById('mdPartialBar'); if(b) b.innerHTML = ''; }, 2500);
+    const fu = document.getElementById('mdFull');
+    if(fu && fu.style.display !== 'none') mdView('full');
+  }
+}
+function mdPartialFail(reason, sheetName, st){
+  const bar = document.getElementById('mdPartialBar');
+  if(!bar) return;
+  if(mdCtx){ mdCtx.partial = true; }
+  bar.innerHTML = `<div class="md-partial err">⚠ লোড মাঝপথে থেমে গেছে (${st.loaded.toLocaleString('en-IN')} / ${st.total.toLocaleString('en-IN')} সারি এসেছে) — কারণ: ${escapeHtml(reason)}
+    <button class="btn" style="margin-left:10px" onclick="monthDataLoadSheetTable('RAW','${escapeAttr(sheetName)}')">↻ আবার চেষ্টা করুন</button></div>`;
+}
+
+function mdView(which){
+  const c = mdCtx; if(!c) return;
+  const sm = document.getElementById('mdSmart'), fu = document.getElementById('mdFull');
+  const tS = document.getElementById('mdTabSmart'), tF = document.getElementById('mdTabFull');
+  if(which === 'full'){
+    if(!c.fullBuilt){
+      const tid = 'rawSheetTable-MONTHDATARAW';
+      fu.innerHTML = `
+        <div class="table-search-wrap">
+          <span class="table-search-icon">🔎</span>
+          <input type="text" class="table-search-input" id="monthDataSearch" placeholder="যেকোনো তথ্য দিয়ে খুঁজুন..." oninput="filterRawSheetTable(this,'${tid}')">
+        </div>
+        <div class="raw-sheet-wrap md-table">
+          ${buildMergedSheetTableHtml(c.values, Array.isArray(c.merges) ? c.merges : [], 'MONTHDATARAW')}
+          <div class="table-no-match" style="display:none;">😕 কোনো তথ্য পাওয়া যায়নি।</div>
+        </div>`;
+      c.fullBuilt = true;
+    }
+    sm.style.display = 'none'; fu.style.display = '';
+    tF.classList.add('primary'); tS.classList.remove('primary');
+  }else{
+    fu.style.display = 'none'; sm.style.display = '';
+    tS.classList.add('primary'); tF.classList.remove('primary');
+  }
+}
+
+function mdRenderKpi(){
+  const c = mdCtx, a = c.a, g = c.sel.group, col = a.cols[g];
+  let topTxt = '', topSub = '';
+  if(col && col.map.size){
+    const best = [...col.map.entries()].sort((x, y) => y[1] - x[1])[0];
+    topTxt = formatSheetCellValue(best[0]);
+    topSub = `${mdFmt(best[1])} রেকর্ড • ${(best[1] / a.rows.length * 100).toFixed(1)}%`;
+  }
+  const html = [
+    ['মোট রেকর্ড' + (c.partial ? ' (এখন পর্যন্ত)' : ''), mdFmt(a.rows.length), c.partial ? 'বাকি ডাটা আসছে...' : 'সব সারি গোনা হয়েছে'],
+    ['মোট কলাম', mdFmt(a.headers.length), `${a.cols.filter(x => x.isCat).length}টি গ্রুপ-যোগ্য • ${a.cols.filter(x => x.isNum).length}টি সংখ্যার`],
+    ['ইউনিক ' + (col ? col.h : ''), col ? mdFmt(col.distinct) : '-', 'বর্তমান গ্রুপ কলামে'],
+    ['সর্বাধিক: ' + (col ? col.h : ''), topTxt || '-', topSub]
+  ].map(k => `<div class="md-kpi"><small>${escapeHtml(k[0])}</small><b>${escapeHtml(k[1])}</b><span>${escapeHtml(k[2])}</span></div>`).join('');
+  document.getElementById('mdKpi').innerHTML = html;
+}
+
+function mdRenderCtrl(){
+  const c = mdCtx, a = c.a, s = c.sel;
+  const optCols = (selected, withNone) =>
+    (withNone ? `<option value="-1" ${selected === -1 ? 'selected' : ''}>— কিছু না —</option>` : '') +
+    a.cols.map((x, i) => x.isId ? '' : `<option value="${i}" ${i === selected ? 'selected' : ''}>${escapeHtml(x.h)}</option>`).join('');
+  const nums = a.cols.map((x, i) => x.isNum ? i : -1).filter(i => i >= 0);
+  const mOpt = `<option value="count" ${s.measure.k === 'count' ? 'selected' : ''}>রেকর্ড সংখ্যা (Count)</option>` +
+    nums.map(i => `<option value="sum:${i}" ${s.measure.k === 'sum' && s.measure.c === i ? 'selected' : ''}>যোগফল — ${escapeHtml(a.headers[i])}</option>` +
+                  `<option value="avg:${i}" ${s.measure.k === 'avg' && s.measure.c === i ? 'selected' : ''}>গড় — ${escapeHtml(a.headers[i])}</option>`).join('');
+  document.getElementById('mdCtrl').innerHTML = `
+    <label>গ্রুপ (সারি)<select class="md-sel" onchange="mdSet('group',this.value)">${optCols(s.group, false)}</select></label>
+    <label>ভাগ করুন (কলাম)<select class="md-sel" onchange="mdSet('split',this.value)">${optCols(s.split, true)}</select></label>
+    <label>পরিমাপ<select class="md-sel" onchange="mdSet('measure',this.value)">${mOpt}</select></label>
+    <label>সাজান<select class="md-sel" onchange="mdSet('sort',this.value)">
+      <option value="desc" ${c.sort === 'desc' ? 'selected' : ''}>বেশি → কম</option>
+      <option value="asc" ${c.sort === 'asc' ? 'selected' : ''}>কম → বেশি</option>
+      <option value="name" ${c.sort === 'name' ? 'selected' : ''}>নাম অনুযায়ী (A→Z)</option></select></label>
+    <button class="btn" onclick="mdDownloadPivot()">⬇ এই টেবিল Excel</button>`;
+}
+
+function mdSet(what, val){
+  const c = mdCtx; if(!c) return;
+  if(what === 'group'){ c.sel.group = parseInt(val, 10); if(c.sel.split === c.sel.group) c.sel.split = -1; mdRenderKpi(); }
+  else if(what === 'split'){ c.sel.split = parseInt(val, 10); }
+  else if(what === 'sort'){ c.sort = val; }
+  else if(what === 'measure'){
+    if(val === 'count') c.sel.measure = { k: 'count', c: -1 };
+    else { const p = val.split(':'); c.sel.measure = { k: p[0], c: parseInt(p[1], 10) }; }
+  }
+  mdRenderCtrl(); mdRenderPivot();
+}
+
+function mdRenderPivot(){
+  const c = mdCtx, a = c.a, s = c.sel, box = document.getElementById('mdPivotBox');
+  if(!box) return;
+  const g = s.group, sp = s.split, ms = s.measure;
+
+  let colKeys = [], others = null;
+  if(sp >= 0){
+    const cnt = new Map();
+    a.rows.forEach(r => { const k = mdT(r[sp]); cnt.set(k, (cnt.get(k) || 0) + 1); });
+    const sorted = [...cnt.entries()].sort((x, y) => y[1] - x[1]);
+    colKeys = sorted.slice(0, 14).map(e => e[0]);
+    if(sorted.length > 14) others = new Set(sorted.slice(14).map(e => e[0]));
+  }
+  const colIndex = new Map(colKeys.map((k, i) => [k, i]));
+  const nCols = colKeys.length + (others ? 1 : 0);
+  const mk = () => ({ n: 0, s: 0 });
+  const add = (o, v) => {
+    if(ms.k === 'count'){ o.n++; return; }
+    const x = mdNum(v);
+    if(!isNaN(x)){ o.n++; o.s += x; }
+  };
+  const val = o => ms.k === 'count' ? o.n : (ms.k === 'sum' ? o.s : (o.n ? o.s / o.n : 0));
+
+  const rowMap = new Map();
+  const colTot = Array.from({ length: nCols }, mk);
+  const grand = mk();
+  a.rows.forEach(r => {
+    const gk = mdT(r[g]);
+    let ro = rowMap.get(gk);
+    if(!ro){ ro = { tot: mk(), cells: Array.from({ length: nCols }, mk) }; rowMap.set(gk, ro); }
+    const mv = ms.k === 'count' ? null : r[ms.c];
+    add(ro.tot, mv); add(grand, mv);
+    if(sp >= 0){
+      const k = mdT(r[sp]);
+      const ci = colIndex.has(k) ? colIndex.get(k) : colKeys.length;
+      add(ro.cells[ci], mv); add(colTot[ci], mv);
+    }
+  });
+
+  let entries = [...rowMap.entries()];
+  if(c.sort === 'name') entries.sort((x, y) => mdLabel(x[0]).localeCompare(mdLabel(y[0])));
+  else entries.sort((x, y) => c.sort === 'asc' ? val(x[1].tot) - val(y[1].tot) : val(y[1].tot) - val(x[1].tot));
+
+  c.pv = { rowKeys: entries.map(e => e[0]), colKeys, others };
+
+  let maxCell = 0, maxTot = 0;
+  entries.forEach(([, o]) => { maxTot = Math.max(maxTot, val(o.tot)); o.cells.forEach(x => { maxCell = Math.max(maxCell, val(x)); }); });
+  const grandV = val(grand);
+
+  const mLabel = ms.k === 'count' ? 'সংখ্যা' : (ms.k === 'sum' ? 'যোগফল' : 'গড়');
+  let head = `<th>${escapeHtml(a.headers[g])}</th>`;
+  colKeys.forEach(k => { head += `<th class="md-num">${escapeHtml(mdLabel(k))}</th>`; });
+  if(others) head += `<th class="md-num">অন্যান্য</th>`;
+  head += `<th class="md-num">মোট ${mLabel}</th>`;
+  if(sp < 0 && ms.k !== 'avg') head += `<th>অংশ %</th>`;
+
+  let body = '';
+  entries.forEach(([k, o], ri) => {
+    let tds = `<td class="md-click" onclick="mdDrill(${ri},-1)">${escapeHtml(mdLabel(k))}</td>`;
+    o.cells.forEach((x, ci) => {
+      const v = val(x);
+      const alpha = maxCell ? (v / maxCell * 0.55).toFixed(2) : 0;
+      tds += `<td class="md-num md-click" style="background:rgba(51,201,176,${alpha})" onclick="mdDrill(${ri},${ci})">${v ? mdFmt(v) : ''}</td>`;
+    });
+    const tv = val(o.tot);
+    tds += `<td class="md-num md-click" style="font-weight:700" onclick="mdDrill(${ri},-1)">${mdFmt(tv)}</td>`;
+    if(sp < 0 && ms.k !== 'avg'){
+      const pct = grandV ? tv / grandV * 100 : 0;
+      tds += `<td>${pct.toFixed(1)}%<span class="md-bar" style="width:${Math.max(2, Math.round(pct * 1.2))}px"></span></td>`;
+    }
+    body += `<tr>${tds}</tr>`;
+  });
+  let foot = `<tr class="md-total"><td>সর্বমোট</td>`;
+  colTot.forEach(x => { foot += `<td class="md-num">${mdFmt(val(x))}</td>`; });
+  foot += `<td class="md-num">${mdFmt(grandV)}</td>`;
+  if(sp < 0 && ms.k !== 'avg') foot += `<td>100%</td>`;
+  foot += `</tr>`;
+
+  box.innerHTML = `<div class="md-scroll"><table class="md-t" id="mdPivotTable"><thead><tr>${head}</tr></thead><tbody>${body}${foot}</tbody></table></div>
+    <div class="md-note" style="margin:8px 0 0;">${entries.length.toLocaleString('en-IN')}টি গ্রুপ • সব গ্রুপ দেখানো হয়েছে${others ? ' • ভাগ করা কলামে ১৪টির বেশি মান থাকায় বাকিগুলো "অন্যান্য"-তে একত্র করা হয়েছে' : ''}</div>`;
+}
+
+function mdDrill(ri, ci){
+  const c = mdCtx, s = c.sel, pv = c.pv, a = c.a;
+  const f = [{ c: s.group, vals: new Set([pv.rowKeys[ri]]), label: a.headers[s.group] + ' = ' + mdLabel(pv.rowKeys[ri]) }];
+  if(ci >= 0 && s.split >= 0){
+    if(ci < pv.colKeys.length) f.push({ c: s.split, vals: new Set([pv.colKeys[ci]]), label: a.headers[s.split] + ' = ' + mdLabel(pv.colKeys[ci]) });
+    else f.push({ c: s.split, vals: pv.others, label: a.headers[s.split] + ' = অন্যান্য' });
+  }
+  c.filters = f; c.page = 0;
+  mdRenderDetail();
+  const el = document.getElementById('mdDetailCard');
+  if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function mdRenderProfiles(){
+  const c = mdCtx, a = c.a;
+  c.profTop = {};
+  const cats = a.cols.map((x, i) => ({ x, i })).filter(o => o.x.isCat).slice(0, 12);
+  if(!cats.length){ document.getElementById('mdProfiles').innerHTML = `<div class="md-note">গ্রুপ করার মতো কলাম পাওয়া যায়নি — নিচের রেকর্ড-তালিকা দেখুন।</div>`; return; }
+  document.getElementById('mdProfiles').innerHTML = cats.map(({ x, i }) => {
+    const top = [...x.map.entries()].sort((p, q) => q[1] - p[1]).slice(0, 6);
+    c.profTop[i] = top.map(t => t[0]);
+    const mx = top[0][1];
+    return `<div><h4>${escapeHtml(x.h)} <small style="color:var(--text-muted);font-weight:400;">(${x.distinct}টি ভিন্ন মান)</small></h4>` +
+      top.map((t, vi) => `<div class="row" onclick="mdProfDrill(${i},${vi})"><span>${escapeHtml(formatSheetCellValue(t[0]))}</span><span>${mdFmt(t[1])} <small style="color:var(--text-muted);">(${(t[1] / x.filled * 100).toFixed(1)}%)</small></span></div>
+      <div class="track"><div class="fill" style="width:${(t[1] / mx * 100).toFixed(0)}%"></div></div>`).join('') + `</div>`;
+  }).join('');
+}
+function mdProfDrill(ci, vi){
+  const c = mdCtx, v = c.profTop[ci][vi];
+  c.filters = [{ c: ci, vals: new Set([v]), label: c.a.headers[ci] + ' = ' + mdLabel(v) }];
+  c.page = 0; mdRenderDetail();
+  const el = document.getElementById('mdDetailCard');
+  if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function mdRenderNum(){
+  const c = mdCtx, a = c.a, host = document.getElementById('mdNumCard');
+  const nums = a.cols.map((x, i) => ({ x, i })).filter(o => o.x.isNum).slice(0, 20);
+  if(!nums.length){ host.innerHTML = ''; return; }
+  const rowsHtml = nums.map(({ x, i }) => {
+    let n = 0, sum = 0, mn = Infinity, mxv = -Infinity;
+    a.rows.forEach(r => { const v = mdNum(r[i]); if(!isNaN(v)){ n++; sum += v; if(v < mn) mn = v; if(v > mxv) mxv = v; } });
+    return `<tr><td>${escapeHtml(x.h)}</td><td class="md-num">${mdFmt(n)}</td><td class="md-num">${mdFmt(sum)}</td><td class="md-num">${mdFmt(n ? sum / n : 0)}</td><td class="md-num">${mdFmt(mn)}</td><td class="md-num">${mdFmt(mxv)}</td></tr>`;
+  }).join('');
+  host.innerHTML = `<div class="md-card"><h3>🔢 সংখ্যার কলামের সারাংশ</h3><div class="md-scroll"><table class="md-t"><thead><tr><th>কলাম</th><th class="md-num">গণনা</th><th class="md-num">যোগফল</th><th class="md-num">গড়</th><th class="md-num">সর্বনিম্ন</th><th class="md-num">সর্বোচ্চ</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></div>`;
+}
+
+function mdFiltered(){
+  const c = mdCtx, a = c.a, q = c.q;
+  if(q && !a.txt) a.txt = a.rows.map(r => r.map(v => formatSheetCellValue(v)).join(' ').toLowerCase());
+  const out = [];
+  for(let i = 0; i < a.rows.length; i++){
+    const r = a.rows[i];
+    let ok = true;
+    for(const f of c.filters){ if(!f.vals.has(mdT(r[f.c]))){ ok = false; break; } }
+    if(ok && q && !a.txt[i].includes(q)) ok = false;
+    if(ok) out.push(i);
+  }
+  return out;
+}
+
+function mdRenderDetail(){
+  const c = mdCtx, a = c.a, host = document.getElementById('mdDetail');
+  if(!host) return;
+  const idx = mdFiltered();
+  const pages = Math.max(1, Math.ceil(idx.length / c.pageSize));
+  if(c.page >= pages) c.page = pages - 1;
+  const slice = idx.slice(c.page * c.pageSize, (c.page + 1) * c.pageSize);
+
+  const chips = c.filters.map((f, i) => `<span class="md-chip" onclick="mdRemoveFilter(${i})">${escapeHtml(f.label)} ✕</span>`).join('');
+  const head = `<th>#</th>` + a.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('');
+  const body = slice.map((ri, n) => `<tr><td class="md-num" style="color:var(--text-muted)">${c.page * c.pageSize + n + 1}</td>` +
+    a.rows[ri].map(v => `<td>${escapeHtml(formatSheetCellValue(v))}</td>`).join('') + `</tr>`).join('');
+
+  host.innerHTML = `
+    <div class="md-ctrl">
+      <label>খুঁজুন<input class="md-inp" id="mdQ" placeholder="যেকোনো তথ্য..." value="${escapeAttr(c.q)}" oninput="mdSearch(this.value)"></label>
+      <label>প্রতি পাতায়<select class="md-sel" onchange="mdPageSize(this.value)">${[25, 50, 100, 200].map(n => `<option ${n === c.pageSize ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      ${c.filters.length ? `<button class="btn" onclick="mdClearFilters()">✕ সব ফিল্টার সরান</button>` : ''}
+    </div>
+    <div>${chips}</div>
+    <div class="md-note" style="margin:0 0 8px;">মোট ${a.rows.length.toLocaleString('en-IN')}টির মধ্যে <b>${idx.length.toLocaleString('en-IN')}</b>টি রেকর্ড মিলেছে</div>
+    <div class="md-scroll"><table class="md-t"><thead><tr>${head}</tr></thead><tbody>${body || `<tr><td colspan="${a.headers.length + 1}">কোনো রেকর্ড মেলেনি</td></tr>`}</tbody></table></div>
+    <div class="md-pager">
+      <button class="btn" ${c.page <= 0 ? 'disabled' : ''} onclick="mdPage(-1)">‹ আগের</button>
+      <span>পাতা ${c.page + 1} / ${pages}</span>
+      <button class="btn" ${c.page >= pages - 1 ? 'disabled' : ''} onclick="mdPage(1)">পরের ›</button>
+    </div>`;
+  const q = document.getElementById('mdQ');
+  if(q && document.activeElement && document.activeElement.id === 'mdQ'){ /* keep focus */ }
+}
+let mdSearchTimer = null;
+function mdSearch(v){
+  clearTimeout(mdSearchTimer);
+  mdSearchTimer = setTimeout(() => {
+    mdCtx.q = String(v).trim().toLowerCase(); mdCtx.page = 0;
+    mdRenderDetail();
+    const q = document.getElementById('mdQ');
+    if(q){ q.focus(); const l = q.value.length; q.setSelectionRange(l, l); }
+  }, 250);
+}
+function mdPage(d){ mdCtx.page += d; mdRenderDetail(); }
+function mdPageSize(v){ mdCtx.pageSize = parseInt(v, 10); mdCtx.page = 0; mdRenderDetail(); }
+function mdRemoveFilter(i){ mdCtx.filters.splice(i, 1); mdCtx.page = 0; mdRenderDetail(); }
+function mdClearFilters(){ mdCtx.filters = []; mdCtx.q = ''; mdCtx.page = 0; mdRenderDetail(); }
+
+function mdDownloadAll(){
+  const c = mdCtx; if(!c) return;
+  if(c.partial){ alert('ডাটা এখনও লোড হচ্ছে — সম্পূর্ণ হলে ডাউনলোড করুন।'); return; }
+  const aoa = c.values.map(r => r.map(v => formatSheetCellValue(v)));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), String(c.sheetName || 'Data').slice(0, 31));
+  XLSX.writeFile(wb, `${c.sheetName || 'MonthData'}_AllData_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+function mdDownloadPivot(){
+  exportTableToExcel('mdPivotTable', (mdCtx && mdCtx.sheetName ? mdCtx.sheetName : 'Month') + '_Summary');
+}
 
 async function renderMonthDataPanel(section){
   monthDataSection = section || monthDataSection || 'RAW';
@@ -14938,7 +15503,7 @@ async function monthDataLoadSheetList(section){
   }
 
   tabsWrap.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">মাসের তালিকা লোড হচ্ছে...</span>`;
-  tableWrap.innerHTML = `<div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
+  tableWrap.innerHTML = `${syncLoaderHtml('ডাটা সিঙ্ক হচ্ছে')}`;
 
   try{
     const data = await monthDataFetchList(section);
@@ -14990,9 +15555,28 @@ async function monthDataLoadSheetTable(section, sheetName){
   const cfg = monthDataConfig(section);
   const tableWrap = document.getElementById('monthDataTableWrap');
   if(!tableWrap) return;
-  tableWrap.innerHTML = `<div class="empty-state"><b>"${escapeHtml(sheetName)}" লোড হচ্ছে...</b></div>`;
+  tableWrap.innerHTML = `${syncLoaderHtml('"' + escapeHtml(sheetName) + '" লোড হচ্ছে')}`;
 
   try{
+    if(section === 'RAW'){
+      const key = 'RAW|' + sheetName;
+      const p = monthDataFetchData(section, sheetName);
+      const st = monthDataProg[key];
+      if(st){
+        st.subs = [ s2 => {
+          const w = document.getElementById('monthDataTableWrap');
+          if(!w || monthDataSection !== 'RAW' || monthDataActiveSheet.RAW !== sheetName) return;
+          mdApplyPartial(w, s2, sheetName);
+        } ];
+        if(st.values.length) st.subs[0](st);       // যা আগেই এসে গেছে সাথে সাথে দেখাও
+      }
+      const data = await p;
+      const vals = Array.isArray(data.values) ? data.values : [];
+      if(!vals.length){
+        tableWrap.innerHTML = `<div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b></div>`;
+      }
+      return;
+    }
     const data = await monthDataFetchData(section, sheetName);
     const values = Array.isArray(data.values) ? data.values : [];
     if(!values.length){
@@ -15016,6 +15600,11 @@ async function monthDataLoadSheetTable(section, sheetName){
   }catch(err){
     console.error('Month wise data: table fetch failed', err);
     const reason = (err && err.name === 'AbortError') ? 'সময় শেষ (Timeout) — শিটটি খুব বড় হতে পারে' : (err && err.message ? err.message : String(err));
+    const stF = monthDataProg['RAW|' + sheetName];
+    if(section === 'RAW' && stF && stF.values.length && document.getElementById('mdPartialBar')){
+      mdPartialFail(reason, sheetName, stF);
+      return;
+    }
     tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা আনতে ব্যর্থ!</b><br><small style="opacity:.8;">কারণ: ${escapeHtml(reason)}</small><br><button class="btn" onclick="monthDataLoadSheetTable('${section}','${escapeAttr(sheetName)}')">↻ আবার চেষ্টা করুন</button></div>`;
   }
 }
@@ -15440,7 +16029,7 @@ async function renderLobDataPanel(){
       <div class="lobdata-datetime" id="lobDataDateTime"></div>
     </div>
     ${LOBDATA_ACCESS_TICKER}
-    <div class="empty-state"><b>Syncing data...</b><br>Please wait a moment.</div>`;
+    ${syncLoaderHtml('Syncing data', ['🔗 Connecting to server', '📥 Fetching live data', '🧮 Preparing your table'])}`;
   startLobDataClock();
 
   try{
