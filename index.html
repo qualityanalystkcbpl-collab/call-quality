@@ -14831,6 +14831,74 @@ function monthDataConfig(section){
     : { url: MONTHDATA_RAW_WEB_APP_URL,   label: 'Raw data',              icon:'📁' };
 }
 
+
+/* ---- Month wise Data: cache + prefetch + default = গত মাস ---- */
+const monthDataListPromise = { RAW: null, PARAM: null };
+const monthDataDataPromise = {};      // key: section|sheet
+let monthDataForceFresh = false;
+
+async function monthDataFetchJson(url){
+  let lastErr = null;
+  for(let attempt = 1; attempt <= 2; attempt++){
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 60000);
+    try{
+      const res = await fetch(url, { signal: ctrl.signal });
+      const txt = await res.text();
+      clearTimeout(timer);
+      let data;
+      try{ data = JSON.parse(txt); }
+      catch(pe){ throw new Error('Apps Script JSON দেয়নি (HTTP ' + res.status + '): ' + txt.replace(/<[^>]*>/g,' ').trim().slice(0,160)); }
+      if(data && data.error) throw new Error('Apps Script error: ' + data.error);
+      return data;
+    }catch(e){ clearTimeout(timer); lastErr = e; }
+  }
+  throw lastErr;
+}
+function monthDataFetchList(section){
+  if(monthDataListPromise[section]) return monthDataListPromise[section];
+  const cfg = monthDataConfig(section);
+  const p = monthDataFetchJson(cfg.url + "?action=list" + (monthDataForceFresh ? "&nocache=1" : ""));
+  monthDataListPromise[section] = p;
+  p.catch(() => { monthDataListPromise[section] = null; });
+  return p;
+}
+function monthDataFetchData(section, sheetName){
+  const key = section + '|' + sheetName;
+  if(monthDataDataPromise[key]) return monthDataDataPromise[key];
+  const cfg = monthDataConfig(section);
+  const p = monthDataFetchJson(cfg.url + "?action=data&sheet=" + encodeURIComponent(sheetName) + (monthDataForceFresh ? "&nocache=1" : ""));
+  monthDataDataPromise[key] = p;
+  p.catch(() => { delete monthDataDataPromise[key]; });
+  return p;
+}
+/* গত মাসের শিট বেছে নেয় (যেমন আজ Oct 2026 হলে "September2026"), না পেলে সবচেয়ে শেষের শিট */
+function monthDataPickDefault(sheets){
+  const names = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+  const now = new Date();
+  let m = now.getMonth() - 1, y = now.getFullYear();
+  if(m < 0){ m = 11; y--; }
+  const norm = x => String(x).toLowerCase().replace(/[^a-z0-9]/g,'');
+  const want = [names[m] + y, names[m].slice(0,3) + y, names[m] + String(y).slice(2), names[m].slice(0,3) + String(y).slice(2)];
+  const hit = sheets.find(n => want.includes(norm(n)));
+  return hit || sheets[sheets.length - 1];
+}
+/* পোর্টাল খোলার সাথে সাথে ব্যাকগ্রাউন্ডে দুই সেকশনেরই গত মাসের ডাটা আগে থেকে এনে রাখে */
+async function monthDataPrefetch(){
+  for(const section of ['RAW','PARAM']){
+    try{
+      const cfg = monthDataConfig(section);
+      if(!cfg.url || cfg.url.indexOf('PASTE_') === 0) continue;
+      const data = await monthDataFetchList(section);
+      const sheets = Array.isArray(data) ? data : (Array.isArray(data.sheets) ? data.sheets : []);
+      if(!sheets.length) continue;
+      monthDataSheetListCache[section] = sheets;
+      monthDataFetchData(section, monthDataPickDefault(sheets)).catch(() => {});
+    }catch(e){ console.warn('Month data prefetch failed', section, e); }
+  }
+}
+window.addEventListener('load', () => setTimeout(monthDataPrefetch, 1000));
+
 async function renderMonthDataPanel(section){
   monthDataSection = section || monthDataSection || 'RAW';
   const panel = document.getElementById('panel-MONTHDATA');
@@ -14873,8 +14941,7 @@ async function monthDataLoadSheetList(section){
   tableWrap.innerHTML = `<div class="empty-state"><b>ডাটা সিঙ্ক হচ্ছে...</b><br>দয়া করে কিছুক্ষণ অপেক্ষা করুন।</div>`;
 
   try{
-    const res = await fetch(cfg.url + "?action=list");
-    const data = await res.json();
+    const data = await monthDataFetchList(section);
     const sheets = Array.isArray(data) ? data : (Array.isArray(data.sheets) ? data.sheets : []);
     monthDataSheetListCache[section] = sheets;
     monthDataRenderSheetTabs(section, sheets);
@@ -14887,6 +14954,10 @@ async function monthDataLoadSheetList(section){
 
 async function monthDataRefreshList(section){
   monthDataSheetListCache[section] = null;
+  monthDataListPromise[section] = null;
+  Object.keys(monthDataDataPromise).forEach(k => { if(k.indexOf(section + '|') === 0) delete monthDataDataPromise[k]; });
+  monthDataForceFresh = true;
+  setTimeout(() => { monthDataForceFresh = false; }, 120000);
   await monthDataLoadSheetList(section);
 }
 
@@ -14900,7 +14971,7 @@ function monthDataRenderSheetTabs(section, sheets){
     return;
   }
   const active = (monthDataActiveSheet[section] && sheets.includes(monthDataActiveSheet[section]))
-    ? monthDataActiveSheet[section] : sheets[0];
+    ? monthDataActiveSheet[section] : monthDataPickDefault(sheets);
   monthDataActiveSheet[section] = active;
 
   tabsWrap.innerHTML = sheets.map(name =>
@@ -14922,8 +14993,7 @@ async function monthDataLoadSheetTable(section, sheetName){
   tableWrap.innerHTML = `<div class="empty-state"><b>"${escapeHtml(sheetName)}" লোড হচ্ছে...</b></div>`;
 
   try{
-    const res = await fetch(cfg.url + "?action=data&sheet=" + encodeURIComponent(sheetName));
-    const data = await res.json();
+    const data = await monthDataFetchData(section, sheetName);
     const values = Array.isArray(data.values) ? data.values : [];
     if(!values.length){
       tableWrap.innerHTML = `<div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b></div>`;
@@ -14945,7 +15015,8 @@ async function monthDataLoadSheetTable(section, sheetName){
       </div>`;
   }catch(err){
     console.error('Month wise data: table fetch failed', err);
-    tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা আনতে ব্যর্থ!</b><br><button class="btn" onclick="monthDataLoadSheetTable('${section}','${escapeAttr(sheetName)}')">↻ আবার চেষ্টা করুন</button></div>`;
+    const reason = (err && err.name === 'AbortError') ? 'সময় শেষ (Timeout) — শিটটি খুব বড় হতে পারে' : (err && err.message ? err.message : String(err));
+    tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা আনতে ব্যর্থ!</b><br><small style="opacity:.8;">কারণ: ${escapeHtml(reason)}</small><br><button class="btn" onclick="monthDataLoadSheetTable('${section}','${escapeAttr(sheetName)}')">↻ আবার চেষ্টা করুন</button></div>`;
   }
 }
 
