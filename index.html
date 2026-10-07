@@ -7350,6 +7350,9 @@ const sbClient = (typeof supabase !== 'undefined' && supabase.createClient)
 const CHAT_MSG_TABLE = "chat_messages";
 const CHAT_META_TABLE = "chat_thread_meta";
 const SB_HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
+/* ticker / updates / banners / loginPopup — সরাসরি Supabase `webpage_settings` টেবিলে (storageGet/storageSet এগুলো ব্যবহার করে) */
+const SB_SETTINGS_KEYS = ['ticker', 'updates', 'banners', 'loginPopup'];
+const SB_SETTINGS_TABLE = 'webpage_settings';
 const SB_HEADERS_JSON = Object.assign({ 'Content-Type': 'application/json' }, SB_HEADERS);
 const BANNER_BUCKET = "banners";
 const BANNER_MAX_IMAGE_MB = 5;   // images/GIFs above this are rejected client-side
@@ -7607,8 +7610,6 @@ function autoFormatCellValue(val, columnName) {
 /* ===================== STORAGE & TOAST LOGIC (LIVE GOOGLE SHEETS) ===================== */
 /* এই ৪টা key সরাসরি Supabase-এর `webpage_settings` টেবিল থেকে পড়া/সেভ হয় (Google Sheet / Apps Script ছাড়া)।
    বাকি সব key (helpList ইত্যাদি) আগের মতোই Apps Script (WEB_APP_URL) দিয়ে যায়। */
-const SB_SETTINGS_KEYS = ['ticker', 'updates', 'banners', 'loginPopup'];
-const SB_SETTINGS_TABLE = 'webpage_settings';
 
 async function storageGet(key){
   try{
