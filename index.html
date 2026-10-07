@@ -7,10 +7,10 @@
 <link rel="icon" type="image/png" href="GTPL_KCBPL_favicon_32x32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
@@ -4732,6 +4732,17 @@ transform:translateY(0);
 @keyframes syncSlide{from{left:-40%;}to{left:100%;}}
 @keyframes syncShimmer{from{background-position:200% 0;}to{background-position:-200% 0;}}
 @media (prefers-reduced-motion: reduce){ .sync-loader *{animation-duration:6s !important;} }
+</style>
+<style id="callPerfAndMonthTweaks">
+/* Month wise Data — lighter rendering */
+.md-table .rs-anim-row{animation:none!important;opacity:1!important;}
+#panel-MONTHDATA .lob-tab,#panel-MONTHDATA #monthDataSheetTabs .btn{animation:tabPop .45s cubic-bezier(.34,1.56,.64,1) both!important;}
+body:has(#panel-MONTHDATA.active)::before{animation:none!important;}
+/* Header filter boxes (first 2 columns) */
+.md-hf{display:block;width:100%;min-width:92px;margin-top:5px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px 6px;font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;outline:none;}
+.md-hf:focus{border-color:var(--agent);}
+.md-fcount{font-size:12px;color:var(--text-muted);margin:4px 2px 6px;min-height:0;}
+.md-fcount:empty{display:none;}
 </style>
 </head>
 <body>
@@ -14899,7 +14910,7 @@ async function monthDataFetchJson(url){
       clearTimeout(timer);
       let data;
       try{ data = JSON.parse(txt); }
-      catch(pe){ throw new Error('Apps Script JSON দেয়নি (HTTP ' + res.status + '): ' + txt.replace(/<[^>]*>/g,' ').trim().slice(0,160)); }
+      catch(pe){ throw new Error('Apps Script did not return JSON (HTTP ' + res.status + '): ' + txt.replace(/<[^>]*>/g,' ').trim().slice(0,160)); }
       if(data && data.error) throw new Error('Apps Script error: ' + data.error);
       return data;
     }catch(e){ clearTimeout(timer); lastErr = e; }
@@ -14980,7 +14991,7 @@ function monthDataPickDefault(sheets){
 }
 /* পোর্টাল খোলার সাথে সাথে ব্যাকগ্রাউন্ডে দুই সেকশনেরই গত মাসের ডাটা আগে থেকে এনে রাখে */
 async function monthDataPrefetch(){
-  for(const section of ['RAW','PARAM']){
+  for(const section of ['RAW']){   // Parameter report loads only when its tab is opened
     try{
       const cfg = monthDataConfig(section);
       if(!cfg.url || cfg.url.indexOf('PASTE_') === 0) continue;
@@ -14992,7 +15003,11 @@ async function monthDataPrefetch(){
     }catch(e){ console.warn('Month data prefetch failed', section, e); }
   }
 }
-window.addEventListener('load', () => setTimeout(monthDataPrefetch, 1000));
+window.addEventListener('load', () => {
+  const go = () => monthDataPrefetch();
+  if(window.requestIdleCallback) requestIdleCallback(go, { timeout: 8000 });
+  else setTimeout(go, 4000);
+});
 
 /* ===================== MONTH WISE RAW DATA — SMART ANALYTICS VIEW =====================
    কাঁচা টেবিলের বদলে বিশ্লেষণ: KPI, গ্রুপ/ক্রস-টেবিল (Pivot), কলাম-প্রোফাইল, সংখ্যার সারাংশ।
@@ -15054,7 +15069,7 @@ function mdFmt(n){
   return Number.isInteger(n) ? n.toLocaleString('en-IN') : (Math.round(n * 100) / 100).toLocaleString('en-IN');
 }
 function mdT(v){ return String(v == null ? '' : v).trim(); }
-function mdLabel(v){ return v === '' ? '(ফাঁকা)' : formatSheetCellValue(v); }
+function mdLabel(v){ return v === '' ? '(blank)' : formatSheetCellValue(v); }
 
 function mdAnalyze(values){
   const nz = r => r.filter(c => mdT(c) !== '').length;
@@ -15111,34 +15126,104 @@ function mdRenderSmart(wrap, values, merges, sheetName, partial){
   mdInjectCss();
   const a = mdAnalyze(values);
   mdCtx = { a, values, merges, sheetName, filters: [], q: '', page: 0, pageSize: 50,
-            sel: { group: mdPickDefaultGroup(a), split: -1, measure: { k: 'count', c: -1 } }, sort: 'desc', fullBuilt: false, partial: !!partial };
+            sel: { group: mdPickDefaultGroup(a), split: -1, measure: { k: 'count', c: -1 } }, sort: 'desc',
+            fullBuilt: false, smartBuilt: false, partial: !!partial, fq: '', hf: ['', ''], lastFull: 0 };
 
   wrap.innerHTML = `
     <div id="mdPartialBar"></div>
     <div class="md-tabs">
-      <button class="btn primary" id="mdTabSmart" onclick="mdView('smart')">📊 বিশ্লেষণ (Summary)</button>
-      <button class="btn" id="mdTabFull" onclick="mdView('full')">📋 সব ডাটা (${a.rows.length.toLocaleString('en-IN')} সারি)</button>
+      <button class="btn primary" id="mdTabFull" onclick="mdView('full')">📋 All Data (${a.rows.length.toLocaleString('en-IN')} rows)</button>
+      <button class="btn" id="mdTabSmart" onclick="mdView('smart')">📊 Analysis (Summary)</button>
       <span style="flex:1"></span>
-      <button class="btn" onclick="mdDownloadAll()">⬇ সব ডাটা Excel</button>
+      <button class="btn" onclick="mdDownloadAll()">⬇ Download All Data (Excel)</button>
     </div>
-    ${a.preamble > 0 ? `<div class="md-note">শিটের উপরের ${a.preamble}টি শিরোনাম-লাইন বিশ্লেষণে ধরা হয়নি; সেগুলো সহ সবকিছু "সব ডাটা" ট্যাবে ও Excel-এ আছে।</div>` : ''}
-    <div id="mdSmart"></div>
-    <div id="mdFull" style="display:none;"></div>`;
+    ${a.preamble > 0 ? `<div class="md-note">The top ${a.preamble} title line(s) of the sheet are not included in the analysis; everything, including them, is in the "All Data" tab and the Excel file.</div>` : ''}
+    <div id="mdFull"></div>
+    <div id="mdSmart" style="display:none;"></div>`;
 
-  const box = document.getElementById('mdSmart');
-  if(!a.rows.length){ box.innerHTML = `<div class="empty-state"><b>কোনো ডাটা সারি পাওয়া যায়নি</b></div>`; return; }
+  if(!a.rows.length){ document.getElementById('mdFull').innerHTML = `<div class="empty-state"><b>No data rows found</b></div>`; return; }
+  mdView('full');          // default tab = All Data
+}
 
+/* Analysis view is built only when the user opens it (keeps page load light) */
+function mdBuildSmart(){
+  const c = mdCtx, box = document.getElementById('mdSmart');
+  if(!c || !box) return;
   box.innerHTML = `
     <div id="mdKpi" class="md-kpis"></div>
-    <div class="md-card"><h3>🧮 গ্রুপ অনুযায়ী বিশ্লেষণ <small style="font-weight:400;color:var(--text-muted);">— যেকোনো ঘরে ক্লিক করলে নিচে সেই রেকর্ডগুলো দেখাবে</small></h3>
+    <div class="md-card"><h3>🧮 Group-wise Analysis <small style="font-weight:400;color:var(--text-muted);">— click any cell to see those records below</small></h3>
       <div class="md-ctrl" id="mdCtrl"></div>
       <div id="mdPivotBox"></div>
     </div>
-    <div class="md-card"><h3>🔍 কলাম-ভিত্তিক সংক্ষিপ্ত চিত্র (শীর্ষ মান)</h3><div id="mdProfiles" class="md-prof"></div></div>
+    <div class="md-card"><h3>🔍 Column Overview (top values)</h3><div id="mdProfiles" class="md-prof"></div></div>
     <div id="mdNumCard"></div>
-    <div class="md-card" id="mdDetailCard"><h3>🗂️ রেকর্ড বিস্তারিত (কোনো সারি বাদ নেই)</h3><div id="mdDetail"></div></div>`;
-
+    <div class="md-card" id="mdDetailCard"><h3>🗂️ Record Details (no rows excluded)</h3><div id="mdDetail"></div></div>`;
+  c.smartBuilt = true;
   mdRenderKpi(); mdRenderCtrl(); mdRenderPivot(); mdRenderProfiles(); mdRenderNum(); mdRenderDetail();
+}
+
+/* ---- All Data table: global search + filter boxes in the first 2 header columns ---- */
+let mdFullTimer = null;
+function mdFullDebounce(){ clearTimeout(mdFullTimer); mdFullTimer = setTimeout(mdApplyFullFilters, 200); }
+function mdBuildFull(){
+  const c = mdCtx, fu = document.getElementById('mdFull'); if(!c || !fu) return;
+  fu.innerHTML = `
+    <div class="table-search-wrap">
+      <span class="table-search-icon">🔎</span>
+      <input type="text" class="table-search-input" id="monthDataSearch" placeholder="Search anything..." value="${escapeAttr(c.fq || '')}" oninput="mdCtx.fq=this.value;mdFullDebounce()">
+    </div>
+    <div class="md-fcount" id="mdFullCount"></div>
+    <div class="raw-sheet-wrap md-table">
+      ${buildMergedSheetTableHtml(c.values, Array.isArray(c.merges) ? c.merges : [], 'MONTHDATARAW')}
+      <div class="table-no-match" style="display:none;">😕 No matching data found.</div>
+    </div>`;
+  mdSetupHeaderFilters();
+  mdApplyFullFilters();
+}
+function mdSetupHeaderFilters(){
+  const c = mdCtx, t = document.getElementById('rawSheetTable-MONTHDATARAW'); if(!t) return;
+  const hrIdx = c.a.hr || 0, rows = t.rows, sets = [new Set(), new Set()];
+  for(let i = hrIdx + 1; i < rows.length; i++){
+    const tr = rows[i]; if(!tr.hasAttribute('data-row-text')) continue;
+    for(let k = 0; k < 2; k++){
+      const td = tr.children[k]; const v = td ? td.textContent.trim() : '';
+      tr.dataset['c' + k] = v.toLowerCase();
+      if(v) sets[k].add(v);
+    }
+  }
+  const hdr = rows[hrIdx]; if(!hdr) return;
+  for(let k = 0; k < 2; k++){
+    const th = hdr.children[k]; if(!th) continue;
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.className = 'md-hf'; inp.placeholder = 'Filter...'; inp.autocomplete = 'off';
+    inp.setAttribute('list', 'mdHfList' + k); inp.value = c.hf[k] || '';
+    inp.addEventListener('click', e => e.stopPropagation());
+    inp.addEventListener('input', () => { c.hf[k] = inp.value; mdFullDebounce(); });
+    const dl = document.createElement('datalist'); dl.id = 'mdHfList' + k;
+    dl.innerHTML = [...sets[k]].sort((x, y) => x.localeCompare(y)).map(v => `<option value="${escapeAttr(v)}"></option>`).join('');
+    th.appendChild(inp); th.appendChild(dl);
+  }
+}
+function mdApplyFullFilters(){
+  const c = mdCtx, t = document.getElementById('rawSheetTable-MONTHDATARAW'); if(!c || !t) return;
+  const q = (c.fq || '').trim().toLowerCase(), f0 = (c.hf[0] || '').trim().toLowerCase(), f1 = (c.hf[1] || '').trim().toLowerCase();
+  const hrIdx = c.a.hr || 0, rows = t.rows;
+  let vis = 0, tot = 0;
+  for(let i = 0; i < rows.length; i++){
+    const tr = rows[i];
+    if(i <= hrIdx){ tr.style.display = ''; continue; }
+    if(!tr.hasAttribute('data-row-text')) continue;
+    tot++;
+    let ok = true;
+    if(q && tr.getAttribute('data-row-text').indexOf(q) === -1) ok = false;
+    if(ok && f0 && (tr.dataset.c0 || '').indexOf(f0) === -1) ok = false;
+    if(ok && f1 && (tr.dataset.c1 || '').indexOf(f1) === -1) ok = false;
+    tr.style.display = ok ? '' : 'none';
+    if(ok) vis++;
+  }
+  const nm = t.parentElement.querySelector('.table-no-match'); if(nm) nm.style.display = vis ? 'none' : 'block';
+  const cnt = document.getElementById('mdFullCount');
+  if(cnt) cnt.textContent = (q || f0 || f1) ? `Showing ${vis.toLocaleString('en-IN')} of ${tot.toLocaleString('en-IN')} rows` : '';
 }
 
 
@@ -15160,11 +15245,15 @@ function mdUpdateData(values, merges){
   if(c.sel.measure.k !== 'count' && (c.sel.measure.c >= n || !a.cols[c.sel.measure.c].isNum)) c.sel.measure = { k: 'count', c: -1 };
   c.filters = c.filters.filter(f => f.c < n);
   const tf = document.getElementById('mdTabFull');
-  if(tf) tf.textContent = '📋 সব ডাটা (' + a.rows.length.toLocaleString('en-IN') + ' সারি)';
-  const hadFocus = document.activeElement && document.activeElement.id === 'mdQ';
-  mdRenderKpi(); if(n !== prevN) mdRenderCtrl();
-  mdRenderPivot(); mdRenderProfiles(); mdRenderNum(); mdRenderDetail();
-  if(hadFocus){ const q = document.getElementById('mdQ'); if(q){ q.focus(); const l = q.value.length; q.setSelectionRange(l, l); } }
+  if(tf) tf.textContent = '📋 All Data (' + a.rows.length.toLocaleString('en-IN') + ' rows)';
+  if(c.smartBuilt){
+    const hadFocus = document.activeElement && document.activeElement.id === 'mdQ';
+    mdRenderKpi(); if(n !== prevN) mdRenderCtrl();
+    mdRenderPivot(); mdRenderProfiles(); mdRenderNum(); mdRenderDetail();
+    if(hadFocus){ const q = document.getElementById('mdQ'); if(q){ q.focus(); const l = q.value.length; q.setSelectionRange(l, l); } }
+  }
+  const fu = document.getElementById('mdFull');
+  if(fu && fu.style.display !== 'none' && Date.now() - c.lastFull > 2000) mdView('full');   // throttled; final rebuild happens when loading completes
 }
 function mdSetPartial(st){
   const bar = document.getElementById('mdPartialBar');
@@ -15172,10 +15261,10 @@ function mdSetPartial(st){
   clearTimeout(mdDoneTimer);
   const pct = st.total ? Math.min(100, Math.round(st.loaded / st.total * 100)) : 0;
   if(!st.done){
-    bar.innerHTML = `<div class="md-partial"><span class="md-spin"></span>ডাটা অল্প অল্প করে আসছে: <b>${st.loaded.toLocaleString('en-IN')} / ${st.total.toLocaleString('en-IN')} সারি</b> (${pct}%) — এখন পর্যন্ত আসা ডাটার বিশ্লেষণ দেখানো হচ্ছে
+    bar.innerHTML = `<div class="md-partial"><span class="md-spin"></span>Data is loading in parts: <b>${st.loaded.toLocaleString('en-IN')} / ${st.total.toLocaleString('en-IN')} rows</b> (${pct}%) — showing what has loaded so far
       <div class="tr"><i style="width:${Math.max(4, pct)}%"></i></div></div>`;
   }else{
-    bar.innerHTML = `<div class="md-partial ok">✅ সব ডাটা লোড সম্পূর্ণ (${mdCtx.a.rows.length.toLocaleString('en-IN')} রেকর্ড)</div>`;
+    bar.innerHTML = `<div class="md-partial ok">✅ All data loaded (${mdCtx.a.rows.length.toLocaleString('en-IN')} records)</div>`;
     mdDoneTimer = setTimeout(() => { const b = document.getElementById('mdPartialBar'); if(b) b.innerHTML = ''; }, 2500);
     const fu = document.getElementById('mdFull');
     if(fu && fu.style.display !== 'none') mdView('full');
@@ -15185,8 +15274,8 @@ function mdPartialFail(reason, sheetName, st){
   const bar = document.getElementById('mdPartialBar');
   if(!bar) return;
   if(mdCtx){ mdCtx.partial = true; }
-  bar.innerHTML = `<div class="md-partial err">⚠ লোড মাঝপথে থেমে গেছে (${st.loaded.toLocaleString('en-IN')} / ${st.total.toLocaleString('en-IN')} সারি এসেছে) — কারণ: ${escapeHtml(reason)}
-    <button class="btn" style="margin-left:10px" onclick="monthDataLoadSheetTable('RAW','${escapeAttr(sheetName)}')">↻ আবার চেষ্টা করুন</button></div>`;
+  bar.innerHTML = `<div class="md-partial err">⚠ Loading stopped midway (${st.loaded.toLocaleString('en-IN')} / ${st.total.toLocaleString('en-IN')} rows received) — Reason: ${escapeHtml(reason)}
+    <button class="btn" style="margin-left:10px" onclick="monthDataLoadSheetTable('RAW','${escapeAttr(sheetName)}')">↻ Retry</button></div>`;
 }
 
 function mdView(which){
@@ -15194,22 +15283,11 @@ function mdView(which){
   const sm = document.getElementById('mdSmart'), fu = document.getElementById('mdFull');
   const tS = document.getElementById('mdTabSmart'), tF = document.getElementById('mdTabFull');
   if(which === 'full'){
-    if(!c.fullBuilt){
-      const tid = 'rawSheetTable-MONTHDATARAW';
-      fu.innerHTML = `
-        <div class="table-search-wrap">
-          <span class="table-search-icon">🔎</span>
-          <input type="text" class="table-search-input" id="monthDataSearch" placeholder="যেকোনো তথ্য দিয়ে খুঁজুন..." oninput="filterRawSheetTable(this,'${tid}')">
-        </div>
-        <div class="raw-sheet-wrap md-table">
-          ${buildMergedSheetTableHtml(c.values, Array.isArray(c.merges) ? c.merges : [], 'MONTHDATARAW')}
-          <div class="table-no-match" style="display:none;">😕 কোনো তথ্য পাওয়া যায়নি।</div>
-        </div>`;
-      c.fullBuilt = true;
-    }
+    if(!c.fullBuilt){ mdBuildFull(); c.fullBuilt = true; c.lastFull = Date.now(); }
     sm.style.display = 'none'; fu.style.display = '';
     tF.classList.add('primary'); tS.classList.remove('primary');
   }else{
+    if(!c.smartBuilt) mdBuildSmart();
     fu.style.display = 'none'; sm.style.display = '';
     tS.classList.add('primary'); tF.classList.remove('primary');
   }
@@ -15221,13 +15299,13 @@ function mdRenderKpi(){
   if(col && col.map.size){
     const best = [...col.map.entries()].sort((x, y) => y[1] - x[1])[0];
     topTxt = formatSheetCellValue(best[0]);
-    topSub = `${mdFmt(best[1])} রেকর্ড • ${(best[1] / a.rows.length * 100).toFixed(1)}%`;
+    topSub = `${mdFmt(best[1])} records • ${(best[1] / a.rows.length * 100).toFixed(1)}%`;
   }
   const html = [
-    ['মোট রেকর্ড' + (c.partial ? ' (এখন পর্যন্ত)' : ''), mdFmt(a.rows.length), c.partial ? 'বাকি ডাটা আসছে...' : 'সব সারি গোনা হয়েছে'],
-    ['মোট কলাম', mdFmt(a.headers.length), `${a.cols.filter(x => x.isCat).length}টি গ্রুপ-যোগ্য • ${a.cols.filter(x => x.isNum).length}টি সংখ্যার`],
-    ['ইউনিক ' + (col ? col.h : ''), col ? mdFmt(col.distinct) : '-', 'বর্তমান গ্রুপ কলামে'],
-    ['সর্বাধিক: ' + (col ? col.h : ''), topTxt || '-', topSub]
+    ['Total Records' + (c.partial ? ' (so far)' : ''), mdFmt(a.rows.length), c.partial ? 'Remaining data is loading...' : 'All rows counted'],
+    ['Total Columns', mdFmt(a.headers.length), `${a.cols.filter(x => x.isCat).length} groupable • ${a.cols.filter(x => x.isNum).length} numeric`],
+    ['Unique ' + (col ? col.h : ''), col ? mdFmt(col.distinct) : '-', 'In the current group column'],
+    ['Most frequent: ' + (col ? col.h : ''), topTxt || '-', topSub]
   ].map(k => `<div class="md-kpi"><small>${escapeHtml(k[0])}</small><b>${escapeHtml(k[1])}</b><span>${escapeHtml(k[2])}</span></div>`).join('');
   document.getElementById('mdKpi').innerHTML = html;
 }
@@ -15235,21 +15313,21 @@ function mdRenderKpi(){
 function mdRenderCtrl(){
   const c = mdCtx, a = c.a, s = c.sel;
   const optCols = (selected, withNone) =>
-    (withNone ? `<option value="-1" ${selected === -1 ? 'selected' : ''}>— কিছু না —</option>` : '') +
+    (withNone ? `<option value="-1" ${selected === -1 ? 'selected' : ''}>— None —</option>` : '') +
     a.cols.map((x, i) => x.isId ? '' : `<option value="${i}" ${i === selected ? 'selected' : ''}>${escapeHtml(x.h)}</option>`).join('');
   const nums = a.cols.map((x, i) => x.isNum ? i : -1).filter(i => i >= 0);
-  const mOpt = `<option value="count" ${s.measure.k === 'count' ? 'selected' : ''}>রেকর্ড সংখ্যা (Count)</option>` +
-    nums.map(i => `<option value="sum:${i}" ${s.measure.k === 'sum' && s.measure.c === i ? 'selected' : ''}>যোগফল — ${escapeHtml(a.headers[i])}</option>` +
-                  `<option value="avg:${i}" ${s.measure.k === 'avg' && s.measure.c === i ? 'selected' : ''}>গড় — ${escapeHtml(a.headers[i])}</option>`).join('');
+  const mOpt = `<option value="count" ${s.measure.k === 'count' ? 'selected' : ''}>Record count (Count)</option>` +
+    nums.map(i => `<option value="sum:${i}" ${s.measure.k === 'sum' && s.measure.c === i ? 'selected' : ''}>Sum — ${escapeHtml(a.headers[i])}</option>` +
+                  `<option value="avg:${i}" ${s.measure.k === 'avg' && s.measure.c === i ? 'selected' : ''}>Average — ${escapeHtml(a.headers[i])}</option>`).join('');
   document.getElementById('mdCtrl').innerHTML = `
-    <label>গ্রুপ (সারি)<select class="md-sel" onchange="mdSet('group',this.value)">${optCols(s.group, false)}</select></label>
-    <label>ভাগ করুন (কলাম)<select class="md-sel" onchange="mdSet('split',this.value)">${optCols(s.split, true)}</select></label>
-    <label>পরিমাপ<select class="md-sel" onchange="mdSet('measure',this.value)">${mOpt}</select></label>
-    <label>সাজান<select class="md-sel" onchange="mdSet('sort',this.value)">
-      <option value="desc" ${c.sort === 'desc' ? 'selected' : ''}>বেশি → কম</option>
-      <option value="asc" ${c.sort === 'asc' ? 'selected' : ''}>কম → বেশি</option>
-      <option value="name" ${c.sort === 'name' ? 'selected' : ''}>নাম অনুযায়ী (A→Z)</option></select></label>
-    <button class="btn" onclick="mdDownloadPivot()">⬇ এই টেবিল Excel</button>`;
+    <label>Group (rows)<select class="md-sel" onchange="mdSet('group',this.value)">${optCols(s.group, false)}</select></label>
+    <label>Split by (column)<select class="md-sel" onchange="mdSet('split',this.value)">${optCols(s.split, true)}</select></label>
+    <label>Measure<select class="md-sel" onchange="mdSet('measure',this.value)">${mOpt}</select></label>
+    <label>Sort<select class="md-sel" onchange="mdSet('sort',this.value)">
+      <option value="desc" ${c.sort === 'desc' ? 'selected' : ''}>High → Low</option>
+      <option value="asc" ${c.sort === 'asc' ? 'selected' : ''}>Low → High</option>
+      <option value="name" ${c.sort === 'name' ? 'selected' : ''}>By name (A→Z)</option></select></label>
+    <button class="btn" onclick="mdDownloadPivot()">⬇ This table (Excel)</button>`;
 }
 
 function mdSet(what, val){
@@ -15313,12 +15391,12 @@ function mdRenderPivot(){
   entries.forEach(([, o]) => { maxTot = Math.max(maxTot, val(o.tot)); o.cells.forEach(x => { maxCell = Math.max(maxCell, val(x)); }); });
   const grandV = val(grand);
 
-  const mLabel = ms.k === 'count' ? 'সংখ্যা' : (ms.k === 'sum' ? 'যোগফল' : 'গড়');
+  const mLabel = ms.k === 'count' ? 'Count' : (ms.k === 'sum' ? 'Sum' : 'Average');
   let head = `<th>${escapeHtml(a.headers[g])}</th>`;
   colKeys.forEach(k => { head += `<th class="md-num">${escapeHtml(mdLabel(k))}</th>`; });
-  if(others) head += `<th class="md-num">অন্যান্য</th>`;
-  head += `<th class="md-num">মোট ${mLabel}</th>`;
-  if(sp < 0 && ms.k !== 'avg') head += `<th>অংশ %</th>`;
+  if(others) head += `<th class="md-num">Others</th>`;
+  head += `<th class="md-num">Total ${mLabel}</th>`;
+  if(sp < 0 && ms.k !== 'avg') head += `<th>Share %</th>`;
 
   let body = '';
   entries.forEach(([k, o], ri) => {
@@ -15336,14 +15414,14 @@ function mdRenderPivot(){
     }
     body += `<tr>${tds}</tr>`;
   });
-  let foot = `<tr class="md-total"><td>সর্বমোট</td>`;
+  let foot = `<tr class="md-total"><td>Grand Total</td>`;
   colTot.forEach(x => { foot += `<td class="md-num">${mdFmt(val(x))}</td>`; });
   foot += `<td class="md-num">${mdFmt(grandV)}</td>`;
   if(sp < 0 && ms.k !== 'avg') foot += `<td>100%</td>`;
   foot += `</tr>`;
 
   box.innerHTML = `<div class="md-scroll"><table class="md-t" id="mdPivotTable"><thead><tr>${head}</tr></thead><tbody>${body}${foot}</tbody></table></div>
-    <div class="md-note" style="margin:8px 0 0;">${entries.length.toLocaleString('en-IN')}টি গ্রুপ • সব গ্রুপ দেখানো হয়েছে${others ? ' • ভাগ করা কলামে ১৪টির বেশি মান থাকায় বাকিগুলো "অন্যান্য"-তে একত্র করা হয়েছে' : ''}</div>`;
+    <div class="md-note" style="margin:8px 0 0;">${entries.length.toLocaleString('en-IN')} groups • all groups shown${others ? ' • the split column has more than 14 values, so the rest are combined into "Others"' : ''}</div>`;
 }
 
 function mdDrill(ri, ci){
@@ -15351,7 +15429,7 @@ function mdDrill(ri, ci){
   const f = [{ c: s.group, vals: new Set([pv.rowKeys[ri]]), label: a.headers[s.group] + ' = ' + mdLabel(pv.rowKeys[ri]) }];
   if(ci >= 0 && s.split >= 0){
     if(ci < pv.colKeys.length) f.push({ c: s.split, vals: new Set([pv.colKeys[ci]]), label: a.headers[s.split] + ' = ' + mdLabel(pv.colKeys[ci]) });
-    else f.push({ c: s.split, vals: pv.others, label: a.headers[s.split] + ' = অন্যান্য' });
+    else f.push({ c: s.split, vals: pv.others, label: a.headers[s.split] + ' = Others' });
   }
   c.filters = f; c.page = 0;
   mdRenderDetail();
@@ -15363,12 +15441,12 @@ function mdRenderProfiles(){
   const c = mdCtx, a = c.a;
   c.profTop = {};
   const cats = a.cols.map((x, i) => ({ x, i })).filter(o => o.x.isCat).slice(0, 12);
-  if(!cats.length){ document.getElementById('mdProfiles').innerHTML = `<div class="md-note">গ্রুপ করার মতো কলাম পাওয়া যায়নি — নিচের রেকর্ড-তালিকা দেখুন।</div>`; return; }
+  if(!cats.length){ document.getElementById('mdProfiles').innerHTML = `<div class="md-note">No groupable columns found — see the record list below.</div>`; return; }
   document.getElementById('mdProfiles').innerHTML = cats.map(({ x, i }) => {
     const top = [...x.map.entries()].sort((p, q) => q[1] - p[1]).slice(0, 6);
     c.profTop[i] = top.map(t => t[0]);
     const mx = top[0][1];
-    return `<div><h4>${escapeHtml(x.h)} <small style="color:var(--text-muted);font-weight:400;">(${x.distinct}টি ভিন্ন মান)</small></h4>` +
+    return `<div><h4>${escapeHtml(x.h)} <small style="color:var(--text-muted);font-weight:400;">(${x.distinct} distinct values)</small></h4>` +
       top.map((t, vi) => `<div class="row" onclick="mdProfDrill(${i},${vi})"><span>${escapeHtml(formatSheetCellValue(t[0]))}</span><span>${mdFmt(t[1])} <small style="color:var(--text-muted);">(${(t[1] / x.filled * 100).toFixed(1)}%)</small></span></div>
       <div class="track"><div class="fill" style="width:${(t[1] / mx * 100).toFixed(0)}%"></div></div>`).join('') + `</div>`;
   }).join('');
@@ -15390,7 +15468,7 @@ function mdRenderNum(){
     a.rows.forEach(r => { const v = mdNum(r[i]); if(!isNaN(v)){ n++; sum += v; if(v < mn) mn = v; if(v > mxv) mxv = v; } });
     return `<tr><td>${escapeHtml(x.h)}</td><td class="md-num">${mdFmt(n)}</td><td class="md-num">${mdFmt(sum)}</td><td class="md-num">${mdFmt(n ? sum / n : 0)}</td><td class="md-num">${mdFmt(mn)}</td><td class="md-num">${mdFmt(mxv)}</td></tr>`;
   }).join('');
-  host.innerHTML = `<div class="md-card"><h3>🔢 সংখ্যার কলামের সারাংশ</h3><div class="md-scroll"><table class="md-t"><thead><tr><th>কলাম</th><th class="md-num">গণনা</th><th class="md-num">যোগফল</th><th class="md-num">গড়</th><th class="md-num">সর্বনিম্ন</th><th class="md-num">সর্বোচ্চ</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></div>`;
+  host.innerHTML = `<div class="md-card"><h3>🔢 Numeric Column Summary</h3><div class="md-scroll"><table class="md-t"><thead><tr><th>Column</th><th class="md-num">Count</th><th class="md-num">Sum</th><th class="md-num">Average</th><th class="md-num">Min</th><th class="md-num">Max</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></div>`;
 }
 
 function mdFiltered(){
@@ -15422,17 +15500,17 @@ function mdRenderDetail(){
 
   host.innerHTML = `
     <div class="md-ctrl">
-      <label>খুঁজুন<input class="md-inp" id="mdQ" placeholder="যেকোনো তথ্য..." value="${escapeAttr(c.q)}" oninput="mdSearch(this.value)"></label>
-      <label>প্রতি পাতায়<select class="md-sel" onchange="mdPageSize(this.value)">${[25, 50, 100, 200].map(n => `<option ${n === c.pageSize ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
-      ${c.filters.length ? `<button class="btn" onclick="mdClearFilters()">✕ সব ফিল্টার সরান</button>` : ''}
+      <label>Search<input class="md-inp" id="mdQ" placeholder="Search anything..." value="${escapeAttr(c.q)}" oninput="mdSearch(this.value)"></label>
+      <label>Rows per page<select class="md-sel" onchange="mdPageSize(this.value)">${[25, 50, 100, 200].map(n => `<option ${n === c.pageSize ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      ${c.filters.length ? `<button class="btn" onclick="mdClearFilters()">✕ Clear all filters</button>` : ''}
     </div>
     <div>${chips}</div>
-    <div class="md-note" style="margin:0 0 8px;">মোট ${a.rows.length.toLocaleString('en-IN')}টির মধ্যে <b>${idx.length.toLocaleString('en-IN')}</b>টি রেকর্ড মিলেছে</div>
-    <div class="md-scroll"><table class="md-t"><thead><tr>${head}</tr></thead><tbody>${body || `<tr><td colspan="${a.headers.length + 1}">কোনো রেকর্ড মেলেনি</td></tr>`}</tbody></table></div>
+    <div class="md-note" style="margin:0 0 8px;"><b>${idx.length.toLocaleString('en-IN')}</b> of ${a.rows.length.toLocaleString('en-IN')} records matched</div>
+    <div class="md-scroll"><table class="md-t"><thead><tr>${head}</tr></thead><tbody>${body || `<tr><td colspan="${a.headers.length + 1}">No records matched</td></tr>`}</tbody></table></div>
     <div class="md-pager">
-      <button class="btn" ${c.page <= 0 ? 'disabled' : ''} onclick="mdPage(-1)">‹ আগের</button>
-      <span>পাতা ${c.page + 1} / ${pages}</span>
-      <button class="btn" ${c.page >= pages - 1 ? 'disabled' : ''} onclick="mdPage(1)">পরের ›</button>
+      <button class="btn" ${c.page <= 0 ? 'disabled' : ''} onclick="mdPage(-1)">‹ Previous</button>
+      <span>Page ${c.page + 1} / ${pages}</span>
+      <button class="btn" ${c.page >= pages - 1 ? 'disabled' : ''} onclick="mdPage(1)">Next ›</button>
     </div>`;
   const q = document.getElementById('mdQ');
   if(q && document.activeElement && document.activeElement.id === 'mdQ'){ /* keep focus */ }
@@ -15454,7 +15532,7 @@ function mdClearFilters(){ mdCtx.filters = []; mdCtx.q = ''; mdCtx.page = 0; mdR
 
 function mdDownloadAll(){
   const c = mdCtx; if(!c) return;
-  if(c.partial){ alert('ডাটা এখনও লোড হচ্ছে — সম্পূর্ণ হলে ডাউনলোড করুন।'); return; }
+  if(c.partial){ alert('Data is still loading — please download once it is complete.'); return; }
   const aoa = c.values.map(r => r.map(v => formatSheetCellValue(v)));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), String(c.sheetName || 'Data').slice(0, 31));
@@ -15493,7 +15571,7 @@ async function monthDataLoadSheetList(section){
   if(!cfg.url || cfg.url.indexOf('PASTE_') === 0){
     tabsWrap.innerHTML = '';
     const constName = section === 'PARAM' ? 'MONTHDATA_PARAM_WEB_APP_URL' : 'MONTHDATA_RAW_WEB_APP_URL';
-    tableWrap.innerHTML = `<div class="empty-state"><b>⚙️ Apps Script URL সেট করা হয়নি</b><br>এই সেকশনের জন্য নিজের Google Sheet-এ Apps Script ডিপ্লয় করে, সেই URL কোডে <code>${constName}</code>-এর জায়গায় বসাতে হবে।</div>`;
+    tableWrap.innerHTML = `<div class="empty-state"><b>⚙️ Apps Script URL is not set</b><br>Deploy an Apps Script in your Google Sheet for this section and put its URL in the code at <code>${constName}</code>.</div>`;
     return;
   }
 
@@ -15502,8 +15580,8 @@ async function monthDataLoadSheetList(section){
     return;
   }
 
-  tabsWrap.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">মাসের তালিকা লোড হচ্ছে...</span>`;
-  tableWrap.innerHTML = `${syncLoaderHtml('ডাটা সিঙ্ক হচ্ছে')}`;
+  tabsWrap.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">Loading month list...</span>`;
+  tableWrap.innerHTML = `${syncLoaderHtml('Syncing data', ['🔗 Connecting to server', '📥 Fetching live data', '🧮 Organising data'])}`;
 
   try{
     const data = await monthDataFetchList(section);
@@ -15513,7 +15591,7 @@ async function monthDataLoadSheetList(section){
   }catch(err){
     console.error('Month wise data: sheet list fetch failed', err);
     tabsWrap.innerHTML = '';
-    tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">মাসের তালিকা আনতে ব্যর্থ!</b><br>Apps Script URL বা কানেকশন চেক করুন।<br><button class="btn" onclick="monthDataRefreshList('${section}')">↻ আবার চেষ্টা করুন</button></div>`;
+    tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">Failed to load the month list!</b><br>Check the Apps Script URL or your connection.<br><button class="btn" onclick="monthDataRefreshList('${section}')">↻ Retry</button></div>`;
   }
 }
 
@@ -15532,7 +15610,7 @@ function monthDataRenderSheetTabs(section, sheets){
   if(!sheets || !sheets.length){
     tabsWrap.innerHTML = '';
     const tableWrap = document.getElementById('monthDataTableWrap');
-    if(tableWrap) tableWrap.innerHTML = `<div class="empty-state"><b>কোনো শিট পাওয়া যায়নি</b></div>`;
+    if(tableWrap) tableWrap.innerHTML = `<div class="empty-state"><b>No sheets found</b></div>`;
     return;
   }
   const active = (monthDataActiveSheet[section] && sheets.includes(monthDataActiveSheet[section]))
@@ -15555,7 +15633,7 @@ async function monthDataLoadSheetTable(section, sheetName){
   const cfg = monthDataConfig(section);
   const tableWrap = document.getElementById('monthDataTableWrap');
   if(!tableWrap) return;
-  tableWrap.innerHTML = `${syncLoaderHtml('"' + escapeHtml(sheetName) + '" লোড হচ্ছে')}`;
+  tableWrap.innerHTML = `${syncLoaderHtml('"' + escapeHtml(sheetName) + '" is loading', ['🔗 Connecting to server', '📥 Fetching live data', '🧮 Organising data'])}`;
 
   try{
     if(section === 'RAW'){
@@ -15573,14 +15651,14 @@ async function monthDataLoadSheetTable(section, sheetName){
       const data = await p;
       const vals = Array.isArray(data.values) ? data.values : [];
       if(!vals.length){
-        tableWrap.innerHTML = `<div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b></div>`;
+        tableWrap.innerHTML = `<div class="empty-state"><b>No data found</b></div>`;
       }
       return;
     }
     const data = await monthDataFetchData(section, sheetName);
     const values = Array.isArray(data.values) ? data.values : [];
     if(!values.length){
-      tableWrap.innerHTML = `<div class="empty-state"><b>কোনো ডাটা পাওয়া যায়নি</b></div>`;
+      tableWrap.innerHTML = `<div class="empty-state"><b>No data found</b></div>`;
       return;
     }
     const searchTargetId = section === 'PARAM' ? 'monthDataParamTable' : 'rawSheetTable-MONTHDATARAW';
@@ -15590,22 +15668,22 @@ async function monthDataLoadSheetTable(section, sheetName){
     tableWrap.innerHTML = `
       <div class="table-search-wrap">
         <span class="table-search-icon">🔎</span>
-        <input type="text" class="table-search-input" id="monthDataSearch" placeholder="যেকোনো তথ্য দিয়ে খুঁজুন..." oninput="filterRawSheetTable(this,'${searchTargetId}')">
+        <input type="text" class="table-search-input" id="monthDataSearch" placeholder="Search anything..." oninput="filterRawSheetTable(this,'${searchTargetId}')">
       </div>
       <div class="raw-sheet-wrap md-table">
         ${xlsxDownloadBtnHtml(searchTargetId, sheetName)}
         ${tableHtml}
-        <div class="table-no-match" style="display:none;">😕 কোনো তথ্য পাওয়া যায়নি।</div>
+        <div class="table-no-match" style="display:none;">😕 No matching data found.</div>
       </div>`;
   }catch(err){
     console.error('Month wise data: table fetch failed', err);
-    const reason = (err && err.name === 'AbortError') ? 'সময় শেষ (Timeout) — শিটটি খুব বড় হতে পারে' : (err && err.message ? err.message : String(err));
+    const reason = (err && err.name === 'AbortError') ? 'Timed out — the sheet may be very large' : (err && err.message ? err.message : String(err));
     const stF = monthDataProg['RAW|' + sheetName];
     if(section === 'RAW' && stF && stF.values.length && document.getElementById('mdPartialBar')){
       mdPartialFail(reason, sheetName, stF);
       return;
     }
-    tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">ডাটা আনতে ব্যর্থ!</b><br><small style="opacity:.8;">কারণ: ${escapeHtml(reason)}</small><br><button class="btn" onclick="monthDataLoadSheetTable('${section}','${escapeAttr(sheetName)}')">↻ আবার চেষ্টা করুন</button></div>`;
+    tableWrap.innerHTML = `<div class="empty-state"><b style="color:var(--need);">Failed to load data!</b><br><small style="opacity:.8;">Reason: ${escapeHtml(reason)}</small><br><button class="btn" onclick="monthDataLoadSheetTable('${section}','${escapeAttr(sheetName)}')">↻ Retry</button></div>`;
   }
 }
 
