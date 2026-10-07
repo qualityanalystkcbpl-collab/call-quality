@@ -4743,6 +4743,14 @@ body:has(#panel-MONTHDATA.active)::before{animation:none!important;}
 .md-hf:focus{border-color:var(--agent);}
 .md-fcount{font-size:12px;color:var(--text-muted);margin:4px 2px 6px;min-height:0;}
 .md-fcount:empty{display:none;}
+/* LOB Wise Data month filter */
+.lob-filterbar{display:flex;flex-direction:column;gap:8px;margin:10px 0 12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+.lob-fb-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.lob-fb-lbl{font-size:12px;font-weight:600;color:var(--text-muted);min-width:118px;}
+.lob-chip{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s;}
+.lob-chip:hover{border-color:var(--agent);}
+.lob-chip.on{background:var(--agent-dim);color:var(--agent);border-color:var(--agent);}
+.lob-chip.preset.on{background:var(--agent);color:#04120f;}
 </style>
 </head>
 <body>
@@ -16085,6 +16093,66 @@ function downloadLobDataPDF(){
   doc.save(`LOB_Wise_Data_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
+/* ---------- LOB Wise Data: month filter (choose months → AVERAGE & GRAND TOTAL recalculate for them) ---------- */
+let lobDataRaw = null;     // { hdr:[month headers], rows:[[LOB, v1, v2...]] } straight from the sheet
+let lobDataSel = null;     // Set of selected month column indexes (null = all)
+
+function lobDataRealIdx(){
+  return lobDataRaw.hdr.map((h, i) => i).filter(i => !/average|avg/i.test(String(lobDataRaw.hdr[i] || '')));
+}
+function lobDataSelSet(){ return lobDataSel ? lobDataSel : new Set(lobDataRealIdx()); }
+function lobDataComputeView(){
+  const real = lobDataRealIdx();
+  const picked = lobDataSel ? real.filter(i => lobDataSel.has(i)) : real;
+  const use = picked.length ? picked : real;
+  const hdr = use.map(i => lobDataRaw.hdr[i]);
+  const rows = lobDataRaw.rows.map(r => [r[0], ...use.map(i => r[i + 1])]);
+  const a = lobDataWithAutoAverage(hdr, rows);
+  if(use.length < real.length) a.monthHeaders[a.monthHeaders.length - 1] = 'AVERAGE (' + use.length + ' month' + (use.length > 1 ? 's' : '') + ')';
+  return { monthHeaders: a.monthHeaders, rows: lobDataWithGrandTotal(a.monthHeaders, a.rows) };
+}
+function lobDataPresets(){
+  const real = lobDataRealIdx(), h = lobDataRaw.hdr, out = [{ key: 'all', label: 'All Months', idx: real }];
+  if(real.length > 3){
+    const A = real.slice(0, 3), B = real.slice(3);
+    out.push({ key: 'a', label: h[A[0]] + ' – ' + h[A[A.length - 1]], idx: A });
+    out.push({ key: 'b', label: h[B[0]] + ' – ' + h[B[B.length - 1]], idx: B });
+  }
+  return out;
+}
+function lobDataFilterBarHtml(){
+  if(!lobDataRaw) return '';
+  const real = lobDataRealIdx(), sel = lobDataSelSet();
+  const same = idx => idx.length === sel.size && idx.every(i => sel.has(i));
+  const presets = lobDataPresets().map(p =>
+    `<button class="lob-chip preset ${same(p.idx) ? 'on' : ''}" onclick="lobDataPreset('${p.key}')">${escapeHtml(p.label)}</button>`).join('');
+  const chips = real.map(i =>
+    `<button class="lob-chip ${sel.has(i) ? 'on' : ''}" onclick="lobDataToggle(${i})">${sel.has(i) ? '✓ ' : ''}${escapeHtml(lobDataRaw.hdr[i])}</button>`).join('');
+  return `<div class="lob-fb-row"><span class="lob-fb-lbl">🎯 Quick average:</span>${presets}</div>
+          <div class="lob-fb-row"><span class="lob-fb-lbl">📅 Pick months:</span>${chips}</div>`;
+}
+function lobDataToggle(i){
+  const sel = new Set(lobDataSelSet());
+  if(sel.has(i)){ if(sel.size === 1) return; sel.delete(i); } else sel.add(i);   // keep at least one month
+  lobDataSel = sel.size === lobDataRealIdx().length ? null : sel;
+  lobDataApplyFilter();
+}
+function lobDataPreset(key){
+  const p = lobDataPresets().find(x => x.key === key); if(!p) return;
+  lobDataSel = key === 'all' ? null : new Set(p.idx);
+  lobDataApplyFilter();
+}
+function lobDataApplyFilter(){
+  if(!lobDataRaw) return;
+  const { monthHeaders, rows } = lobDataComputeView();
+  lobDataLastMonthHeaders = monthHeaders; lobDataLastRows = rows;     // Excel / PDF export what is on screen
+  const bar = document.getElementById('lobDataFilterBar'), host = document.getElementById('lobDataTableHost');
+  if(bar) bar.innerHTML = lobDataFilterBarHtml();
+  if(host) host.innerHTML = buildLobDataTableHtml(monthHeaders, rows, 'LOB');
+  drawLobDataChart(monthHeaders, rows);
+  drawLobDataAvgChart(monthHeaders, rows);
+}
+
 async function renderLobDataPanel(){
   const panel = document.getElementById('panel-LOBDATA');
   if(!panel) return;
@@ -16134,8 +16202,9 @@ async function renderLobDataPanel(){
     const headers = data[0];
     const rawMonthHeaders = headers.slice(1);
     const rawRows = data.slice(1).filter(r => String(r[0] || '').trim());
-    const { monthHeaders, rows: avgRows } = lobDataWithAutoAverage(rawMonthHeaders, rawRows); // auto-fills AVERAGE column
-    const rows = lobDataWithGrandTotal(monthHeaders, avgRows); // auto-adds GRAND TOTAL (average of averages)
+    lobDataRaw = { hdr: rawMonthHeaders, rows: rawRows };
+    lobDataSel = null;                                   // null = all months
+    const { monthHeaders, rows } = lobDataComputeView(); // AVERAGE + GRAND TOTAL for the selected months
     lobDataLastMonthHeaders = monthHeaders;
     lobDataLastRows = rows;
 
@@ -16171,7 +16240,8 @@ async function renderLobDataPanel(){
         <div class="lobdata-datetime" id="lobDataDateTime"></div>
       </div>
       ${LOBDATA_ACCESS_TICKER}
-      ${buildLobDataTableHtml(monthHeaders, rows, 'LOB')}
+      <div id="lobDataFilterBar" class="lob-filterbar">${lobDataFilterBarHtml()}</div>
+      <div id="lobDataTableHost">${buildLobDataTableHtml(monthHeaders, rows, 'LOB')}</div>
       <div class="lobdata-scroll-hint" onclick="document.getElementById('lobDataChart')?.closest('.chart-box')?.scrollIntoView({behavior:'smooth', block:'start'})">
         <span>Scroll down to see the charts &amp; table</span>
         <span class="lobdata-scroll-arrow">⌄</span>
