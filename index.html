@@ -15821,20 +15821,30 @@ async function monthDataLoadSheetTable(section, sheetName){
   try{
     if(section === 'RAW'){
       const key = 'RAW|' + sheetName;
+      // Create the progress object BEFORE the fetch starts (the fetch may first check the browser cache,
+      // so it can no longer be relied on to create it synchronously).
+      const st = monthDataProg[key] = monthDataProg[key] || { values: [], merges: [], total: 0, loaded: 0, done: false, subs: [] };
+      const paint = s2 => {
+        const w = document.getElementById('monthDataTableWrap');
+        if(!w || monthDataSection !== 'RAW' || monthDataActiveSheet.RAW !== sheetName) return;
+        mdApplyPartial(w, s2, sheetName);
+      };
+      st.subs = [ paint ];
       const p = monthDataFetchData(section, sheetName);
-      const st = monthDataProg[key];
-      if(st){
-        st.subs = [ s2 => {
-          const w = document.getElementById('monthDataTableWrap');
-          if(!w || monthDataSection !== 'RAW' || monthDataActiveSheet.RAW !== sheetName) return;
-          mdApplyPartial(w, s2, sheetName);
-        } ];
-        if(st.values.length) st.subs[0](st);       // যা আগেই এসে গেছে সাথে সাথে দেখাও
-      }
+      if(st.values.length) paint(st);       // show what has already arrived straight away
       const data = await p;
       const vals = Array.isArray(data.values) ? data.values : [];
       if(!vals.length){
         tableWrap.innerHTML = `<div class="empty-state"><b>No data found</b></div>`;
+        return;
+      }
+      // Final paint (covers the cached / single-piece case where no progress callback ran)
+      const stNow = monthDataProg[key];
+      if(stNow){
+        if(!stNow.subs || !stNow.subs.length) stNow.subs = [ paint ];
+        if(!stNow.values.length){ stNow.values = vals; stNow.merges = data.merges || []; stNow.total = stNow.loaded = vals.length; }
+        stNow.done = true;
+        paint(stNow);
       }
       return;
     }
