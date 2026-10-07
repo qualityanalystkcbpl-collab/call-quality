@@ -14901,9 +14901,9 @@ let monthDataForceFresh = false;
 
 async function monthDataFetchJson(url){
   let lastErr = null;
-  for(let attempt = 1; attempt <= 2; attempt++){
+  for(let attempt = 1; attempt <= 3; attempt++){
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 60000);
+    const timer = setTimeout(() => ctrl.abort(), 120000);
     try{
       const res = await fetch(url, { signal: ctrl.signal });
       const txt = await res.text();
@@ -14930,10 +14930,10 @@ function monthDataFetchList(section){
 const monthDataProg = {};   // key -> { values, merges, total, loaded, done, subs:[] }
 function monthDataNotify(st){ (st.subs || []).slice().forEach(fn => { try{ fn(st); }catch(e){ console.error(e); } }); }
 async function monthDataFetchChunked(url, sheet, key){
-  const CH = 1500, enc = encodeURIComponent(sheet), fresh = monthDataForceFresh ? '&nocache=1' : '';
-  const mk = st => `${url}?action=data&sheet=${enc}&from=${st}&count=${CH}${fresh}`;
+  const CH = 1500, FIRST = 300, enc = encodeURIComponent(sheet), fresh = monthDataForceFresh ? '&nocache=1' : '';
+  const mk = (st, n) => `${url}?action=data&sheet=${enc}&from=${st}&count=${n || CH}${fresh}`;
   const st = monthDataProg[key] = { values: [], merges: [], total: 0, loaded: 0, done: false, subs: (monthDataProg[key] && monthDataProg[key].subs) || [] };
-  const first = await monthDataFetchJson(mk(1));
+  const first = await monthDataFetchJson(mk(1, FIRST));   // small first piece so rows show quickly
   if(first.totalRows == null || !Array.isArray(first.values)){      // পুরোনো স্ক্রিপ্ট
     st.values = Array.isArray(first.values) ? first.values : [];
     st.merges = first.merges || [];
@@ -14945,7 +14945,7 @@ async function monthDataFetchChunked(url, sheet, key){
   st.total = first.totalRows; st.loaded = st.values.length;
   monthDataNotify(st);
   const starts = [];
-  for(let p = 1 + CH; p <= st.total; p += CH) starts.push(p);
+  for(let p = 1 + FIRST; p <= st.total; p += CH) starts.push(p);
   const parts = new Array(starts.length), ready = [];
   let next = 0, emitted = 0;
   const flush = () => {
