@@ -7605,8 +7605,21 @@ function autoFormatCellValue(val, columnName) {
   return val;
 }
 /* ===================== STORAGE & TOAST LOGIC (LIVE GOOGLE SHEETS) ===================== */
+/* এই ৪টা key সরাসরি Supabase-এর `webpage_settings` টেবিল থেকে পড়া/সেভ হয় (Google Sheet / Apps Script ছাড়া)।
+   বাকি সব key (helpList ইত্যাদি) আগের মতোই Apps Script (WEB_APP_URL) দিয়ে যায়। */
+const SB_SETTINGS_KEYS = ['ticker', 'updates', 'banners', 'loginPopup'];
+const SB_SETTINGS_TABLE = 'webpage_settings';
+
 async function storageGet(key){
   try{
+    if(SB_SETTINGS_KEYS.indexOf(key) !== -1){
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/${SB_SETTINGS_TABLE}?select=value&key=eq.${encodeURIComponent(key)}&limit=1`,
+        { headers: SB_HEADERS, cache: 'no-store' });
+      if(!res.ok) throw new Error('Supabase read ' + res.status);
+      const rows = await res.json();
+      return rows.length && rows[0].value ? JSON.parse(rows[0].value) : null;
+    }
     const res = await fetch(`${WEB_APP_URL}?action=getSettings&key=${encodeURIComponent(key)}`);
     const data = await res.json();
     return data && data.value ? JSON.parse(data.value) : null;
@@ -7617,6 +7630,15 @@ async function storageGet(key){
 }
 async function storageSet(key, value){
   try{
+    if(SB_SETTINGS_KEYS.indexOf(key) !== -1){
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/${SB_SETTINGS_TABLE}?on_conflict=key`,
+        { method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }, SB_HEADERS),
+          body: JSON.stringify([{ key: key, value: JSON.stringify(value) }]) });
+      if(!res.ok){ console.error('Supabase save failed', res.status, await res.text()); return false; }
+      return true;
+    }
     const res = await fetch(`${WEB_APP_URL}?action=saveSettings`, {
       method: 'POST',
       body: JSON.stringify({ key: key, value: JSON.stringify(value) })
