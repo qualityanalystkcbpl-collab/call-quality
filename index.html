@@ -14512,6 +14512,79 @@ function buildAns3SecTableHtml(monthHeaders, rows, label){
       </table>
     </div>`;
 }
+/* ---------- Answered within 3 Sec: month filter (AVERAGE recalculates for the selected months) ---------- */
+let ans3Raw = null;        // { sub, label, headers:[month headers incl. AVERAGE], rows }
+let ans3SelLabels = null;  // Set of selected month labels (null = all months)
+
+function ans3RealIdx(){
+  return ans3Raw.headers.map((h, i) => i).filter(i => !/average|avg/i.test(String(ans3Raw.headers[i] || '')));
+}
+function ans3Num(v){
+  const n = parseFloat(String(v == null ? '' : v).replace(/[,%\s]/g, ''));
+  return isNaN(n) ? NaN : n;
+}
+function ans3SelectedIdx(){
+  const real = ans3RealIdx();
+  if(!ans3SelLabels) return real;
+  const picked = real.filter(i => ans3SelLabels.has(String(ans3Raw.headers[i])));
+  return picked.length ? picked : real;
+}
+function ans3ComputeView(){
+  const real = ans3RealIdx(), use = ans3SelectedIdx();
+  if(use.length === real.length) return { monthHeaders: ans3Raw.headers, rows: ans3Raw.rows };   // all months = exactly as in the sheet
+  const hdr = use.map(i => ans3Raw.headers[i]);
+  hdr.push('AVERAGE (' + use.length + ' month' + (use.length > 1 ? 's' : '') + ')');
+  const rows = ans3Raw.rows.map(r => {
+    const vals = use.map(i => r[i + 1]);
+    const nums = vals.map(ans3Num).filter(n => !isNaN(n));
+    let avg = '-';
+    if(nums.length){
+      const pct = vals.some(v => String(v == null ? '' : v).indexOf('%') !== -1);
+      avg = (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2) + (pct ? '%' : '');
+    }
+    return [r[0], ...vals, avg];
+  });
+  return { monthHeaders: hdr, rows };
+}
+function ans3Presets(){
+  const real = ans3RealIdx(), h = ans3Raw.headers, out = [{ key: 'all', label: 'All Months', idx: real }];
+  if(real.length > 3){
+    const A = real.slice(0, 3), B = real.slice(3);
+    out.push({ key: 'a', label: h[A[0]] + ' – ' + h[A[A.length - 1]], idx: A });
+    out.push({ key: 'b', label: h[B[0]] + ' – ' + h[B[B.length - 1]], idx: B });
+  }
+  return out;
+}
+function ans3FilterBarHtml(){
+  if(!ans3Raw) return '';
+  const real = ans3RealIdx(), sel = new Set(ans3SelectedIdx());
+  const same = idx => idx.length === sel.size && idx.every(i => sel.has(i));
+  const presets = ans3Presets().map(p =>
+    `<button class="lob-chip preset ${same(p.idx) ? 'on' : ''}" onclick="ans3Preset('${p.key}')">${escapeHtml(p.label)}</button>`).join('');
+  const chips = real.map(i =>
+    `<button class="lob-chip ${sel.has(i) ? 'on' : ''}" onclick="ans3Toggle(${i})">${sel.has(i) ? '✓ ' : ''}${escapeHtml(ans3Raw.headers[i])}</button>`).join('');
+  return `<div class="lob-fb-row"><span class="lob-fb-lbl">🎯 Quick average:</span>${presets}</div>
+          <div class="lob-fb-row"><span class="lob-fb-lbl">📅 Pick months:</span>${chips}</div>`;
+}
+function ans3Toggle(i){
+  const sel = new Set(ans3SelectedIdx());
+  if(sel.has(i)){ if(sel.size === 1) return; sel.delete(i); } else sel.add(i);   // keep at least one month
+  ans3SelLabels = sel.size === ans3RealIdx().length ? null : new Set([...sel].map(k => String(ans3Raw.headers[k])));
+  ans3ApplyFilter();
+}
+function ans3Preset(key){
+  const p = ans3Presets().find(x => x.key === key); if(!p) return;
+  ans3SelLabels = key === 'all' ? null : new Set(p.idx.map(k => String(ans3Raw.headers[k])));
+  ans3ApplyFilter();
+}
+function ans3ApplyFilter(){
+  if(!ans3Raw) return;
+  const v = ans3ComputeView();
+  const bar = document.getElementById('ans3FilterBar'), host = document.getElementById('ans3TableHost');
+  if(bar) bar.innerHTML = ans3FilterBarHtml();
+  if(host) host.innerHTML = buildAns3SecTableHtml(v.monthHeaders, v.rows, ans3Raw.label);
+}
+
 async function renderAnswered3SecPanel(sub){
   sub = sub || ans3secSubTab || 'CATV';
   ans3secSubTab = sub;
@@ -14543,6 +14616,8 @@ async function renderAnswered3SecPanel(sub){
     const headers = data[0];
     const rows = data.slice(1);
     const monthHeaders = headers.slice(1);
+    ans3Raw = { sub, label, headers: monthHeaders, rows };     // selected months (if any) are kept when switching CATV / BB Tech / BB Renewal
+    const view = ans3ComputeView();
 
     panel.innerHTML = `
       <div class="panel-header">
@@ -14553,7 +14628,8 @@ async function renderAnswered3SecPanel(sub){
         <button class="btn primary" onclick="renderAnswered3SecPanel('${sub}')">↻ Refresh Live Data</button>
       </div>
       ${ans3secSubTabsHtml(sub)}
-      ${buildAns3SecTableHtml(monthHeaders, rows, label)}
+      <div id="ans3FilterBar" class="lob-filterbar">${ans3FilterBarHtml()}</div>
+      <div id="ans3TableHost">${buildAns3SecTableHtml(view.monthHeaders, view.rows, label)}</div>
     `;
   }catch(err){
     console.error(err);
