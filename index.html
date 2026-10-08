@@ -9493,16 +9493,15 @@ function aaNavLabel(el){
 function aaCatalog(){
   aaAssignNavIds();
   const seen = new Set(), out = [];
-  document.querySelectorAll('.sidebar .nav-section').forEach(sec => {
-    if(sec.classList.contains('admin-only') || sec.classList.contains('superadmin-only')) return;
-    const group = ((sec.querySelector('.nav-label') || {}).textContent || 'Menu').trim();
-    sec.querySelectorAll('.nav-item').forEach(el => {
-      if(el.classList.contains('admin-only') || el.classList.contains('superadmin-only')) return;
-      const id = el.dataset.navId;
-      if(!id || id === 'HOME' || seen.has(id)) return;
-      seen.add(id);
-      out.push({ id, label: aaNavLabel(el), group });
-    });
+  document.querySelectorAll('.sidebar .nav-item').forEach(el => {
+    if(el.closest('.admin-only:not(.agent-only), .superadmin-only, .sql-control-nav') && !el.classList.contains('agent-only')) return;   // admin-only items are never shown to agents
+    if(el.classList.contains('admin-only') || el.classList.contains('superadmin-only')) return;
+    const id = el.dataset.navId;
+    if(!id || id === 'HOME' || seen.has(id)) return;
+    seen.add(id);
+    const sec = el.closest('.nav-section');
+    const lbl = sec && sec.querySelector('.nav-label');
+    out.push({ id, label: aaNavLabel(el), group: lbl ? lbl.textContent.trim() : 'Quick links' });
   });
   return out;
 }
@@ -9589,7 +9588,7 @@ function aaShellHtml(){
     <th></th><th>ID</th><th>Agent</th><th>Process</th><th>Status</th><th>Sidebar access</th><th>Popup</th><th></th>
   </tr></thead><tbody id="aaBody"><tr><td colspan="8">Loading...</td></tr></tbody></table></div>
   <div class="aa-bulk">
-    <div style="font-weight:700;margin-bottom:6px;">📦 Bulk — উপরে যাদের টিক দিয়েছেন তাদের সবার জন্য</div>
+    <div style="font-weight:700;margin-bottom:6px;">📦 Bulk — উপরে যাদের টিক দিয়েছেন তাদের সবার জন্য <span id="aaBulkInfo" class="aa-pill aa-blue" style="margin-left:6px;">0 agent selected</span></div>
     <div class="aa-grp">Sidebar items (যেগুলো add/remove করতে চান সেগুলো টিক দিন)</div>
     <div id="aaBulkNav"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -9661,17 +9660,21 @@ function aaRenderTable(){
   const rows = aaVisibleRows();
   body.innerHTML = rows.length ? rows.map(r => {
     const n = r.hidden_nav.length;
+    const catMap = aaCatMap();
+    const tip = r.hidden_nav.map(id => catMap[id] || id).join(', ');
     const popup = r.popup_mode === 'custom' ? '<span class="aa-pill aa-blue">Custom</span>' : r.popup_mode === 'off' ? '<span class="aa-pill aa-red">Off</span>' : '<span class="aa-pill">Default</span>';
     return `<tr>
       <td><input type="checkbox" ${aaSelected.has(r.employee_id) ? 'checked' : ''} data-id="${escapeAttr(r.employee_id)}" onchange="aaToggleSel(this.dataset.id,this.checked)"></td>
       <td class="mono">${escapeHtml(r.employee_id)}</td><td>${escapeHtml(r.agent_name)}</td><td>${escapeHtml(r.process)}</td><td>${escapeHtml(r.status)}</td>
-      <td>${n ? `<span class="aa-pill aa-amber">${n} hidden</span>` : '<span class="aa-pill aa-green">Full access</span>'}</td>
+      <td>${n ? `<span class="aa-pill aa-amber" title="${escapeAttr(tip)}">${n} hidden</span>` : '<span class="aa-pill aa-green">Full access</span>'}</td>
       <td>${popup}</td>
       <td><button class="btn small" data-id="${escapeAttr(r.employee_id)}" onclick="aaOpenEdit(this.dataset.id)">Edit</button></td></tr>`;
   }).join('') : '<tr><td colspan="8">কোনো agent পাওয়া যায়নি।</td></tr>';
   document.getElementById('aaCount').textContent = `${rows.length} / ${aaRows.length} agents • ${aaSelected.size} selected`;
+  const bi = document.getElementById('aaBulkInfo'); if(bi) bi.textContent = `${aaSelected.size} agent selected`;
 }
 function aaToggleSel(id, on){ if(on) aaSelected.add(id); else aaSelected.delete(id); aaRenderTable(); }
+function aaCatMap(){ const m = {}; aaCatalog().forEach(c => { m[c.id] = c.label; }); return m; }
 function aaSelectVisible(on){ aaVisibleRows().forEach(r => on ? aaSelected.add(r.employee_id) : aaSelected.delete(r.employee_id)); if(!on) aaSelected.clear(); aaRenderTable(); }
 function aaChecked(containerId){ return Array.from(document.querySelectorAll('#' + containerId + ' input:checked')).map(i => i.value); }
 
