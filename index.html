@@ -9526,7 +9526,11 @@ function aaCatalog(){
     out.push({ id, label: aaNavLabel(el), group: lbl ? lbl.textContent.trim() : 'Quick links' });
   });
   HOME_SECTION_ACCESS.forEach(h => out.push({ id: h.id, label: h.label, group: 'Home Page Sections' }));   // CATV / BB Tech / BB Renewal parts of the Home page
-  return out;
+  /* Items that get their OWN separate access box (shown first in every checklist: Edit window, Bulk, New agent template) */
+  const SPECIAL = ['parameter-wise-fail-count-live', 'ANS3SEC', 'AIINSIGHT', 'HOME-CATV', 'HOME-BBTECH', 'HOME-BBRENEWAL'];
+  const special = SPECIAL.map(id => out.find(c => c.id === id)).filter(Boolean)
+    .map(c => Object.assign({}, c, { group: '⭐ Special Access — আলাদা অ্যাক্সেস' }));
+  return special.concat(out.filter(c => !SPECIAL.includes(c.id)));
 }
 
 /* ---- logged-in agent: load own row, hide sidebar items, custom popup ---- */
