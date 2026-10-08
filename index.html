@@ -7428,6 +7428,7 @@ let aaMyHidden = new Set();      // sidebar item ids hidden for the logged-in ag
 const LOB_LIST = [['CATV','CATV'],['BBTECH','BB Tech Support'],['BBRENEWAL','BB Renewal']];
 const SPECIAL_ACCESS_ITEMS = [].concat(
   LOB_LIST.map(([k,n]) => ({ id: 'PWFC-' + k, label: 'Parameter Wise Fail Count › ' + n, group: '⭐ Parameter Wise Fail Count (LIVE)' })),
+  LOB_LIST.map(([k,n]) => ({ id: 'FATAL-' + k, label: 'FATAL This Month › ' + n, group: '⭐ 🚨 FATAL This Month (LIVE)' })),
   LOB_LIST.map(([k,n]) => ({ id: 'ANS3-' + k, label: 'Answered Within 3 Sec › ' + n, group: '⭐ Answered Within 3 Sec (Month wise)' })),
   [{ id: 'AIINSIGHT', label: '🤖 Get feedback from AI Agent', group: '⭐ 🤖 Get feedback from AI Agent' }],
   LOB_LIST.reduce((acc, [k,n]) => acc.concat([['SCORE','Score'],['CHARTS','Charts'],['TABLE','Table']].map(([p,pn]) =>
@@ -7437,6 +7438,7 @@ const SPECIAL_ACCESS_ITEMS = [].concat(
 const AA_MIGRATE = {
   'parameter-wise-fail-count-live': LOB_LIST.map(([k]) => 'PWFC-' + k),
   'ANS3SEC': LOB_LIST.map(([k]) => 'ANS3-' + k),
+  'FATALTM': LOB_LIST.map(([k]) => 'FATAL-' + k),
   'HOME-CATV': ['SCORE','CHARTS','TABLE'].map(p => 'HOME-CATV-' + p),
   'HOME-BBTECH': ['SCORE','CHARTS','TABLE'].map(p => 'HOME-BBTECH-' + p),
   'HOME-BBRENEWAL': ['SCORE','CHARTS','TABLE'].map(p => 'HOME-BBRENEWAL-' + p)
@@ -9542,7 +9544,7 @@ function aaCatalog(){
     out.push({ id, label: aaNavLabel(el), group: lbl ? lbl.textContent.trim() : 'Quick links' });
   });
   /* Special items get their own tick boxes, shown first in every checklist (Edit window, Bulk, New agent template) */
-  const rest = out.filter(c => c.id !== 'AIINSIGHT' && c.id !== 'parameter-wise-fail-count-live' && c.id !== 'ANS3SEC');
+  const rest = out.filter(c => c.id !== 'AIINSIGHT' && c.id !== 'parameter-wise-fail-count-live' && c.id !== 'ANS3SEC' && c.id !== 'FATALTM');
   return SPECIAL_ACCESS_ITEMS.map(c => Object.assign({}, c)).concat(rest);
 }
 
@@ -9572,7 +9574,7 @@ async function aaPrepareAccessInner(){
   aaAssignNavIds();
   aaMyHidden = new Set(hidden);
   /* a menu whose every LOB is switched off disappears completely */
-  [['PWFC','parameter-wise-fail-count-live'],['ANS3','ANS3SEC']].forEach(([p, nav]) => {
+  [['PWFC','parameter-wise-fail-count-live'],['ANS3','ANS3SEC'],['FATAL','FATALTM']].forEach(([p, nav]) => {
     if(LOB_LIST.every(([k]) => aaMyHidden.has(p + '-' + k))) aaMyHidden.add(nav);
   });
   document.querySelectorAll('.sidebar .nav-item').forEach(el => { if(aaMyHidden.has(el.dataset.navId)) el.classList.add('nav-denied'); });
@@ -15191,10 +15193,11 @@ async function renderAnswered3SecPanel(sub){
    "Account Authentication/Security Checks (3 Marks / FATAL)") and it FAILS when the paired
    Remarks column is non-empty. Only calls from the CURRENT calendar month (based on "Call Date")
    are shown, per LOB (CATV / BB Tech Support / BB Renewal). */
+function fatalAllowed(k){ return !(currentRole === 'agent' && aaMyHidden.has('FATAL-' + k)); }
 function fatalSubTabsHtml(activeSub){
   const cls = { CATV:'lob-catv', BBTECH:'lob-bbtech', BBRENEWAL:'lob-bbrenewal' };
   return `<div class="lob-tab-row">
-    ${Object.keys(VERTICALS).map(k=>
+    ${Object.keys(VERTICALS).filter(fatalAllowed).map(k=>
       `<button class="lob-tab ${cls[k]||''} ${k===activeSub?'active':''}" onclick="renderFatalThisMonthPanel('${k}')">${VERTICALS[k].label}</button>`
     ).join('')}
   </div>`;
@@ -15283,8 +15286,11 @@ function buildFatalThisMonthTableHtml(tab, entries){
 }
 async function renderFatalThisMonthPanel(sub){
   sub = sub || fatalSubTab || 'CATV';
-  fatalSubTab = sub;
   const panel = document.getElementById('panel-FATALTM');
+  const fatalKeys = Object.keys(VERTICALS).filter(fatalAllowed);
+  if(!fatalKeys.length){ panel.innerHTML = '<div class="empty-state"><b>এই সেকশনে আপনার অ্যাক্সেস নেই।</b></div>'; return; }
+  if(!fatalKeys.includes(sub)) sub = fatalKeys[0];
+  fatalSubTab = sub;
   const label = VERTICALS[sub].label;
   const now = new Date();
   const monthLabel = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
