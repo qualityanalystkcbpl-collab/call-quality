@@ -7410,6 +7410,12 @@ const AA_TABLE = 'agent_access';
 const AA_TEMPLATE_ID = '__NEW_AGENT_TEMPLATE__';
 let aaMyPromise = null;          // logged-in agent's own access row (cached per login)
 let aaMyHidden = new Set();      // sidebar item ids hidden for the logged-in agent
+/* Home page LOB parts (CATV / BB Tech / BB Renewal) — each can be shown/hidden per agent from Admin Panel > Agent Access */
+const HOME_SECTION_ACCESS = [
+  { id: 'HOME-CATV',       vKey: 'CATV',       label: '🏠 Home › CATV (Score, Charts & Table)' },
+  { id: 'HOME-BBTECH',     vKey: 'BBTECH',     label: '🏠 Home › BB Tech Support (Score, Charts & Table)' },
+  { id: 'HOME-BBRENEWAL',  vKey: 'BBRENEWAL',  label: '🏠 Home › BB Renewal (Score, Charts & Table)' }
+];
 let aaRows = [], aaTemplate = null, aaSelected = new Set();
 const SB_HEADERS_JSON = Object.assign({ 'Content-Type': 'application/json' }, SB_HEADERS);
 const BANNER_BUCKET = "banners";
@@ -9503,6 +9509,7 @@ function aaCatalog(){
     const lbl = sec && sec.querySelector('.nav-label');
     out.push({ id, label: aaNavLabel(el), group: lbl ? lbl.textContent.trim() : 'Quick links' });
   });
+  HOME_SECTION_ACCESS.forEach(h => out.push({ id: h.id, label: h.label, group: 'Home Page Sections' }));   // CATV / BB Tech / BB Renewal parts of the Home page
   return out;
 }
 
@@ -14603,7 +14610,16 @@ async function renderHomePage(isManualRefresh){
       ? syncLoaderHtml('Refreshing — Quality Server থেকে ডাটা সিঙ্ক হচ্ছে')
       : syncLoaderHtml('লাইভ ডাটা লোড হচ্ছে')}`;
 
-  const vKeys = Object.keys(VERTICALS); // CATV, BBTECH, BBRENEWAL
+  // CATV, BBTECH, BBRENEWAL — an agent only sees the LOB parts that Admin has allowed (Agent Access > Home Page Sections)
+  const vKeys = Object.keys(VERTICALS).filter(k => !(currentRole === 'agent' && aaMyHidden.has('HOME-' + k)));
+  if(!vKeys.length){
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
+      </div>
+      <div class="empty-state"><b>এই Home সেকশনে আপনার অ্যাক্সেস নেই।</b><br>প্রয়োজনে Admin-এর সাথে যোগাযোগ করুন।</div>`;
+    return;
+  }
 
   try{
     const res2 = await fetch(NEW_WEB_APP_URL);
