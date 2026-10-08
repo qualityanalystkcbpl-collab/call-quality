@@ -7424,12 +7424,28 @@ const AA_TABLE = 'agent_access';
 const AA_TEMPLATE_ID = '__NEW_AGENT_TEMPLATE__';
 let aaMyPromise = null;          // logged-in agent's own access row (cached per login)
 let aaMyHidden = new Set();      // sidebar item ids hidden for the logged-in agent
-/* Home page LOB parts (CATV / BB Tech / BB Renewal) — each can be shown/hidden per agent from Admin Panel > Agent Access */
-const HOME_SECTION_ACCESS = [
-  { id: 'HOME-CATV',       vKey: 'CATV',       label: '🏠 Home › CATV (Score, Charts & Table)' },
-  { id: 'HOME-BBTECH',     vKey: 'BBTECH',     label: '🏠 Home › BB Tech Support (Score, Charts & Table)' },
-  { id: 'HOME-BBRENEWAL',  vKey: 'BBRENEWAL',  label: '🏠 Home › BB Renewal (Score, Charts & Table)' }
-];
+/* Special access (separate ticks): Parameter Wise Fail Count / Answered Within 3 Sec -> per LOB;  Home -> per LOB: Score, Charts, Table */
+const LOB_LIST = [['CATV','CATV'],['BBTECH','BB Tech Support'],['BBRENEWAL','BB Renewal']];
+const SPECIAL_ACCESS_ITEMS = [].concat(
+  LOB_LIST.map(([k,n]) => ({ id: 'PWFC-' + k, label: 'Parameter Wise Fail Count › ' + n, group: '⭐ Parameter Wise Fail Count (LIVE)' })),
+  LOB_LIST.map(([k,n]) => ({ id: 'ANS3-' + k, label: 'Answered Within 3 Sec › ' + n, group: '⭐ Answered Within 3 Sec (Month wise)' })),
+  [{ id: 'AIINSIGHT', label: '🤖 Get feedback from AI Agent', group: '⭐ 🤖 Get feedback from AI Agent' }],
+  LOB_LIST.reduce((acc, [k,n]) => acc.concat([['SCORE','Score'],['CHARTS','Charts'],['TABLE','Table']].map(([p,pn]) =>
+    ({ id: 'HOME-' + k + '-' + p, label: '🏠 Home › ' + n + ' › ' + pn, group: '⭐ 🏠 Home › ' + n }))), [])
+);
+/* old single ids -> new per-part ids (so nothing saved earlier is lost) */
+const AA_MIGRATE = {
+  'parameter-wise-fail-count-live': LOB_LIST.map(([k]) => 'PWFC-' + k),
+  'ANS3SEC': LOB_LIST.map(([k]) => 'ANS3-' + k),
+  'HOME-CATV': ['SCORE','CHARTS','TABLE'].map(p => 'HOME-CATV-' + p),
+  'HOME-BBTECH': ['SCORE','CHARTS','TABLE'].map(p => 'HOME-BBTECH-' + p),
+  'HOME-BBRENEWAL': ['SCORE','CHARTS','TABLE'].map(p => 'HOME-BBRENEWAL-' + p)
+};
+function aaMigrateHidden(arr){
+  const out = new Set(Array.isArray(arr) ? arr : []);
+  Object.keys(AA_MIGRATE).forEach(k => { if(out.has(k)){ out.delete(k); AA_MIGRATE[k].forEach(i => out.add(i)); } });
+  return Array.from(out);
+}
 let aaRows = [], aaTemplate = null, aaSelected = new Set();
 let aaSheetIds = null;           // lower-cased employee ids currently in the Google Sheet 'All Agents' list (set after every sync)
 let aaSyncBusy = false;
@@ -9525,12 +9541,9 @@ function aaCatalog(){
     const lbl = sec && sec.querySelector('.nav-label');
     out.push({ id, label: aaNavLabel(el), group: lbl ? lbl.textContent.trim() : 'Quick links' });
   });
-  HOME_SECTION_ACCESS.forEach(h => out.push({ id: h.id, label: h.label, group: 'Home Page Sections' }));   // CATV / BB Tech / BB Renewal parts of the Home page
-  /* Items that get their OWN separate access box (shown first in every checklist: Edit window, Bulk, New agent template) */
-  const SPECIAL = ['parameter-wise-fail-count-live', 'ANS3SEC', 'AIINSIGHT', 'HOME-CATV', 'HOME-BBTECH', 'HOME-BBRENEWAL'];
-  const special = SPECIAL.map(id => out.find(c => c.id === id)).filter(Boolean)
-    .map(c => Object.assign({}, c, { group: '⭐ Special Access — আলাদা অ্যাক্সেস' }));
-  return special.concat(out.filter(c => !SPECIAL.includes(c.id)));
+  /* Special items get their own tick boxes, shown first in every checklist (Edit window, Bulk, New agent template) */
+  const rest = out.filter(c => c.id !== 'AIINSIGHT' && c.id !== 'parameter-wise-fail-count-live' && c.id !== 'ANS3SEC');
+  return SPECIAL_ACCESS_ITEMS.map(c => Object.assign({}, c)).concat(rest);
 }
 
 /* ---- logged-in agent: load own row, hide sidebar items, custom popup ---- */
@@ -9555,10 +9568,18 @@ async function aaPrepareAccessInner(){
   aaMyHidden = new Set();
   if(currentRole !== 'agent') return;
   const row = await aaFetchMy();
-  const hidden = row && Array.isArray(row.hidden_nav) ? row.hidden_nav : [];
+  const hidden = row && Array.isArray(row.hidden_nav) ? aaMigrateHidden(row.hidden_nav) : [];
   aaAssignNavIds();
   aaMyHidden = new Set(hidden);
+  /* a menu whose every LOB is switched off disappears completely */
+  [['PWFC','parameter-wise-fail-count-live'],['ANS3','ANS3SEC']].forEach(([p, nav]) => {
+    if(LOB_LIST.every(([k]) => aaMyHidden.has(p + '-' + k))) aaMyHidden.add(nav);
+  });
   document.querySelectorAll('.sidebar .nav-item').forEach(el => { if(aaMyHidden.has(el.dataset.navId)) el.classList.add('nav-denied'); });
+  /* Parameter Wise Fail Count opens its own page: tell it which LOBs this agent may NOT see (?hide=CATV,BBTECH) */
+  const pwHide = LOB_LIST.map(([k]) => k).filter(k => aaMyHidden.has('PWFC-' + k));
+  const pwEl = document.querySelector('.sidebar .nav-item[data-nav-id="parameter-wise-fail-count-live"]');
+  if(pwEl) pwEl.onclick = () => { window.location.href = 'parameter_wise_fail_count_all_lob.html' + (pwHide.length ? '?hide=' + pwHide.join(',') : ''); };
   document.querySelectorAll('.sidebar .nav-section').forEach(sec => {
     const items = Array.from(sec.querySelectorAll('.nav-item'));
     if(items.length && items.every(i => i.classList.contains('nav-denied'))) sec.classList.add('nav-denied');
@@ -9568,7 +9589,7 @@ async function aaPrepareAccessInner(){
 /* ---- Supabase helpers ---- */
 function aaNormRow(r){
   return { employee_id: r.employee_id, agent_name: r.agent_name || '', team: r.team || '', process: r.process || '', status: r.status || '',
-           hidden_nav: Array.isArray(r.hidden_nav) ? r.hidden_nav : [], popup_mode: r.popup_mode || 'default', popup_text: r.popup_text || '' };
+           hidden_nav: aaMigrateHidden(r.hidden_nav), popup_mode: r.popup_mode || 'default', popup_text: r.popup_text || '' };
 }
 async function aaUpsert(rows, ignoreDup){
   try{
@@ -14691,7 +14712,8 @@ async function renderHomePage(isManualRefresh){
       : syncLoaderHtml('লাইভ ডাটা লোড হচ্ছে')}`;
 
   // CATV, BBTECH, BBRENEWAL — an agent only sees the LOB parts that Admin has allowed (Agent Access > Home Page Sections)
-  const vKeys = Object.keys(VERTICALS).filter(k => !(currentRole === 'agent' && aaMyHidden.has('HOME-' + k)));
+  const homeOk = (k, part) => !(currentRole === 'agent' && aaMyHidden.has('HOME-' + k + '-' + part));
+  const vKeys = Object.keys(VERTICALS).filter(k => ['SCORE','CHARTS','TABLE'].some(p => homeOk(k, p)));
   if(!vKeys.length){
     panel.innerHTML = `
       <div class="panel-header">
@@ -14725,7 +14747,10 @@ async function renderHomePage(isManualRefresh){
       return { vKey, meta, avg: Math.round(overallAvg * 10) / 10, agentCount: rows.length, agents: agentsSorted, totalAudits, rawRows: Array.isArray(proc.rows) ? proc.rows : [] };
     });
 
-    const statCardsHtml = results.map(r => {
+    const scoreResults = results.filter(r => homeOk(r.vKey, 'SCORE'));     // Score cards, total audit line, low-score ticker
+    const chartResults = results.filter(r => homeOk(r.vKey, 'CHARTS'));    // Charts
+    const tableResults = results.filter(r => homeOk(r.vKey, 'TABLE'));     // Call Quality Score tables
+    const statCardsHtml = scoreResults.map(r => {
       const s = (r.avg !== null) ? statusFor(r.avg) : null;
       const statusCls = s ? s.cls : 'need';
       const fillPct = r.avg !== null ? Math.max(0, Math.min(100, r.avg)) : 0;
@@ -14752,7 +14777,7 @@ async function renderHomePage(isManualRefresh){
       return 'need';
     }
 
-    const qcrTablesHtml = results.map(r => {
+    const qcrTablesHtml = tableResults.map(r => {
       if(!r.agents.length){
         return `<div class="qcr-section">
           <div class="qcr-header ${qcrHeaderCls[r.vKey]||''}"><span class="qcr-title-text">${qcrIcon[r.vKey]||'📋'} ${r.meta.label} — Call Quality Score</span></div>
@@ -14784,14 +14809,14 @@ async function renderHomePage(isManualRefresh){
       </div>`;
     }).join('');
 
-    const grandTotalAudits = results.reduce((s,r)=> s + (Number(r.totalAudits)||0), 0);
-    const allLobWeightedSum = results.reduce((s,r)=> s + ((Number(r.avg)||0) * (Number(r.totalAudits)||0)), 0);
+    const grandTotalAudits = scoreResults.reduce((s,r)=> s + (Number(r.totalAudits)||0), 0);
+    const allLobWeightedSum = scoreResults.reduce((s,r)=> s + ((Number(r.avg)||0) * (Number(r.totalAudits)||0)), 0);
     const allLobScorePct = grandTotalAudits > 0 ? (allLobWeightedSum / grandTotalAudits) : 0;
 
     /* Individual CALL-LEVEL scores below 90% across ALL LOBs (including 0%) — every call, not just
        agent averages — worst first — feeds the scrolling red ticker under the Home panel header. */
     const lowScoreCalls = [];
-    results.forEach(r=>{
+    scoreResults.forEach(r=>{
       (r.rawRows || []).forEach(row=>{
         const { meta } = cleanCallRowForAI(row);
         const nameKey = findMetaKey(meta, /^\s*associate\s*name\s*$/i);
@@ -14828,12 +14853,12 @@ async function renderHomePage(isManualRefresh){
       ${homeLowScoreTickerHtml}
       <div class="stat-row">${statCardsHtml}</div>
       <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px; justify-content:space-between; flex-wrap:wrap; row-gap:10px;">
-        <span style="display:flex; align-items:center; gap:8px;">📊 LOB-wise Average Score Comparison</span>
-        <div class="total-audit-marquee-box">
+        <span style="display:flex; align-items:center; gap:8px;">${chartResults.length ? '📊 LOB-wise Average Score Comparison' : ''}</span>
+        ${scoreResults.length ? `<div class="total-audit-marquee-box">
           <span class="total-audit-marquee-text">TOTAL CALL AUDIT COUNT (ALL LOB) - ${grandTotalAudits} (ALL LOB SCORE - ${allLobScorePct.toFixed(1)}%)</span>
-        </div>
+        </div>` : ''}
       </h3>
-      <div class="chart-box"><canvas id="homeAvgChart"></canvas></div>
+      ${chartResults.length ? `<div class="chart-box"><canvas id="homeAvgChart"></canvas></div>
       <div class="analysis-grid">
         <div class="chart-box small">
           <div class="chart-box-title">🥧 Agent Distribution by LOB</div>
@@ -14843,11 +14868,11 @@ async function renderHomePage(isManualRefresh){
           <div class="chart-box-title">🎯 Achieved vs Gap to 100%</div>
           <canvas id="homeGapChart"></canvas>
         </div>
-      </div>
-      <h3 style="margin: 30px 0 14px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
+      </div>` : ''}
+      ${tableResults.length ? `<h3 style="margin: 30px 0 14px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
         📄 Detailed Call Quality Score — LOB অনুযায়ী
       </h3>
-      ${qcrTablesHtml}`;
+      ${qcrTablesHtml}` : ''}`;
 
     runCountUps(panel);
 
@@ -14859,11 +14884,11 @@ async function renderHomePage(isManualRefresh){
       chartInstances['home-avg'] = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: results.map(r => r.meta.label),
+          labels: chartResults.map(r => r.meta.label),
           datasets: [{
             label: 'Average Score (%)',
-            data: results.map(r => r.avg !== null ? r.avg : 0),
-            backgroundColor: results.map(r => {
+            data: chartResults.map(r => r.avg !== null ? r.avg : 0),
+            backgroundColor: chartResults.map(r => {
               if(r.avg === null) return 'rgba(224,82,74,0.4)';
               const s = statusFor(r.avg);
               return {excellent:'rgba(63,191,127,0.7)', good:'rgba(224,195,65,0.7)', average:'rgba(224,138,63,0.7)', need:'rgba(224,82,74,0.7)'}[s.cls] || 'rgba(51,201,176,0.7)';
@@ -14902,10 +14927,10 @@ async function renderHomePage(isManualRefresh){
       chartInstances['home-agentdonut'] = new Chart(ctx2, {
         type: 'doughnut',
         data: {
-          labels: results.map(r => r.meta.label),
+          labels: chartResults.map(r => r.meta.label),
           datasets: [{
-            data: results.map(r => r.agentCount),
-            backgroundColor: results.map(r => vertColors[r.vKey] || 'rgba(51,201,176,0.7)'),
+            data: chartResults.map(r => r.agentCount),
+            backgroundColor: chartResults.map(r => vertColors[r.vKey] || 'rgba(51,201,176,0.7)'),
             borderColor: 'var(--surface)',
             borderWidth: 2,
             hoverOffset: 8
@@ -14929,7 +14954,7 @@ async function renderHomePage(isManualRefresh){
       if(!ctx3) return;
       if(chartInstances['home-gap']) chartInstances['home-gap'].destroy();
 
-      const achievedColors = results.map(r => {
+      const achievedColors = chartResults.map(r => {
         if(r.avg === null) return 'rgba(224,82,74,0.75)';
         const s = statusFor(r.avg);
         return {top:'#E3A857', excellent:'#3FBF7F', good:'#E0C341', average:'#E08A3F', need:'#E0524A'}[s.cls] || '#33C9B0';
@@ -14938,18 +14963,18 @@ async function renderHomePage(isManualRefresh){
       chartInstances['home-gap'] = new Chart(ctx3, {
         type: 'bar',
         data: {
-          labels: results.map(r => r.meta.label),
+          labels: chartResults.map(r => r.meta.label),
           datasets: [
             {
               label: 'Achieved (%)',
-              data: results.map(r => r.avg !== null ? r.avg : 0),
+              data: chartResults.map(r => r.avg !== null ? r.avg : 0),
               backgroundColor: achievedColors,
               borderRadius: 5,
               stack: 'gap'
             },
             {
               label: 'Gap to 100% (%)',
-              data: results.map(r => r.avg !== null ? Math.max(0, Math.round((100 - r.avg) * 10) / 10) : 100),
+              data: chartResults.map(r => r.avg !== null ? Math.max(0, Math.round((100 - r.avg) * 10) / 10) : 100),
               backgroundColor: 'rgba(143,160,181,0.15)',
               borderRadius: 5,
               stack: 'gap'
@@ -14983,10 +15008,11 @@ async function renderHomePage(isManualRefresh){
   }
 }
 
+function ans3Allowed(k){ return !(currentRole === 'agent' && aaMyHidden.has('ANS3-' + k)); }
 function ans3secSubTabsHtml(activeSub){
   const cls = { CATV:'lob-catv', BBTECH:'lob-bbtech', BBRENEWAL:'lob-bbrenewal' };
   return `<div class="lob-tab-row">
-    ${Object.keys(ANS3SEC_SHEETS).map(k=>
+    ${Object.keys(ANS3SEC_SHEETS).filter(ans3Allowed).map(k=>
       `<button class="lob-tab ${cls[k]||''} ${k===activeSub?'active':''}" onclick="renderAnswered3SecPanel('${k}')">${VERTICALS[k].label}</button>`
     ).join('')}
   </div>`;
@@ -15102,8 +15128,11 @@ function ans3ApplyFilter(){
 
 async function renderAnswered3SecPanel(sub){
   sub = sub || ans3secSubTab || 'CATV';
-  ans3secSubTab = sub;
   const panel = document.getElementById('panel-ANS3SEC');
+  const ans3Keys = Object.keys(ANS3SEC_SHEETS).filter(ans3Allowed);
+  if(!ans3Keys.length){ panel.innerHTML = '<div class="empty-state"><b>এই সেকশনে আপনার অ্যাক্সেস নেই।</b></div>'; return; }
+  if(!ans3Keys.includes(sub)) sub = ans3Keys[0];
+  ans3secSubTab = sub;
   const sheetName = ANS3SEC_SHEETS[sub];
   const label = VERTICALS[sub].label;
 
