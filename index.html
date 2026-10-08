@@ -4550,6 +4550,9 @@ transform:translateY(0);
 @media(max-width:800px){.adv-feedback-head{align-items:flex-start;flex-direction:column;}.adv-feedback-table-wrap{padding:8px;}}
 /* QA Feedback Sheets — paginated Admin report tab */
 .adv-feedback-tab-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.adv-feedback-tab-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:900;color:#fff}.adv-feedback-tab-sub{font-size:11px;color:var(--text-muted);margin-top:3px}.adv-feedback-pagination{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0 2px}.adv-feedback-page-info{font-size:11px;color:var(--text-muted);min-width:100px;text-align:center}.adv-feedback-page-btn{min-width:34px;padding:6px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);color:var(--text);cursor:pointer;font-weight:800}.adv-feedback-page-btn:disabled{opacity:.35;cursor:not-allowed}.adv-feedback-page-btn.active{background:#1d4f7a;color:#fff;border-color:#3a75aa}.adv-feedback-score.score-critical{color:#d52b2b;background:#ffe9e7}.adv-feedback-score.score-needs{color:#c85a13;background:#fff0df}.adv-feedback-score.score-warning{color:#9a6b00;background:#fff6d8}
+.sa-filter-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px 0;}
+.sa-filter-bar input,.sa-filter-bar select{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;font-family:inherit;min-width:120px;flex:1;}
+.sa-filter-bar input:focus,.sa-filter-bar select:focus{outline:none;border-color:var(--agent);}
 </style>
 
 </style>
@@ -5832,6 +5835,17 @@ body:has(#panel-MONTHDATA.active)::before{animation:none!important;}
               <button class="btn small" onclick="saDownload('getActivityHistory','Activity_Log')">⬇ Activity Log</button>
               <button class="btn small" onclick="saDownload('getAuditHistory','Audit_Log')">⬇ Audit Log</button>
               <button class="btn small" onclick="saDownload('getDailySummary','Daily_Summary')">⬇ Daily Summary</button>
+            </div>
+            <div class="sa-filter-bar" id="saFilterBar">
+              <input type="text" id="saFSearch" placeholder="🔎 Search all (ID / Name / Team / Process)..." oninput="saRenderAgents()" style="min-width:230px;flex:1.4;">
+              <input type="text" id="saFId" placeholder="Employee ID" oninput="saRenderAgents()">
+              <input type="text" id="saFName" placeholder="Name" oninput="saRenderAgents()">
+              <select id="saFTeam" onchange="saRenderAgents()"><option value="">All Team</option></select>
+              <select id="saFProcess" onchange="saRenderAgents()"><option value="">All Process</option></select>
+              <select id="saFRole" onchange="saRenderAgents()"><option value="">All Role</option><option value="agent">Agent</option><option value="admin">Admin</option></select>
+              <select id="saFStatus" onchange="saRenderAgents()"><option value="">All Status</option></select>
+              <button class="btn small" onclick="saClearFilters()">✖ Clear filters</button>
+              <span id="saFCount" style="font-size:12px;color:var(--text-muted);white-space:nowrap;"></span>
             </div>
             <div style="overflow-x:auto;">
               <div class="xlsx-btn-row"><button class="xlsx-icon-btn" title="Download as Excel" onclick="exportTableToExcel('saAgentTable','All_Agents')">
@@ -18806,17 +18820,40 @@ async function superAdminLogin(){
   }
 }
 
-async function saLoadAgents(){
-  const tbody = document.getElementById('saAgentTableBody');
-  if(!tbody) return;
-  if(!superAdminToken){ tbody.innerHTML = '<tr><td colspan="7">🔒 Agents ম্যানেজ করতে Super Admin হিসেবে লগইন করতে হবে।</td></tr>'; return; }
-  tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
-  try{
-    const data = await empApiGet('listAgents', { token: superAdminToken });
-    if(!data || data.ok !== true){ tbody.innerHTML = `<tr><td colspan="7">${(data&&data.error)||'Failed to load.'}</td></tr>`; return; }
-    if(!data.agents.length){ tbody.innerHTML = '<tr><td colspan="7">কোনো agent নেই।</td></tr>'; return; }
-    if(typeof aaSyncWithSheet === 'function') aaSyncWithSheet(data.agents, true);   // keep Agent Access in step with every All Agents change
-    tbody.innerHTML = data.agents.map(a => {
+let saAgentsData = [];
+/* All Agents table: filters on every column (search-all, ID, Name, Team, Process, Role, Status) */
+function saFillFilterSelect(id, values){
+  const el = document.getElementById(id); if(!el) return;
+  const cur = el.value, first = el.options[0].outerHTML;
+  el.innerHTML = first + Array.from(new Set(values.filter(Boolean))).sort().map(v => `<option value="${escapeAttr(v)}">${escapeHtml(v)}</option>`).join('');
+  el.value = Array.from(el.options).some(o => o.value === cur) ? cur : '';
+}
+function saClearFilters(){
+  ['saFSearch','saFId','saFName','saFTeam','saFProcess','saFRole','saFStatus'].forEach(i => { const e = document.getElementById(i); if(e) e.value = ''; });
+  saRenderAgents();
+}
+function saRenderAgents(){
+  const tbody = document.getElementById('saAgentTableBody'); if(!tbody) return;
+  if(!saAgentsData.length) return;
+  saFillFilterSelect('saFTeam', saAgentsData.map(a => a.team || ''));
+  saFillFilterSelect('saFProcess', saAgentsData.map(a => a.process || ''));
+  saFillFilterSelect('saFStatus', saAgentsData.map(a => a.status || ''));
+  const v = id => ((document.getElementById(id) || {}).value || '').trim();
+  const q = v('saFSearch').toLowerCase(), fId = v('saFId').toLowerCase(), fName = v('saFName').toLowerCase();
+  const fTeam = v('saFTeam'), fProc = v('saFProcess'), fRole = v('saFRole'), fStatus = v('saFStatus');
+  const list = saAgentsData.filter(a => {
+    const role = String(a.role || 'agent').toLowerCase();
+    return (!q || [a.employeeId, a.agentName, a.team, a.process].join(' ').toLowerCase().includes(q))
+      && (!fId || String(a.employeeId || '').toLowerCase().includes(fId))
+      && (!fName || String(a.agentName || '').toLowerCase().includes(fName))
+      && (!fTeam || (a.team || '') === fTeam)
+      && (!fProc || (a.process || '') === fProc)
+      && (!fRole || role === fRole)
+      && (!fStatus || (a.status || '') === fStatus);
+  });
+  const cnt = document.getElementById('saFCount'); if(cnt) cnt.textContent = `${list.length} / ${saAgentsData.length} agents`;
+  if(!list.length){ tbody.innerHTML = '<tr><td colspan="7">এই ফিল্টারে কোনো agent পাওয়া যায়নি।</td></tr>'; return; }
+    tbody.innerHTML = list.map(a => {
       const role = (a.role || 'agent').toLowerCase();
       const isAdmin = role === 'admin';
       return `
@@ -18838,6 +18875,19 @@ async function saLoadAgents(){
         </td>
       </tr>`;
     }).join('');
+}
+async function saLoadAgents(){
+  const tbody = document.getElementById('saAgentTableBody');
+  if(!tbody) return;
+  if(!superAdminToken){ tbody.innerHTML = '<tr><td colspan="7">🔒 Agents ম্যানেজ করতে Super Admin হিসেবে লগইন করতে হবে।</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+  try{
+    const data = await empApiGet('listAgents', { token: superAdminToken });
+    if(!data || data.ok !== true){ tbody.innerHTML = `<tr><td colspan="7">${(data&&data.error)||'Failed to load.'}</td></tr>`; return; }
+    if(!data.agents.length){ tbody.innerHTML = '<tr><td colspan="7">কোনো agent নেই।</td></tr>'; return; }
+    if(typeof aaSyncWithSheet === 'function') aaSyncWithSheet(data.agents, true);   // keep Agent Access in step with every All Agents change
+    saAgentsData = data.agents;
+    saRenderAgents();
   }catch(e){
     console.error('Load agents failed', e);
     tbody.innerHTML = '<tr><td colspan="7">Server error.</td></tr>';
