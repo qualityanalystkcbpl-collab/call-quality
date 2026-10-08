@@ -14679,7 +14679,7 @@ async function renderHomePage(isManualRefresh){
 
   panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
+      <div><h1>🏠 Home</h1><p>Overall average score</p></div>
       <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
     </div>
     ${isManualRefresh
@@ -14691,7 +14691,7 @@ async function renderHomePage(isManualRefresh){
   if(!vKeys.length){
     panel.innerHTML = `
       <div class="panel-header">
-        <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
+        <div><h1>🏠 Home</h1><p>Overall average score</p></div>
       </div>
       <div class="empty-state"><b>এই Home সেকশনে আপনার অ্যাক্সেস নেই।</b><br>প্রয়োজনে Admin-এর সাথে যোগাযোগ করুন।</div>`;
     return;
@@ -14818,7 +14818,7 @@ async function renderHomePage(isManualRefresh){
 
     panel.innerHTML = `
       <div class="panel-header">
-        <div><h1>🏠 Home</h1><p>Overall average score across CATV, BB Tech Support &amp; BB Renewal — all at a glance.</p></div>
+        <div><h1>🏠 Home</h1><p>Overall average score</p></div>
         <button class="btn primary" onclick="switchTab('HOME')">↻ Refresh</button>
       </div>
       ${homeLowScoreTickerHtml}
