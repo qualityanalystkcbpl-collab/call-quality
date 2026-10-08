@@ -4755,6 +4755,23 @@ body:has(#panel-MONTHDATA.active)::before{animation:none!important;}
 .md-hf:focus{border-color:var(--agent);}
 .md-fcount{font-size:12px;color:var(--text-muted);margin:4px 2px 6px;min-height:0;}
 .md-fcount:empty{display:none;}
+/* Agent access (sidebar per agent) */
+.nav-denied{display:none!important;}
+.aa-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.aa-toolbar input,.aa-toolbar select,.aa-ta{padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12.5px;}
+.aa-ta{width:100%;min-height:80px;resize:vertical;}
+.aa-table-wrap{max-height:380px;overflow:auto;border:1px solid var(--border);border-radius:8px;}
+.aa-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.aa-table th,.aa-table td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+.aa-table th{position:sticky;top:0;background:var(--surface-2);z-index:1;}
+.aa-pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);}
+.aa-green{color:#3fe0a0;border-color:#3fe0a055;} .aa-amber{color:#ffc857;border-color:#ffc85755;} .aa-red{color:#ff6b81;border-color:#ff6b8155;} .aa-blue{color:#6bb7ff;border-color:#6bb7ff55;}
+.aa-bulk{border:1px dashed var(--border);border-radius:10px;padding:12px;margin-top:12px;}
+.aa-grp{font-size:11px;letter-spacing:1px;color:var(--text-muted);margin:10px 0 4px;text-transform:uppercase;}
+.aa-navgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px 14px;}
+.aa-navgrid label{display:flex;gap:6px;align-items:flex-start;font-size:12.5px;cursor:pointer;}
+.aa-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;}
+.aa-modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:780px;width:100%;max-height:90vh;overflow:auto;padding:18px;}
 /* LOB Wise Data month filter */
 .lob-filterbar{display:flex;flex-direction:column;gap:8px;margin:10px 0 12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
 .lob-fb-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
@@ -5753,6 +5770,11 @@ body:has(#panel-MONTHDATA.active)::before{animation:none!important;}
             <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">Agent লগইন করার পর এই মেসেজটি পপ-আপে দেখাবে (রঙিন অ্যানিমেশন সহ, বড় ফন্টে)। খালি রাখলে কোনো পপ-আপ দেখাবে না।</p>
             <textarea id="loginPopupInput" placeholder="যেমন: আজকের টার্গেট সম্পন্ন করার জন্য শুভকামনা!" style="width:100%;min-height:90px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:10px;resize:vertical;font-family:inherit;"></textarea>
             <button class="btn primary small" onclick="saveLoginPopup()">Save Popup Message</button>
+          </div>
+          <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
+            <h3 style="margin-bottom:6px;">👥 Agent Access — Sidebar & Popup (Agent wise)</h3>
+            <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">প্রতিটা agent-এর বাঁ দিকের sidebar-এর কোন কোন আইটেম দেখাবে আর কোন popup দেখাবে এখান থেকে ঠিক করুন (Edit)। অনেক agent একসাথে বদলাতে টিক দিয়ে নিচের Bulk অংশ ব্যবহার করুন। সব ডাটা Supabase-এ সেভ হয়। Admin / Super Admin-এর sidebar-এ কোনো বদল হবে না।</p>
+            <div id="aaRoot"></div>
           </div>
           <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
             <h3 style="margin-bottom:12px;">Banner Slides (max 10)</h3>
@@ -7383,6 +7405,12 @@ const SB_HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABAS
 /* ticker / updates / banners / loginPopup — সরাসরি Supabase `webpage_settings` টেবিলে (storageGet/storageSet এগুলো ব্যবহার করে) */
 const SB_SETTINGS_KEYS = ['ticker', 'updates', 'banners', 'loginPopup', 'brand'];
 const SB_SETTINGS_TABLE = 'webpage_settings';
+/* ---- Agent Access (per-agent sidebar menu + popup) — Supabase table `agent_access` ---- */
+const AA_TABLE = 'agent_access';
+const AA_TEMPLATE_ID = '__NEW_AGENT_TEMPLATE__';
+let aaMyPromise = null;          // logged-in agent's own access row (cached per login)
+let aaMyHidden = new Set();      // sidebar item ids hidden for the logged-in agent
+let aaRows = [], aaTemplate = null, aaSelected = new Set();
 const SB_HEADERS_JSON = Object.assign({ 'Content-Type': 'application/json' }, SB_HEADERS);
 const BANNER_BUCKET = "banners";
 const BANNER_MAX_IMAGE_MB = 5;   // images/GIFs above this are rejected client-side
@@ -9428,6 +9456,7 @@ if(currentRole==="agent"){
 }
   if(currentRole==="admin" && typeof updateAdminChatNavBadge === 'function'){ updateAdminChatNavBadge(); }
   
+  await aaPrepareAccess();   // agent-wise sidebar access (Supabase)
   showToast('লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।...');
 
   // Allow a URL like "...?tab=LEADFORM" to land directly on that tab after login (deep-link support).
@@ -9444,6 +9473,298 @@ if(currentRole==="agent"){
   ]);
   hidePageLoadOverlay();
 }
+/* ===================== AGENT ACCESS (sidebar menu + popup, per agent) — Supabase `agent_access` ===================== */
+function aaAssignNavIds(){
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if(el.dataset.navId) return;
+    let id = el.dataset.tab;
+    if(!id){
+      const t = Array.from(el.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join(' ') || el.textContent;
+      id = String(t).replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^a-z0-9\u0980-\u09ff]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+    if(id) el.dataset.navId = id;
+  });
+}
+function aaNavLabel(el){
+  const t = Array.from(el.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join(' ').replace(/\s+/g, ' ').trim();
+  return t || el.textContent.replace(/\s+/g, ' ').trim();
+}
+/* every sidebar item an agent can see (built from the live sidebar, so new menu items appear here automatically) */
+function aaCatalog(){
+  aaAssignNavIds();
+  const seen = new Set(), out = [];
+  document.querySelectorAll('.sidebar .nav-section').forEach(sec => {
+    if(sec.classList.contains('admin-only') || sec.classList.contains('superadmin-only')) return;
+    const group = ((sec.querySelector('.nav-label') || {}).textContent || 'Menu').trim();
+    sec.querySelectorAll('.nav-item').forEach(el => {
+      if(el.classList.contains('admin-only') || el.classList.contains('superadmin-only')) return;
+      const id = el.dataset.navId;
+      if(!id || id === 'HOME' || seen.has(id)) return;
+      seen.add(id);
+      out.push({ id, label: aaNavLabel(el), group });
+    });
+  });
+  return out;
+}
+
+/* ---- logged-in agent: load own row, hide sidebar items, custom popup ---- */
+function aaFetchMy(){
+  if(aaMyPromise) return aaMyPromise;
+  const id = empEmployeeId || localStorage.getItem('qa_emp_id');
+  if(!id) return Promise.resolve(null);
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 6000);
+  aaMyPromise = fetch(`${SUPABASE_URL}/rest/v1/${AA_TABLE}?select=hidden_nav,popup_mode,popup_text&employee_id=ilike.${encodeURIComponent(id)}&limit=1`,
+    { headers: SB_HEADERS, cache: 'no-store', signal: ctl.signal })
+    .then(r => r.ok ? r.json() : [])
+    .then(rows => rows[0] || null)
+    .catch(() => null)                                   // Supabase problem → agent keeps full access (never locked out)
+    .finally(() => clearTimeout(timer));
+  return aaMyPromise;
+}
+async function aaPrepareAccess(){
+  document.querySelectorAll('.nav-denied').forEach(e => e.classList.remove('nav-denied'));
+  aaMyHidden = new Set();
+  if(currentRole !== 'agent') return;
+  const row = await aaFetchMy();
+  const hidden = row && Array.isArray(row.hidden_nav) ? row.hidden_nav : [];
+  aaAssignNavIds();
+  aaMyHidden = new Set(hidden);
+  document.querySelectorAll('.sidebar .nav-item').forEach(el => { if(aaMyHidden.has(el.dataset.navId)) el.classList.add('nav-denied'); });
+  document.querySelectorAll('.sidebar .nav-section').forEach(sec => {
+    const items = Array.from(sec.querySelectorAll('.nav-item'));
+    if(items.length && items.every(i => i.classList.contains('nav-denied'))) sec.classList.add('nav-denied');
+  });
+}
+
+/* ---- Supabase helpers ---- */
+function aaNormRow(r){
+  return { employee_id: r.employee_id, agent_name: r.agent_name || '', team: r.team || '', process: r.process || '', status: r.status || '',
+           hidden_nav: Array.isArray(r.hidden_nav) ? r.hidden_nav : [], popup_mode: r.popup_mode || 'default', popup_text: r.popup_text || '' };
+}
+async function aaUpsert(rows, ignoreDup){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${AA_TABLE}?on_conflict=employee_id`, {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json', Prefer: (ignoreDup ? 'resolution=ignore-duplicates' : 'resolution=merge-duplicates') + ',return=minimal' }, SB_HEADERS),
+      body: JSON.stringify(rows.map(aaNormRow))
+    });
+    if(!res.ok){ console.error('agent_access save failed', res.status, await res.text()); return false; }
+    return true;
+  }catch(e){ console.error('agent_access save error', e); return false; }
+}
+async function aaFetchTemplate(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${AA_TABLE}?select=*&employee_id=eq.${AA_TEMPLATE_ID}&limit=1`, { headers: SB_HEADERS, cache: 'no-store' });
+    const rows = res.ok ? await res.json() : [];
+    return rows[0] ? aaNormRow(rows[0]) : null;
+  }catch(e){ return null; }
+}
+/* called when Super Admin creates a new agent: new agent gets the "new agent template" access/popup */
+async function aaCreateRowForNewAgent(id, name, team, proc){
+  try{
+    const t = await aaFetchTemplate();
+    await aaUpsert([{ employee_id: id, agent_name: name, team, process: proc, status: 'Active',
+                      hidden_nav: t ? t.hidden_nav : [], popup_mode: t ? t.popup_mode : 'default', popup_text: t ? t.popup_text : '' }], true);
+  }catch(e){ console.error(e); }
+}
+
+/* ---- Admin panel UI ---- */
+function aaShellHtml(){
+  return `
+  <div class="aa-toolbar">
+    <input type="text" id="aaSearch" placeholder="🔎 Name / ID খুঁজুন..." oninput="aaRenderTable()">
+    <select id="aaProc" onchange="aaRenderTable()"><option value="">All Process</option></select>
+    <select id="aaStatus" onchange="aaRenderTable()"><option value="">All Status</option><option>Active</option><option>Inactive</option></select>
+    <button class="btn small" onclick="aaSelectVisible(true)">☑ Select visible</button>
+    <button class="btn small" onclick="aaSelectVisible(false)">☐ Clear</button>
+    <span id="aaCount" style="font-size:12px;color:var(--text-muted);"></span>
+    <span style="flex:1"></span>
+    <button class="btn small" onclick="aaOpenEdit('${AA_TEMPLATE_ID}')">⚙ New agent template</button>
+    <button class="btn small" id="aaSyncBtn" onclick="aaSyncFromSuper()">⟳ Sync new agents</button>
+  </div>
+  <div class="aa-table-wrap"><table class="aa-table"><thead><tr>
+    <th></th><th>ID</th><th>Agent</th><th>Process</th><th>Status</th><th>Sidebar access</th><th>Popup</th><th></th>
+  </tr></thead><tbody id="aaBody"><tr><td colspan="8">Loading...</td></tr></tbody></table></div>
+  <div class="aa-bulk">
+    <div style="font-weight:700;margin-bottom:6px;">📦 Bulk — উপরে যাদের টিক দিয়েছেন তাদের সবার জন্য</div>
+    <div class="aa-grp">Sidebar items (যেগুলো add/remove করতে চান সেগুলো টিক দিন)</div>
+    <div id="aaBulkNav"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+      <button class="btn small danger" onclick="aaBulkNav('remove')">➖ Remove from selected agents</button>
+      <button class="btn small primary" onclick="aaBulkNav('add')">➕ Add (allow) to selected agents</button>
+      <button class="btn small" onclick="aaBulkNav('reset')">♻ Reset to full access</button>
+    </div>
+    <div class="aa-grp" style="margin-top:14px;">Popup (login-এর পর যে মেসেজ দেখাবে)</div>
+    <textarea id="aaBulkPopup" maxlength="1000" placeholder="Selected agent দের জন্য আলাদা popup মেসেজ..." class="aa-ta"></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+      <button class="btn small primary" onclick="aaBulkPopup('custom')">💬 Set this popup</button>
+      <button class="btn small" onclick="aaBulkPopup('default')">↩ Use default popup</button>
+      <button class="btn small" onclick="aaBulkPopup('off')">🚫 Popup off</button>
+    </div>
+  </div>`;
+}
+function aaNavChecklistHtml(containerId, checkedIds, defaultChecked){
+  const cat = aaCatalog(); const set = new Set(checkedIds || []);
+  let html = `<div id="${containerId}">`, last = '', open = false;
+  cat.forEach(c => {
+    if(c.group !== last){
+      if(open) html += '</div>';
+      html += `<div class="aa-grp">${escapeHtml(c.group)}</div><div class="aa-navgrid">`;
+      last = c.group; open = true;
+    }
+    const checked = defaultChecked ? true : set.has(c.id);
+    html += `<label><input type="checkbox" value="${escapeAttr(c.id)}" ${checked ? 'checked' : ''}> <span>${escapeHtml(c.label)}</span></label>`;
+  });
+  if(open) html += '</div>';
+  return html + '</div>';
+}
+async function aaInit(){
+  if(currentRole !== 'admin') return;
+  const root = document.getElementById('aaRoot'); if(!root) return;
+  if(!root.dataset.built){
+    root.innerHTML = aaShellHtml();
+    document.getElementById('aaBulkNav').innerHTML = aaNavChecklistHtml('aaBulkNavList', [], false);
+    root.dataset.built = '1';
+  }
+  const sb = document.getElementById('aaSyncBtn');
+  if(sb) sb.style.display = (typeof superAdminToken !== 'undefined' && superAdminToken) ? '' : 'none';
+  await aaLoadRoster();
+}
+async function aaLoadRoster(){
+  const body = document.getElementById('aaBody'); if(!body) return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${AA_TABLE}?select=*&order=agent_name.asc&limit=2000`, { headers: SB_HEADERS, cache: 'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const all = (await res.json()).map(aaNormRow);
+    aaTemplate = all.find(r => r.employee_id === AA_TEMPLATE_ID) || { employee_id: AA_TEMPLATE_ID, agent_name: 'NEW AGENT TEMPLATE', status: 'Template', hidden_nav: [], popup_mode: 'default', popup_text: '' };
+    aaRows = all.filter(r => r.employee_id !== AA_TEMPLATE_ID);
+    const procs = Array.from(new Set(aaRows.map(r => r.process).filter(Boolean))).sort();
+    const ps = document.getElementById('aaProc'); const cur = ps.value;
+    ps.innerHTML = '<option value="">All Process</option>' + procs.map(p => `<option>${escapeHtml(p)}</option>`).join('');
+    ps.value = cur;
+    aaRenderTable();
+  }catch(e){
+    console.error('Agent access load failed', e);
+    body.innerHTML = '<tr><td colspan="8">লোড করা যায়নি — Supabase-এ supabase_agent_access.sql Run করা হয়েছে কি না দেখুন।</td></tr>';
+  }
+}
+function aaVisibleRows(){
+  const q = (document.getElementById('aaSearch').value || '').trim().toLowerCase();
+  const p = document.getElementById('aaProc').value, st = document.getElementById('aaStatus').value;
+  return aaRows.filter(r => (!q || (r.agent_name + ' ' + r.employee_id).toLowerCase().includes(q)) && (!p || r.process === p) && (!st || r.status === st));
+}
+function aaRenderTable(){
+  const body = document.getElementById('aaBody'); if(!body) return;
+  const rows = aaVisibleRows();
+  body.innerHTML = rows.length ? rows.map(r => {
+    const n = r.hidden_nav.length;
+    const popup = r.popup_mode === 'custom' ? '<span class="aa-pill aa-blue">Custom</span>' : r.popup_mode === 'off' ? '<span class="aa-pill aa-red">Off</span>' : '<span class="aa-pill">Default</span>';
+    return `<tr>
+      <td><input type="checkbox" ${aaSelected.has(r.employee_id) ? 'checked' : ''} data-id="${escapeAttr(r.employee_id)}" onchange="aaToggleSel(this.dataset.id,this.checked)"></td>
+      <td class="mono">${escapeHtml(r.employee_id)}</td><td>${escapeHtml(r.agent_name)}</td><td>${escapeHtml(r.process)}</td><td>${escapeHtml(r.status)}</td>
+      <td>${n ? `<span class="aa-pill aa-amber">${n} hidden</span>` : '<span class="aa-pill aa-green">Full access</span>'}</td>
+      <td>${popup}</td>
+      <td><button class="btn small" data-id="${escapeAttr(r.employee_id)}" onclick="aaOpenEdit(this.dataset.id)">Edit</button></td></tr>`;
+  }).join('') : '<tr><td colspan="8">কোনো agent পাওয়া যায়নি।</td></tr>';
+  document.getElementById('aaCount').textContent = `${rows.length} / ${aaRows.length} agents • ${aaSelected.size} selected`;
+}
+function aaToggleSel(id, on){ if(on) aaSelected.add(id); else aaSelected.delete(id); aaRenderTable(); }
+function aaSelectVisible(on){ aaVisibleRows().forEach(r => on ? aaSelected.add(r.employee_id) : aaSelected.delete(r.employee_id)); if(!on) aaSelected.clear(); aaRenderTable(); }
+function aaChecked(containerId){ return Array.from(document.querySelectorAll('#' + containerId + ' input:checked')).map(i => i.value); }
+
+async function aaSaveAndRefresh(newRows, okMsg){
+  const ok = await aaUpsert(newRows);
+  if(!ok){ showToast('Save ব্যর্থ হয়েছে — Supabase সংযোগ / SQL চেক করুন।'); return false; }
+  newRows.forEach(n => { const i = aaRows.findIndex(x => x.employee_id === n.employee_id); if(i >= 0) aaRows[i] = aaNormRow(n); });
+  aaRenderTable(); showToast(okMsg); return true;
+}
+async function aaBulkNav(mode){
+  const ids = Array.from(aaSelected); if(!ids.length){ showToast('আগে উপরের তালিকা থেকে agent সিলেক্ট করুন।'); return; }
+  const items = aaChecked('aaBulkNavList');
+  if(mode !== 'reset' && !items.length){ showToast('Sidebar-এর যে আইটেমগুলো বদলাতে চান সেগুলো টিক দিন।'); return; }
+  const verb = mode === 'remove' ? `${items.length}টি আইটেম সরানো হবে` : mode === 'add' ? `${items.length}টি আইটেম আবার দেওয়া হবে` : 'Full access ফিরিয়ে দেওয়া হবে';
+  if(!confirm(`${ids.length} জন agent-এর জন্য: ${verb}। চালিয়ে যাবেন?`)) return;
+  const rows = ids.map(id => aaRows.find(x => x.employee_id === id)).filter(Boolean).map(r => {
+    const set = new Set(r.hidden_nav);
+    if(mode === 'remove') items.forEach(i => set.add(i)); else if(mode === 'add') items.forEach(i => set.delete(i)); else set.clear();
+    return Object.assign({}, r, { hidden_nav: Array.from(set) });
+  });
+  await aaSaveAndRefresh(rows, `${rows.length} জন agent-এর access আপডেট হয়েছে ✅`);
+}
+async function aaBulkPopup(mode){
+  const ids = Array.from(aaSelected); if(!ids.length){ showToast('আগে উপরের তালিকা থেকে agent সিলেক্ট করুন।'); return; }
+  const text = (document.getElementById('aaBulkPopup').value || '').trim();
+  if(mode === 'custom' && !text){ showToast('Popup-এর মেসেজ লিখুন।'); return; }
+  const rows = ids.map(id => aaRows.find(x => x.employee_id === id)).filter(Boolean)
+    .map(r => Object.assign({}, r, { popup_mode: mode, popup_text: mode === 'custom' ? text : '' }));
+  await aaSaveAndRefresh(rows, `${rows.length} জন agent-এর popup আপডেট হয়েছে ✅`);
+}
+async function aaSyncFromSuper(){
+  if(typeof superAdminToken === 'undefined' || !superAdminToken){ showToast('এটা শুধু Super Admin লগইনে কাজ করে।'); return; }
+  showToast('Agent list আনা হচ্ছে...');
+  try{
+    const data = await empApiGet('listAgents', { token: superAdminToken });
+    if(!data || data.ok !== true || !Array.isArray(data.agents)){ showToast((data && data.error) || 'Agent list আনা যায়নি।'); return; }
+    const have = new Set(aaRows.map(r => r.employee_id.toLowerCase()));
+    const t = aaTemplate || { hidden_nav: [], popup_mode: 'default', popup_text: '' };
+    const fresh = data.agents.filter(a => a && a.employeeId && !have.has(String(a.employeeId).toLowerCase())).map(a => ({
+      employee_id: String(a.employeeId), agent_name: a.agentName || '', team: a.team || '', process: a.process || '', status: a.status || '',
+      hidden_nav: t.hidden_nav, popup_mode: t.popup_mode, popup_text: t.popup_text }));
+    if(!fresh.length){ showToast('নতুন কোনো agent নেই — সবাই লিস্টে আছে।'); return; }
+    if(await aaUpsert(fresh, true)){ showToast(`${fresh.length} জন নতুন agent যোগ হয়েছে (template access সহ) ✅`); await aaLoadRoster(); }
+    else showToast('Save ব্যর্থ হয়েছে।');
+  }catch(e){ console.error(e); showToast('Sync ব্যর্থ হয়েছে।'); }
+}
+
+/* ---- per-agent edit window ---- */
+function aaOpenEdit(id){
+  const isT = id === AA_TEMPLATE_ID;
+  const r = isT ? aaTemplate : aaRows.find(x => x.employee_id === id); if(!r) return;
+  const known = new Set(aaCatalog().map(c => c.id));
+  const allowed = aaCatalog().filter(c => !r.hidden_nav.includes(c.id)).map(c => c.id);
+  const m = document.createElement('div'); m.className = 'aa-modal'; m.id = 'aaModal';
+  m.innerHTML = `<div class="aa-modal-box">
+    <h3 style="margin-bottom:4px;">${isT ? '⚙ New agent template' : escapeHtml(r.agent_name) + ' <span class="mono" style="font-size:12px;color:var(--text-muted);">(' + escapeHtml(r.employee_id) + ')</span>'}</h3>
+    <p style="color:var(--text-muted);font-size:12px;margin-bottom:8px;">${isT ? 'এখান থেকে Super Admin যে নতুন agent বানাবে (বা "Sync new agents" চাপলে যারা যোগ হবে) তারা এই access ও popup পাবে।' : 'টিক দেওয়া আইটেমগুলো এই agent-এর sidebar-এ দেখাবে। টিক তুলে দিলে সরে যাবে।'}</p>
+    <div style="display:flex;gap:8px;margin-bottom:6px;">
+      <button class="btn small" type="button" onclick="document.querySelectorAll('#aaEditNav input').forEach(i=>i.checked=true)">Select all</button>
+      <button class="btn small" type="button" onclick="document.querySelectorAll('#aaEditNav input').forEach(i=>i.checked=false)">Select none</button>
+    </div>
+    <div id="aaEditNav">${aaNavChecklistHtml('aaEditNavList', allowed, false)}</div>
+    <div class="aa-grp" style="margin-top:14px;">Popup</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;">
+      <label><input type="radio" name="aaPopMode" value="default" ${r.popup_mode === 'default' ? 'checked' : ''}> Default popup (সবার মতো)</label>
+      <label><input type="radio" name="aaPopMode" value="custom" ${r.popup_mode === 'custom' ? 'checked' : ''}> Custom popup (শুধু ${isT ? 'নতুনদের' : 'এই agent-এর'})</label>
+      <label><input type="radio" name="aaPopMode" value="off" ${r.popup_mode === 'off' ? 'checked' : ''}> Popup off</label>
+    </div>
+    <textarea id="aaPopText" maxlength="1000" class="aa-ta" placeholder="Custom popup মেসেজ...">${escapeHtml(r.popup_text)}</textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+      <button class="btn small" type="button" onclick="aaCloseEdit()">Cancel</button>
+      <button class="btn small primary" type="button" onclick="aaSaveEdit('${escapeAttr(id)}')">Save</button>
+    </div></div>`;
+  m._known = known;
+  document.body.appendChild(m);
+}
+function aaCloseEdit(){ const m = document.getElementById('aaModal'); if(m) m.remove(); }
+async function aaSaveEdit(id){
+  const isT = id === AA_TEMPLATE_ID;
+  const r = isT ? aaTemplate : aaRows.find(x => x.employee_id === id); if(!r) return;
+  const cat = aaCatalog().map(c => c.id), known = new Set(cat);
+  const allowed = new Set(aaChecked('aaEditNavList'));
+  const hidden = cat.filter(i => !allowed.has(i)).concat(r.hidden_nav.filter(i => !known.has(i)));
+  const mode = (document.querySelector('input[name="aaPopMode"]:checked') || {}).value || 'default';
+  const text = (document.getElementById('aaPopText').value || '').trim();
+  if(mode === 'custom' && !text){ showToast('Custom popup-এর মেসেজ লিখুন।'); return; }
+  const row = Object.assign({}, r, { hidden_nav: hidden, popup_mode: mode, popup_text: mode === 'custom' ? text : '' });
+  if(isT){
+    if(await aaUpsert([row])){ aaTemplate = aaNormRow(row); showToast('New agent template সেভ হয়েছে ✅'); aaCloseEdit(); }
+    else showToast('Save ব্যর্থ হয়েছে।');
+  }else{
+    if(await aaSaveAndRefresh([row], `${r.agent_name} — সেভ হয়েছে ✅`)) aaCloseEdit();
+  }
+}
+
+
 /* ===================== PORTAL NAME (top-left header) — stored in Supabase webpage_settings, key "brand" ===================== */
 /* "QA Control Room" / "CALL QUALITY Analytics" stay fixed. The admin text is shown as a separate, coloured 4th item in the header rotation. */
 function applyBrandText(b){
@@ -9533,7 +9854,15 @@ async function saveLoginPopup(){
 }
 async function showLoginPopupIfNeeded(){
   const data = await fetchLoginPopupOnce();
-  const text = (data && data.text) ? data.text.trim() : '';
+  let text = (data && data.text) ? data.text.trim() : '';
+  if(currentRole === 'agent'){                       // agent-wise popup overrides the default one
+    const acc = await aaFetchMy();
+    if(acc){
+      if(acc.popup_mode === 'off') return;
+      const own = (acc.popup_text || '').trim();
+      if(acc.popup_mode === 'custom' && own) text = own;
+    }
+  }
   const overlay = document.getElementById('loginPopupOverlay');
   const textEl = document.getElementById('loginPopupText');
   const greetEl = document.getElementById('loginPopupGreeting');
@@ -9865,6 +10194,9 @@ async function saveNewsTicker(){
 }
 /* ===================== NAVIGATION & TABS ===================== */
 async function switchTab(tab){
+  // Agent-wise sidebar access (Admin Panel > Agent Access): hidden sections cannot be opened by this agent
+  if(currentRole === 'agent' && aaMyHidden.has(tab)){ showToast('এই সেকশনে আপনার অ্যাক্সেস নেই।'); tab = 'HOME'; }
+  if(tab === 'ADMIN' && currentRole === 'admin'){ setTimeout(aaInit, 0); }
   // Super Admin Panel: only Admin / Super Admin logins may open it (never Agents)
   if(tab === 'SUPERADMIN' && currentRole !== 'admin'){ return; }
   if(tab === 'SUPERADMIN' && typeof saLoadAgents === 'function'){ setTimeout(saLoadAgents, 0); }
@@ -17979,6 +18311,7 @@ function completeEmployeeLogin(data){
   localStorage.setItem('qa_role', currentRole);
   localStorage.setItem('qa_login_time', Date.now());
 
+  aaMyPromise = null; // new login → re-read this agent's access row
   showLoginPopupIfNeeded(); // fired before enterApp() so its request isn't queued behind the dashboard's own calls
   enterApp();
   showEmployeeWelcomeBar();
@@ -18480,6 +18813,7 @@ async function saCreateAgent(){
   document.getElementById('saNewEmpTeam').value = '';
   document.getElementById('saNewEmpProcess').value = '';
   showToast('নতুন agent তৈরি হয়েছে। ডিফল্ট পাসওয়ার্ড: GTPL@123');
+  aaCreateRowForNewAgent(employeeId, agentName, team, process_);   // new agent gets the "new agent template" access/popup
   saLoadAgents();
 }
 
