@@ -9510,7 +9510,7 @@ function aaCatalog(){
 /* ---- logged-in agent: load own row, hide sidebar items, custom popup ---- */
 function aaFetchMy(){
   if(aaMyPromise) return aaMyPromise;
-  const id = empEmployeeId || localStorage.getItem('qa_emp_id');
+  const id = localStorage.getItem('qa_emp_id');          // (not empEmployeeId: it is declared later in the file and is not ready on page refresh)
   if(!id) return Promise.resolve(null);
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 6000);
   aaMyPromise = fetch(`${SUPABASE_URL}/rest/v1/${AA_TABLE}?select=hidden_nav,popup_mode,popup_text&employee_id=ilike.${encodeURIComponent(id)}&limit=1`,
@@ -9522,6 +9522,9 @@ function aaFetchMy(){
   return aaMyPromise;
 }
 async function aaPrepareAccess(){
+  try{ await aaPrepareAccessInner(); }catch(e){ console.error('Agent access skipped (full access kept)', e); }
+}
+async function aaPrepareAccessInner(){
   document.querySelectorAll('.nav-denied').forEach(e => e.classList.remove('nav-denied'));
   aaMyHidden = new Set();
   if(currentRole !== 'agent') return;
