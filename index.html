@@ -7417,6 +7417,8 @@ const HOME_SECTION_ACCESS = [
   { id: 'HOME-BBRENEWAL',  vKey: 'BBRENEWAL',  label: '🏠 Home › BB Renewal (Score, Charts & Table)' }
 ];
 let aaRows = [], aaTemplate = null, aaSelected = new Set();
+let aaSheetIds = null;           // lower-cased employee ids currently in the Google Sheet 'All Agents' list (set after every sync)
+let aaSyncBusy = false;
 const SB_HEADERS_JSON = Object.assign({ 'Content-Type': 'application/json' }, SB_HEADERS);
 const BANNER_BUCKET = "banners";
 const BANNER_MAX_IMAGE_MB = 5;   // images/GIFs above this are rejected client-side
@@ -9589,7 +9591,7 @@ function aaShellHtml(){
     <span id="aaCount" style="font-size:12px;color:var(--text-muted);"></span>
     <span style="flex:1"></span>
     <button class="btn small" onclick="aaOpenEdit('${AA_TEMPLATE_ID}')">⚙ New agent template</button>
-    <button class="btn small" id="aaSyncBtn" onclick="aaSyncFromSuper()">⟳ Sync new agents</button>
+    <button class="btn small" id="aaSyncBtn" onclick="aaSyncFromSuper()" title="All Agents (Google Sheet) এর সাথে মিলিয়ে নিন">⟳ Sync with Google Sheet</button>
   </div>
   <div class="aa-table-wrap"><table class="aa-table"><thead><tr>
     <th></th><th>ID</th><th>Agent</th><th>Process</th><th>Status</th><th>Sidebar access</th><th>Popup</th><th></th>
@@ -9637,7 +9639,11 @@ async function aaInit(){
   }
   const sb = document.getElementById('aaSyncBtn');
   if(sb) sb.style.display = (typeof superAdminToken !== 'undefined' && superAdminToken) ? '' : 'none';
+  await aaAutoSync(true);            // mirror Google Sheet 'All Agents' first, then show the list
   await aaLoadRoster();
+  if(!window.aaAutoTimer){           // while the Agent Access panel stays open, re-check the sheet every 2 minutes
+    window.aaAutoTimer = setInterval(() => { if(currentTab === 'ADMIN' && !document.hidden) aaAutoSync(true); }, 120000);
+  }
 }
 async function aaLoadRoster(){
   const body = document.getElementById('aaBody'); if(!body) return;
@@ -9646,7 +9652,7 @@ async function aaLoadRoster(){
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const all = (await res.json()).map(aaNormRow);
     aaTemplate = all.find(r => r.employee_id === AA_TEMPLATE_ID) || { employee_id: AA_TEMPLATE_ID, agent_name: 'NEW AGENT TEMPLATE', status: 'Template', hidden_nav: [], popup_mode: 'default', popup_text: '' };
-    aaRows = all.filter(r => r.employee_id !== AA_TEMPLATE_ID);
+    aaRows = all.filter(r => r.employee_id !== AA_TEMPLATE_ID && (!aaSheetIds || aaSheetIds.has(String(r.employee_id).toLowerCase())));   // list always mirrors the Google Sheet 'All Agents'
     const procs = Array.from(new Set(aaRows.map(r => r.process).filter(Boolean))).sort();
     const ps = document.getElementById('aaProc'); const cur = ps.value;
     ps.innerHTML = '<option value="">All Process</option>' + procs.map(p => `<option>${escapeHtml(p)}</option>`).join('');
@@ -9712,21 +9718,74 @@ async function aaBulkPopup(mode){
     .map(r => Object.assign({}, r, { popup_mode: mode, popup_text: mode === 'custom' ? text : '' }));
   await aaSaveAndRefresh(rows, `${rows.length} জন agent-এর popup আপডেট হয়েছে ✅`);
 }
-async function aaSyncFromSuper(){
-  if(typeof superAdminToken === 'undefined' || !superAdminToken){ showToast('এটা শুধু Super Admin লগইনে কাজ করে।'); return; }
-  showToast('Agent list আনা হচ্ছে...');
+/* ---- Google Sheet 'All Agents' <-> Agent Access two-way mirror ----
+   Sheet = source of truth for WHO exists + name / team / process / status.
+   Agent Access keeps its own data (hidden sidebar items + popup) for every agent that is still in the sheet.
+   • new agent in sheet      -> added here with the "new agent template" access
+   • name/team/process/status changed in sheet -> updated here (access & popup are kept)
+   • agent removed from sheet -> removed from this list too */
+async function aaSyncWithSheet(sheetAgents, silent){
+  if(aaSyncBusy || !Array.isArray(sheetAgents) || !sheetAgents.length) return -1;   // empty answer = never wipe anything
+  aaSyncBusy = true;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${AA_TABLE}?select=*&limit=2000`, { headers: SB_HEADERS, cache: 'no-store' });
+    if(!res.ok) return -1;
+    const all = (await res.json()).map(aaNormRow);
+    const tpl = all.find(r => r.employee_id === AA_TEMPLATE_ID) || { hidden_nav: [], popup_mode: 'default', popup_text: '' };
+    const cur = new Map();
+    all.filter(r => r.employee_id !== AA_TEMPLATE_ID).forEach(r => cur.set(String(r.employee_id).toLowerCase(), r));
+
+    const sheetIds = new Set(), toUpsert = [];
+    let added = 0, updated = 0;
+    sheetAgents.forEach(a => {
+      if(!a || !a.employeeId) return;
+      const id = String(a.employeeId).trim(), key = id.toLowerCase();
+      if(!id || sheetIds.has(key)) return;
+      sheetIds.add(key);
+      const name = a.agentName || '', team = a.team || '', proc = a.process || '', status = a.status || '';
+      const ex = cur.get(key);
+      if(!ex){
+        toUpsert.push({ employee_id: id, agent_name: name, team, process: proc, status,
+                        hidden_nav: tpl.hidden_nav, popup_mode: tpl.popup_mode, popup_text: tpl.popup_text });
+        added++;
+      }else if(ex.agent_name !== name || ex.team !== team || ex.process !== proc || ex.status !== status){
+        toUpsert.push(Object.assign({}, ex, { agent_name: name, team, process: proc, status }));
+        updated++;
+      }
+    });
+    const stale = Array.from(cur.values()).filter(r => !sheetIds.has(String(r.employee_id).toLowerCase()));
+
+    if(toUpsert.length && !(await aaUpsert(toUpsert))) return -1;
+    if(stale.length){
+      try{
+        const list = stale.map(r => '"' + String(r.employee_id).replace(/"/g, '') + '"').join(',');
+        const del = await fetch(`${SUPABASE_URL}/rest/v1/${AA_TABLE}?employee_id=in.(${encodeURIComponent(list)})`,
+          { method: 'DELETE', headers: Object.assign({ Prefer: 'return=minimal' }, SB_HEADERS) });
+        if(!del.ok) console.error('agent_access cleanup failed (hidden from list anyway)', del.status);
+      }catch(e){ console.error('agent_access cleanup error', e); }
+    }
+    aaSheetIds = sheetIds;
+    const changes = added + updated + stale.length;
+    if(changes && document.getElementById('aaBody')) await aaLoadRoster();
+    if(changes) showToast(`Google Sheet-এর সাথে sync ✅ — নতুন ${added}, আপডেট ${updated}, বাদ ${stale.length}`);
+    else if(!silent) showToast('সব agent আগে থেকেই Google Sheet-এর সাথে মিলে আছে ✅');
+    return changes;
+  }catch(e){ console.error('Agent access sync failed', e); return -1; }
+  finally{ aaSyncBusy = false; }
+}
+async function aaAutoSync(silent){
+  if(typeof superAdminToken === 'undefined' || !superAdminToken) return -1;   // the sheet list can only be read with a Super Admin token
   try{
     const data = await empApiGet('listAgents', { token: superAdminToken });
-    if(!data || data.ok !== true || !Array.isArray(data.agents)){ showToast((data && data.error) || 'Agent list আনা যায়নি।'); return; }
-    const have = new Set(aaRows.map(r => r.employee_id.toLowerCase()));
-    const t = aaTemplate || { hidden_nav: [], popup_mode: 'default', popup_text: '' };
-    const fresh = data.agents.filter(a => a && a.employeeId && !have.has(String(a.employeeId).toLowerCase())).map(a => ({
-      employee_id: String(a.employeeId), agent_name: a.agentName || '', team: a.team || '', process: a.process || '', status: a.status || '',
-      hidden_nav: t.hidden_nav, popup_mode: t.popup_mode, popup_text: t.popup_text }));
-    if(!fresh.length){ showToast('নতুন কোনো agent নেই — সবাই লিস্টে আছে।'); return; }
-    if(await aaUpsert(fresh, true)){ showToast(`${fresh.length} জন নতুন agent যোগ হয়েছে (template access সহ) ✅`); await aaLoadRoster(); }
-    else showToast('Save ব্যর্থ হয়েছে।');
-  }catch(e){ console.error(e); showToast('Sync ব্যর্থ হয়েছে।'); }
+    if(data && data.ok === true && Array.isArray(data.agents)) return await aaSyncWithSheet(data.agents, silent);
+  }catch(e){ console.error('Agent list fetch failed', e); }
+  return -1;
+}
+async function aaSyncFromSuper(){
+  if(typeof superAdminToken === 'undefined' || !superAdminToken){ showToast('এটা শুধু Super Admin লগইনে কাজ করে।'); return; }
+  showToast('Google Sheet থেকে Agent list আনা হচ্ছে...');
+  const r = await aaAutoSync(false);
+  if(r < 0) showToast('Sync ব্যর্থ হয়েছে — আবার চেষ্টা করুন।');
 }
 
 /* ---- per-agent edit window ---- */
@@ -18753,6 +18812,7 @@ async function saLoadAgents(){
     const data = await empApiGet('listAgents', { token: superAdminToken });
     if(!data || data.ok !== true){ tbody.innerHTML = `<tr><td colspan="7">${(data&&data.error)||'Failed to load.'}</td></tr>`; return; }
     if(!data.agents.length){ tbody.innerHTML = '<tr><td colspan="7">কোনো agent নেই।</td></tr>'; return; }
+    if(typeof aaSyncWithSheet === 'function') aaSyncWithSheet(data.agents, true);   // keep Agent Access in step with every All Agents change
     tbody.innerHTML = data.agents.map(a => {
       const role = (a.role || 'agent').toLowerCase();
       const isAdmin = role === 'admin';
