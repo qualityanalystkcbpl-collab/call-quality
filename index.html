@@ -9671,15 +9671,18 @@ function aaVisibleRows(){
 function aaRenderTable(){
   const body = document.getElementById('aaBody'); if(!body) return;
   const rows = aaVisibleRows();
+  const cat = aaCatalog(), catMap = {}; cat.forEach(c => { catMap[c.id] = c.label; });
   body.innerHTML = rows.length ? rows.map(r => {
-    const n = r.hidden_nav.length;
-    const catMap = aaCatMap();
-    const tip = r.hidden_nav.map(id => catMap[id] || id).join(', ');
+    const hiddenKnown = r.hidden_nav.filter(id => catMap[id]);                 // hidden items that exist in the current menu
+    const nHide = hiddenKnown.length, nShow = cat.length - nHide;
+    const hideTip = hiddenKnown.map(id => catMap[id]).join(', ');
+    const showTip = cat.filter(c => !r.hidden_nav.includes(c.id)).map(c => c.label).join(', ');
+    const accessCell = `<span class="aa-pill aa-green" title="${escapeAttr('Show: ' + (showTip || '—'))}">✅ ${nShow} Show</span> <span class="aa-pill ${nHide ? 'aa-amber' : ''}" title="${escapeAttr('Hide: ' + (hideTip || '—'))}">🚫 ${nHide} Hide</span>`;
     const popup = r.popup_mode === 'custom' ? '<span class="aa-pill aa-blue">Custom</span>' : r.popup_mode === 'off' ? '<span class="aa-pill aa-red">Off</span>' : '<span class="aa-pill">Default</span>';
     return `<tr>
       <td><input type="checkbox" ${aaSelected.has(r.employee_id) ? 'checked' : ''} data-id="${escapeAttr(r.employee_id)}" onchange="aaToggleSel(this.dataset.id,this.checked)"></td>
       <td class="mono">${escapeHtml(r.employee_id)}</td><td>${escapeHtml(r.agent_name)}</td><td>${escapeHtml(r.process)}</td><td>${escapeHtml(r.status)}</td>
-      <td>${n ? `<span class="aa-pill aa-amber" title="${escapeAttr(tip)}">${n} hidden</span>` : '<span class="aa-pill aa-green">Full access</span>'}</td>
+      <td style="white-space:nowrap;">${accessCell}</td>
       <td>${popup}</td>
       <td><button class="btn small" data-id="${escapeAttr(r.employee_id)}" onclick="aaOpenEdit(this.dataset.id)">Edit</button></td></tr>`;
   }).join('') : '<tr><td colspan="8">কোনো agent পাওয়া যায়নি।</td></tr>';
