@@ -4775,6 +4775,40 @@ body:has(#panel-MONTHDATA.active)::before{animation:none!important;}
 .aa-navgrid label{display:flex;gap:6px;align-items:flex-start;font-size:12.5px;cursor:pointer;}
 .aa-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;}
 .aa-modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:780px;width:100%;max-height:90vh;overflow:auto;padding:18px;}
+/* ===== ADMIN PORTAL colour theme (only when an Admin / Super Admin is logged in; Dark / Light toggle still works) ===== */
+body.role-admin:not(.light-theme){--bg:#0D0B1E;--surface:#161230;--surface-2:#1F1944;--surface-3:#2A2259;--border:#3A2F70;--text:#F0EDFB;--text-muted:#A39CCB;--agent:#9B7BFF;--agent-dim:#2A2060;--top:#9B7BFF;}
+body.role-admin.light-theme{--bg:#F5F2FD;--surface:#FFFFFF;--surface-2:#EFEAFB;--surface-3:#E5DDF8;--border:#DBD0F2;--text:#1C1536;--text-muted:#645B85;--agent:#6E4BE0;--agent-dim:#E8E0FB;--top:#6E4BE0;}
+body.role-admin[data-accent="blue"]:not(.light-theme){--bg:#050E24;--surface:#0B1B3D;--surface-2:#112652;--surface-3:#19346B;--border:#24428A;--text:#EAF1FF;--text-muted:#93A8D6;--agent:#4C8DFF;--agent-dim:#12306B;--top:#4C8DFF;}
+body.role-admin[data-accent="blue"].light-theme{--bg:#F0F5FF;--surface:#FFFFFF;--surface-2:#E8F0FD;--surface-3:#DCE8FB;--border:#CBDCF5;--text:#12203D;--text-muted:#56688A;--agent:#2563EB;--agent-dim:#DDE9FD;--top:#2563EB;}
+body.role-admin[data-accent="rose"]:not(.light-theme){--bg:#1A0A14;--surface:#26101D;--surface-2:#331828;--surface-3:#44213A;--border:#632E52;--text:#FBEDF4;--text-muted:#D0A0BF;--agent:#FF6B9D;--agent-dim:#4A1F38;--top:#FF6B9D;}
+body.role-admin[data-accent="rose"].light-theme{--bg:#FFF3F7;--surface:#FFFFFF;--surface-2:#FDEAF1;--surface-3:#FADCE8;--border:#F2C9DA;--text:#3A1424;--text-muted:#86536B;--agent:#D6336C;--agent-dim:#FCE0EB;--top:#D6336C;}
+body.role-admin[data-accent="orange"]:not(.light-theme){--bg:#1A0F06;--surface:#25160A;--surface-2:#331F0E;--surface-3:#452A12;--border:#63401C;--text:#FBF1E6;--text-muted:#D2B08A;--agent:#FF9F43;--agent-dim:#4A2D10;--top:#FF9F43;}
+body.role-admin[data-accent="orange"].light-theme{--bg:#FFF7EE;--surface:#FFFFFF;--surface-2:#FDEFDD;--surface-3:#FAE3C7;--border:#F2D4B0;--text:#3A2210;--text-muted:#866444;--agent:#E07B16;--agent-dim:#FDE7CC;--top:#E07B16;}
+body.role-admin::before{ background:linear-gradient(120deg,var(--agent) 0%,#B94AE0 25%,var(--agent) 50%,#E3A857 75%,var(--agent) 100%); background-size:700% 700%; opacity:.10; }
+body.role-admin .bg-floating-circles span{ --clr:var(--agent) !important; }
+#adminModeBar{ display:none; position:fixed; top:0; left:0; right:0; height:4px; z-index:100001; background:linear-gradient(90deg,var(--agent),#E3A857,var(--agent)); background-size:200% 100%; animation:adminBarMove 6s linear infinite; }
+body.role-admin #adminModeBar{ display:block; }
+@keyframes adminBarMove{ to{ background-position:200% 0; } }
+body.role-admin .role-pill.admin{ background:var(--agent); color:#fff; border-color:var(--agent); box-shadow:0 0 12px var(--agent); }
+/* Admin: replace the remaining hard-coded teal accents with the admin accent colour */
+body.role-admin .banner-wrap{ border-color:color-mix(in srgb,var(--agent) 65%,transparent); background:linear-gradient(-45deg,#1B1450,#2A1A6B,#5A2D8F,#8A2E6B,#233E9B); background-size:400% 400%; animation:dynamicMeshBackground 15s ease infinite; box-shadow:0 0 40px color-mix(in srgb,var(--agent) 35%,transparent), inset 0 0 60px rgba(0,0,0,.45); }
+body.role-admin .banner-wrap::before{ background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--agent) 25%,transparent) 30%,rgba(227,168,87,.4) 50%,color-mix(in srgb,var(--agent) 25%,transparent) 70%,transparent); }
+body.role-admin .banner-dots span.active{ background:linear-gradient(90deg,var(--agent),#FF5E7E); box-shadow:0 0 15px var(--agent); }
+body.role-admin .ticker{ border-color:color-mix(in srgb,var(--agent) 45%,transparent); background:linear-gradient(90deg,var(--surface),var(--surface-2),var(--surface)); }
+body.role-admin .news-ticker-track{ background:linear-gradient(90deg,color-mix(in srgb,var(--agent) 10%,transparent),transparent 30%),var(--surface-2); }
+body.role-admin .news-ticker-scroll span.item{ color:var(--agent); }
+body.role-admin .nav-label{ background:linear-gradient(90deg,var(--agent),#E3A857,#B94AE0,var(--agent)); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; filter:drop-shadow(0 0 6px color-mix(in srgb,var(--agent) 55%,transparent)); }
+body.role-admin .brand-strip{ background:linear-gradient(120deg,var(--bg),color-mix(in srgb,var(--agent) 12%,transparent),var(--bg)); }
+body.role-admin .nav-item.nav-quicklink-glow{ border-color:color-mix(in srgb,var(--agent) 40%,transparent); }
+body.role-admin table.raw-sheet-table tr:not(.rs-header-row):nth-child(even) td:not(.rs-head){ background:color-mix(in srgb,var(--agent) 6%,transparent); }
+body.role-admin table.raw-sheet-table tr:not(.rs-header-row):hover td:not(.rs-head){ background:color-mix(in srgb,var(--agent) 16%,transparent); }
+body.role-admin .ans3sec-table-wrap{ background:linear-gradient(135deg,color-mix(in srgb,var(--agent) 12%,transparent),rgba(227,168,87,.10)); }
+body.role-admin .banner-always.on{ background:color-mix(in srgb,var(--agent) 18%,transparent); border-color:var(--agent); color:var(--text) !important; }
+body.role-admin .emp-welcome-btn-row .theme-switch-mini{ display:none; }     /* admin has its own toggle in the header */
+.admin-theme-controls{ display:none; align-items:center; gap:8px; margin-right:8px; }
+body.role-admin .admin-theme-controls{ display:inline-flex; }
+.admin-accent-dot{ width:16px; height:16px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0; box-shadow:0 0 0 1px rgba(255,255,255,.25); }
+.admin-accent-dot.on{ border-color:#fff; box-shadow:0 0 8px currentColor; transform:scale(1.15); }
 /* LOB Wise Data month filter */
 .lob-filterbar{display:flex;flex-direction:column;gap:8px;margin:10px 0 12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
 .lob-fb-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
@@ -4935,6 +4969,7 @@ body:has(#panel-MONTHDATA.active)::before{animation:none!important;}
   </div>
 </div>
 <!-- ============ MAIN APP ============ -->
+<div id="adminModeBar"></div>
 <div id="mainScreen">
     <!-- ============ EMPLOYEE FIXED WELCOME BAR (NEW - ADDITIVE) ============ -->
     <div id="employeeWelcomeBar" style="display:none;">
@@ -5097,6 +5132,16 @@ body:has(#panel-MONTHDATA.active)::before{animation:none!important;}
         </div>
       </div>
       <div class="user-block">
+        <span class="admin-theme-controls" id="adminThemeControls" title="Admin theme">
+          <label class="theme-switch theme-switch-mini" title="Dark / Light mode">
+            <input type="checkbox" class="theme-switch-input" onchange="toggleTheme(this)">
+            <span class="slider"></span>
+          </label>
+          <button type="button" class="admin-accent-dot" data-k="violet" style="background:#8B6BFF;color:#8B6BFF" title="Violet" onclick="setAdminAccent('violet')"></button>
+          <button type="button" class="admin-accent-dot" data-k="blue"   style="background:#3B82F6;color:#3B82F6" title="Blue"   onclick="setAdminAccent('blue')"></button>
+          <button type="button" class="admin-accent-dot" data-k="rose"   style="background:#F0558A;color:#F0558A" title="Rose"   onclick="setAdminAccent('rose')"></button>
+          <button type="button" class="admin-accent-dot" data-k="orange" style="background:#F59E3B;color:#F59E3B" title="Orange" onclick="setAdminAccent('orange')"></button>
+        </span>
         <span class="role-pill" id="rolePill">AGENT</span>
         <button class="logout-btn" onclick="handleLogoutClick()">⏻Logout</button>
       </div>
@@ -9404,6 +9449,7 @@ function doLogout(){
 localStorage.removeItem("qa_role");
     localStorage.removeItem("qa_login_time");
   currentRole = null;
+  applyAdminTheme();   // admin colours must not stay on the login screen
   document.getElementById('mainScreen').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   // Role-gated elements (chat bubble/panel, nav items etc.) must go back to hidden —
@@ -9445,6 +9491,18 @@ function getSafeReturnTarget(){
   }catch(e){}
   return null;
 }
+/* ---- Admin portal theme: separate colours for Admin / Super Admin only ---- */
+function applyAdminTheme(){
+  const on = (currentRole === 'admin');
+  document.body.classList.toggle('role-admin', on);
+  const acc = localStorage.getItem('qa_admin_accent') || 'violet';
+  if(on) document.body.setAttribute('data-accent', acc); else document.body.removeAttribute('data-accent');
+  document.querySelectorAll('.admin-accent-dot').forEach(b => b.classList.toggle('on', b.dataset.k === acc));
+  if(on) document.title = (document.title.replace(/ \(Admin\)$/, '')) + ' (Admin)';
+  else document.title = document.title.replace(/ \(Admin\)$/, '');
+}
+function setAdminAccent(k){ localStorage.setItem('qa_admin_accent', k); applyAdminTheme(); }
+
 async function enterApp(){
   showPageLoadOverlay();
   // Forceful login-gate hookup: if we got here (fresh login OR restored
@@ -9461,6 +9519,7 @@ async function enterApp(){
   const pill = document.getElementById('rolePill');
   pill.textContent = currentRole.toUpperCase();
   pill.className = 'role-pill ' + currentRole;
+  applyAdminTheme();
   if(currentRole==="admin"){
 
     document
