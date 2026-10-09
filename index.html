@@ -4804,20 +4804,18 @@ body.role-admin table.raw-sheet-table tr:not(.rs-header-row):nth-child(even) td:
 body.role-admin table.raw-sheet-table tr:not(.rs-header-row):hover td:not(.rs-head){ background:color-mix(in srgb,var(--agent) 16%,transparent); }
 body.role-admin .ans3sec-table-wrap{ background:linear-gradient(135deg,color-mix(in srgb,var(--agent) 12%,transparent),rgba(227,168,87,.10)); }
 body.role-admin .banner-always.on{ background:color-mix(in srgb,var(--agent) 18%,transparent); border-color:var(--agent); color:var(--text) !important; }
-/* big "ADMIN PORTAL" label next to the logo (Admin / Super Admin only) */
-.admin-portal-title{ display:none; flex-shrink:0; margin:0 16px 0 6px; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:26px; letter-spacing:2.5px; line-height:1; white-space:nowrap;
-  background:linear-gradient(90deg,var(--agent),#E3A857,var(--agent)); background-size:200% 100%; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
-  filter:drop-shadow(0 0 8px color-mix(in srgb,var(--agent) 55%,transparent));
-  transform-origin:left center; will-change:transform;
-  animation:adminBarMove 6s linear infinite, adminPortalZoom 2.2s ease-in-out infinite; }
-@keyframes adminPortalZoom{
-  0%,100%{ transform:scale(1);    filter:drop-shadow(0 0 6px color-mix(in srgb,var(--agent) 45%,transparent)); }
-  50%    { transform:scale(1.14); filter:drop-shadow(0 0 16px color-mix(in srgb,var(--agent) 90%,transparent)); }
-}
-@media (prefers-reduced-motion:reduce){ .admin-portal-title{ animation:adminBarMove 6s linear infinite; } }
+/* big scrolling "ADMIN PORTAL" label next to the logo (Admin / Super Admin only) — scrolls left → right (reverse of the normal tickers) */
+.admin-portal-title{ display:none; flex-shrink:0; width:250px; margin:0 14px 0 6px; overflow:hidden; white-space:nowrap;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
 body.role-admin .admin-portal-title{ display:block; }
-@media (max-width:1100px){ .admin-portal-title{ font-size:18px; letter-spacing:1.5px; margin:0 8px; } }
-@media (max-width:700px){ .admin-portal-title{ font-size:14px; letter-spacing:1px; } }
+.admin-portal-title .apt-track{ display:inline-flex; width:max-content; animation:adminPortalScroll 7s linear infinite; will-change:transform; }
+.admin-portal-title .apt-track span{ padding-right:46px; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:26px; letter-spacing:2.5px; line-height:1.15;
+  background:linear-gradient(90deg,var(--agent),#E3A857,var(--agent)); background-size:200% 100%; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
+  filter:drop-shadow(0 0 8px color-mix(in srgb,var(--agent) 55%,transparent)); animation:adminBarMove 6s linear infinite; }
+@keyframes adminPortalScroll{ from{ transform:translateX(-50%); } to{ transform:translateX(0); } }   /* moves to the RIGHT */
+@media (prefers-reduced-motion:reduce){ .admin-portal-title .apt-track{ animation:none; } }
+@media (max-width:1100px){ .admin-portal-title{ width:190px; margin:0 8px; } .admin-portal-title .apt-track span{ font-size:18px; letter-spacing:1.5px; padding-right:32px; } }
+@media (max-width:700px){ .admin-portal-title{ width:140px; } .admin-portal-title .apt-track span{ font-size:14px; letter-spacing:1px; padding-right:24px; } }
 body.role-admin .emp-welcome-btn-row .theme-switch-mini{ display:none; }     /* admin has its own toggle in the header */
 .admin-theme-controls{ display:none; align-items:center; gap:8px; margin-right:8px; }
 body.role-admin .admin-theme-controls{ display:inline-flex; }
@@ -5139,7 +5137,7 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
           </div>
         </div>
       </div>
-      <div class="admin-portal-title" id="adminPortalTitle">ADMIN PORTAL</div>
+      <div class="admin-portal-title" id="adminPortalTitle"><div class="apt-track"><span>ADMIN PORTAL</span><span>ADMIN PORTAL</span></div></div>
       <div class="ticker">
         <div class="ticker-track mono" id="tickerTrack">Loading updates ...</div>
         <div class="ticker-flash" id="tickerFlash">
