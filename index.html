@@ -4804,18 +4804,22 @@ body.role-admin table.raw-sheet-table tr:not(.rs-header-row):nth-child(even) td:
 body.role-admin table.raw-sheet-table tr:not(.rs-header-row):hover td:not(.rs-head){ background:color-mix(in srgb,var(--agent) 16%,transparent); }
 body.role-admin .ans3sec-table-wrap{ background:linear-gradient(135deg,color-mix(in srgb,var(--agent) 12%,transparent),rgba(227,168,87,.10)); }
 body.role-admin .banner-always.on{ background:color-mix(in srgb,var(--agent) 18%,transparent); border-color:var(--agent); color:var(--text) !important; }
-/* big scrolling "ADMIN PORTAL" label next to the logo (Admin / Super Admin only) — scrolls left → right (reverse of the normal tickers) */
-.admin-portal-title{ display:none; flex-shrink:0; width:250px; margin:0 14px 0 6px; overflow:hidden; white-space:nowrap;
+/* big scrolling 3D "ADMIN PORTAL" label next to the logo (Admin / Super Admin only) — scrolls left → right (reverse of the normal tickers) */
+.admin-portal-title{ display:none; flex-shrink:0; width:190px; margin:0 12px 0 6px; padding:3px 0 7px; overflow:hidden; white-space:nowrap; perspective:420px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
 body.role-admin .admin-portal-title{ display:block; }
-.admin-portal-title .apt-track{ display:inline-flex; width:max-content; animation:adminPortalScroll 7s linear infinite; will-change:transform; }
-.admin-portal-title .apt-track span{ padding-right:46px; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:26px; letter-spacing:2.5px; line-height:1.15;
-  background:linear-gradient(90deg,var(--agent),#E3A857,var(--agent)); background-size:200% 100%; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
-  filter:drop-shadow(0 0 8px color-mix(in srgb,var(--agent) 55%,transparent)); animation:adminBarMove 6s linear infinite; }
+.admin-portal-title .apt-track{ display:inline-flex; width:max-content; animation:adminPortalScroll 6s linear infinite; will-change:transform; }
+.admin-portal-title .apt-track span{
+  --apt-side:color-mix(in srgb,var(--agent) 52%,#000);
+  display:inline-block; padding-right:34px; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:18px; letter-spacing:2px; line-height:1.25;
+  color:color-mix(in srgb,var(--agent) 28%,#fff); -webkit-text-fill-color:currentColor;
+  text-shadow:1px 1px 0 var(--apt-side),2px 2px 0 var(--apt-side),3px 3px 0 var(--apt-side),4px 4px 0 var(--apt-side),5px 5px 0 var(--apt-side),
+              7px 8px 9px rgba(0,0,0,.55),0 0 16px color-mix(in srgb,var(--agent) 70%,transparent);
+  transform:rotateY(-16deg) rotateX(6deg); transform-origin:50% 60%; }
 @keyframes adminPortalScroll{ from{ transform:translateX(-50%); } to{ transform:translateX(0); } }   /* moves to the RIGHT */
 @media (prefers-reduced-motion:reduce){ .admin-portal-title .apt-track{ animation:none; } }
-@media (max-width:1100px){ .admin-portal-title{ width:190px; margin:0 8px; } .admin-portal-title .apt-track span{ font-size:18px; letter-spacing:1.5px; padding-right:32px; } }
-@media (max-width:700px){ .admin-portal-title{ width:140px; } .admin-portal-title .apt-track span{ font-size:14px; letter-spacing:1px; padding-right:24px; } }
+@media (max-width:1100px){ .admin-portal-title{ width:150px; margin:0 8px; } .admin-portal-title .apt-track span{ font-size:15px; letter-spacing:1.5px; padding-right:26px; } }
+@media (max-width:700px){ .admin-portal-title{ width:116px; } .admin-portal-title .apt-track span{ font-size:12px; letter-spacing:1px; padding-right:20px; } }
 body.role-admin .emp-welcome-btn-row .theme-switch-mini{ display:none; }     /* admin has its own toggle in the header */
 .admin-theme-controls{ display:none; align-items:center; gap:8px; margin-right:8px; }
 body.role-admin .admin-theme-controls{ display:inline-flex; }
