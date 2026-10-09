@@ -4804,7 +4804,7 @@ body.role-admin table.raw-sheet-table tr:not(.rs-header-row):nth-child(even) td:
 body.role-admin table.raw-sheet-table tr:not(.rs-header-row):hover td:not(.rs-head){ background:color-mix(in srgb,var(--agent) 16%,transparent); }
 body.role-admin .ans3sec-table-wrap{ background:linear-gradient(135deg,color-mix(in srgb,var(--agent) 12%,transparent),rgba(227,168,87,.10)); }
 body.role-admin .banner-always.on{ background:color-mix(in srgb,var(--agent) 18%,transparent); border-color:var(--agent); color:var(--text) !important; }
-/* big scrolling 3D "ADMIN PORTAL" label next to the logo (Admin / Super Admin only) — scrolls left → right (reverse of the normal tickers) */
+/* big scrolling 3D "ADMIN PORTAL" label next to the logo (Admin / Super Admin only) — scrolls right → left (same direction as the other tickers) */
 .admin-portal-title{ display:none; flex-shrink:0; width:190px; margin:0 12px 0 6px; padding:3px 0 7px; overflow:hidden; white-space:nowrap; perspective:420px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
 body.role-admin .admin-portal-title{ display:block; }
@@ -4816,7 +4816,7 @@ body.role-admin .admin-portal-title{ display:block; }
   text-shadow:1px 1px 0 var(--apt-side),2px 2px 0 var(--apt-side),3px 3px 0 var(--apt-side),4px 4px 0 var(--apt-side),5px 5px 0 var(--apt-side),
               7px 8px 9px rgba(0,0,0,.55),0 0 16px color-mix(in srgb,var(--agent) 70%,transparent);
   transform:rotateY(-16deg) rotateX(6deg); transform-origin:50% 60%; }
-@keyframes adminPortalScroll{ from{ transform:translateX(-50%); } to{ transform:translateX(0); } }   /* moves to the RIGHT */
+@keyframes adminPortalScroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }   /* normal direction: moves to the LEFT (same as the other tickers) */
 @media (prefers-reduced-motion:reduce){ .admin-portal-title .apt-track{ animation:none; } }
 @media (max-width:1100px){ .admin-portal-title{ width:150px; margin:0 8px; } .admin-portal-title .apt-track span{ font-size:15px; letter-spacing:1.5px; padding-right:26px; } }
 @media (max-width:700px){ .admin-portal-title{ width:116px; } .admin-portal-title .apt-track span{ font-size:12px; letter-spacing:1px; padding-right:20px; } }
