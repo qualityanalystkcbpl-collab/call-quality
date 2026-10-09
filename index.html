@@ -4807,7 +4807,14 @@ body.role-admin .banner-always.on{ background:color-mix(in srgb,var(--agent) 18%
 /* big "ADMIN PORTAL" label next to the logo (Admin / Super Admin only) */
 .admin-portal-title{ display:none; flex-shrink:0; margin:0 16px 0 6px; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:26px; letter-spacing:2.5px; line-height:1; white-space:nowrap;
   background:linear-gradient(90deg,var(--agent),#E3A857,var(--agent)); background-size:200% 100%; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
-  filter:drop-shadow(0 0 8px color-mix(in srgb,var(--agent) 55%,transparent)); animation:adminBarMove 6s linear infinite; }
+  filter:drop-shadow(0 0 8px color-mix(in srgb,var(--agent) 55%,transparent));
+  transform-origin:left center; will-change:transform;
+  animation:adminBarMove 6s linear infinite, adminPortalZoom 2.2s ease-in-out infinite; }
+@keyframes adminPortalZoom{
+  0%,100%{ transform:scale(1);    filter:drop-shadow(0 0 6px color-mix(in srgb,var(--agent) 45%,transparent)); }
+  50%    { transform:scale(1.14); filter:drop-shadow(0 0 16px color-mix(in srgb,var(--agent) 90%,transparent)); }
+}
+@media (prefers-reduced-motion:reduce){ .admin-portal-title{ animation:adminBarMove 6s linear infinite; } }
 body.role-admin .admin-portal-title{ display:block; }
 @media (max-width:1100px){ .admin-portal-title{ font-size:18px; letter-spacing:1.5px; margin:0 8px; } }
 @media (max-width:700px){ .admin-portal-title{ font-size:14px; letter-spacing:1px; } }
