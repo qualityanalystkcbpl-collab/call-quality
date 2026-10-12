@@ -15110,7 +15110,12 @@ function chartGridColor(){
 }
 
 /* Agent without Home access (Admin Panel > Agent Access): Home shows only a big GTPL KCBPL logo */
-function homeAccessDenied(){ return currentRole === 'agent' && aaMyHidden && aaMyHidden.has('HOME'); }
+function homeAccessDenied(){
+  if(currentRole !== 'agent' || !aaMyHidden) return false;
+  if(aaMyHidden.has('HOME')) return true;
+  // every LOB x (Score / Charts / Table) part switched off in Agent Access > Home Page Sections
+  return Object.keys(VERTICALS).every(k => ['SCORE','CHARTS','TABLE'].every(p => aaMyHidden.has('HOME-' + k + '-' + p)));
+}
 function renderHomeLogoOnly(){
   const panel = document.getElementById('panel-HOME');
   if(!panel) return;
@@ -15134,11 +15139,7 @@ async function renderHomePage(isManualRefresh){
   const homeOk = (k, part) => !(currentRole === 'agent' && aaMyHidden.has('HOME-' + k + '-' + part));
   const vKeys = Object.keys(VERTICALS).filter(k => ['SCORE','CHARTS','TABLE'].some(p => homeOk(k, p)));
   if(!vKeys.length){
-    panel.innerHTML = `
-      <div class="panel-header">
-        <div><h1>🏠 Home</h1><p>Overall average score</p></div>
-      </div>
-      <div class="empty-state"><b>এই Home সেকশনে আপনার অ্যাক্সেস নেই।</b><br>প্রয়োজনে Admin-এর সাথে যোগাযোগ করুন।</div>`;
+    renderHomeLogoOnly();   // no Home access at all -> only the big GTPL KCBPL logo
     return;
   }
 
