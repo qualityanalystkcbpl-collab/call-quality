@@ -7498,6 +7498,7 @@ const SB_SETTINGS_TABLE = 'webpage_settings';
 const AA_TABLE = 'agent_access';
 const AA_TEMPLATE_ID = '__NEW_AGENT_TEMPLATE__';
 let aaMyPromise = null;          // logged-in agent's own access row (cached per login)
+let aaMyProcess = '';            // this agent's process from the Supabase agent list (backup when the login response has none)
 let aaMyHidden = new Set();      // sidebar item ids hidden for the logged-in agent
 /* Special access (separate ticks): Parameter Wise Fail Count / Answered Within 3 Sec -> per LOB;  Home -> per LOB: Score, Charts, Table */
 const LOB_LIST = [['CATV','CATV'],['BBTECH','BB Tech Support'],['BBRENEWAL','BB Renewal']];
@@ -9540,7 +9541,7 @@ function applyRoleTitle(){
   let text = '';
   if(currentRole === 'admin') text = 'ADMIN PORTAL';
   else if(currentRole === 'agent'){
-    const proc = (localStorage.getItem('qa_emp_process') || '').replace(/\s+/g, ' ').trim().toUpperCase();
+    const proc = (localStorage.getItem('qa_emp_process') || aaMyProcess || '').replace(/\s+/g, ' ').trim().toUpperCase();
     text = proc ? (/\bPORTAL$/.test(proc) ? proc : proc + ' PORTAL') : '';      // e.g. "CATV PORTAL", "BB RENEWAL PORTAL"
   }
   document.body.classList.toggle('show-role-title', !!text);
@@ -9668,7 +9669,7 @@ function aaFetchMy(){
   const id = localStorage.getItem('qa_emp_id');          // (not empEmployeeId: it is declared later in the file and is not ready on page refresh)
   if(!id) return Promise.resolve(null);
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 6000);
-  aaMyPromise = fetch(`${SUPABASE_URL}/rest/v1/${AA_TABLE}?select=hidden_nav,popup_mode,popup_text&employee_id=ilike.${encodeURIComponent(id)}&limit=1`,
+  aaMyPromise = fetch(`${SUPABASE_URL}/rest/v1/${AA_TABLE}?select=hidden_nav,popup_mode,popup_text,process&employee_id=ilike.${encodeURIComponent(id)}&limit=1`,
     { headers: SB_HEADERS, cache: 'no-store', signal: ctl.signal })
     .then(r => r.ok ? r.json() : [])
     .then(rows => rows[0] || null)
@@ -9681,9 +9682,11 @@ async function aaPrepareAccess(){
 }
 async function aaPrepareAccessInner(){
   document.querySelectorAll('.nav-denied').forEach(e => e.classList.remove('nav-denied'));
-  aaMyHidden = new Set();
+  aaMyHidden = new Set(); aaMyProcess = '';
   if(currentRole !== 'agent') return;
   const row = await aaFetchMy();
+  aaMyProcess = (row && row.process) ? String(row.process) : '';
+  applyRoleTitle();                                                    // label next to the logo (uses the backup process if the login had none)
   const hidden = row && Array.isArray(row.hidden_nav) ? aaMigrateHidden(row.hidden_nav) : [];
   aaAssignNavIds();
   aaMyHidden = new Set(hidden);
