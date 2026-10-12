@@ -2344,6 +2344,17 @@ aside
   }
 }
 
+/* Home page of an agent who has no Home access: one big logo */
+.home-logo-only{ min-height:62vh; display:flex; align-items:center; justify-content:center; padding:24px 12px; }
+.home-logo-card{
+  background:#fff; border-radius:26px; padding:clamp(22px,4vw,48px) clamp(28px,6vw,72px);
+  box-shadow:0 0 0 1px rgba(51,201,176,.35), 0 14px 50px rgba(0,0,0,.35), 0 0 60px rgba(51,201,176,.25);
+  animation: homeLogoIn .9s cubic-bezier(.34,1.56,.64,1) both, homeLogoGlow 4s ease-in-out 1s infinite;
+}
+.home-logo-card img{ display:block; width:min(560px,70vw); max-height:46vh; height:auto; object-fit:contain; }
+.home-logo-fallback{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:clamp(34px,7vw,72px); letter-spacing:4px; color:#12263f; }
+@keyframes homeLogoIn{ from{ opacity:0; transform:scale(.7) translateY(20px);} to{ opacity:1; transform:none; } }
+@keyframes homeLogoGlow{ 0%,100%{ box-shadow:0 0 0 1px rgba(51,201,176,.35), 0 14px 50px rgba(0,0,0,.35), 0 0 40px rgba(51,201,176,.2);} 50%{ box-shadow:0 0 0 1px rgba(255,122,200,.5), 0 14px 50px rgba(0,0,0,.35), 0 0 80px rgba(255,122,200,.35);} }
 /* ===== Brighter sidebar menu: full-strength text, glowing dots, soft tinted rows ===== */
 .nav-item{
   color:var(--text);
@@ -10680,7 +10691,7 @@ async function saveNewsTicker(){
 /* ===================== NAVIGATION & TABS ===================== */
 async function switchTab(tab){
   // Agent-wise sidebar access (Admin Panel > Agent Access): hidden sections cannot be opened by this agent
-  if(currentRole === 'agent' && aaMyHidden.has(tab)){ showToast('এই সেকশনে আপনার অ্যাক্সেস নেই।'); tab = 'HOME'; }
+  if(currentRole === 'agent' && aaMyHidden.has(tab)){ if(tab !== 'HOME') showToast('এই সেকশনে আপনার অ্যাক্সেস নেই।'); tab = 'HOME'; }
   if(tab === 'ADMIN' && currentRole === 'admin'){ setTimeout(aaInit, 0); }
   // Super Admin Panel: only Admin / Super Admin logins may open it (never Agents)
   if(tab === 'SUPERADMIN' && currentRole !== 'admin'){ return; }
@@ -10702,7 +10713,7 @@ async function switchTab(tab){
   document.getElementById('panel-'+tab).classList.add('active');
   const bannerWrap = document.getElementById('bannerCarouselWrap');
   if(bannerWrap){
-    if(tab === 'HOME'){ loadHomeBannerCarousel(); }
+    if(tab === 'HOME' && !homeAccessDenied()){ loadHomeBannerCarousel(); }
     else{ bannerWrap.style.display = 'none'; if(homeBannerAutoTimer){ clearInterval(homeBannerAutoTimer); homeBannerAutoTimer=null; } }
   }
 
@@ -15098,9 +15109,17 @@ function chartGridColor(){
   return document.body.classList.contains('light-theme') ? '#D9E1EA' : '#203859';
 }
 
+/* Agent without Home access (Admin Panel > Agent Access): Home shows only a big GTPL KCBPL logo */
+function homeAccessDenied(){ return currentRole === 'agent' && aaMyHidden && aaMyHidden.has('HOME'); }
+function renderHomeLogoOnly(){
+  const panel = document.getElementById('panel-HOME');
+  if(!panel) return;
+  panel.innerHTML = `<div class="home-logo-only"><div class="home-logo-card"><img src="logo.png" alt="GTPL KCBPL" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='logo2.png';}else{this.style.display='none';this.nextElementSibling.style.display='block';}"><div class="home-logo-fallback" style="display:none;">GTPL KCBPL</div></div></div>`;
+}
 async function renderHomePage(isManualRefresh){
   const panel = document.getElementById('panel-HOME');
   if(!panel) return;
+  if(homeAccessDenied()){ renderHomeLogoOnly(); return; }
 
   panel.innerHTML = `
     <div class="panel-header">
