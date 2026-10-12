@@ -188,7 +188,7 @@ body.light-theme .bg-floating-circles span{
   letter-spacing:0.4px;
   transform:translateX(100%);
   animation:
-    pageLoadMarquee 26s linear infinite,
+    pageLoadMarquee calc(26s / var(--spd-pageload, 1)) linear infinite,
     empGreetingColorShift 6s linear infinite;
   
   background:linear-gradient(90deg, #0E9C85, #2A6FE0, #A730D6, #C6821E, #E0399A, #0E9C85);
@@ -3773,7 +3773,7 @@ transform:translateY(0);
   display:inline-block; padding-left:100%;
   font-size:11px; font-weight:600; letter-spacing:.3px;
   color:var(--text-muted, #7C8CA3);
-  animation: lobdataTickerScroll 14s linear infinite;
+  animation: lobdataTickerScroll calc(14s / var(--spd-lobaccess, 1)) linear infinite;
 }
 @keyframes lobdataTickerScroll{
   0%{ transform:translateX(0); }
@@ -4808,7 +4808,7 @@ body.role-admin .banner-always.on{ background:color-mix(in srgb,var(--agent) 18%
 .admin-portal-title{ display:none; flex-shrink:0; width:190px; margin:0 12px 0 6px; padding:3px 0 7px; overflow:hidden; white-space:nowrap; perspective:420px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
 body.role-admin .admin-portal-title, body.show-role-title .admin-portal-title{ display:block; }
-.admin-portal-title .apt-track{ display:inline-flex; width:max-content; animation:adminPortalScroll 6s linear infinite; will-change:transform; }
+.admin-portal-title .apt-track{ display:inline-flex; width:max-content; animation:adminPortalScroll calc(6s / var(--spd-adminlabel, 1)) linear infinite; will-change:transform; }
 .admin-portal-title .apt-track span{
   --apt-side:color-mix(in srgb,var(--agent) 52%,#000);
   display:inline-block; padding-right:34px; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:18px; letter-spacing:2px; line-height:1.25;
@@ -5866,6 +5866,15 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="btn small" type="button" onclick="addNewsTickerRow()">+ Add Line</button>
               <button class="btn primary small" onclick="saveNewsTicker()">Save News Ticker</button>
+            </div>
+          </div>
+          <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
+            <h3 style="margin-bottom:6px;">⏩ Scrolling Speed Control</h3>
+            <p style="color:var(--text-muted); font-size:12px; margin-bottom:12px;">প্রতিটা স্ক্রলিং লেখার speed এখান থেকে কমান বা বাড়ান (1x = আগের স্পিড)। স্লাইডার টানলেই সাথে সাথে বদলে দেখা যায়; <b>Save Speeds</b> চাপলে সবার জন্য সেভ হয়।</p>
+            <div id="scrollSpeedEditor"></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+              <button class="btn primary small" onclick="saveScrollSpeeds()">Save Speeds</button>
+              <button class="btn small" type="button" onclick="resetScrollSpeeds()">Reset All to 1x</button>
             </div>
           </div>
         </div>
@@ -7492,7 +7501,7 @@ const CHAT_MSG_TABLE = "chat_messages";
 const CHAT_META_TABLE = "chat_thread_meta";
 const SB_HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 /* ticker / updates / banners / loginPopup — সরাসরি Supabase `webpage_settings` টেবিলে (storageGet/storageSet এগুলো ব্যবহার করে) */
-const SB_SETTINGS_KEYS = ['ticker', 'updates', 'banners', 'loginPopup', 'brand'];
+const SB_SETTINGS_KEYS = ['ticker', 'updates', 'banners', 'loginPopup', 'brand', 'scrollSpeeds'];
 const SB_SETTINGS_TABLE = 'webpage_settings';
 /* ---- Agent Access (per-agent sidebar menu + popup) — Supabase table `agent_access` ---- */
 const AA_TABLE = 'agent_access';
@@ -7820,6 +7829,75 @@ async function storageSet(key, value){
     console.error('Storage write system issue', e); 
     return false; 
   }
+}
+
+/* ===================== SCROLLING SPEED CONTROL (Admin / Super Admin) =====================
+   Multiplier per scroller, 1 = original speed. Saved in Supabase webpage_settings ('scrollSpeeds'),
+   cached in localStorage so even the pre-login screens use the last saved value. */
+const SCROLL_SPEED_ITEMS = [
+  ['top',        '📢 Top ticker (Updates)'],
+  ['news',       '📰 News / Notice ticker'],
+  ['lowscore',   '🔴 <90% Scores agent ticker (Home)'],
+  ['lobaccess',  '⚠️ LOB Data access notice'],
+  ['adminlabel', '🛡️ ADMIN PORTAL label (next to logo)'],
+  ['pageload',   '⏳ Page loading message'],
+  ['empstats',   '👤 Agent welcome-bar stats strip']
+];
+const SCROLL_SPEED_MIN = 0.25, SCROLL_SPEED_MAX = 3;
+let SCROLL_SPEEDS = {};
+function scrollSpd(k){
+  const v = Number(SCROLL_SPEEDS[k]);
+  return (v >= SCROLL_SPEED_MIN && v <= SCROLL_SPEED_MAX) ? v : 1;
+}
+function applyScrollSpeeds(){
+  SCROLL_SPEED_ITEMS.forEach(([k])=> document.documentElement.style.setProperty('--spd-' + k, String(scrollSpd(k))));
+}
+(function(){
+  try{ const c = JSON.parse(localStorage.getItem('qa_scroll_speeds') || 'null'); if(c && typeof c === 'object') SCROLL_SPEEDS = c; }catch(e){}
+  applyScrollSpeeds();
+})();
+function renderScrollSpeedEditor(){
+  const box = document.getElementById('scrollSpeedEditor');
+  if(!box) return;
+  box.innerHTML = SCROLL_SPEED_ITEMS.map(([k,label])=>`
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
+      <div style="flex:1 1 220px; font-size:13px; font-weight:600;">${label}</div>
+      <input type="range" id="spdRange_${k}" min="${SCROLL_SPEED_MIN}" max="${SCROLL_SPEED_MAX}" step="0.25" value="${scrollSpd(k)}" style="flex:2 1 200px;" oninput="onScrollSpeedInput('${k}', this.value)">
+      <span id="spdVal_${k}" style="min-width:48px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12.5px;">${scrollSpd(k)}x</span>
+    </div>`).join('');
+}
+function onScrollSpeedInput(k, v){
+  SCROLL_SPEEDS[k] = Number(v);
+  const lab = document.getElementById('spdVal_' + k);
+  if(lab) lab.textContent = Number(v) + 'x';
+  applyScrollSpeeds();   // live preview on this screen
+}
+async function loadScrollSpeeds(){
+  const data = await storageGet('scrollSpeeds');
+  if(data && typeof data === 'object'){
+    SCROLL_SPEEDS = data;
+    try{ localStorage.setItem('qa_scroll_speeds', JSON.stringify(data)); }catch(e){}
+  }
+  applyScrollSpeeds();
+  renderScrollSpeedEditor();
+}
+async function saveScrollSpeeds(){
+  const out = {};
+  SCROLL_SPEED_ITEMS.forEach(([k])=>{ out[k] = scrollSpd(k); });
+  const ok = await storageSet('scrollSpeeds', out);
+  if(ok){
+    SCROLL_SPEEDS = out;
+    try{ localStorage.setItem('qa_scroll_speeds', JSON.stringify(out)); }catch(e){}
+    showToast('Scrolling speeds saved for everyone.');
+  }else{
+    showToast('Speed save failed. Please try again.');
+  }
+}
+function resetScrollSpeeds(){
+  SCROLL_SPEEDS = {};
+  applyScrollSpeeds();
+  renderScrollSpeedEditor();
+  showToast('All speeds reset to 1x. Press "Save Speeds" to keep this.');
 }
 
 let homeBannerList = [];
@@ -9624,7 +9702,8 @@ if(currentRole==="agent"){
     loadNewsTicker(),
     loadUpdates(),
     loadLoginPopupAdmin(),
-    loadBrandText()
+    loadBrandText(),
+    loadScrollSpeeds()
   ]);
   hidePageLoadOverlay();
 }
@@ -10155,7 +10234,7 @@ function renderTopTicker(text){
     const dt = now - lastFrameTime;
     lastFrameTime = now;
 
-    posX -= pxPerSec * (dt/1000);
+    posX -= pxPerSec * scrollSpd('top') * (dt/1000);
 
     if(posX <= -contentW){
       
@@ -10482,7 +10561,7 @@ function renderNewsTicker(items){
     const dt = now - lastFrameTime;
     lastFrameTime = now;
 
-    posX -= pxPerSec * (dt/1000);
+    posX -= pxPerSec * scrollSpd('news') * (dt/1000);
     scrollingElapsed += dt;
 
     if(posX <= -singleSetWidth){
@@ -15100,7 +15179,7 @@ async function renderHomePage(isManualRefresh){
       return `<div class="home-lowscore-ticker">
         <span class="home-lowscore-ticker-tag"><span class="blink-dot">🔴</span> &lt;90% Scores agent</span>
         <div class="home-lowscore-ticker-track">
-          <div class="home-lowscore-ticker-scroll" style="animation-duration:${durationSec}s;">${itemsHtml}${itemsHtml}</div>
+          <div class="home-lowscore-ticker-scroll" style="animation-duration:calc(${durationSec}s / var(--spd-lowscore, 1));">${itemsHtml}${itemsHtml}</div>
         </div>
       </div>`;
     })();
@@ -18875,7 +18954,7 @@ function startEmpStatsMarquee(){
   function step(now){
     const dt = Math.min((now - last)/1000, 0.1); last = now;
     if(!paused){
-      pos -= SPEED*dt;
+      pos -= SPEED * scrollSpd('empstats') * dt;
       if(pos < -tr.scrollWidth){
         // one full pass done -> play finale, then start the next pass
         tr.style.transform = 'translateX(' + vp.clientWidth + 'px)';
