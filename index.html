@@ -5007,7 +5007,7 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
         <span id="empWelcomeGreeting" class="emp-welcome-greeting">Good Morning</span>
         <span class="emp-online-chip"><span class="pulse-dot" style="display:inline-block;"></span> You are online. Your portal activity is being monitored by the Portal Administrator.</span>
         <span class="brand-strip-online-badge" id="onlineCountPill" title="Click to see who's currently online" onclick="openOnlineAgentsModal()" style="cursor:pointer;"><span class="pulse-dot" style="display:inline-block;"></span><span id="onlineCountBadge">--</span> Total Agent(s) Currently Online </span>
-        <span class="emp-inline-stats">
+        <span class="emp-inline-stats" id="empInlineStats"><span class="emp-inline-stats-track" id="empInlineStatsTrack">
           <span class="emp-inline-stat">ID: <b id="empStatId">--</b></span>
           <span class="emp-inline-stat">Login: <b id="empStatLoginTime">--:--:--</b></span>
           <span class="emp-inline-stat">Previous: <b id="empStatPrevLogin">--</b></span>
@@ -5016,7 +5016,7 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
           <span class="emp-inline-stat">Today: <b id="empStatTodayTotal">00:00:00</b></span>
           <span class="emp-inline-stat">Device: <b id="empStatDevice">--</b></span>
           <span class="emp-inline-stat">Browser: <b id="empStatBrowser">--</b></span>
-        </span>
+        </span></span>
       </div>
       <div class="emp-welcome-right">
         <div class="emp-welcome-btn-row">
@@ -18203,7 +18203,7 @@ setInterval(updateWelcome,1000);
 
 /* Small inline session stats, shown right next to "Currently Online" in the welcome bar */
 .emp-inline-stats{
-  display:flex; gap:10px; flex-wrap:wrap;
+  display:block; flex:1 1 260px; min-width:0; overflow:hidden; white-space:nowrap;
   font-family:'IBM Plex Mono', monospace;
   font-size:10px;
   padding:3px 12px;
@@ -18215,6 +18215,7 @@ setInterval(updateWelcome,1000);
   0%,100%{ box-shadow:0 0 0 rgba(51,201,176,0); border-color:rgba(51,201,176,0.22); }
   50%{     box-shadow:0 0 12px rgba(51,201,176,0.28); border-color:rgba(51,201,176,0.55); }
 }
+.emp-inline-stats-track{ display:inline-flex; gap:28px; width:max-content; will-change:transform; }
 .emp-inline-stat{ color: var(--text-muted, #8FA0B5); white-space:nowrap; }
 .emp-inline-stat b{ color: var(--text, #EAF0F6); font-size:11.5px; font-weight:600; }
 
@@ -18786,6 +18787,29 @@ function startEmpBarHeightWatch(){
   }
 }
 
+/* Slow right-to-left scrolling of the agent welcome-bar stats strip */
+let __empStatsRAF = null;
+function startEmpStatsMarquee(){
+  const vp = document.getElementById('empInlineStats');
+  const tr = document.getElementById('empInlineStatsTrack');
+  if(!vp || !tr) return;
+  if(__empStatsRAF) cancelAnimationFrame(__empStatsRAF);
+  const SPEED = 28; // px per second (slow)
+  let pos = vp.clientWidth, last = performance.now(), paused = false;
+  vp.onmouseenter = ()=>{ paused = true; };
+  vp.onmouseleave = ()=>{ paused = false; };
+  function step(now){
+    const dt = Math.min((now - last)/1000, 0.1); last = now;
+    if(!paused){
+      pos -= SPEED*dt;
+      if(pos < -tr.scrollWidth) pos = vp.clientWidth;
+      tr.style.transform = 'translateX(' + pos + 'px)';
+    }
+    __empStatsRAF = requestAnimationFrame(step);
+  }
+  __empStatsRAF = requestAnimationFrame(step);
+}
+
 function showEmployeeWelcomeBar(){
   document.getElementById('employeeWelcomeBar').style.display = 'flex';
   document.body.classList.add('has-emp-bar');
@@ -18803,6 +18827,7 @@ function showEmployeeWelcomeBar(){
   ipEl.textContent = 'Loading...';
   getClientIP().then(ip=>{ ipEl.textContent = ip || 'Unavailable'; syncEmpBarOffset(); });
 
+  startEmpStatsMarquee();
   startEmpBarHeightWatch();
   if(!window.__empBarResizeBound){
     window.addEventListener('resize', syncEmpBarOffset);
