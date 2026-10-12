@@ -7501,7 +7501,7 @@ const CHAT_MSG_TABLE = "chat_messages";
 const CHAT_META_TABLE = "chat_thread_meta";
 const SB_HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 /* ticker / updates / banners / loginPopup — সরাসরি Supabase `webpage_settings` টেবিলে (storageGet/storageSet এগুলো ব্যবহার করে) */
-const SB_SETTINGS_KEYS = ['ticker', 'updates', 'banners', 'loginPopup', 'brand', 'scrollSpeeds'];
+const SB_SETTINGS_KEYS = ['ticker', 'updates', 'banners', 'loginPopup', 'brand'];
 const SB_SETTINGS_TABLE = 'webpage_settings';
 /* ---- Agent Access (per-agent sidebar menu + popup) — Supabase table `agent_access` ---- */
 const AA_TABLE = 'agent_access';
@@ -7873,7 +7873,9 @@ function onScrollSpeedInput(k, v){
   applyScrollSpeeds();   // live preview on this screen
 }
 async function loadScrollSpeeds(){
-  const data = await storageGet('scrollSpeeds');
+  // stored inside the existing 'brand' settings row (known to be writable), under the field scrollSpeeds
+  const brand = await storageGet('brand');
+  const data = brand && brand.scrollSpeeds;
   if(data && typeof data === 'object'){
     SCROLL_SPEEDS = data;
     try{ localStorage.setItem('qa_scroll_speeds', JSON.stringify(data)); }catch(e){}
@@ -7884,7 +7886,8 @@ async function loadScrollSpeeds(){
 async function saveScrollSpeeds(){
   const out = {};
   SCROLL_SPEED_ITEMS.forEach(([k])=>{ out[k] = scrollSpd(k); });
-  const ok = await storageSet('scrollSpeeds', out);
+  const cur = (await storageGet('brand')) || {};
+  const ok = await storageSet('brand', Object.assign({}, cur, { scrollSpeeds: out }));
   if(ok){
     SCROLL_SPEEDS = out;
     try{ localStorage.setItem('qa_scroll_speeds', JSON.stringify(out)); }catch(e){}
@@ -10114,7 +10117,7 @@ async function saveBrandText(){
   const auto = document.getElementById('brandColorAuto').checked;
   const color = auto ? '' : document.getElementById('brandColorInput').value;
   showToast('Saving...');
-  const ok = await storageSet('brand', { text, sub, color });
+  const ok = await storageSet('brand', { text, sub, color, scrollSpeeds: SCROLL_SPEEDS });
   if(ok){
     applyBrandText({ text, sub, color });
     try{ localStorage.setItem('qa_brand_cache2', JSON.stringify({ text, sub, color })); }catch(e){}
