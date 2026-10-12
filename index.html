@@ -4549,6 +4549,9 @@ transform:translateY(0);
 .adv-feedback-preview-frame{flex:1;border:0;width:100%;background:#fff;}
 @media(max-width:800px){.adv-feedback-head{align-items:flex-start;flex-direction:column;}.adv-feedback-table-wrap{padding:8px;}}
 /* QA Feedback Sheets — paginated Admin report tab */
+.adv-fb-cnt{display:inline-block;min-width:18px;margin-left:6px;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.92);color:#12263f;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:800;line-height:1.4;text-align:center;}
+.adv-fb-cnt.zero{opacity:.55;}
+
 .adv-feedback-tab-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.adv-feedback-tab-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:900;color:#fff}.adv-feedback-tab-sub{font-size:11px;color:var(--text-muted);margin-top:3px}.adv-feedback-pagination{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0 2px}.adv-feedback-page-info{font-size:11px;color:var(--text-muted);min-width:100px;text-align:center}.adv-feedback-page-btn{min-width:34px;padding:6px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);color:var(--text);cursor:pointer;font-weight:800}.adv-feedback-page-btn:disabled{opacity:.35;cursor:not-allowed}.adv-feedback-page-btn.active{background:#1d4f7a;color:#fff;border-color:#3a75aa}.adv-feedback-score.score-critical{color:#d52b2b;background:#ffe9e7}.adv-feedback-score.score-needs{color:#c85a13;background:#fff0df}.adv-feedback-score.score-warning{color:#9a6b00;background:#fff6d8}
 .sa-filter-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px 0;}
 .sa-filter-bar input,.sa-filter-bar select{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;font-family:inherit;min-width:120px;flex:1;}
@@ -9699,14 +9702,15 @@ if(currentRole==="agent"){
   const requestedTab = new URLSearchParams(window.location.search).get('tab');
   const validRequestedTab = requestedTab && document.getElementById('panel-' + requestedTab) ? requestedTab : 'HOME';
   switchTab(validRequestedTab);
-  await Promise.all([
+  // scroll speeds load in the background so they can never hold up the page-load overlay
+  try{ loadScrollSpeeds().catch(e=> console.error('scroll speeds', e)); }catch(e){ console.error('scroll speeds', e); }
+  await Promise.allSettled([
     loadTicker(),
     loadBanners(),
     loadNewsTicker(),
     loadUpdates(),
     loadLoginPopupAdmin(),
-    loadBrandText(),
-    loadScrollSpeeds()
+    loadBrandText()
   ]);
   hidePageLoadOverlay();
 }
@@ -11698,6 +11702,7 @@ function advFeedbackFindKey(obj,patterns){const keys=Object.keys(obj||{});for(co
 function advFeedbackLowRows(){const seen=new Set();return (Array.isArray(advReportRows)?advReportRows:[]).filter(r=>{const n=advFeedbackNum(r.Total_Score);if(n===null||n>=ADV_FEEDBACK_THRESHOLD)return false;const id=advFeedbackNormalizeCallId(r.Call_ID);if(id&&seen.has(id))return false;if(id)seen.add(id);return true;}).sort((a,b)=>(advFeedbackNum(a.Total_Score)||999)-(advFeedbackNum(b.Total_Score)||999));}
 function advFeedbackRenderList(){
   const body=document.getElementById('sqlAdvContent'); if(!body)return;
+  advFeedbackEnsureCounts();
   if(!Array.isArray(advReportRows)||!advReportRows.length){body.innerHTML='<div class="sql-adv-empty">প্রথমে উপরের filter সেট করে "Apply Filters" চাপুন।</div>';return;}
   const rows=advFeedbackLowRows(), total=rows.length;
   if(!total){body.innerHTML='<div class="sql-adv-empty">✓ বর্তমান filter-এর মধ্যে 85%-এর নিচে কোনো call নেই।</div>';return;}
@@ -11706,8 +11711,36 @@ function advFeedbackRenderList(){
   for(let p=1;p<=pages;p++){if(p===1||p===pages||Math.abs(p-advFeedbackPage)<=1)buttons.push(p);else if(buttons[buttons.length-1]!=='…')buttons.push('…');}
   body.innerHTML=`<div class="adv-feedback-tab-head"><div><div class="adv-feedback-tab-title">📝 QA Feedback Sheets</div><div class="adv-feedback-tab-sub">Total Score 85%-এর নিচে থাকা audited calls — প্রতি page-এ সর্বোচ্চ 10টি।</div></div><div class="adv-feedback-count">${total} Call${total===1?'':'s'}</div></div>
   <div class="adv-feedback-table-wrap"><table class="adv-feedback-table"><thead><tr><th>#</th><th>AGENT NAME</th><th>PROCESS</th><th>CALL ID</th><th>TOTAL SCORE</th><th>ACTIONS</th></tr></thead><tbody>
-  ${pageRows.map((r,i)=>{const idx=advReportRows.indexOf(r),score=advFeedbackNum(r.Total_Score),cls=score<70?'score-critical':score<80?'score-needs':'score-warning';return `<tr><td>${from+i+1}</td><td><span class="adv-feedback-agent">${escapeHtml(r.Associate_Name||'--')}</span></td><td>${escapeHtml(r.Process||'--')}</td><td class="mono">${escapeHtml(r.Call_ID||'--')}</td><td><span class="adv-feedback-score ${cls}">${score===null?'--':score.toFixed(2)+'%'}</span></td><td><div class="adv-feedback-actions"><button class="btn primary small" type="button" onclick="advFeedbackPreview(${idx})">👁 Preview PDF</button><button class="btn gold small" type="button" onclick="advFeedbackDownload(${idx})">⬇ Download PDF</button><button class="btn small" type="button" onclick="advFeedbackPrint(${idx})">🖨 Print PDF</button></div></td></tr>`}).join('')}
+  ${pageRows.map((r,i)=>{const idx=advReportRows.indexOf(r),score=advFeedbackNum(r.Total_Score),cls=score<70?'score-critical':score<80?'score-needs':'score-warning';return `<tr><td>${from+i+1}</td><td><span class="adv-feedback-agent">${escapeHtml(r.Associate_Name||'--')}</span></td><td>${escapeHtml(r.Process||'--')}</td><td class="mono">${escapeHtml(r.Call_ID||'--')}</td><td><span class="adv-feedback-score ${cls}">${score===null?'--':score.toFixed(2)+'%'}</span></td><td><div class="adv-feedback-actions"><button class="btn primary small" type="button" onclick="advFeedbackPreview(${idx})">👁 Preview PDF${advFeedbackBadge(r.Call_ID,'p')}</button><button class="btn gold small" type="button" onclick="advFeedbackDownload(${idx})">⬇ Download PDF${advFeedbackBadge(r.Call_ID,'d')}</button><button class="btn small" type="button" onclick="advFeedbackPrint(${idx})">🖨 Print PDF${advFeedbackBadge(r.Call_ID,'r')}</button></div></td></tr>`}).join('')}
   </tbody></table></div><div class="adv-feedback-pagination"><button class="adv-feedback-page-btn" type="button" ${advFeedbackPage<=1?'disabled':''} onclick="advFeedbackGoPage(${advFeedbackPage-1})">‹</button>${buttons.map(p=>p==='…'?'<span class="adv-feedback-page-info">…</span>':`<button class="adv-feedback-page-btn ${p===advFeedbackPage?'active':''}" type="button" onclick="advFeedbackGoPage(${p})">${p}</button>`).join('')}<button class="adv-feedback-page-btn" type="button" ${advFeedbackPage>=pages?'disabled':''} onclick="advFeedbackGoPage(${advFeedbackPage+1})">›</button><span class="adv-feedback-page-info">Page ${advFeedbackPage} / ${pages}</span></div><div class="adv-feedback-note">📌 প্রতিটি PDF-তে unique Feedback Sheet Number QR থাকবে। Recording Link box-এর QR scan করলে সরাসরি ওই Call Recording খুলবে।</div>`;
+}
+/* ---- QA Feedback PDF usage counters: how many times each call's PDF was previewed (p) / downloaded (d) / printed (r).
+   Saved with the shared settings store (key 'feedbackPdfCounts') so every admin sees the same numbers; localStorage is only a fast cache. ---- */
+let advFbCounts={}, advFbCountsLoaded=false, advFbCountsLoading=null, advFbSaveQueue=Promise.resolve();
+try{const c=JSON.parse(localStorage.getItem('qa_fb_pdf_counts')||'null');if(c&&typeof c==='object')advFbCounts=c;}catch(e){}
+function advFeedbackCountKey(id){return advFeedbackNormalizeCallId(id)||String(id||'').trim();}
+function advFeedbackCountOf(id,t){const o=advFbCounts[advFeedbackCountKey(id)];return (o&&Number(o[t]))||0;}
+function advFeedbackBadge(id,t){const n=advFeedbackCountOf(id,t);return `<span class="adv-fb-cnt${n?'':' zero'}" data-id="${escapeHtml(advFeedbackCountKey(id))}" data-t="${t}" title="${t==='p'?'Preview':t==='d'?'Download':'Print'} count">${n}</span>`;}
+function advFeedbackRefreshBadges(){document.querySelectorAll('.adv-fb-cnt').forEach(el=>{const n=advFeedbackCountOf(el.dataset.id,el.dataset.t);el.textContent=n;el.classList.toggle('zero',!n);});}
+function advFeedbackMergeCounts(remote){if(!remote||typeof remote!=='object')return;Object.keys(remote).forEach(k=>{const r=remote[k]||{},l=advFbCounts[k]||{};advFbCounts[k]={p:Math.max(+r.p||0,+l.p||0),d:Math.max(+r.d||0,+l.d||0),r:Math.max(+r.r||0,+l.r||0)};});try{localStorage.setItem('qa_fb_pdf_counts',JSON.stringify(advFbCounts));}catch(e){}}
+function advFeedbackEnsureCounts(){
+  if(advFbCountsLoaded||advFbCountsLoading)return advFbCountsLoading;
+  advFbCountsLoading=storageGet('feedbackPdfCounts').then(d=>{advFeedbackMergeCounts(d);advFbCountsLoaded=true;advFeedbackRefreshBadges();}).catch(()=>{}).finally(()=>{advFbCountsLoading=null;});
+  return advFbCountsLoading;
+}
+function advFeedbackBump(id,t){
+  const k=advFeedbackCountKey(id); if(!k)return;
+  const o=advFbCounts[k]||(advFbCounts[k]={p:0,d:0,r:0}); o[t]=(+o[t]||0)+1;   // show the new number immediately
+  try{localStorage.setItem('qa_fb_pdf_counts',JSON.stringify(advFbCounts));}catch(e){}
+  advFeedbackRefreshBadges();
+  // save in the background: read the latest shared value, add this one click, write it back (one at a time)
+  advFbSaveQueue=advFbSaveQueue.then(async()=>{
+    try{
+      const remote=(await storageGet('feedbackPdfCounts'))||{};
+      const r=remote[k]||{p:0,d:0,r:0}; r[t]=(+r[t]||0)+1; remote[k]=r;
+      if(await storageSet('feedbackPdfCounts',remote)){advFbCounts[k]=Object.assign({p:0,d:0,r:0},advFbCounts[k],{[t]:Math.max(+r[t]||0,+advFbCounts[k][t]||0)});advFeedbackMergeCounts(remote);advFeedbackRefreshBadges();}
+    }catch(e){console.warn('Feedback PDF count save failed',e);}
+  });
 }
 function advFeedbackGoPage(page){advFeedbackPage=page;advFeedbackRenderList();document.getElementById('sqlAdvContent')?.scrollIntoView({behavior:'smooth',block:'start'});}
 
@@ -11772,11 +11805,11 @@ async function advFeedbackBuildPdf(row){
   advFeedbackRenderPdfPage(doc,merged,qr,recordingQr);
   return {doc,row:merged,sheetNo};
 }
-async function advFeedbackDownload(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);doc.save(`${advFeedbackSafeFileName(`${merged.Process||'Process'}_${merged.Associate_Name||'Agent'}_${merged.Call_ID||'Call'}_QA_Feedback`)}.pdf`);sqlCenterLog(`QA Feedback PDF downloaded — ${merged.Associate_Name||''} / ${merged.Call_ID||''}`);}catch(e){alert('Feedback PDF তৈরি করা যায়নি: '+e.message);}}
-async function advFeedbackPreview(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);advFeedbackPreviewRow=merged;if(advFeedbackPreviewUrl)URL.revokeObjectURL(advFeedbackPreviewUrl);advFeedbackPreviewUrl=URL.createObjectURL(doc.output('blob'));document.getElementById('advFeedbackPreviewFrame').src=advFeedbackPreviewUrl;document.getElementById('advFeedbackPreviewOverlay').classList.add('active');}catch(e){alert('PDF Preview তৈরি করা যায়নি: '+e.message);}}
+async function advFeedbackDownload(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);doc.save(`${advFeedbackSafeFileName(`${merged.Process||'Process'}_${merged.Associate_Name||'Agent'}_${merged.Call_ID||'Call'}_QA_Feedback`)}.pdf`);advFeedbackBump(merged.Call_ID,'d');sqlCenterLog(`QA Feedback PDF downloaded — ${merged.Associate_Name||''} / ${merged.Call_ID||''}`);}catch(e){alert('Feedback PDF তৈরি করা যায়নি: '+e.message);}}
+async function advFeedbackPreview(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);advFeedbackPreviewRow=merged;if(advFeedbackPreviewUrl)URL.revokeObjectURL(advFeedbackPreviewUrl);advFeedbackPreviewUrl=URL.createObjectURL(doc.output('blob'));document.getElementById('advFeedbackPreviewFrame').src=advFeedbackPreviewUrl;document.getElementById('advFeedbackPreviewOverlay').classList.add('active');advFeedbackBump(merged.Call_ID,'p');}catch(e){alert('PDF Preview তৈরি করা যায়নি: '+e.message);}}
 function advFeedbackClosePreview(){const ov=document.getElementById('advFeedbackPreviewOverlay');if(ov)ov.classList.remove('active');}
-async function advFeedbackDownloadPreviewPdf(){if(!advFeedbackPreviewRow)return;try{const {doc,row}=await advFeedbackBuildPdf(advFeedbackPreviewRow);doc.save(`${advFeedbackSafeFileName(`${row.Process||'Process'}_${row.Associate_Name||'Agent'}_${row.Call_ID||'Call'}_QA_Feedback`)}.pdf`);}catch(e){alert('PDF download failed: '+e.message);}}
-async function advFeedbackPrint(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);const url=URL.createObjectURL(doc.output('blob'));const win=window.open(url,'_blank');if(!win)throw new Error('Browser blocked the PDF window. Allow pop-ups for this portal.');sqlCenterLog(`QA Feedback PDF opened for print — ${merged.Associate_Name||''} / ${merged.Call_ID||''}`);}catch(e){alert('Print PDF করা যায়নি: '+e.message);}}
+async function advFeedbackDownloadPreviewPdf(){if(!advFeedbackPreviewRow)return;try{const {doc,row}=await advFeedbackBuildPdf(advFeedbackPreviewRow);doc.save(`${advFeedbackSafeFileName(`${row.Process||'Process'}_${row.Associate_Name||'Agent'}_${row.Call_ID||'Call'}_QA_Feedback`)}.pdf`);advFeedbackBump(row.Call_ID,'d');}catch(e){alert('PDF download failed: '+e.message);}}
+async function advFeedbackPrint(index){try{const row=advReportRows[index];if(!row)throw new Error('Feedback record not found.');const {doc,row:merged}=await advFeedbackBuildPdf(row);const url=URL.createObjectURL(doc.output('blob'));const win=window.open(url,'_blank');if(!win)throw new Error('Browser blocked the PDF window. Allow pop-ups for this portal.');advFeedbackBump(merged.Call_ID,'r');sqlCenterLog(`QA Feedback PDF opened for print — ${merged.Associate_Name||''} / ${merged.Call_ID||''}`);}catch(e){alert('Print PDF করা যায়নি: '+e.message);}}
 
 function advReportSwitchTab(tab){
   advReportActiveTab = tab;
