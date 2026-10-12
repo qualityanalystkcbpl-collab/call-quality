@@ -4807,7 +4807,7 @@ body.role-admin .banner-always.on{ background:color-mix(in srgb,var(--agent) 18%
 /* big scrolling 3D "ADMIN PORTAL" label next to the logo (Admin / Super Admin only) — scrolls right → left (same direction as the other tickers) */
 .admin-portal-title{ display:none; flex-shrink:0; width:190px; margin:0 12px 0 6px; padding:3px 0 7px; overflow:hidden; white-space:nowrap; perspective:420px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
-body.role-admin .admin-portal-title{ display:block; }
+body.role-admin .admin-portal-title, body.show-role-title .admin-portal-title{ display:block; }
 .admin-portal-title .apt-track{ display:inline-flex; width:max-content; animation:adminPortalScroll 6s linear infinite; will-change:transform; }
 .admin-portal-title .apt-track span{
   --apt-side:color-mix(in srgb,var(--agent) 52%,#000);
@@ -9528,10 +9528,35 @@ function applyAdminTheme(){
   const acc = localStorage.getItem('qa_admin_accent') || 'violet';
   if(on) document.body.setAttribute('data-accent', acc); else document.body.removeAttribute('data-accent');
   document.querySelectorAll('.admin-accent-dot').forEach(b => b.classList.toggle('on', b.dataset.k === acc));
+  applyRoleTitle();
   if(on) document.title = (document.title.replace(/ \(Admin\)$/, '')) + ' (Admin)';
   else document.title = document.title.replace(/ \(Admin\)$/, '');
 }
 function setAdminAccent(k){ localStorage.setItem('qa_admin_accent', k); applyAdminTheme(); }
+
+/* Big scrolling 3D label next to the logo: "ADMIN PORTAL" for Admin / Super Admin, the agent's PROCESS (from the Google Sheet) for agents */
+function applyRoleTitle(){
+  const el = document.getElementById('adminPortalTitle'); if(!el) return;
+  let text = '';
+  if(currentRole === 'admin') text = 'ADMIN PORTAL';
+  else if(currentRole === 'agent'){
+    const proc = (localStorage.getItem('qa_emp_process') || '').replace(/\s+/g, ' ').trim().toUpperCase();
+    text = proc ? (/\bPORTAL$/.test(proc) ? proc : proc + ' PORTAL') : '';      // e.g. "CATV PORTAL", "BB RENEWAL PORTAL"
+  }
+  document.body.classList.toggle('show-role-title', !!text);
+  const track = el.querySelector('.apt-track'); if(!track) return;
+  if(track.dataset.text === text) return;
+  track.dataset.text = text;
+  track.innerHTML = '';
+  if(!text) return;
+  const mk = () => { const sp = document.createElement('span'); sp.textContent = text; return sp; };
+  track.appendChild(mk()); track.appendChild(mk());
+  // enough copies so the box is always full, even for short names like "CATV"; constant speed whatever the length
+  const w = track.firstChild.offsetWidth || (text.length * 17 + 34);
+  const half = Math.max(1, Math.ceil(260 / w));
+  for(let i = 2; i < half * 2; i++) track.appendChild(mk());
+  track.style.animationDuration = Math.max(4, (half * w) / 36) + 's';
+}
 
 async function enterApp(){
   showPageLoadOverlay();
