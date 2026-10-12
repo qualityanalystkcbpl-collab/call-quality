@@ -4825,6 +4825,19 @@ body.role-admin .emp-welcome-btn-row .theme-switch-mini{ display:none; }     /* 
 body.role-admin .admin-theme-controls{ display:inline-flex; }
 .admin-accent-dot{ width:16px; height:16px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0; box-shadow:0 0 0 1px rgba(255,255,255,.25); }
 .admin-accent-dot.on{ border-color:#fff; box-shadow:0 0 8px currentColor; transform:scale(1.15); }
+/* Banner slide background animation + editor */
+.banner-slide{ overflow:hidden; }
+.banner-slide-img{ will-change:transform; }
+.bn-row{ margin-bottom:10px; }
+.bn-line1{ display:flex; gap:6px; }
+.bn-line2{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:5px 0 0 26px; }
+.bn-thumb{ width:40px; height:24px; object-fit:cover; border-radius:4px; border:1px solid var(--border); background:var(--surface-2); }
+.bn-anim summary{ cursor:pointer; list-style:none; padding:5px 12px; border-radius:6px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:12px; font-weight:600; }
+.bn-anim summary::-webkit-details-marker{ display:none; }
+.bn-anim[open] summary{ border-color:var(--agent); }
+.bn-anim-list{ margin-top:6px; min-width:250px; padding:8px 12px; display:grid; gap:5px; background:var(--surface); border:1px solid var(--border); border-radius:10px; }   /* opens inline (pushes the rows below down) so it never covers other buttons */
+.bn-ac-l{ display:flex; align-items:center; gap:7px; font-size:12.5px; cursor:pointer; white-space:nowrap; }
+.bn-all{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; padding:10px 12px; margin-bottom:12px; background:var(--surface-2); border:1px dashed var(--border); border-radius:10px; font-size:12.5px; }
 /* LOB Wise Data month filter */
 .lob-filterbar{display:flex;flex-direction:column;gap:8px;margin:10px 0 12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
 .lob-fb-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
@@ -10138,10 +10151,27 @@ function renderTopTicker(text){
   topTickerAnimFrame = requestAnimationFrame(tick);
 }
 /* ===================== BANNER CORNER ===================== */
+/* Background-picture animation for each banner slide:
+   top    = comes from the top, stops in the middle for 2 sec, goes down      (loop)
+   bottom = comes from the bottom, stops in the middle for 2 sec, goes up     (loop)
+   right  = comes from the right, stops in the middle for 2 sec, goes left    (loop)
+   left   = comes from the left, stops in the middle for 2 sec, goes right    (loop)
+   (nothing selected) = Still.  Several selected = they play one after another, in this order. */
+const BG_ANIM = {
+  top:    ['translateY(-100%)', 'translateY(100%)'],
+  bottom: ['translateY(100%)',  'translateY(-100%)'],
+  right:  ['translateX(100%)',  'translateX(-100%)'],
+  left:   ['translateX(-100%)', 'translateX(100%)']
+};
+const BG_ENTER_MS = 1500, BG_HOLD_MS = 2000, BG_EXIT_MS = 1500;
+const BN_ANIM_ORDER = ['top', 'bottom', 'right', 'left'];
+const BN_ANIM_LABEL = { top: '⬇ From top → goes down', bottom: '⬆ From bottom → goes up', right: '⬅ From right → goes left', left: '➡ From left → goes right' };
+const BN_ANIM_ICON  = { top: '⬇', bottom: '⬆', right: '⬅', left: '➡' };
+
 function defaultBanners(){
   const arr = [];
   for(let i=1;i<=10;i++){
-    arr.push({ title: 'Loading.......', subtitle: 'Loading.......', image: '' });
+    arr.push({ title: 'Loading.......', subtitle: 'Loading.......', image: '', anim: [] });
   }
   return arr;
 }
@@ -10151,15 +10181,61 @@ async function loadBanners(){
   renderBanners(data);
   renderBannerEditor(data);
 }
+
+/* ---- background animation player ---- */
+function bgSleep(ms, tok){ return new Promise(res => { const t = setTimeout(res, ms); tok.cancel = () => { clearTimeout(t); res(); }; }); }
+function stopBannerBg(slide){
+  if(!slide) return;
+  if(slide._bgTok){ slide._bgTok.stop = true; if(slide._bgTok.cancel) slide._bgTok.cancel(); slide._bgTok = null; }
+  const img = slide.querySelector('.banner-slide-img');
+  if(img){
+    img.getAnimations().forEach(a => a.cancel());
+    const list = slide._anims || [];
+    img.style.transform = list.length ? BG_ANIM[list[0]][0] : '';       // parked off-screen, ready for the next start
+  }
+}
+function startBannerBg(slide){
+  if(!slide) return;
+  stopBannerBg(slide);
+  const img = slide.querySelector('.banner-slide-img');
+  const list = slide._anims || [];
+  if(!img || !list.length) return;                                       // Still
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){ img.style.transform = ''; return; }
+  const tok = { stop: false }; slide._bgTok = tok;
+  (async () => {
+    let i = slide._bgIdx || 0;
+    while(!tok.stop && img.isConnected){
+      const key = list[i % list.length]; i++; slide._bgIdx = i;
+      const from = BG_ANIM[key][0], to = BG_ANIM[key][1];
+      try{
+        img.getAnimations().forEach(a => a.cancel());
+        img.style.transform = from;
+        await img.animate([{ transform: from }, { transform: 'translate(0,0)' }], { duration: BG_ENTER_MS, easing: 'cubic-bezier(.22,.8,.3,1)', fill: 'forwards' }).finished;
+        if(tok.stop) break;
+        await bgSleep(BG_HOLD_MS, tok);
+        if(tok.stop) break;
+        await img.animate([{ transform: 'translate(0,0)' }, { transform: to }], { duration: BG_EXIT_MS, easing: 'cubic-bezier(.6,0,.9,.4)', fill: 'forwards' }).finished;
+      }catch(e){ break; }
+    }
+  })();
+}
+function bannerBgSync(){
+  document.querySelectorAll('.banner-slide').forEach(s => { if(s.classList.contains('active')) startBannerBg(s); else stopBannerBg(s); });
+}
+
 function renderBanners(banners){
   const wrap = document.getElementById('bannerWrap');
+  wrap.querySelectorAll('.banner-slide').forEach(stopBannerBg);          // stop old loops before re-drawing
   wrap.innerHTML = '';
   banners.forEach((b, i)=>{
     const slide = document.createElement('div');
     slide.className = 'banner-slide' + (i===0 ? ' active' : '');
+    slide._anims = (Array.isArray(b.anim) ? b.anim : []).filter(k => BG_ANIM[k]);
     slide.innerHTML = `${b.image ? `<img class="banner-slide-img" src="${escapeAttr(b.image)}" alt="">` : ''}
       <div class="banner-title">${escapeHtml(b.title||'')}</div>
       <div class="banner-sub">${escapeHtml(b.subtitle||'')}</div>`;
+    const img = slide.querySelector('.banner-slide-img');
+    if(img && slide._anims.length) img.style.transform = BG_ANIM[slide._anims[0]][0];   // start hidden, no flash
     wrap.appendChild(slide);
   });
   const dots = document.createElement('div');
@@ -10175,6 +10251,7 @@ function renderBanners(banners){
   if(bannerTimer) clearInterval(bannerTimer);
   /* 6) Banner slide auto-change every 10 seconds */
   bannerTimer = setInterval(()=> setBannerSlide((bannerIndex+1) % banners.length), 10000);
+  bannerBgSync();
 }
 function setBannerSlide(i){
   const slides = document.querySelectorAll('.banner-slide');
@@ -10183,33 +10260,110 @@ function setBannerSlide(i){
     slides.forEach((s,idx)=> s.classList.toggle('active', idx===i));
     dots.forEach((d,idx)=> d.classList.toggle('active', idx===i));
     bannerIndex = i;
+    bannerBgSync();
   }
+}
+
+/* ---- Admin: banner slide editor (text, background picture URL / upload from PC, background animation) ---- */
+function bnSummary(list){ return list && list.length ? '🎞 ' + list.map(k => BN_ANIM_ICON[k]).join(' ') : '⏸ Still'; }
+function bnAnimCheckboxes(list, extraAttrs, cls){
+  const has = new Set(list || []);
+  return BN_ANIM_ORDER.map(k =>
+    `<label class="bn-ac-l"><input type="checkbox" class="${cls}" ${extraAttrs} value="${k}" ${has.has(k) ? 'checked' : ''} onchange="bnAnimChange(this)"> ${BN_ANIM_LABEL[k]}</label>`).join('')
+    + `<label class="bn-ac-l"><input type="checkbox" class="${cls} bn-still" ${extraAttrs} value="still" ${(list && list.length) ? '' : 'checked'} onchange="bnAnimChange(this)"> ⏸ Still (no animation)</label>`;
+}
+/* keeps the choice valid: "Still" excludes the moving ones, and if nothing is ticked it falls back to Still */
+function bnAnimChange(el){
+  const box = el.closest('.bn-anim-box'); if(!box) return;
+  const all = Array.from(box.querySelectorAll('input[type=checkbox]'));
+  const still = all.find(c => c.value === 'still'), moving = all.filter(c => c.value !== 'still');
+  if(el.value === 'still' && el.checked) moving.forEach(c => c.checked = false);
+  else if(el.value !== 'still' && el.checked) still.checked = false;
+  if(!moving.some(c => c.checked)) still.checked = true;
+  const sum = box.querySelector('summary'); if(sum) sum.textContent = bnSummary(moving.filter(c => c.checked).map(c => c.value));
+}
+function bnApplyAll(){
+  const g = Array.from(document.querySelectorAll('#bnAllBox input[type=checkbox]:checked')).map(c => c.value).filter(v => v !== 'still');
+  document.querySelectorAll('#bannerEditor details.bn-anim-box').forEach(d => {
+    d.querySelectorAll('input[type=checkbox]').forEach(c => { c.checked = (c.value === 'still') ? !g.length : g.includes(c.value); });
+    d.querySelector('summary').textContent = bnSummary(g);
+  });
+  showToast(g.length ? 'সব স্লাইডে animation সেট হয়েছে — এবার "Save Banners" চাপুন।' : 'সব স্লাইড Still করা হয়েছে — এবার "Save Banners" চাপুন।');
 }
 function renderBannerEditor(banners){
   const box = document.getElementById('bannerEditor');
-  box.innerHTML = '';
+  box.innerHTML = `
+    <div class="bn-all" id="bnAllBox"><div class="bn-anim-box" style="display:contents;">
+      <span style="font-weight:700;">🎞 Background animation — সব স্লাইডের জন্য:</span>
+      ${bnAnimCheckboxes([], '', 'bn-gc')}
+      <button class="btn small" type="button" onclick="bnApplyAll()">Apply to all slides</button></div>
+      <div style="width:100%;color:var(--text-muted);font-size:11.5px;">একাধিক টিক দিলে animation গুলো পর পর (উপরের ক্রমে) চলতে থাকবে। প্রতিটা: আসবে → মাঝখানে ২ সেকেন্ড থামবে → চলে যাবে → আবার (loop)। প্রতিটা স্লাইডের জন্য আলাদাও বেছে নিতে পারেন।</div>
+    </div>`;
   banners.forEach((b,i)=>{
+    const list = (Array.isArray(b.anim) ? b.anim : []).filter(k => BG_ANIM[k]);
     const row = document.createElement('div');
-    row.style.display = 'flex'; row.style.gap = '6px'; row.style.marginBottom = '6px';
-    row.innerHTML = `<span style="color:var(--text-muted); min-width:20px;">${i+1}</span>
-      <input type="text" placeholder="Title" value="${escapeAttr(b.title||'')}" data-idx="${i}" data-field="title" style="flex:1; padding:6px; background:var(--surface-2); border:1px solid var(--border); color:#fff; border-radius:4px;">
-      <input type="text" placeholder="Subtitle" value="${escapeAttr(b.subtitle||'')}" data-idx="${i}" data-field="subtitle" style="flex:1; padding:6px; background:var(--surface-2); border:1px solid var(--border); color:#fff; border-radius:4px;">
-      <input type="text" placeholder="Image URL (optional)" value="${escapeAttr(b.image||'')}" data-idx="${i}" data-field="image" style="flex:1; padding:6px; background:var(--surface-2); border:1px solid var(--border); color:#fff; border-radius:4px;">`;
+    row.className = 'bn-row';
+    const inpStyle = 'flex:1; padding:6px; background:var(--surface-2); border:1px solid var(--border); color:#fff; border-radius:4px;';
+    row.innerHTML = `<div class="bn-line1"><span style="color:var(--text-muted); min-width:20px;">${i+1}</span>
+      <input type="text" placeholder="Title" value="${escapeAttr(b.title||'')}" data-idx="${i}" data-field="title" style="${inpStyle}">
+      <input type="text" placeholder="Subtitle" value="${escapeAttr(b.subtitle||'')}" data-idx="${i}" data-field="subtitle" style="${inpStyle}">
+      <input type="text" placeholder="Image URL (optional)" value="${escapeAttr(b.image||'')}" data-idx="${i}" data-field="image" oninput="bnThumb(${i})" style="${inpStyle}"></div>
+      <div class="bn-line2">
+        <img class="bn-thumb" id="bnThumb${i}" alt="" style="${b.image ? '' : 'display:none;'}" src="${escapeAttr(b.image||'')}">
+        <label class="btn small" style="cursor:pointer;">📁 Upload background from PC<input type="file" accept="image/*" style="display:none;" onchange="uploadSlideBg(this, ${i})"></label>
+        <details class="bn-anim-box bn-anim"><summary>${bnSummary(list)}</summary>
+          <div class="bn-anim-list">${bnAnimCheckboxes(list, `data-idx="${i}" data-field="anim"`, 'bn-ac')}</div>
+        </details>
+      </div>`;
     box.appendChild(row);
   });
 }
+function bnThumb(i){
+  const inp = document.querySelector(`#bannerEditor input[data-idx="${i}"][data-field="image"]`), t = document.getElementById('bnThumb' + i);
+  if(!inp || !t) return;
+  if(inp.value.trim()){ t.src = inp.value.trim(); t.style.display = ''; } else t.style.display = 'none';
+}
+/* Upload a background picture directly from the PC (Supabase Storage, same bucket the Home banners use) */
+async function uploadSlideBg(input, i){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  if(!(file.type && file.type.startsWith('image/'))){ showToast('শুধু ছবি (JPG / PNG / WEBP / GIF) আপলোড করা যাবে।'); input.value = ''; return; }
+  const sizeMB = file.size / (1024 * 1024);
+  if(sizeMB > BANNER_MAX_IMAGE_MB){ showToast(`ছবি সর্বোচ্চ ${BANNER_MAX_IMAGE_MB}MB হতে পারে (এটা ${sizeMB.toFixed(1)}MB)।`); input.value = ''; return; }
+  showToast('ছবি আপলোড হচ্ছে, একটু অপেক্ষা করুন...');
+  try{
+    const isGif = file.type === 'image/gif';
+    const { blob, ext, type } = isGif ? { blob: file, ext: 'gif', type: file.type } : await compressImageFile(file);
+    const path = `slide_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${ext}`;
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BANNER_BUCKET}/${path}`, {
+      method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': type }, body: blob });
+    if(!res.ok) throw new Error('Storage upload failed: ' + res.status);
+    const url = `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}/${path}`;
+    const field = document.querySelector(`#bannerEditor input[data-idx="${i}"][data-field="image"]`);
+    if(field){ field.value = url; bnThumb(i); }
+    showToast(`স্লাইড ${i + 1}-এর ব্যাকগ্রাউন্ড ছবি আপলোড হয়েছে ✅ — এবার "Save Banners" চাপুন।`);
+  }catch(e){
+    console.error(e);
+    showToast('আপলোড ব্যর্থ হয়েছে: ' + (e.message || e));
+  }
+  input.value = '';
+}
 async function saveBanners(){
-  const inputs = document.querySelectorAll('#bannerEditor input');
   const banners = defaultBanners();
-  inputs.forEach(inp=>{
+  document.querySelectorAll('#bannerEditor input[data-field]').forEach(inp=>{
     const idx = parseInt(inp.dataset.idx,10);
-    banners[idx][inp.dataset.field] = inp.value;
+    if(!banners[idx]) return;
+    if(inp.dataset.field === 'anim'){ if(inp.checked && BG_ANIM[inp.value]) banners[idx].anim.push(inp.value); }
+    else banners[idx][inp.dataset.field] = inp.value;
   });
+  banners.forEach(b => { b.anim = BN_ANIM_ORDER.filter(k => b.anim.includes(k)); });   // keep a fixed, predictable order
   showToast('Updating Banners in WEBPAGEDATA...');
   const success = await storageSet('banners', banners);
   if(success) {
     renderBanners(banners);
-    showToast('Banners matching completely saved to Sheet!');
+    showToast('Banners saved ✅');
+  } else {
+    showToast('Banner save ব্যর্থ হয়েছে — Supabase সংযোগ চেক করুন।');
   }
 }
 
