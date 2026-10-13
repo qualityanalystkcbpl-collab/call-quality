@@ -12730,7 +12730,6 @@ function renderLeadFormPanel(){
       .lead-remark-box.locked{ background:#FFF7EC; border-color:#F0DDBB; }
       .lead-remark-box.locked .lead-form-msg{ margin:0; color:#B8722A; font-size:12.5px; font-weight:600; }
           /* ===== Lead Entry Form — 3D look (CSS only, light-weight: transform/opacity/shadow animations) ===== */
-      .lead-page-card{ perspective:1400px; }
       .lead-page-card .panel-header h1.lead-title3d{ text-shadow:0 1px 0 #fff, 0 2px 0 rgba(15,25,45,.10), 0 4px 8px rgba(15,25,45,.12); }
       .lead-title-emoji{ display:inline-block; transform-origin:70% 90%; animation:leadEmojiWrite 3.2s ease-in-out infinite; }
       @keyframes leadEmojiWrite{ 0%,60%,100%{ transform:rotate(0); } 68%{ transform:rotate(-14deg); } 76%{ transform:rotate(10deg); } 84%{ transform:rotate(-6deg); } 92%{ transform:rotate(0); } }
@@ -12760,7 +12759,7 @@ function renderLeadFormPanel(){
       }
       .lead-page-card .lead-anim-box + .lead-anim-box{ animation-delay:0s,.12s; }
       @keyframes leadBoxEnter{
-        from{ opacity:0; transform:rotateX(14deg) translateY(18px); }
+        from{ opacity:0; transform:perspective(1400px) rotateX(14deg) translateY(18px); }
         to{ opacity:1; transform:none; }
       }
 
