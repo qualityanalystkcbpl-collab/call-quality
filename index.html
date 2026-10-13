@@ -12729,11 +12729,92 @@ function renderLeadFormPanel(){
       .lead-remark-box textarea:focus{ border-color:#3FBF7F; box-shadow:0 0 0 3px rgba(63,191,127,.18); }
       .lead-remark-box.locked{ background:#FFF7EC; border-color:#F0DDBB; }
       .lead-remark-box.locked .lead-form-msg{ margin:0; color:#B8722A; font-size:12.5px; font-weight:600; }
+          /* ===== Lead Entry Form — 3D look (CSS only, light-weight: transform/opacity/shadow animations) ===== */
+      .lead-page-card{ perspective:1400px; }
+      .lead-page-card .panel-header h1.lead-title3d{ text-shadow:0 1px 0 #fff, 0 2px 0 rgba(15,25,45,.10), 0 4px 8px rgba(15,25,45,.12); }
+      .lead-title-emoji{ display:inline-block; transform-origin:70% 90%; animation:leadEmojiWrite 3.2s ease-in-out infinite; }
+      @keyframes leadEmojiWrite{ 0%,60%,100%{ transform:rotate(0); } 68%{ transform:rotate(-14deg); } 76%{ transform:rotate(10deg); } 84%{ transform:rotate(-6deg); } 92%{ transform:rotate(0); } }
+      .lead-logo3d{ display:inline-flex; align-items:center; min-height:30px; perspective:500px; }
+      .lead-logo3d img{
+        transform-origin:50% 60%; backface-visibility:hidden;
+        animation:leadLogoFloat 5s ease-in-out infinite, leadLogoGlow 6s ease-in-out infinite;
+      }
+      @keyframes leadLogoFloat{
+        0%,100%{ transform:translateY(0) rotateY(-14deg) rotateX(2deg); }
+        50%{ transform:translateY(-3px) rotateY(14deg) rotateX(-2deg); }
+      }
+      @keyframes leadLogoGlow{
+        0%,100%{ filter:drop-shadow(0 3px 3px rgba(15,25,45,.22)) drop-shadow(0 0 4px rgba(63,191,127,.45)); }
+        33%{ filter:drop-shadow(0 3px 3px rgba(15,25,45,.22)) drop-shadow(0 0 5px rgba(79,209,255,.55)); }
+        66%{ filter:drop-shadow(0 3px 3px rgba(15,25,45,.22)) drop-shadow(0 0 5px rgba(139,124,246,.55)); }
+      }
+
+      /* raised "slab" panels with visible thickness, soft entrance tilt */
+      .lead-page-card .lead-anim-box{
+        transform-origin:50% 0;
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,.75),
+          0 2px 0 rgba(15,25,45,.07), 0 4px 0 rgba(15,25,45,.06), 0 6px 0 rgba(15,25,45,.05),
+          0 20px 32px -8px rgba(15,25,45,.28);
+        animation:leadInnerBoxColorShift 360s ease-in-out infinite, leadBoxEnter .7s cubic-bezier(.22,1,.36,1) both;
+      }
+      .lead-page-card .lead-anim-box + .lead-anim-box{ animation-delay:0s,.12s; }
+      @keyframes leadBoxEnter{
+        from{ opacity:0; transform:rotateX(14deg) translateY(18px); }
+        to{ opacity:1; transform:none; }
+      }
+
+      /* fields: pressed-in "wells" that lift up when focused */
+      .lead-page-card .field label{ font-weight:600; text-shadow:0 1px 0 rgba(255,255,255,.7); }
+      .lead-page-card .field input,
+      .lead-page-card select{
+        background:linear-gradient(180deg,#F3F6FB 0%,#FFFFFF 55%);
+        border:1px solid #CBD6E4; border-bottom-color:#B9C7D9;
+        box-shadow:inset 0 2px 4px rgba(15,25,45,.10), 0 1px 0 rgba(255,255,255,.95);
+        transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      }
+      .lead-page-card .field input:hover:not(:disabled),
+      .lead-page-card select:hover:not(:disabled){ border-color:#9DB3CC; }
+      .lead-page-card .field input:focus,
+      .lead-page-card select:focus{
+        transform:translateY(-2px);
+        border-color:#3FBF7F;
+        box-shadow:inset 0 1px 2px rgba(15,25,45,.05), 0 0 0 3px rgba(63,191,127,.20), 0 8px 14px -4px rgba(15,25,45,.28);
+      }
+      .lead-page-card .field input:disabled,
+      .lead-page-card select:disabled{ background:#EEF1F6; box-shadow:inset 0 1px 3px rgba(15,25,45,.08); }
+
+      /* 3D press-down Submit button */
+      #leadSubmitBtn.btn.primary{
+        position:relative; overflow:hidden; border:0; color:#fff; font-weight:700; letter-spacing:.6px;
+        padding:12px 34px; border-radius:12px;
+        background:linear-gradient(180deg,#52D69A 0%,#2FAE72 100%);
+        box-shadow:0 5px 0 #1D7F52, 0 10px 16px rgba(29,127,82,.38), inset 0 1px 0 rgba(255,255,255,.45);
+        text-shadow:0 1px 1px rgba(0,0,0,.25);
+        transition:transform .12s ease, box-shadow .12s ease, filter .2s ease;
+      }
+      #leadSubmitBtn.btn.primary:hover{ transform:translateY(-2px); box-shadow:0 7px 0 #1D7F52, 0 14px 20px rgba(29,127,82,.40), inset 0 1px 0 rgba(255,255,255,.45); }
+      #leadSubmitBtn.btn.primary:active{ transform:translateY(5px); box-shadow:0 0 0 #1D7F52, 0 3px 6px rgba(29,127,82,.35), inset 0 1px 0 rgba(255,255,255,.3); }
+      #leadSubmitBtn.btn.primary:disabled{ filter:grayscale(.5) opacity(.7); cursor:not-allowed; }
+      #leadSubmitBtn.btn.primary::after{
+        content:''; position:absolute; top:0; bottom:0; left:-60%; width:35%;
+        background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);
+        transform:skewX(-20deg); animation:leadBtnShine 3.8s ease-in-out infinite; pointer-events:none;
+      }
+      @keyframes leadBtnShine{ 0%,60%{ left:-60%; } 100%{ left:140%; } }
+
+      @media (max-width:600px){
+        .lead-page-card .lead-anim-box{ animation:leadInnerBoxColorShift 360s ease-in-out infinite; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        .lead-title-emoji,.lead-logo3d img,#leadSubmitBtn.btn.primary::after{ animation:none; }
+        .lead-page-card .lead-anim-box{ animation:none; background:#DCE9FC; }
+      }
     </style>
 
     <div class="lead-page-card">
       <div class="panel-header" style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
-        <div><h1 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">📝 Lead Entry Form <img src="logo2.png" alt="GTPL KCBPL" style="height:26px;width:auto;object-fit:contain;" onerror="this.style.display='none'"></h1><p>Data entered here goes directly to the Business Development team.</p></div>
+        <div><h1 class="lead-title3d" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span class="lead-title-emoji">📝</span> Lead Entry Form <span class="lead-logo3d"><img src="logo2.png" alt="GTPL KCBPL" decoding="async" style="height:28px;width:auto;object-fit:contain;" onerror="this.style.display='none'"></span></h1><p>Data entered here goes directly to the Business Development team.</p></div>
         <div class="lead-net-spin-wrap">
         <div class="lead-net-card" id="leadNetCard">
           <div class="lead-net-title"><span class="lead-net-dot" id="leadNetDot"></span> Internet Speed</div>
