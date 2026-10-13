@@ -21780,14 +21780,20 @@ window.qxSendMsg = async function(){
   if(!aud){ qToast('আগে বাছুন: সব Agent নাকি নির্দিষ্ট Agent'); return; }
   if(aud === 'SEL' && !sel.size){ qToast('কমপক্ষে একজন Agent বাছুন'); return; }
   const btn = document.getElementById('qxSendBtn'); btn.disabled = true;
+  const BTN_LABEL = '📢 Send Live Message';
+  let dots = 0; btn.textContent = '⏳ পাঠানো হচ্ছে';
+  const dotTimer = setInterval(()=>{ dots = (dots + 1) % 9; btn.textContent = '⏳ পাঠানো হচ্ছে' + '.'.repeat(dots); }, 350);
+  let okSent = false;
   try{
     const d = await qxPost('qxSendMessage', { title, text, target: aud === 'ALL' ? 'ALL' : Array.from(sel), by: qWho() });
     if(!d || d.ok !== true) throw new Error((d && d.error) || 'failed');
-    qToast('✅ মেসেজ পাঠানো হয়েছে');
+    okSent = true; qToast('✅ মেসেজ পাঠানো হয়েছে');
     document.getElementById('qxMText').value = ''; document.getElementById('qxMTitle').value = ''; document.getElementById('qxMLen').textContent = '0';
     qxLoadReceipts();
   }catch(e){ qToast('❌ ' + (e.message && e.message !== 'failed' ? e.message : 'Backend সেট করা নেই বা Server সমস্যা')); }
-  btn.disabled = false;
+  clearInterval(dotTimer);
+  if(okSent){ btn.textContent = '✅ পাঠানো হয়েছে'; setTimeout(()=>{ btn.textContent = BTN_LABEL; btn.disabled = false; }, 1500); }
+  else { btn.textContent = BTN_LABEL; btn.disabled = false; }
 };
 window.qxLoadReceipts = async function(silent){
   const box = document.getElementById('qxReceipts'); if(!box) return;
