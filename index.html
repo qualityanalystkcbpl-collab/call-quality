@@ -4146,6 +4146,49 @@ transform:translateY(0);
   background:#E0524A; color:#fff; font-size:9.5px; font-weight:800;
   letter-spacing:.5px; line-height:1.5; margin-left:6px; vertical-align:middle;
 }
+/* Lead Entry Form — animated colour glow (agent + admin portal) */
+.nav-item.nav-leadform-glow{
+  border-color:rgba(255,140,60,.55);
+  background:linear-gradient(120deg,rgba(255,106,61,.16),rgba(168,85,247,.14),rgba(34,211,238,.12),rgba(255,106,61,.16));
+  background-size:300% 300%;
+  animation:leadFormBg 6s ease-in-out infinite, leadFormGlow 2.8s ease-in-out infinite;
+}
+.nav-item.nav-leadform-glow .nav-leadform-text{
+  font-weight:700;
+  background:linear-gradient(90deg,#ffb347,#ff6a3d,#e056fd,#22d3ee,#ffb347);
+  background-size:250% 100%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:leadFormText 4s linear infinite;
+}
+.nav-item.nav-leadform-glow .dot{
+  background:#ff8a3d;
+  animation:leadFormDot 1.6s ease-in-out infinite;
+}
+.nav-item.nav-leadform-glow::after{
+  content:''; position:absolute; top:0; bottom:0; left:-60%; width:40%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);
+  transform:skewX(-20deg);
+  animation:leadFormShine 3.6s ease-in-out infinite;
+  pointer-events:none;
+}
+.nav-item.nav-leadform-glow:hover{ transform:translateX(3px); }
+@keyframes leadFormBg{ 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
+@keyframes leadFormText{ to{ background-position:250% 0; } }
+@keyframes leadFormGlow{
+  0%,100%{ box-shadow:0 0 6px rgba(255,106,61,.35), inset 0 0 8px rgba(255,106,61,.10); border-color:rgba(255,140,60,.55); }
+  33%{ box-shadow:0 0 12px rgba(224,86,253,.50), inset 0 0 10px rgba(224,86,253,.12); border-color:rgba(224,86,253,.65); }
+  66%{ box-shadow:0 0 12px rgba(34,211,238,.45), inset 0 0 10px rgba(34,211,238,.12); border-color:rgba(34,211,238,.60); }
+}
+@keyframes leadFormDot{
+  0%,100%{ transform:scale(1); box-shadow:0 0 4px #ff8a3d; }
+  50%{ transform:scale(1.5); box-shadow:0 0 12px #ff8a3d, 0 0 18px #e056fd; }
+}
+@keyframes leadFormShine{ 0%,55%{ left:-60%; } 100%{ left:140%; } }
+@media (prefers-reduced-motion:reduce){
+  .nav-item.nav-leadform-glow,.nav-item.nav-leadform-glow .nav-leadform-text,
+  .nav-item.nav-leadform-glow .dot,.nav-item.nav-leadform-glow::after{ animation:none; }
+}
 .nav-chat-badge{
   display:inline-flex; align-items:center; justify-content:center;
   min-width:18px; height:18px; padding:0 5px; border-radius:9px; box-sizing:border-box;
@@ -5270,7 +5313,7 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
 
       <div class="nav-section">
       <div class="nav-label">NEW LEAD</div>
-      <div class="nav-item" data-tab="LEADFORM" onclick="switchTab('LEADFORM')"><span class="dot"></span>📝 Lead Entry Form <span class="nav-new-tag">NEW</span></div>
+      <div class="nav-item nav-leadform-glow" data-tab="LEADFORM" onclick="switchTab('LEADFORM')"><span class="dot"></span><span class="nav-leadform-text">📝 Lead Entry Form</span></div>
       </div>
 
 
