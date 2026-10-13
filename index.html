@@ -21737,7 +21737,7 @@ window.qxRenderMsg = async function(){
       '<input class="qx-input" id="qxMTitle" maxlength="80" placeholder="Title (optional)" style="width:100%;margin-bottom:8px">' +
       '<textarea class="qx-input" id="qxMText" maxlength="500" rows="4" placeholder="মেসেজ লিখুন..." style="width:100%;resize:vertical" oninput="document.getElementById(\'qxMLen\').textContent=this.value.length"></textarea>' +
       '<div class="qx-hint" style="margin-top:4px"><span id="qxMLen">0</span>/500</div>' +
-      '<div class="qx-aud"><label><input type="radio" name="qxAud" value="ALL" checked onchange="qxAudChange()"> সব Agent</label>' +
+      '<div class="qx-aud"><label><input type="radio" name="qxAud" value="ALL" onchange="qxAudChange()"> সব Agent</label>' +
       '<label><input type="radio" name="qxAud" value="SEL" onchange="qxAudChange()"> নির্দিষ্ট Agent</label></div>' +
       '<div id="qxPickWrap" style="display:none"><div class="qx-toolbar" style="margin:0">' +
         '<input class="qx-input" id="qxPickSearch" placeholder="Search..." oninput="qxDrawPick()" style="flex:1">' +
@@ -21777,6 +21777,7 @@ window.qxSendMsg = async function(){
   const text = document.getElementById('qxMText').value.trim(), title = document.getElementById('qxMTitle').value.trim();
   const aud = (document.querySelector('input[name="qxAud"]:checked') || {}).value;
   if(!text){ qToast('মেসেজ লিখুন'); return; }
+  if(!aud){ qToast('আগে বাছুন: সব Agent নাকি নির্দিষ্ট Agent'); return; }
   if(aud === 'SEL' && !sel.size){ qToast('কমপক্ষে একজন Agent বাছুন'); return; }
   const btn = document.getElementById('qxSendBtn'); btn.disabled = true;
   try{
