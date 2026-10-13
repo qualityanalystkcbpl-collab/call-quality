@@ -4994,6 +4994,7 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
         <div class="field">
           <label>Password</label>
           <input type="password" id="loginPassword" placeholder="••••••••">
+          <div class="caps-light" data-caps="unknown" title="Caps Lock ON/OFF (কোনো key চাপলে বা mouse নাড়ালে আপডেট হবে)"><span class="caps-led"></span><span class="caps-txt">Caps Lock</span></div>
         </div>
         <button class="login-btn" id="loginBtn" data-role="agent" onclick="submitStaffLogin()">Enter as QA</button>
         <div class="login-error" id="loginError"></div>
@@ -5049,6 +5050,7 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
       <div class="field">
         <label>Password</label>
         <input type="password" id="empPassword" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter'){ event.preventDefault(); employeeLogin(); }">
+        <div class="caps-light" data-caps="unknown" title="Caps Lock ON/OFF (কোনো key চাপলে বা mouse নাড়ালে আপডেট হবে)"><span class="caps-led"></span><span class="caps-txt">Caps Lock</span></div>
         <label class="show-pass-row">
           <input type="checkbox" id="empShowPassword" onchange="toggleEmpPasswordVisibility()">
           <span>Show Password</span>
@@ -5388,6 +5390,46 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
 
     <span class="dot"></span>
     🖼️ Banner Manager
+
+</div>
+
+<div class="nav-item admin-only"
+     data-tab="QX_LOGINS"
+     onclick="switchTab('QX_LOGINS')"
+     style="display:none;">
+
+    <span class="dot"></span>
+    🕘 Login History
+
+</div>
+
+<div class="nav-item admin-only"
+     data-tab="QX_FAILED"
+     onclick="switchTab('QX_FAILED')"
+     style="display:none;">
+
+    <span class="dot"></span>
+    ⚠️ Failed Logins
+
+</div>
+
+<div class="nav-item admin-only"
+     data-tab="QX_FORCE"
+     onclick="switchTab('QX_FORCE')"
+     style="display:none;">
+
+    <span class="dot"></span>
+    🚪 Force Logout
+
+</div>
+
+<div class="nav-item admin-only"
+     data-tab="QX_MSG"
+     onclick="switchTab('QX_MSG')"
+     style="display:none;">
+
+    <span class="dot"></span>
+    📢 Live Message
 
 </div>
 
@@ -5967,6 +6009,7 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
       <!-- ============ EMPLOYEE ⇄ ADMIN CHAT PANEL (Admin/Super Admin) ============ -->
       <div class="panel" id="panel-EMPCHAT"></div>
       <div class="panel" id="panel-BANNERMGR"></div>
+      <div class="panel" id="panel-QX_LOGINS"></div><div class="panel" id="panel-QX_FAILED"></div><div class="panel" id="panel-QX_FORCE"></div><div class="panel" id="panel-QX_MSG"></div>
 
       <!-- ============ SUPER ADMIN PANEL (NEW - ADDITIVE, DOES NOT TOUCH EXISTING ADMIN PANEL) ============ -->
       <div class="panel" id="panel-SUPERADMIN">
@@ -9617,13 +9660,14 @@ async function doLogin(){
     const data = await res.json();
 
     if(!data || data.ok !== true){
-      errBox.textContent = 'Incorrect password. Please try again.';
+      errBox.textContent = 'Incorrect password. Please try again.'; if(window.qxLogLogin) qxLogLogin({name: selectedRole==='admin'?'Admin':'Quality Team', id:'-', role: selectedRole==='admin'?'Admin':'Quality Team', status:'FAILED', reason:'Wrong password'});
       btn.disabled = false;
       btn.textContent = originalBtnText;
       return;
     }
 
     currentRole = selectedRole;
+    if(window.qxLogLogin) qxLogLogin({name: selectedRole==='admin'?'Admin':'Quality Team', id:'-', role: selectedRole==='admin'?'Admin':'Quality Team', status:'SUCCESS'});
 
     localStorage.setItem("qa_role", currentRole);
     localStorage.setItem("qa_login_time", Date.now());
@@ -10743,6 +10787,7 @@ async function switchTab(tab){
   if(tab === 'SUPERADMIN' && typeof saLoadAgents === 'function'){ setTimeout(saLoadAgents, 0); }
   // Role guard: SQL Control Center is Admin-only; My QA Report is Agent-only.
   if(tab === 'SQLCONTROL' && currentRole !== 'admin'){ tab = 'HOME'; }
+  if(String(tab).indexOf('QX_') === 0 && currentRole !== 'admin'){ tab = 'HOME'; }
   if(tab === 'ADVANCEDREPORTS' && currentRole !== 'admin'){ tab = 'HOME'; }
   if(tab === 'AGENTREPORT' && currentRole !== 'agent' && currentRole !== 'admin'){ tab = 'HOME'; }
   currentTab = tab;
@@ -10803,6 +10848,14 @@ async function switchTab(tab){
       renderAdminChatList();
     } else if (tab === 'BANNERMGR') {
       renderBannerManagerPanel();
+    } else if (tab === 'QX_LOGINS') {
+      qxRenderLogins('SUCCESS');
+    } else if (tab === 'QX_FAILED') {
+      qxRenderLogins('FAILED');
+    } else if (tab === 'QX_FORCE') {
+      qxRenderForce();
+    } else if (tab === 'QX_MSG') {
+      qxRenderMsg();
     }
   } finally {
     hidePageLoadOverlay();
@@ -18975,13 +19028,13 @@ async function employeeLogin(){
     btn.disabled = false; btn.textContent = 'Enter as Employee/Agent';
 
     if(!data || data.ok !== true){
-      errBox.textContent = (data && data.error) || 'Invalid Employee ID or Password';
+      errBox.textContent = (data && data.error) || 'Invalid Employee ID or Password'; if(window.qxLogLogin) qxLogLogin({name:'', id: empId, role:'Employee', status:'FAILED', reason: (data && data.error) || 'Invalid ID or Password'});
       generateEmpCaptcha();
       return;
     }
 
     // Stash pending session info; finalize after forced password change (if any)
-    window._pendingEmpSession = data;
+    window._pendingEmpSession = data; if(window.qxLogLogin) qxLogLogin({name: data.agentName || '', id: empId, role: (data.role && String(data.role).toLowerCase()==='admin') ? 'Employee/Admin' : 'Employee', status:'SUCCESS'});
 
     if(data.forceChangePassword){
       document.getElementById('forceChangeModal').style.display = 'flex';
@@ -19216,6 +19269,7 @@ function startEmployeeSessionTracking(){
 
   empHeartbeatInterval = setInterval(sendEmpHeartbeat, EMP_HEARTBEAT_MS);
   sendEmpHeartbeat();
+  if(window.qxStartPolling) qxStartPolling();
 
   setupInactivityWatch();
 
@@ -19285,6 +19339,7 @@ async function employeeLogout(logoutType){
   if(empSessionTimerInterval) clearInterval(empSessionTimerInterval);
   if(empHeartbeatInterval) clearInterval(empHeartbeatInterval);
   if(empGreetingInterval) clearInterval(empGreetingInterval);
+  if(window.qxStopPolling) qxStopPolling(true);
   if(empInactivityTimeout) clearTimeout(empInactivityTimeout);
 
   document.getElementById('employeeWelcomeBar').style.display = 'none';
@@ -19487,10 +19542,10 @@ async function superAdminLogin(){
     const data = await empApiPost('superAdminLogin', { saId: id, saPassword: pass });
     btn.disabled = false; btn.textContent = 'Login as Super Admin';
     if(!data || data.ok !== true){
-      errBox.textContent = (data && data.error) || 'Invalid Super Admin credentials.';
+      errBox.textContent = (data && data.error) || 'Invalid Super Admin credentials.'; if(window.qxLogLogin) qxLogLogin({name:'Super Admin', id: id, role:'Super Admin', status:'FAILED', reason: (data && data.error) || 'Invalid credentials'});
       return;
     }
-    superAdminToken = data.token;
+    superAdminToken = data.token; if(window.qxLogLogin) qxLogLogin({name:'Super Admin', id: id, role:'Super Admin', status:'SUCCESS'});
     localStorage.setItem('qa_sa_token', superAdminToken);
 
     currentRole = 'admin'; // reuse existing admin-only visibility rules
@@ -21260,6 +21315,446 @@ async function adminPreviewAgentReport(){
     setTimeout(syncAIAnalystChatVisibility,1200);
     setInterval(syncAIAnalystChatVisibility,2500);
   });
+})();
+</script>
+
+<style id="qx-style">
+/* ===== Caps Lock light (login screen only) ===== */
+.caps-light{display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:4px 12px 4px 9px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.2px;border:1px solid rgba(128,140,160,.45);background:rgba(128,140,160,.12);color:#7d8aa0;transition:color .2s,background .2s,border-color .2s;user-select:none}
+.caps-led{width:11px;height:11px;border-radius:50%;background:#8a96a8;box-shadow:inset 0 1px 2px rgba(0,0,0,.35);transition:background .2s,box-shadow .2s}
+.caps-light[data-caps="off"]{color:#23925c;border-color:rgba(47,165,106,.5);background:rgba(47,165,106,.12)}
+.caps-light[data-caps="off"] .caps-led{background:#2fd17e;box-shadow:0 0 6px rgba(47,209,126,.85),inset 0 1px 2px rgba(255,255,255,.45)}
+.caps-light[data-caps="on"]{color:#e5483c;border-color:rgba(229,72,60,.65);background:rgba(229,72,60,.14);animation:qxCapsShake .35s}
+.caps-light[data-caps="on"] .caps-led{background:#ff4b3e;animation:qxCapsPulse 1s ease-in-out infinite}
+@keyframes qxCapsPulse{0%,100%{box-shadow:0 0 4px rgba(255,75,62,.7)}50%{box-shadow:0 0 12px rgba(255,75,62,1),0 0 18px rgba(255,75,62,.5)}}
+@keyframes qxCapsShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* ===== Admin tools panels ===== */
+.qx-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+.qx-input{padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font:inherit;font-size:13px;min-width:0}
+.qx-input:focus{outline:none;border-color:var(--admin)}
+.qx-count{font-size:12px;color:var(--text-muted);margin-left:auto}
+.qx-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.qx-card h3{margin:0 0 10px}
+.qx-hint{font-size:12px;color:var(--text-muted);margin:0 0 10px}
+.qx-warn{background:rgba(224,82,74,.12);border:1px solid rgba(224,82,74,.45);color:var(--text);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.5}
+.qx-pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.qx-pill.ok{background:rgba(63,191,127,.16);color:#3fbf7f}
+.qx-pill.bad{background:rgba(224,82,74,.16);color:#e0524a}
+.qx-table td,.qx-table th{white-space:nowrap}
+.qx-btn-danger{background:#e0524a;color:#fff;border:0;border-radius:8px;padding:6px 12px;font-weight:600;cursor:pointer}
+.qx-btn-danger:hover{filter:brightness(1.1)}
+.qx-pick{max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:6px;background:var(--surface-2);margin-top:8px}
+.qx-pick label{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:13px}
+.qx-pick label:hover{background:var(--surface-3)}
+.qx-aud{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin:6px 0}
+.qx-aud label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.qx-msg-card{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--surface-2)}
+.qx-msg-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.qx-msg-head b{font-size:14px}
+.qx-msg-head small{color:var(--text-muted)}
+.qx-msg-body{white-space:pre-wrap;font-size:13px;margin-bottom:8px}
+.qx-chips{display:flex;gap:6px;flex-wrap:wrap}
+.qx-chip{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--border)}
+.qx-chip.read{background:rgba(63,191,127,.15);border-color:rgba(63,191,127,.5);color:#3fbf7f}
+.qx-chip.pending{color:var(--text-muted)}
+.qx-bar{height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden;margin:6px 0 8px}
+.qx-bar>i{display:block;height:100%;background:linear-gradient(90deg,#33c9b0,#3fbf7f);transition:width .4s}
+
+/* ===== Live popup (agent side) ===== */
+.qx-overlay{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(5,10,20,.62);padding:16px;animation:qxFade .2s ease}
+.qx-pop{width:min(460px,100%);background:linear-gradient(160deg,#16294a,#0e1a2b);color:#eaf0f6;border-radius:18px;padding:26px 24px 22px;text-align:center;border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 2px rgba(51,201,176,.35),0 24px 60px rgba(0,0,0,.55);animation:qxPopIn .45s cubic-bezier(.22,1,.36,1)}
+.qx-pop-bell{font-size:40px;display:inline-block;transform-origin:50% 8px;animation:qxBell 1.6s ease-in-out infinite}
+.qx-pop-tag{margin-top:4px;font-size:11px;font-weight:700;letter-spacing:1.6px;color:#33c9b0}
+.qx-pop h3{margin:8px 0 6px;font-size:19px;color:#fff}
+.qx-pop-text{white-space:pre-wrap;text-align:left;font-size:14px;line-height:1.55;background:rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;margin:10px 0;max-height:46vh;overflow:auto}
+.qx-pop-meta{font-size:11px;color:#8fa0b5;margin-bottom:14px}
+.qx-pop-btn{width:100%;padding:12px;border:0;border-radius:12px;font-weight:700;font-size:15px;color:#fff;cursor:pointer;background:linear-gradient(180deg,#52d69a,#2fae72);box-shadow:0 5px 0 #1d7f52,0 10px 16px rgba(29,127,82,.38);transition:transform .12s,box-shadow .12s}
+.qx-pop-btn:active{transform:translateY(5px);box-shadow:0 0 0 #1d7f52}
+.qx-pop-btn:disabled{opacity:.6;cursor:wait}
+.qx-pop.force{box-shadow:0 0 0 2px rgba(224,82,74,.55),0 24px 60px rgba(0,0,0,.55)}
+.qx-pop.force .qx-pop-tag{color:#ff6b60}
+@keyframes qxFade{from{opacity:0}to{opacity:1}}
+@keyframes qxPopIn{from{opacity:0;transform:translateY(22px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes qxBell{0%,60%,100%{transform:rotate(0)}10%{transform:rotate(16deg)}20%{transform:rotate(-14deg)}30%{transform:rotate(10deg)}40%{transform:rotate(-8deg)}50%{transform:rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){.qx-pop,.qx-pop-bell,.caps-light,.caps-led{animation:none!important}}
+</style>
+<script>
+/* ============================================================================
+   QX extras: Caps Lock light, login logging, force logout, live messages,
+   admin tools.  Needs the QA_Extras.gs backend on EMP_WEB_APP_URL.
+   ============================================================================ */
+(function(){
+'use strict';
+
+/* ---------------- tiny helpers ---------------- */
+// QX calls go to the main Apps Script (WEB_APP_URL), the one that also holds checkLogin / settings
+const qxPost = (action, payload) => fetch(WEB_APP_URL + '?action=' + encodeURIComponent(action), { method: 'POST', body: JSON.stringify(payload || {}) }).then(r => r.json());
+const qxGet = (action, params) => fetch(WEB_APP_URL + '?' + new URLSearchParams(Object.assign({ action }, params || {})).toString()).then(r => r.json());
+const qE = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const qFmt = ms => ms ? new Date(Number(ms)).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}) : '-';
+const qToast = m => { try{ showToast(m); }catch(e){ alert(m); } };
+const qWho = () => {
+  if(localStorage.getItem('qa_is_superadmin')==='1') return 'Super Admin';
+  try{ if(typeof empAgentName!=='undefined' && empAgentName) return empAgentName + ' (Admin)'; }catch(e){}
+  return 'Admin';
+};
+const SETUP_HINT = '<div class="qx-warn"><b>Backend এখনও সেট করা হয়নি।</b><br>QA_Backend_Merged.gs-এর কোড Apps Script-এ বসিয়ে নতুন version Deploy করুন। তারপর এই পেজ Refresh করুন।</div>';
+
+/* ============================================================
+   1) CAPS LOCK LIGHT — login screen only
+   ============================================================ */
+(function(){
+  let state = null, lastMove = 0;
+  const loginVisible = () => { const l = document.getElementById('loginScreen'); return !!l && getComputedStyle(l).display !== 'none'; };
+  function paint(on){
+    document.querySelectorAll('#loginScreen .caps-light').forEach(el=>{
+      el.dataset.caps = on ? 'on' : 'off';
+      const t = el.querySelector('.caps-txt'); if(t) t.textContent = on ? 'Caps Lock ON' : 'Caps Lock OFF';
+    });
+  }
+  function check(e){
+    if(!e || !e.getModifierState || !loginVisible()) return;
+    const on = !!e.getModifierState('CapsLock');
+    if(on !== state){ state = on; paint(on); }
+  }
+  ['keydown','keyup','mousedown'].forEach(ev=>document.addEventListener(ev, check, true));
+  document.addEventListener('mousemove', e=>{ const n = Date.now(); if(n - lastMove > 250){ lastMove = n; check(e); } }, {capture:true, passive:true});
+  document.addEventListener('focusin', ()=>{ if(state !== null && loginVisible()) paint(state); });
+})();
+
+/* ============================================================
+   2) LOGIN LOGGING (fire-and-forget; never blocks login)
+   ============================================================ */
+let _ip = null;
+async function qIp(){ if(_ip !== null) return _ip; try{ _ip = await getClientIP(); }catch(e){ _ip = ''; } return _ip || ''; }
+window.qxLogLogin = function(info){
+  (async()=>{ try{
+    const ip = await qIp();
+    await qxPost('qxLogLogin', {
+      name: info.name || '', id: info.id || '', role: info.role || '', status: info.status || 'SUCCESS',
+      reason: info.reason || '', device: getDeviceType(), browser: getBrowserName(), ip
+    });
+  }catch(e){} })();
+};
+
+/* ============================================================
+   3) AGENT SIDE: one light poll = force logout + live popups
+   ============================================================ */
+const POLL_MS = 30000;
+let pollTimer = null, lastPoll = 0, queue = [], showing = null, shown = new Set(), forced = false;
+const baseKey = () => 'qx_base_' + ((typeof empSessionId !== 'undefined' && empSessionId) || '');
+
+window.qxStartPolling = function(){
+  if(pollTimer) clearInterval(pollTimer);
+  forced = false;
+  const mine = baseKey();
+  Object.keys(localStorage).forEach(k=>{ if(k.indexOf('qx_base_') === 0 && k !== mine) localStorage.removeItem(k); });
+  poll();
+  pollTimer = setInterval(poll, POLL_MS);
+};
+window.qxStopPolling = function(clearBase){
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  if(clearBase) localStorage.removeItem(baseKey());
+  queue = []; shown.clear(); showing = null;
+  const o = document.getElementById('qxLiveOverlay'); if(o) o.style.display = 'none';
+};
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && pollTimer && Date.now() - lastPoll > 5000) poll(); });
+
+async function poll(){
+  if(typeof empEmployeeId === 'undefined' || !empEmployeeId || forced) return;
+  lastPoll = Date.now();
+  try{
+    const base = Number(localStorage.getItem(baseKey())) || 0;
+    const d = await qxPost('qxPoll', { employeeId: empEmployeeId, base });
+    if(!d || d.ok !== true) return;
+    if(!base && d.serverNow) localStorage.setItem(baseKey(), String(d.serverNow));
+    if(d.forceLogout){ onForced(); return; }
+    (d.messages || []).forEach(m=>{ if(!shown.has(m.id)){ shown.add(m.id); queue.push(m); } });
+    showNext();
+  }catch(e){ /* backend not ready / offline: stay silent for agents */ }
+}
+
+function ensureOverlay(){
+  let o = document.getElementById('qxLiveOverlay');
+  if(o) return o;
+  o = document.createElement('div');
+  o.id = 'qxLiveOverlay'; o.className = 'qx-overlay'; o.style.display = 'none';
+  o.innerHTML = '<div class="qx-pop" id="qxPop" role="alertdialog" aria-modal="true">'
+    + '<div class="qx-pop-bell" id="qxPopIcon">🔔</div>'
+    + '<div class="qx-pop-tag" id="qxPopTag"></div>'
+    + '<h3 id="qxPopTitle"></h3>'
+    + '<div class="qx-pop-text" id="qxPopText"></div>'
+    + '<div class="qx-pop-meta" id="qxPopMeta"></div>'
+    + '<button type="button" class="qx-pop-btn" id="qxPopBtn"></button></div>';
+  document.body.appendChild(o);
+  return o;
+}
+function beep(){
+  try{
+    const C = window.AudioContext || window.webkitAudioContext; if(!C) return;
+    const c = new C(), t = c.currentTime;
+    [880, 1175].forEach((f,i)=>{ const o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(.0001, t + i*.16);
+      g.gain.exponentialRampToValueAtTime(.12, t + i*.16 + .02); g.gain.exponentialRampToValueAtTime(.0001, t + i*.16 + .15);
+      o.connect(g); g.connect(c.destination); o.start(t + i*.16); o.stop(t + i*.16 + .16); });
+    setTimeout(()=>c.close(), 700);
+  }catch(e){}
+}
+function showNext(){
+  if(showing || !queue.length || forced) return;
+  showing = queue.shift();
+  const o = ensureOverlay(), m = showing;
+  document.getElementById('qxPop').className = 'qx-pop';
+  document.getElementById('qxPopIcon').textContent = '🔔';
+  document.getElementById('qxPopTag').textContent = 'LIVE MESSAGE' + (queue.length ? '  ·  +' + queue.length + ' more' : '');
+  document.getElementById('qxPopTitle').textContent = m.title || 'Message from Admin';
+  document.getElementById('qxPopText').textContent = m.text || '';
+  document.getElementById('qxPopMeta').textContent = 'From ' + (m.by || 'Admin') + '  ·  ' + qFmt(m.ms);
+  const b = document.getElementById('qxPopBtn');
+  b.disabled = false; b.textContent = '✔ Read — পড়েছি'; b.onclick = window.qxReadCurrent;
+  o.style.display = 'flex'; beep();
+}
+window.qxReadCurrent = async function(){
+  const m = showing; if(!m) return;
+  const b = document.getElementById('qxPopBtn'); b.disabled = true; b.textContent = 'Please wait...';
+  try{
+    const d = await qxPost('qxMarkRead', { msgId: m.id, employeeId: empEmployeeId, agentName: (typeof empAgentName !== 'undefined' ? empAgentName : '') });
+    if(!d || d.ok !== true) throw new Error('mark read failed');
+    showing = null;
+    document.getElementById('qxLiveOverlay').style.display = 'none';
+    showNext();
+  }catch(e){
+    b.disabled = false; b.textContent = '✔ Read — পড়েছি';
+    qToast('Network সমস্যা — আবার চাপুন');
+  }
+};
+function onForced(){
+  forced = true;
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  queue = []; showing = null;
+  const o = ensureOverlay();
+  document.getElementById('qxPop').className = 'qx-pop force';
+  document.getElementById('qxPopIcon').textContent = '🚪';
+  document.getElementById('qxPopTag').textContent = 'SESSION ENDED';
+  document.getElementById('qxPopTitle').textContent = 'Admin আপনাকে লগআউট করেছেন';
+  document.getElementById('qxPopText').textContent = 'আপনার সেশন Admin বন্ধ করে দিয়েছেন। আবার কাজ করতে নতুন করে লগইন করুন।';
+  document.getElementById('qxPopMeta').textContent = '';
+  const b = document.getElementById('qxPopBtn');
+  let left = 6;
+  const go = ()=>{ clearInterval(tick); o.style.display = 'none'; localStorage.removeItem(baseKey()); if(typeof employeeLogout === 'function') employeeLogout('Forced'); };
+  b.disabled = false; b.onclick = go;
+  const label = ()=>{ b.textContent = 'OK — Logout (' + left + ')'; }; label();
+  const tick = setInterval(()=>{ left--; if(left <= 0) go(); else label(); }, 1000);
+  o.style.display = 'flex'; beep();
+}
+
+/* ============================================================
+   4) ADMIN TOOLS — shared agent list
+   ============================================================ */
+let agentCache = { t: 0, list: [], err: '' };
+async function loadAgents(force){
+  if(!force && Date.now() - agentCache.t < 60000) return agentCache;
+  const map = {}; let err = '';
+  try{
+    const d = await qxGet('qxKnownAgents');
+    if(d && d.ok === true) d.agents.forEach(a=>{ map[a.id] = { id: a.id, name: a.name, last: a.last }; });
+    else err = 'setup';
+  }catch(e){ err = 'setup'; }
+  try{
+    if(typeof superAdminToken !== 'undefined' && superAdminToken){
+      const d = await empApiGet('listAgents', { token: superAdminToken });
+      if(d && d.ok === true) (d.agents || []).forEach(a=>{
+        const id = String(a.employeeId || '').trim().toUpperCase(); if(!id) return;
+        map[id] = { id, name: a.agentName || (map[id] && map[id].name) || '', last: (map[id] && map[id].last) || 0 };
+      });
+    }
+  }catch(e){}
+  agentCache = { t: Date.now(), list: Object.values(map).sort((a,b)=>String(a.name).localeCompare(String(b.name))), err };
+  return agentCache;
+}
+
+/* ============================================================
+   5) ADMIN: LOGIN HISTORY + FAILED LOGINS
+   ============================================================ */
+const logRows = { SUCCESS: [], FAILED: [] };
+window.qxRenderLogins = async function(kind){
+  const failed = kind === 'FAILED';
+  const panel = document.getElementById(failed ? 'panel-QX_FAILED' : 'panel-QX_LOGINS'); if(!panel) return;
+  const roles = ['Employee','Employee/Admin','Quality Team','Admin','Super Admin'];
+  panel.innerHTML =
+    '<div class="panel-header"><div><h1>' + (failed ? '⚠️ Failed Logins' : '🕘 Login History') + '</h1><p>' +
+    (failed ? 'ভুল ID / Password দিয়ে যত লগইন চেষ্টা হয়েছে' : 'কে, কখন, কোন ডিভাইস ও ব্রাউজার থেকে লগইন করেছে') + '</p></div></div>' +
+    '<div class="qx-toolbar">' +
+      '<input class="qx-input" id="qxLS-' + kind + '" placeholder="Search name / ID / IP..." oninput="qxFilterLogins(\'' + kind + '\')" style="min-width:210px">' +
+      '<select class="qx-input" id="qxLR-' + kind + '" onchange="qxFilterLogins(\'' + kind + '\')"><option value="">All roles</option>' + roles.map(r=>'<option>' + r + '</option>').join('') + '</select>' +
+      '<input type="date" class="qx-input" id="qxLD-' + kind + '" onchange="qxFilterLogins(\'' + kind + '\')">' +
+      '<button class="btn small" onclick="qxRenderLogins(\'' + kind + '\')">⟳ Refresh</button>' +
+      '<span class="qx-count" id="qxLC-' + kind + '"></span></div>' +
+    '<div class="table-wrapper"><table class="score-table qx-table"><thead><tr>' +
+    (failed ? '<th>Time</th><th>ID / Name tried</th><th>Role</th><th>Reason</th><th>Device</th><th>Browser</th><th>IP</th>'
+            : '<th>Time</th><th>Name</th><th>ID</th><th>Role</th><th>Device</th><th>Browser</th><th>IP</th>') +
+    '</tr></thead><tbody id="qxLB-' + kind + '"><tr><td colspan="7">Loading...</td></tr></tbody></table></div>';
+  try{
+    const d = await qxGet('qxGetLogins', { status: kind, limit: 500 });
+    if(!d || d.ok !== true){ document.getElementById('qxLB-' + kind).innerHTML = '<tr><td colspan="7">' + SETUP_HINT + '</td></tr>'; return; }
+    logRows[kind] = d.rows || [];
+    qxFilterLogins(kind);
+  }catch(e){ document.getElementById('qxLB-' + kind).innerHTML = '<tr><td colspan="7">' + SETUP_HINT + '</td></tr>'; }
+};
+window.qxFilterLogins = function(kind){
+  const failed = kind === 'FAILED', g = id => (document.getElementById(id) || {}).value || '';
+  const q = g('qxLS-' + kind).trim().toLowerCase(), role = g('qxLR-' + kind), day = g('qxLD-' + kind);
+  const list = logRows[kind].filter(r=>{
+    if(role && r.role !== role) return false;
+    if(day){ const d = new Date(r.ms), s = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); if(s !== day) return false; }
+    return !q || [r.name, r.id, r.ip, r.role].join(' ').toLowerCase().includes(q);
+  });
+  const body = document.getElementById('qxLB-' + kind); if(!body) return;
+  body.innerHTML = list.length ? list.map(r=> failed
+    ? '<tr><td>' + qFmt(r.ms) + '</td><td>' + qE(r.id && r.id !== '-' ? r.id : r.name) + '</td><td>' + qE(r.role) + '</td><td><span class="qx-pill bad">' + qE(r.reason || 'Failed') + '</span></td><td>' + qE(r.device) + '</td><td>' + qE(r.browser) + '</td><td>' + qE(r.ip) + '</td></tr>'
+    : '<tr><td>' + qFmt(r.ms) + '</td><td>' + qE(r.name) + '</td><td>' + qE(r.id) + '</td><td>' + qE(r.role) + '</td><td>' + qE(r.device) + '</td><td>' + qE(r.browser) + '</td><td>' + qE(r.ip) + '</td></tr>'
+  ).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">কোনো রেকর্ড নেই</td></tr>';
+  const c = document.getElementById('qxLC-' + kind); if(c) c.textContent = list.length + ' / ' + logRows[kind].length + ' records';
+};
+
+/* ============================================================
+   6) ADMIN: FORCE LOGOUT
+   ============================================================ */
+window.qxRenderForce = async function(){
+  const panel = document.getElementById('panel-QX_FORCE'); if(!panel) return;
+  panel.innerHTML =
+    '<div class="panel-header"><div><h1>🚪 Force Logout</h1><p>কোনো Agent-কে জোর করে লগআউট করান (সাধারণত ৩০ সেকেন্ডের মধ্যে কার্যকর হয়)</p></div></div>' +
+    '<div class="qx-card"><h3>Employee ID দিয়ে</h3><div class="qx-toolbar" style="margin:0">' +
+      '<input class="qx-input" id="qxFId" placeholder="e.g. GK0001" style="min-width:200px;text-transform:uppercase">' +
+      '<button class="qx-btn-danger" onclick="qxForceLogout(document.getElementById(\'qxFId\').value)">Force Logout</button></div></div>' +
+    '<div class="qx-toolbar"><input class="qx-input" id="qxFSearch" placeholder="Search agent name / ID..." oninput="qxDrawForce()" style="min-width:230px">' +
+      '<button class="btn small" onclick="qxRenderForce()">⟳ Refresh</button><span class="qx-count" id="qxFCount"></span></div>' +
+    '<div class="table-wrapper"><table class="score-table qx-table"><thead><tr><th>Employee ID</th><th>Name</th><th>Last login</th><th>Action</th></tr></thead>' +
+    '<tbody id="qxFBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>';
+  await loadAgents(true);
+  qxDrawForce();
+};
+window.qxDrawForce = function(){
+  const body = document.getElementById('qxFBody'); if(!body) return;
+  if(agentCache.err){ body.innerHTML = '<tr><td colspan="4">' + SETUP_HINT + '</td></tr>'; return; }
+  const q = ((document.getElementById('qxFSearch') || {}).value || '').trim().toLowerCase();
+  const list = agentCache.list.filter(a=>!q || (a.id + ' ' + a.name).toLowerCase().includes(q));
+  body.innerHTML = list.length ? list.map(a=>
+    '<tr><td>' + qE(a.id) + '</td><td>' + qE(a.name) + '</td><td>' + (a.last ? qFmt(a.last) : '-') + '</td>' +
+    '<td><button class="qx-btn-danger" data-id="' + qE(a.id) + '" onclick="qxForceLogout(this.dataset.id)">🚪 Force Logout</button></td></tr>'
+  ).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">এখনও কোনো Employee লগইন রেকর্ড নেই — উপরে ID লিখে ব্যবহার করুন</td></tr>';
+  const c = document.getElementById('qxFCount'); if(c) c.textContent = list.length + ' agents';
+};
+window.qxForceLogout = async function(id){
+  id = String(id || '').trim().toUpperCase();
+  if(!id){ qToast('Employee ID দিন'); return; }
+  if(!confirm(id + ' কে এখনই লগআউট করাবেন?')) return;
+  try{
+    const d = await qxPost('qxForceLogout', { employeeId: id, by: qWho() });
+    if(!d || d.ok !== true) throw new Error((d && d.error) || 'failed');
+    qToast('✅ ' + id + ' — Force Logout পাঠানো হয়েছে');
+    const f = document.getElementById('qxFId'); if(f) f.value = '';
+  }catch(e){ qToast('❌ Backend সেট করা নেই বা Server সমস্যা'); }
+};
+
+/* ============================================================
+   7) ADMIN: LIVE MESSAGE + READ RECEIPTS
+   ============================================================ */
+const sel = new Set();
+let msgTimer = null;
+window.qxRenderMsg = async function(){
+  const panel = document.getElementById('panel-QX_MSG'); if(!panel) return;
+  sel.clear();
+  panel.innerHTML =
+    '<div class="panel-header"><div><h1>📢 Live Message</h1><p>Agent যে পেজেই থাকুক, স্ক্রিনে পপআপ আসবে। “Read” চাপলে পপআপ বন্ধ হবে এবং আপনি এখানে দেখতে পাবেন কে পড়েছে।</p></div></div>' +
+    '<div class="qx-card"><h3>নতুন মেসেজ</h3>' +
+      '<input class="qx-input" id="qxMTitle" maxlength="80" placeholder="Title (optional)" style="width:100%;margin-bottom:8px">' +
+      '<textarea class="qx-input" id="qxMText" maxlength="500" rows="4" placeholder="মেসেজ লিখুন..." style="width:100%;resize:vertical" oninput="document.getElementById(\'qxMLen\').textContent=this.value.length"></textarea>' +
+      '<div class="qx-hint" style="margin-top:4px"><span id="qxMLen">0</span>/500</div>' +
+      '<div class="qx-aud"><label><input type="radio" name="qxAud" value="ALL" checked onchange="qxAudChange()"> সব Agent</label>' +
+      '<label><input type="radio" name="qxAud" value="SEL" onchange="qxAudChange()"> নির্দিষ্ট Agent</label></div>' +
+      '<div id="qxPickWrap" style="display:none"><div class="qx-toolbar" style="margin:0">' +
+        '<input class="qx-input" id="qxPickSearch" placeholder="Search..." oninput="qxDrawPick()" style="flex:1">' +
+        '<input class="qx-input" id="qxPickManual" placeholder="ID লিখে যোগ করুন" style="width:150px;text-transform:uppercase">' +
+        '<button class="btn small" onclick="qxAddManual()">+ Add</button></div>' +
+      '<div class="qx-pick" id="qxPick">Loading...</div><div class="qx-hint" style="margin-top:6px" id="qxSelCount"></div></div>' +
+      '<button class="btn primary small" id="qxSendBtn" onclick="qxSendMsg()" style="margin-top:10px">📢 Send Live Message</button></div>' +
+    '<div class="qx-toolbar"><h3 style="margin:0">পাঠানো মেসেজ ও Read Status</h3><button class="btn small" onclick="qxLoadReceipts()">⟳ Refresh</button><span class="qx-count">অটো-রিফ্রেশ প্রতি ২০ সেকেন্ডে</span></div>' +
+    '<div id="qxReceipts">Loading...</div>';
+  loadAgents(false).then(()=>{ qxDrawPick(); });
+  qxLoadReceipts();
+  if(msgTimer) clearInterval(msgTimer);
+  msgTimer = setInterval(()=>{ if(typeof currentTab !== 'undefined' && currentTab !== 'QX_MSG'){ clearInterval(msgTimer); msgTimer = null; return; } qxLoadReceipts(true); }, 20000);
+};
+window.qxAudChange = function(){
+  const v = (document.querySelector('input[name="qxAud"]:checked') || {}).value;
+  document.getElementById('qxPickWrap').style.display = v === 'SEL' ? '' : 'none';
+  if(v === 'SEL') qxDrawPick();
+};
+window.qxDrawPick = function(){
+  const box = document.getElementById('qxPick'); if(!box) return;
+  if(agentCache.err){ box.innerHTML = SETUP_HINT; return; }
+  const q = ((document.getElementById('qxPickSearch') || {}).value || '').trim().toLowerCase();
+  const known = new Set(agentCache.list.map(a=>a.id));
+  const list = agentCache.list.concat(Array.from(sel).filter(id=>!known.has(id)).map(id=>({ id, name: '(manual)' })));
+  const f = list.filter(a=>!q || (a.id + ' ' + a.name).toLowerCase().includes(q));
+  box.innerHTML = f.length ? f.map(a=>'<label><input type="checkbox" data-id="' + qE(a.id) + '" ' + (sel.has(a.id) ? 'checked' : '') + ' onchange="qxTogglePick(this.dataset.id,this.checked)"> <b>' + qE(a.id) + '</b> <span style="color:var(--text-muted)">' + qE(a.name) + '</span></label>').join('')
+    : '<div style="padding:8px;color:var(--text-muted);font-size:12px">কেউ নেই — উপরে ID লিখে যোগ করুন</div>';
+  const c = document.getElementById('qxSelCount'); if(c) c.textContent = sel.size + ' জন নির্বাচিত';
+};
+window.qxTogglePick = function(id, on){ if(on) sel.add(id); else sel.delete(id); const c = document.getElementById('qxSelCount'); if(c) c.textContent = sel.size + ' জন নির্বাচিত'; };
+window.qxAddManual = function(){
+  const el = document.getElementById('qxPickManual'), id = String(el.value || '').trim().toUpperCase();
+  if(!id) return; sel.add(id); el.value = ''; qxDrawPick();
+};
+window.qxSendMsg = async function(){
+  const text = document.getElementById('qxMText').value.trim(), title = document.getElementById('qxMTitle').value.trim();
+  const aud = (document.querySelector('input[name="qxAud"]:checked') || {}).value;
+  if(!text){ qToast('মেসেজ লিখুন'); return; }
+  if(aud === 'SEL' && !sel.size){ qToast('কমপক্ষে একজন Agent বাছুন'); return; }
+  const btn = document.getElementById('qxSendBtn'); btn.disabled = true;
+  try{
+    const d = await qxPost('qxSendMessage', { title, text, target: aud === 'ALL' ? 'ALL' : Array.from(sel), by: qWho() });
+    if(!d || d.ok !== true) throw new Error((d && d.error) || 'failed');
+    qToast('✅ মেসেজ পাঠানো হয়েছে');
+    document.getElementById('qxMText').value = ''; document.getElementById('qxMTitle').value = ''; document.getElementById('qxMLen').textContent = '0';
+    qxLoadReceipts();
+  }catch(e){ qToast('❌ ' + (e.message && e.message !== 'failed' ? e.message : 'Backend সেট করা নেই বা Server সমস্যা')); }
+  btn.disabled = false;
+};
+window.qxLoadReceipts = async function(silent){
+  const box = document.getElementById('qxReceipts'); if(!box) return;
+  try{
+    const d = await qxGet('qxGetReceipts', { limit: 30 });
+    if(!d || d.ok !== true){ box.innerHTML = SETUP_HINT; return; }
+    const names = {}; agentCache.list.forEach(a=>{ names[a.id] = a.name; });
+    if(!d.messages.length){ box.innerHTML = '<div class="qx-hint">এখনও কোনো মেসেজ পাঠানো হয়নি।</div>'; return; }
+    box.innerHTML = d.messages.map(m=>{
+      const all = m.target === 'ALL', tg = all ? [] : m.target.split(',').filter(Boolean);
+      const readIds = new Set(m.readers.map(r=>r.id));
+      let status;
+      if(all){
+        status = '<div style="font-size:12px;margin-bottom:6px"><b>' + m.readers.length + '</b> জন পড়েছে <span style="color:var(--text-muted)">(সব Agent-কে পাঠানো)</span></div>' +
+          '<div class="qx-chips">' + (m.readers.length ? m.readers.map(r=>'<span class="qx-chip read" title="' + qE(qFmt(r.ms)) + '">✔ ' + qE(r.name || r.id) + ' · ' + qE(new Date(r.ms).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})) + '</span>').join('') : '<span class="qx-chip pending">এখনও কেউ পড়েনি</span>') + '</div>';
+      }else{
+        const done = tg.filter(id=>readIds.has(id)).length, pct = tg.length ? Math.round(done * 100 / tg.length) : 0;
+        status = '<div style="font-size:12px"><b>' + done + ' / ' + tg.length + '</b> জন পড়েছে</div><div class="qx-bar"><i style="width:' + pct + '%"></i></div>' +
+          '<div class="qx-chips">' + tg.map(id=>{ const r = m.readers.find(x=>x.id === id);
+            return r ? '<span class="qx-chip read" title="' + qE(qFmt(r.ms)) + '">✔ ' + qE(r.name || names[id] || id) + ' · ' + qE(new Date(r.ms).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})) + '</span>'
+                     : '<span class="qx-chip pending">⏳ ' + qE(names[id] || id) + ' (' + qE(id) + ')</span>'; }).join('') + '</div>';
+      }
+      return '<div class="qx-msg-card"><div class="qx-msg-head"><b>' + qE(m.title || 'Message') + '</b><small>' + qE(qFmt(m.ms)) + ' · ' + qE(m.by || 'Admin') + ' · ' + (all ? 'All agents' : tg.length + ' selected') + '</small>' +
+        '<button class="btn small" style="margin-left:auto" data-id="' + qE(m.id) + '" onclick="qxDelMsg(this.dataset.id)">🗑 Delete</button></div>' +
+        '<div class="qx-msg-body">' + qE(m.text) + '</div>' + status + '</div>';
+    }).join('');
+  }catch(e){ if(!silent) box.innerHTML = SETUP_HINT; }
+};
+window.qxDelMsg = async function(id){
+  if(!confirm('এই মেসেজটা মুছে ফেলবেন? (এখনো না-পড়া Agent আর পপআপ পাবে না)')) return;
+  try{ await qxPost('qxDeleteMessage', { msgId: id }); qxLoadReceipts(); }catch(e){ qToast('Delete failed'); }
+};
+
 })();
 </script>
 
