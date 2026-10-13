@@ -21441,25 +21441,74 @@ window.qxLogLogin = function(info){
 /* ============================================================
    3) AGENT SIDE: one light poll = force logout + live popups
    ============================================================ */
-const POLL_MS = 30000;
-let pollTimer = null, lastPoll = 0, queue = [], showing = null, shown = new Set(), forced = false;
+const POLL_MS = 15000;
+const OFFLINE_MSG_DELAY_MS = 120000;   /* logout অবস্থায় পাঠানো মেসেজ: login-এর ২ মিনিট পর */
+const loginKey = () => 'qx_login_' + ((typeof empSessionId !== 'undefined' && empSessionId) || '');
+let loginAt = 0;
+let pollTimer = null, pollWorker = null, lastPoll = 0, queue = [], showing = null, shown = new Set(), forced = false;
 const baseKey = () => 'qx_base_' + ((typeof empSessionId !== 'undefined' && empSessionId) || '');
 
+/* Timer that is NOT throttled in background/idle tabs (Web Worker); falls back to setInterval */
+function qxTimerStart(){
+  qxTimerStop();
+  try{
+    const src = 'let t=setInterval(function(){postMessage(1)},' + POLL_MS + ');onmessage=function(e){if(e.data==="stop"){clearInterval(t);close();}}';
+    const url = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
+    pollWorker = new Worker(url);
+    pollWorker.onmessage = function(){ poll(); };
+    pollWorker.onerror = function(){ try{ pollWorker.terminate(); }catch(e){} pollWorker = null; if(!pollTimer) pollTimer = setInterval(poll, POLL_MS); };
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  }catch(e){ pollWorker = null; pollTimer = setInterval(poll, POLL_MS); }
+}
+function qxTimerStop(){
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  if(pollWorker){ try{ pollWorker.postMessage('stop'); pollWorker.terminate(); }catch(e){} pollWorker = null; }
+}
+const qxActive = () => !!(pollTimer || pollWorker);
+
+/* Title flash + desktop notification when tab is hidden */
+let flashTimer = null, origTitle = '';
+function qxFlashStart(txt){
+  if(flashTimer) return;
+  origTitle = document.title; let on = false;
+  flashTimer = setInterval(()=>{ on = !on; document.title = on ? ('🔔 ' + txt) : origTitle; }, 1000);
+}
+function qxFlashStop(){
+  if(flashTimer){ clearInterval(flashTimer); flashTimer = null; document.title = origTitle || document.title; }
+}
+function qxAskNotify(){
+  try{ if('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); }catch(e){}
+}
+function qxNotify(m){
+  try{
+    if(!('Notification' in window) || Notification.permission !== 'granted') return;
+    const n = new Notification('🔔 ' + (m.title || 'Message from Admin'), { body: m.text || '', requireInteraction: true, tag: 'qx-' + m.id });
+    n.onclick = function(){ try{ window.focus(); }catch(e){} n.close(); };
+  }catch(e){}
+}
+
 window.qxStartPolling = function(){
-  if(pollTimer) clearInterval(pollTimer);
   forced = false;
   const mine = baseKey();
   Object.keys(localStorage).forEach(k=>{ if(k.indexOf('qx_base_') === 0 && k !== mine) localStorage.removeItem(k); });
+  qxAskNotify();
+  loginAt = Number(localStorage.getItem(loginKey())) || 0;
+  if(!loginAt){ loginAt = Date.now(); localStorage.setItem(loginKey(), String(loginAt)); }
+  Object.keys(localStorage).forEach(k=>{ if(k.indexOf('qx_login_') === 0 && k !== loginKey()) localStorage.removeItem(k); });
   poll();
-  pollTimer = setInterval(poll, POLL_MS);
+  qxTimerStart();
 };
 window.qxStopPolling = function(clearBase){
-  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
-  if(clearBase) localStorage.removeItem(baseKey());
+  qxTimerStop(); qxFlashStop();
+  if(clearBase){ localStorage.removeItem(baseKey()); localStorage.removeItem(loginKey()); }
   queue = []; shown.clear(); showing = null;
   const o = document.getElementById('qxLiveOverlay'); if(o) o.style.display = 'none';
 };
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && pollTimer && Date.now() - lastPoll > 5000) poll(); });
+const qxKick = ()=>{ if(qxActive() && Date.now() - lastPoll > 3000) poll(); };
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ qxKick(); if(!showing) qxFlashStop(); } });
+window.addEventListener('focus', qxKick);
+window.addEventListener('online', qxKick);
+document.addEventListener('click', qxAskNotify, { once: true });
 
 async function poll(){
   if(typeof empEmployeeId === 'undefined' || !empEmployeeId || forced) return;
@@ -21470,7 +21519,21 @@ async function poll(){
     if(!d || d.ok !== true) return;
     if(!base && d.serverNow) localStorage.setItem(baseKey(), String(d.serverNow));
     if(d.forceLogout){ onForced(); return; }
-    (d.messages || []).forEach(m=>{ if(!shown.has(m.id)){ shown.add(m.id); queue.push(m); } });
+    /* admin 'Cancel All' / Delete করলে: লাইভ লিস্টে নেই এমন মেসেজ কিউ ও খোলা পপআপ থেকে সরাও */
+    if(Array.isArray(d.live)){
+      const live = new Set(d.live);
+      queue = queue.filter(m=>live.has(m.id));
+      if(showing && !live.has(showing.id)){
+        showing = null; qxFlashStop();
+        const ov = document.getElementById('qxLiveOverlay'); if(ov) ov.style.display = 'none';
+      }
+    }
+    const held = Date.now() < loginAt + OFFLINE_MSG_DELAY_MS;
+    (d.messages || []).forEach(m=>{
+      if(shown.has(m.id)) return;
+      if(held && Number(m.ms) < loginAt) return;   /* login-এর আগে পাঠানো → ২ মিনিট পর দেখাবে */
+      shown.add(m.id); queue.push(m);
+    });
     showNext();
   }catch(e){ /* backend not ready / offline: stay silent for agents */ }
 }
@@ -21514,6 +21577,7 @@ function showNext(){
   const b = document.getElementById('qxPopBtn');
   b.disabled = false; b.textContent = '✔ Read — পড়েছি'; b.onclick = window.qxReadCurrent;
   o.style.display = 'flex'; beep();
+  if(document.hidden || !document.hasFocus()){ qxNotify(m); qxFlashStart('New Message from Admin'); }
 }
 window.qxReadCurrent = async function(){
   const m = showing; if(!m) return;
@@ -21521,7 +21585,7 @@ window.qxReadCurrent = async function(){
   try{
     const d = await qxPost('qxMarkRead', { msgId: m.id, employeeId: empEmployeeId, agentName: (typeof empAgentName !== 'undefined' ? empAgentName : '') });
     if(!d || d.ok !== true) throw new Error('mark read failed');
-    showing = null;
+    showing = null; qxFlashStop();
     document.getElementById('qxLiveOverlay').style.display = 'none';
     showNext();
   }catch(e){
@@ -21530,8 +21594,8 @@ window.qxReadCurrent = async function(){
   }
 };
 function onForced(){
-  forced = true;
-  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  forced = true; qxFlashStop();
+  qxTimerStop();
   queue = []; showing = null;
   const o = ensureOverlay();
   document.getElementById('qxPop').className = 'qx-pop force';
@@ -21547,6 +21611,7 @@ function onForced(){
   const label = ()=>{ b.textContent = 'OK — Logout (' + left + ')'; }; label();
   const tick = setInterval(()=>{ left--; if(left <= 0) go(); else label(); }, 1000);
   o.style.display = 'flex'; beep();
+  if(document.hidden) qxFlashStart('Session Ended');
 }
 
 /* ============================================================
@@ -21680,7 +21745,7 @@ window.qxRenderMsg = async function(){
         '<button class="btn small" onclick="qxAddManual()">+ Add</button></div>' +
       '<div class="qx-pick" id="qxPick">Loading...</div><div class="qx-hint" style="margin-top:6px" id="qxSelCount"></div></div>' +
       '<button class="btn primary small" id="qxSendBtn" onclick="qxSendMsg()" style="margin-top:10px">📢 Send Live Message</button></div>' +
-    '<div class="qx-toolbar"><h3 style="margin:0">পাঠানো মেসেজ ও Read Status</h3><button class="btn small" onclick="qxLoadReceipts()">⟳ Refresh</button><span class="qx-count">অটো-রিফ্রেশ প্রতি ২০ সেকেন্ডে</span></div>' +
+    '<div class="qx-toolbar"><h3 style="margin:0">পাঠানো মেসেজ ও Read Status</h3><button class="btn small" onclick="qxLoadReceipts()">⟳ Refresh</button><button class="btn small" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="qxCancelAll()">⛔ Cancel All Messages</button><span class="qx-count">অটো-রিফ্রেশ প্রতি ২০ সেকেন্ডে</span></div>' +
     '<div id="qxReceipts">Loading...</div>';
   loadAgents(false).then(()=>{ qxDrawPick(); });
   qxLoadReceipts();
@@ -21749,6 +21814,15 @@ window.qxLoadReceipts = async function(silent){
         '<div class="qx-msg-body">' + qE(m.text) + '</div>' + status + '</div>';
     }).join('');
   }catch(e){ if(!silent) box.innerHTML = SETUP_HINT; }
+};
+window.qxCancelAll = async function(){
+  if(!confirm('সব পাঠানো মেসেজ (গত ২৪ ঘণ্টার) Cancel করবেন?\n\nযারা এখনও পড়েনি তারা আর পাবে না, আর যাদের স্ক্রিনে পপআপ খোলা আছে সেটাও ১৫ সেকেন্ডের মধ্যে বন্ধ হয়ে যাবে।')) return;
+  try{
+    const d = await qxPost('qxCancelAll', { by: qWho() });
+    if(!d || d.ok !== true) throw new Error('failed');
+    qToast('✅ ' + (d.removed || 0) + 'টা মেসেজ Cancel হয়েছে');
+    qxLoadReceipts();
+  }catch(e){ qToast('❌ Cancel হয়নি — Backend নতুন করে Deploy করেছেন?'); }
 };
 window.qxDelMsg = async function(id){
   if(!confirm('এই মেসেজটা মুছে ফেলবেন? (এখনো না-পড়া Agent আর পপআপ পাবে না)')) return;
