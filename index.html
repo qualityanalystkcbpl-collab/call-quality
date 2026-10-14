@@ -4931,6 +4931,78 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
 .lob-chip.on{background:var(--agent-dim);color:var(--agent);border-color:var(--agent);}
 .lob-chip.preset.on{background:var(--agent);color:#04120f;}
 </style>
+<!-- ===== LOGIN PAGE: random colour theme on every refresh + extra polish (additive, login screen only) ===== -->
+<script id="loginRandomThemeScript">
+(function(){
+  var THEMES = [
+    { n:'Aurora',     a:'#33C9B0', b:'#E3A857', c:'#B94AE0', bg:'#070F19' },
+    { n:'Sunset',     a:'#FF7A59', b:'#FFC857', c:'#FF4D8D', bg:'#1A0B14' },
+    { n:'Ocean',      a:'#38BDF8', b:'#22D3EE', c:'#6366F1', bg:'#06142A' },
+    { n:'Royal',      a:'#A78BFA', b:'#F0ABFC', c:'#6366F1', bg:'#120A24' },
+    { n:'Emerald',    a:'#34D399', b:'#A3E635', c:'#14B8A6', bg:'#04170F' },
+    { n:'Rose',       a:'#FB7185', b:'#F9A8D4', c:'#FDBA74', bg:'#1C0A12' },
+    { n:'Gold Night', a:'#FBBF24', b:'#F59E0B', c:'#FDE68A', bg:'#17120A' },
+    { n:'Cyber',      a:'#00E5FF', b:'#FF2D95', c:'#7CFF6B', bg:'#070B1A' }
+  ];
+  function rgb(h){ h=h.replace('#',''); return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]; }
+  function hex(r){ return '#'+r.map(function(x){ x=Math.max(0,Math.min(255,Math.round(x))); return (x<16?'0':'')+x.toString(16); }).join(''); }
+  function mix(h1,h2,t){ var a=rgb(h1),b=rgb(h2); return hex([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]); }
+
+  // pick a theme different from the previous visit
+  var last = -1;
+  try{ last = parseInt(localStorage.getItem('qa_login_theme_idx'),10); if(isNaN(last)) last = -1; }catch(e){}
+  var idx;
+  do{ idx = Math.floor(Math.random()*THEMES.length); }while(THEMES.length>1 && idx===last);
+  try{ localStorage.setItem('qa_login_theme_idx', String(idx)); }catch(e){}
+
+  var T = THEMES[idx];
+  var A = rgb(T.a).join(','), B = rgb(T.b).join(','), C = rgb(T.c).join(',');
+  var surface = mix(T.bg,'#ffffff',0.05), surface2 = mix(T.bg,'#ffffff',0.09),
+      surface3 = mix(T.bg,'#ffffff',0.14), border = mix(T.bg,T.a,0.28);
+  var aDark = mix(T.a,'#000000',0.30), bDark = mix(T.b,'#000000',0.32);
+
+  // let the 3D background pick up the same colours
+  window.__loginTheme = { name:T.n, three:[T.a,T.b,T.c,mix(T.a,T.c,.5),mix(T.b,'#ff6b6b',.5),mix(T.a,'#ffffff',.35),mix(T.c,'#ffffff',.3)].map(function(h){ return parseInt(h.replace('#',''),16); }) };
+
+  var css = '\
+#loginScreen{--agent:'+T.a+';--admin:'+T.b+';--lt-c:'+T.c+';--lt-a-rgb:'+A+';--lt-b-rgb:'+B+';--lt-c-rgb:'+C+';--agent-dim:rgba('+A+',.16);--admin-dim:rgba('+B+',.16);background:var(--bg);}\
+body:not(.light-theme) #loginScreen{--bg:'+T.bg+';--surface:'+surface+';--surface-2:'+surface2+';--surface-3:'+surface3+';--border:'+border+';}\
+body.light-theme #loginScreen{--agent:'+aDark+';--admin:'+bDark+';--lt-c:'+mix(T.c,'#000000',.25)+';--agent-dim:rgba('+A+',.14);--admin-dim:rgba('+B+',.16);}\
+/* soft floating colour glows behind everything */\
+#loginScreen::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(540px 540px at 86% 14%,rgba('+A+',.17),transparent 70%),radial-gradient(480px 480px at 72% 92%,rgba('+B+',.14),transparent 70%),radial-gradient(380px 380px at 96% 55%,rgba('+C+',.12),transparent 70%);animation:ltFloat 14s ease-in-out infinite alternate;}\
+#loginScreen > .login-form-wrap{position:relative;z-index:1;}\
+#loginScreen .login-brand{background:radial-gradient(circle at 18% 22%,rgba('+A+',.22),transparent 46%),radial-gradient(circle at 82% 80%,rgba('+B+',.19),transparent 46%),radial-gradient(circle at 70% 16%,rgba('+C+',.13),transparent 40%),var(--bg);background-size:140% 140%;animation:ltDrift 20s ease-in-out infinite alternate;}\
+#loginScreen .login-top-glow{background:linear-gradient(90deg,'+T.a+','+T.c+','+T.b+','+T.a+');background-size:300% 100%;box-shadow:0 0 14px rgba('+A+',.65),0 0 26px rgba('+C+',.35);}\
+#loginScreen .login-header-logo::before{background:radial-gradient(circle,rgba('+A+',.30),rgba('+B+',.17) 55%,transparent 75%);}\
+#loginScreen .login-header-logo img{filter:drop-shadow(0 0 15px rgba('+A+',.45)) drop-shadow(0 0 25px rgba('+B+',.25));}\
+#loginScreen .pulse-dot{animation:ltPulse 2s infinite;}\
+#loginScreen .login-title span{animation:ltTitleShift 6s ease-in-out infinite alternate;}\
+#loginScreen .login-stat{transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;}\
+#loginScreen .login-stat:hover{transform:translateY(-4px);border-color:var(--agent);box-shadow:0 10px 26px rgba('+A+',.25);}\
+/* Employee sign-in card: themed glass + glow */\
+#loginScreen .emp-highlight-box{background:linear-gradient(160deg,'+mix(surface,T.a,0.07)+',var(--surface-2));border:1.5px solid rgba('+A+',.6);border-radius:22px;animation:ltBoxGlow 9s ease-in-out infinite;}\
+#loginScreen .emp-highlight-box::before{content:"";position:absolute;left:18px;right:18px;top:0;height:3px;border-radius:0 0 6px 6px;background:linear-gradient(90deg,transparent,var(--agent),var(--lt-c),transparent);opacity:.9;pointer-events:none;}\
+#loginScreen .field input{background:rgba(255,255,255,.04);transition:border-color .2s,box-shadow .2s,background .2s;}\
+body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
+#loginScreen .field input:focus{border-color:var(--agent);box-shadow:0 0 0 3px rgba('+A+',.22);background:rgba('+A+',.06);}\
+#loginScreen .login-btn[data-role="agent"]{background:linear-gradient(135deg,var(--agent),var(--lt-c));color:#06101a;box-shadow:0 6px 18px rgba('+A+',.32);}\
+#loginScreen .login-btn[data-role="admin"]{background:linear-gradient(135deg,var(--admin),var(--agent));color:#06101a;box-shadow:0 6px 18px rgba('+B+',.30);}\
+#loginScreen .login-btn:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 10px 26px rgba('+A+',.45);}\
+#loginScreen .login-btn:active{transform:scale(.98);}\
+#loginScreen .welcome-title{background:linear-gradient(90deg,var(--agent),var(--lt-c),var(--admin));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}\
+@keyframes ltFloat{0%{transform:translate3d(0,0,0) scale(1);}100%{transform:translate3d(-24px,18px,0) scale(1.06);}}\
+@keyframes ltDrift{0%{background-position:0% 0%;}100%{background-position:100% 100%;}}\
+@keyframes ltPulse{0%{box-shadow:0 0 0 0 rgba('+A+',.55);}70%{box-shadow:0 0 0 10px rgba('+A+',0);}100%{box-shadow:0 0 0 0 rgba('+A+',0);}}\
+@keyframes ltTitleShift{0%{color:var(--admin);}100%{color:var(--lt-c);}}\
+@keyframes ltBoxGlow{0%,100%{box-shadow:0 0 34px rgba('+A+',.50),0 0 75px rgba('+A+',.26);border-color:rgba('+A+',.85);}33%{box-shadow:0 0 36px rgba('+B+',.50),0 0 75px rgba('+B+',.26);border-color:rgba('+B+',.85);}66%{box-shadow:0 0 36px rgba('+C+',.50),0 0 75px rgba('+C+',.26);border-color:rgba('+C+',.85);}}\
+@media (prefers-reduced-motion:reduce){#loginScreen::before,#loginScreen .login-brand,#loginScreen .emp-highlight-box,#loginScreen .login-title span{animation:none;}}\
+';
+  var st = document.createElement('style');
+  st.id = 'loginRandomThemeStyle';
+  st.textContent = css;
+  document.head.appendChild(st);
+})();
+</script>
 </head>
 <body>
 
@@ -19928,7 +20000,7 @@ doLogout = function(){
     scene.add(group);
 
     var brandBlue = 0x1A5FB4, brandYellow = 0xD7DE23, brandRed = 0xE5342B;
-    var palette = [0x33C9B0, 0xE3A857, 0xB94AE0, 0x4A7FE0, 0xFF6B6B, 0x00FF9D, 0xFF6FD0];
+    var palette = (window.__loginTheme && window.__loginTheme.three) || [0x33C9B0, 0xE3A857, 0xB94AE0, 0x4A7FE0, 0xFF6B6B, 0x00FF9D, 0xFF6FD0];
 
     // Helper to build a multi-color particle field, returned as a Points object
     function buildParticles(colors, count, spread){
