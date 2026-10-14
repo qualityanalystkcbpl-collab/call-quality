@@ -15135,88 +15135,186 @@ function closePlayerBar() {
   document.getElementById('globalAudioPlayerBar').classList.remove('active');
 }
 /* ===================== LIVE DASHBOARDS (AUTO SYNC - MONTH WISE MATRIX) ===================== */
+/* CATV / BB Tech / BB Renewal dashboards: month filter on top (Quick average + Pick months),
+   and a "Month-wise Average" row at the bottom of the table (average of every agent for each month). */
+const dashRaw = {};   // { [vKey]: { headers:[month headers], rows:[[agent, v1, v2, ...]] } }
+const dashSel = {};   // { [vKey]: Set of selected month column indexes | null = all months }
+
+function dashNum(v){
+  const n = parseFloat(String(v == null ? '' : v).replace(/[,%\s]/g, ''));
+  return isNaN(n) ? NaN : n;
+}
+function dashRealIdx(vKey){
+  const h = dashRaw[vKey].headers;
+  return h.map((_, i) => i).filter(i => !/average|avg/i.test(String(h[i] || '')));
+}
+function dashSelSet(vKey){ return dashSel[vKey] || new Set(dashRealIdx(vKey)); }
+function dashUsedIdx(vKey){
+  const real = dashRealIdx(vKey), s = dashSel[vKey];
+  const picked = s ? real.filter(i => s.has(i)) : real;
+  return picked.length ? picked : real;
+}
+function dashPresets(vKey){
+  const real = dashRealIdx(vKey), h = dashRaw[vKey].headers, out = [{ key:'all', label:'All Months', idx:real }];
+  if(real.length > 3){
+    const A = real.slice(0, 3), B = real.slice(3);
+    out.push({ key:'a', label: h[A[0]] + ' – ' + h[A[A.length - 1]], idx:A });
+    out.push({ key:'b', label: h[B[0]] + ' – ' + h[B[B.length - 1]], idx:B });
+  }
+  return out;
+}
+function dashFilterBarHtml(vKey){
+  if(!dashRaw[vKey]) return '';
+  const real = dashRealIdx(vKey), sel = dashSelSet(vKey);
+  const same = idx => idx.length === sel.size && idx.every(i => sel.has(i));
+  const presets = dashPresets(vKey).map(p =>
+    `<button class="lob-chip preset ${same(p.idx) ? 'on' : ''}" onclick="dashPreset('${vKey}','${p.key}')">${escapeHtml(p.label)}</button>`).join('');
+  const chips = real.map(i =>
+    `<button class="lob-chip ${sel.has(i) ? 'on' : ''}" onclick="dashToggle('${vKey}',${i})">${sel.has(i) ? '✓ ' : ''}${escapeHtml(dashRaw[vKey].headers[i])}</button>`).join('');
+  return `<div class="lob-fb-row"><span class="lob-fb-lbl">🎯 Quick average:</span>${presets}</div>
+          <div class="lob-fb-row"><span class="lob-fb-lbl">📅 Pick months:</span>${chips}</div>`;
+}
+function dashToggle(vKey, i){
+  const sel = new Set(dashSelSet(vKey));
+  if(sel.has(i)){ if(sel.size === 1) return; sel.delete(i); } else sel.add(i);   // keep at least one month
+  dashSel[vKey] = sel.size === dashRealIdx(vKey).length ? null : sel;
+  dashApplyFilter(vKey);
+}
+function dashPreset(vKey, key){
+  const p = dashPresets(vKey).find(x => x.key === key); if(!p) return;
+  dashSel[vKey] = key === 'all' ? null : new Set(p.idx);
+  dashApplyFilter(vKey);
+}
+function dashApplyFilter(vKey){
+  const bar = document.getElementById('dashFilterBar-' + vKey);
+  if(bar) bar.innerHTML = dashFilterBarHtml(vKey);
+  dashRenderBody(vKey);
+}
+function dashCompute(vKey){
+  const raw = dashRaw[vKey], use = dashUsedIdx(vKey);
+  const months = use.map(i => raw.headers[i]);
+  const agents = [];
+  raw.rows.forEach(row => {
+    const name = String(row[0] || '').trim();
+    if(!name || /grand\s*total/i.test(name) || name.includes('Total')) return;
+    const vals = use.map(i => String(row[i + 1] == null ? '' : row[i + 1]).trim());
+    const nums = vals.map(dashNum).filter(n => !isNaN(n));
+    const avg = nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length * 10) / 10 : 0;
+    agents.push({ agent:name, vals, avgScore:avg });
+  });
+  // bottom row: month-wise average across all agents
+  const monthAvgs = months.map((_, c) => {
+    const nums = agents.map(a => dashNum(a.vals[c])).filter(n => !isNaN(n));
+    return nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length * 10) / 10 : null;
+  });
+  const valid = monthAvgs.filter(n => n !== null);
+  const overall = valid.length ? Math.round(valid.reduce((a, b) => a + b, 0) / valid.length * 10) / 10 : null;
+  return { months, agents, monthAvgs, overall, usedCount: use.length };
+}
+function dashCellStyle(num){
+  if(isNaN(num)) return '';
+  return num >= 95 ? 'color: var(--excellent); font-weight:600;' : (num >= 85 ? 'color: var(--good);' : 'color: var(--need);');
+}
+function dashRenderBody(vKey){
+  const meta = VERTICALS[vKey], host = document.getElementById('dashBody-' + vKey);
+  if(!host || !dashRaw[vKey]) return;
+  const v = dashCompute(vKey);
+  if(!v.agents.length){ host.innerHTML = `<div class="empty-state"><b>কোনো বৈধ এজেন্ট ডাটা খুঁজে পাওয়া যায়নি।</b></div>`; return; }
+
+  const avgLabel = v.usedCount === dashRealIdx(vKey).length ? 'Calculated Avg' : `Avg (${v.usedCount} month${v.usedCount > 1 ? 's' : ''})`;
+  const head = `<th>Agent Name</th>` + v.months.map(m => `<th>${escapeHtml(m)}</th>`).join('') + `<th>${avgLabel}</th><th>Status Tier</th>`;
+
+  const body = v.agents.map(a => {
+    const cells = a.vals.map(val => `<td style="${dashCellStyle(dashNum(val))}">${escapeHtml(val || '-')}</td>`).join('');
+    const st = statusFor(a.avgScore);
+    return `<tr>
+      <td style="font-weight:600; color: var(--text);">${escapeHtml(a.agent)}</td>
+      ${cells}
+      <td class="mono" style="font-weight:700; color:var(--admin); background: rgba(227,168,87,0.05);">${a.avgScore}%</td>
+      <td><span class="badge ${st.cls}">${st.label}</span></td>
+    </tr>`;
+  }).join('');
+
+  const footCells = v.monthAvgs.map(n =>
+    `<td class="mono" style="font-weight:800; ${n === null ? '' : dashCellStyle(n)}">${n === null ? '-' : n + '%'}</td>`).join('');
+  const ost = v.overall === null ? null : statusFor(v.overall);
+  const foot = `<tr style="background: rgba(227,168,87,0.12); border-top:2px solid var(--admin);">
+      <td style="font-weight:800; color:var(--admin);">📊 MONTH-WISE AVERAGE</td>
+      ${footCells}
+      <td class="mono" style="font-weight:800; color:var(--admin); background: rgba(227,168,87,0.12);">${v.overall === null ? '-' : v.overall + '%'}</td>
+      <td>${ost ? `<span class="badge ${ost.cls}">${ost.label}</span>` : '-'}</td>
+    </tr>`;
+
+  host.innerHTML = `
+    <div class="chart-box"><canvas id="dashChart-${vKey}"></canvas></div>
+    <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
+      📋 Month-wise Agent Performance Matrix
+    </h3>
+    <div class="table-wrapper" style="overflow-x: auto;">
+      ${xlsxDownloadBtnHtml('dashMatrixTable-' + vKey, meta.label + '_Monthwise_Matrix')}
+      <table class="score-table" id="dashMatrixTable-${vKey}">
+        <thead><tr>${head}</tr></thead>
+        <tbody>${body}</tbody>
+        <tfoot>${foot}</tfoot>
+      </table>
+    </div>`;
+
+  setTimeout(() => {
+    const ctx = document.getElementById(`dashChart-${vKey}`);
+    if(!ctx) return;
+    if(chartInstances[`dash-${vKey}`]) chartInstances[`dash-${vKey}`].destroy();
+    chartInstances[`dash-${vKey}`] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: v.agents.map(a => a.agent),
+        datasets: [{
+          label: avgLabel + ' Score (%)',
+          data: v.agents.map(a => a.avgScore),
+          backgroundColor: v.agents.map(a => {
+            const s = statusFor(a.avgScore);
+            return {excellent:'rgba(63,191,127,0.7)', good:'rgba(224,195,65,0.7)', average:'rgba(224,138,63,0.7)', need:'rgba(224,82,74,0.7)'}[s.cls] || 'rgba(51,201,176,0.7)';
+          }),
+          borderColor: 'var(--border)',
+          borderWidth: 1,
+          borderRadius: 5,
+          maxBarThickness: 30
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: chartTickColor(), font: { size: 11 } }, grid: { display: false } },
+          y: { min: 0, max: 100, ticks: { color: chartTickColor() }, grid: { color: chartGridColor() } }
+        }
+      }
+    });
+  }, 60);
+}
+
 async function renderDedicatedDashboard(vKey) {
   const meta = VERTICALS[vKey];
   const panel = document.getElementById('panel-' + meta.dashId);
-  
+
   panel.innerHTML = `
     <div class="panel-header">
       <div><h1>📊 ${meta.label} Live Analytics Dashboard</h1><p>System (${meta.dashSheet}) থেকে লাইভ ডাটা জেনারেট হচ্ছে...</p></div>
     </div>
     ${syncLoaderHtml('রিয়েল-টাইম ডাটা সিঙ্ক হচ্ছে')}`;
-    
+
   try {
     const response = await fetch(WEB_APP_URL + "?vertical=" + meta.dashSheet);
     const data = await response.json();
-    
+
     if(!Array.isArray(data) || data.length === 0) {
       panel.innerHTML = `<div class="empty-state"><b>কোনো ড্যাশবোর্ড ডাটা পাওয়া যায়নি</b><br>আপনার সিস্টেমের "${meta.dashSheet}" ট্যাবটি চেক করুন।</div>`;
       return;
     }
-    
-    const headers = data[0]; // Agent name, April'26, May'26, etc.
-    const rows = data.slice(1);
-    const monthHeaders = headers.slice(1);
-    
-    let calculatedAgents = [];
-    
-    rows.forEach(row => {
-      const agentName = String(row[0] || '').trim();
-      if(!agentName || agentName.toLowerCase() === 'grand total' || agentName.includes('Total')) return;
-      
-      let totalScore = 0;
-      let validMonths = 0;
-      let monthlyScores = {};
-      
-      monthHeaders.forEach((month, idx) => {
-        let cellVal = String(row[idx + 1] || '').trim();
-        monthlyScores[month] = cellVal;
-        
-        let num = parseFloat(cellVal);
-        if(!isNaN(num)) {
-          totalScore += num;
-          validMonths++;
-        }
-      });
-      
-      let avgScore = validMonths > 0 ? Math.round((totalScore / validMonths) * 10) / 10 : 0;
-      
-      calculatedAgents.push({
-        agent: agentName,
-        scores: monthlyScores,
-        avgScore: avgScore
-      });
-    });
-    
-    if(!calculatedAgents.length) {
-      panel.innerHTML = `<div class="empty-state"><b>কোনো বৈধ এজেন্ট ডাটা খুঁজে পাওয়া যায়নি।</b></div>`;
-      return;
-    }
-    
-    let tableHeadersHtml = `<th>Agent Name</th>` + monthHeaders.map(m => `<th>${m}</th>`).join('') + `<th>Calculated Avg</th><th>Status Tier</th>`;
-    
-    let tableRowsHtml = calculatedAgents.map(a => {
-      let monthCells = monthHeaders.map(m => {
-        let val = a.scores[m] || '-';
-        let style = '';
-        let num = parseFloat(val);
-        if(!isNaN(num)) {
-          style = num >= 95 ? 'color: var(--excellent); font-weight:600;' : (num >= 85 ? 'color: var(--good);' : 'color: var(--need);');
-        }
-        return `<td style="${style}">${val}</td>`;
-      }).join('');
-      
-      const st = statusFor(a.avgScore);
-      
-      return `<tr>
-        <td style="font-weight:600; color: var(--text);">${escapeHtml(a.agent)}</td>
-        ${monthCells}
-        <td class="mono" style="font-weight:700; color:var(--admin); background: rgba(227,168,87,0.05);">${a.avgScore}%</td>
-        <td><span class="badge ${st.cls}">${st.label}</span></td>
-      </tr>`;
-    }).join('');
-    
-    let html = `
+
+    dashRaw[vKey] = { headers: data[0].slice(1), rows: data.slice(1) };   // Agent name column removed from headers
+    dashSel[vKey] = null;                                                 // every refresh starts with all months
+
+    panel.innerHTML = `
       <div class="panel-header">
         <div>
           <h1>📊 ${meta.label} Month-wise Dashboard</h1>
@@ -15224,55 +15322,9 @@ async function renderDedicatedDashboard(vKey) {
         </div>
         <button class="btn primary" onclick="switchTab('${meta.dashId}')">↻ Refresh Live Matrix</button>
       </div>
-      
-      
-      <div class="chart-box"><canvas id="dashChart-${vKey}"></canvas></div>
-      
-      <h3 style="margin: 28px 0 12px 0; font-family:'Space Grotesk',sans-serif; display:flex; align-items:center; gap:8px;">
-        📋 Month-wise Agent Performance Matrix
-      </h3>
-      <div class="table-wrapper" style="overflow-x: auto;">
-        ${xlsxDownloadBtnHtml('dashMatrixTable-'+vKey, meta.label+'_Monthwise_Matrix')}
-        <table class="score-table" id="dashMatrixTable-${vKey}">
-          <thead><tr>${tableHeadersHtml}</tr></thead>
-          <tbody>${tableRowsHtml}</tbody>
-        </table>
-      </div>`;
-      
-    panel.innerHTML = html;
-    
-    setTimeout(() => {
-      const ctx = document.getElementById(`dashChart-${vKey}`);
-      if(!ctx) return;
-      if(chartInstances[`dash-${vKey}`]) chartInstances[`dash-${vKey}`].destroy();
-      
-      chartInstances[`dash-${vKey}`] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: calculatedAgents.map(a => a.agent),
-          datasets: [{
-            label: 'Calculated Average Score (%)',
-            data: calculatedAgents.map(a => a.avgScore),
-            backgroundColor: calculatedAgents.map(a => {
-              const s = statusFor(a.avgScore);
-              return {excellent:'rgba(63,191,127,0.7)', good:'rgba(224,195,65,0.7)', average:'rgba(224,138,63,0.7)', need:'rgba(224,82,74,0.7)'}[s.cls] || 'rgba(51,201,176,0.7)';
-            }),
-            borderColor: 'var(--border)',
-            borderWidth: 1,
-            borderRadius: 5,
-            maxBarThickness: 30
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { color: chartTickColor(), font: { size: 11 } }, grid: { display: false } },
-            y: { min: 0, max: 100, ticks: { color: chartTickColor() }, grid: { color: chartGridColor() } }
-          }
-        }
-      });
-    }, 60);
+      <div id="dashFilterBar-${vKey}" class="lob-filterbar">${dashFilterBarHtml(vKey)}</div>
+      <div id="dashBody-${vKey}"></div>`;
+    dashRenderBody(vKey);
 
   } catch (err) {
     console.error(err);
