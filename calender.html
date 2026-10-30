@@ -2662,16 +2662,24 @@ const NEWS_CATEGORIES = [
     { id:'bbc',           label:'BBC বাংলা',   url:'https://feeds.bbci.co.uk/bengali/rss.xml' }
 ];
 
-/* Browsers block direct cross-origin RSS fetches, so a relay is used. Several are tried in order. */
+/* 🔑 BEST FIX: apnar nijer Google Apps Script relay (steps chat-e deya ache).
+   Deploy kore /exec URL ta ekhane boshan. Faka thakle sudhu free public relay chalbe (ora aksomoy fail kore). */
+const NEWS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbyT5-etjCj42XDJOgi44Fq33i0QKjQaX2rb-iBm7DwWqjGqRHKZI2S5fIqRx6mAlglL/exec';   // e.g. 'https://script.google.com/macros/s/XXXXXXXX/exec'
+
+/* Browsers block direct cross-origin RSS fetches, so a relay is used. */
 function newsSourcesFor(feedUrl){
     const enc = encodeURIComponent(feedUrl);
-    return [
-        { type:'rss2json', url:'https://api.rss2json.com/v1/api.json?rss_url=' + enc },
+    const list = [];
+    if (NEWS_PROXY_URL) list.push({ type:'xml', own:true, url: NEWS_PROXY_URL + (NEWS_PROXY_URL.indexOf('?') === -1 ? '?' : '&') + 'url=' + enc });
+    list.push(
+        { type:'rss2json', url:'https://api.rss2json.com/v1/api.json?count=20&rss_url=' + enc },
         { type:'xml',      url:'https://api.allorigins.win/raw?url=' + enc },
+        { type:'allorigins-json', url:'https://api.allorigins.win/get?url=' + enc },
         { type:'xml',      url:'https://api.codetabs.com/v1/proxy?quest=' + enc },
         { type:'xml',      url:'https://corsproxy.io/?url=' + enc },
-        { type:'xml',      url:'https://thingproxy.freeboard.io/fetch/' + feedUrl }
-    ];
+        { type:'xml',      url:'https://corsproxy.io/?' + enc }
+    );
+    return list;
 }
 
 function escapeHtml(str){
@@ -2749,24 +2757,54 @@ function finishItems(items, cat){
     return out.slice(0, NEWS_MAX_ITEMS);
 }
 
+async function fetchOneNewsSource(source, cat){
+    const res = await fetchWithTimeout(source.url, 9000);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    let raw;
+    if (source.type === 'rss2json') raw = parseRss2Json(await res.json());
+    else if (source.type === 'allorigins-json'){
+        const j = await res.json();
+        if (!j || !j.contents) throw new Error('empty contents');
+        raw = parseXmlFeed(j.contents);
+    } else raw = parseXmlFeed(await res.text());
+    const items = finishItems(raw, cat);
+    if (!items.length) throw new Error('No usable items');
+    return items;
+}
+
+/* first relay that succeeds wins (all public relays are raced together, so it is fast) */
+function firstSuccess(promises){
+    return new Promise(function(resolve, reject){
+        let left = promises.length, lastErr = null;
+        if (!left) return reject(new Error('no sources'));
+        promises.forEach(function(p){
+            p.then(resolve, function(e){ lastErr = e; if (--left === 0) reject(lastErr); });
+        });
+    });
+}
+
 async function fetchNewsFromAnySource(cat){
-    let lastError = null;
     const sources = newsSourcesFor(cat.url);
-    for (let i = 0; i < sources.length; i++){
-        const source = sources[i];
-        try {
-            const res = await fetchWithTimeout(source.url, 9000);
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const raw = source.type === 'rss2json' ? parseRss2Json(await res.json()) : parseXmlFeed(await res.text());
-            const items = finishItems(raw, cat);
-            if (!items.length) throw new Error('No usable items');
-            return items;
-        } catch (err){
-            lastError = err;
-            console.warn('News source failed (' + cat.id + ' / ' + source.type + '):', err.message);
-        }
+    const tag = function(src){ return function(e){ console.warn('News source failed (' + cat.id + ' / ' + src.url.split('?')[0] + '):', e.message); throw e; }; };
+    if (sources[0].own){
+        try { return await fetchOneNewsSource(sources[0], cat); }
+        catch (e){ console.warn('Own news proxy failed:', e.message); }
     }
-    throw lastError || new Error('All news sources failed');
+    const rest = sources.filter(function(x){ return !x.own; });
+    return firstSuccess(rest.map(function(src){ return fetchOneNewsSource(src, cat).catch(tag(src)); }));
+}
+
+/* last good headlines are also kept in localStorage, so the widget is never empty */
+function saveNewsLocal(id, items){
+    try { localStorage.setItem('calNewsData_' + id, JSON.stringify({ t: Date.now(), items: items })); } catch(e){}
+}
+function loadNewsLocal(id){
+    try {
+        const o = JSON.parse(localStorage.getItem('calNewsData_' + id) || 'null');
+        if (!o || !Array.isArray(o.items) || !o.items.length) return null;
+        o.items.forEach(function(it){ it.pubDate = it.pubDate ? new Date(it.pubDate) : null; });
+        return o;
+    } catch(e){ return null; }
 }
 
 /* ---------- News UI ---------- */
@@ -2847,12 +2885,24 @@ async function fetchBengaliNews(force){
     try {
         const items = await fetchNewsFromAnySource(cat);
         newsCache[cat.id] = { items: items, t: Date.now() };
+        saveNewsLocal(cat.id, items);
         if (token !== newsToken) return; // user already switched to another tab
         renderNewsItems(items, cat);
         updateNewsTimestamp(newsCache[cat.id].t);
     } catch (err){
         console.error('Bengali News fetch failed (' + cat.id + '):', err);
         if (token !== newsToken || cached) return; // keep showing older headlines if we have them
+        const old = loadNewsLocal(cat.id);
+        if (old){
+            renderNewsItems(old.items, cat);
+            updateNewsTimestamp(old.t);
+            const note = document.createElement('div');
+            note.className = 'news-time';
+            note.style.cssText = 'justify-content:center;padding:8px;opacity:.75';
+            note.textContent = 'অফলাইন — আগের সংরক্ষিত খবর দেখানো হচ্ছে';
+            body.appendChild(note);
+            return;
+        }
         body.innerHTML = '<div class="widget-error"><i class="fa-solid fa-triangle-exclamation"></i>এই মুহূর্তে খবর পাওয়া যাচ্ছে না।<br>' +
             '<button type="button" class="news-retry" onclick="fetchBengaliNews(true)">আবার চেষ্টা করুন</button></div>';
     }
