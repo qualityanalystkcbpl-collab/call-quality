@@ -3320,7 +3320,6 @@ input[type=file]{display:none;}
 }
 .diwali-deco .dw-alpona{
     position:absolute; inset:0; width:100%; height:100%;
-    filter:drop-shadow(0 0 8px rgba(255,190,90,.5));
 }
 .dw-ring-outer{ transform-origin:0 0; animation:dwSpin 40s linear infinite; }
 .dw-ring-inner{ transform-origin:0 0; animation:dwSpin 26s linear infinite reverse; }
@@ -3331,7 +3330,7 @@ input[type=file]{display:none;}
     transform:translate(-50%,-52%);
     overflow:visible;
 }
-.dw-glow{ transform-origin:30px 22px; animation:dwGlowPulse 2.2s ease-in-out infinite; }
+.dw-glow{ display:none; transform-origin:30px 22px; animation:dwGlowPulse 2.2s ease-in-out infinite; }
 @keyframes dwGlowPulse{ 0%,100%{ opacity:.65; transform:scale(.92); } 50%{ opacity:1; transform:scale(1.12); } }
 .dw-flame{ transform-origin:30px 28px; animation:dwFlicker 1.3s ease-in-out infinite; }
 @keyframes dwFlicker{
@@ -3356,6 +3355,10 @@ input[type=file]{display:none;}
 @media (max-width:900px){ .diwali-deco{ width:160px; height:160px; } .diwali-deco .dw-diya{ width:56px; height:56px; } }
 @media (prefers-reduced-motion:reduce){ .dw-ring-outer,.dw-ring-inner,.dw-glow,.dw-flame,.dw-spark{ animation:none; } }
 /* ===== /DIWALI SPECIAL ===== */
+/* ===== LOGIN LOGO GLOW OFF (permanent) ===== */
+#loginScreen .login-header-logo::before{ display:none !important; }
+#loginScreen .login-header-logo img{ filter:none !important; }
+/* ===== /LOGIN LOGO GLOW OFF ===== */
 
 .login-top-glow{
     position:absolute;
