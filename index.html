@@ -3355,6 +3355,12 @@ input[type=file]{display:none;}
 @media (max-width:900px){ .diwali-deco{ width:160px; height:160px; } .diwali-deco .dw-diya{ width:56px; height:56px; } }
 @media (prefers-reduced-motion:reduce){ .dw-ring-outer,.dw-ring-inner,.dw-glow,.dw-flame,.dw-spark{ animation:none; } }
 /* ===== /DIWALI SPECIAL ===== */
+/* ===== DIWALI FIREWORKS (TEMPORARY) — delete this block to remove ===== */
+#dwFireworks{
+    position:absolute; inset:0; width:100%; height:100%;
+    z-index:1; pointer-events:none; display:block;
+}
+/* ===== /DIWALI FIREWORKS ===== */
 /* ===== LOGIN LOGO GLOW OFF (permanent) ===== */
 #loginScreen .login-header-logo::before{ display:none !important; }
 #loginScreen .login-header-logo img{ filter:none !important; }
@@ -5072,6 +5078,8 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
   <div class="login-brand">
     <canvas id="loginBrand3D" class="login-brand-3d"></canvas>
     <div class="login-brand-scrim" aria-hidden="true"></div>
+    <!-- DIWALI FIREWORKS (TEMPORARY): delete this canvas + the script at the end of the file -->
+    <canvas id="dwFireworks" aria-hidden="true"></canvas>
     <div class="login-header-logo">
         <img src="logo.png" alt="GTPL KCBPL Logo">
         <!-- ===== DIWALI SPECIAL (TEMPORARY): to remove after festival, delete this block + the "DIWALI SPECIAL" CSS block ===== -->
@@ -21982,5 +21990,64 @@ window.qxDelMsg = async function(id){
 })();
 </script>
 
+<!-- ===== DIWALI FIREWORKS SCRIPT (TEMPORARY) — delete this whole <script> to remove ===== -->
+<script>
+(function(){
+  var cv=document.getElementById('dwFireworks'); if(!cv) return;
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var ctx=cv.getContext('2d'), W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2);
+  var rockets=[], parts=[], last=0, nextLaunch=0;
+  var PAL=[['#ffd27a','#ffb02e'],['#ff4d5e','#ff9aa5'],['#4dff9a','#ffffff'],['#6fc3ff','#ffffff'],['#ff7ad9','#ffd0f2'],['#ffe9a8','#ff9a3c']];
+  function resize(){
+    var r=cv.getBoundingClientRect(); W=r.width; H=r.height;
+    cv.width=Math.max(1,W*dpr); cv.height=Math.max(1,H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize',resize); resize();
+  function rnd(a,b){return a+Math.random()*(b-a);}
+  function launch(){
+    var x=rnd(W*.08,W*.92), ty=rnd(H*.07,H*.34);
+    rockets.push({x:x,y:H+4,tx:x+rnd(-30,30),ty:ty,vy:-rnd(480,640),pal:PAL[(Math.random()*PAL.length)|0],willow:Math.random()<.35,trail:[]});
+  }
+  function burst(r){
+    var n=r.willow?90:rnd(80,120)|0, c=r.pal;
+    for(var i=0;i<n;i++){
+      var a=Math.random()*Math.PI*2, sp=r.willow?rnd(40,150):rnd(60,230);
+      parts.push({x:r.x,y:r.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:r.willow?rnd(1.8,2.8):rnd(.9,1.7),age:0,
+        col:Math.random()<.5?c[0]:c[1],g:r.willow?55:90,fr:r.willow?.985:.975,tw:Math.random()<.3,w:r.willow});
+    }
+    for(var k=0;k<14;k++){ parts.push({x:r.x,y:r.y,vx:rnd(-20,20),vy:rnd(-20,20),life:.25,age:0,col:'#fff6d8',g:0,fr:.9,tw:false,w:false,big:true}); }
+  }
+  function frame(t){
+    requestAnimationFrame(frame);
+    if(!cv.offsetParent){ last=t; return; }          // login screen hidden -> pause
+    var dt=Math.min((t-last)/1000||0,.05); last=t;
+    ctx.globalCompositeOperation='destination-out';
+    ctx.fillStyle='rgba(0,0,0,'+(dt*7).toFixed(3)+')'; ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    nextLaunch-=dt;
+    if(nextLaunch<=0){ launch(); if(Math.random()<.4) launch(); nextLaunch=rnd(.7,1.6); }
+    for(var i=rockets.length-1;i>=0;i--){
+      var r=rockets[i]; r.y+=r.vy*dt; r.x+=(r.tx-r.x)*dt*.8; r.vy*=.992;
+      ctx.fillStyle='#ffe9a8'; ctx.beginPath(); ctx.arc(r.x,r.y,1.8,0,6.283); ctx.fill();
+      parts.push({x:r.x+rnd(-1,1),y:r.y,vx:rnd(-10,10),vy:rnd(10,40),life:.45,age:0,col:'#ffb02e',g:0,fr:.95,tw:false,w:false});
+      if(r.y<=r.ty || r.vy>-120){ burst(r); rockets.splice(i,1); }
+    }
+    for(var j=parts.length-1;j>=0;j--){
+      var p=parts[j]; p.age+=dt;
+      if(p.age>=p.life){ parts.splice(j,1); continue; }
+      p.vx*=Math.pow(p.fr,dt*60); p.vy=p.vy*Math.pow(p.fr,dt*60)+p.g*dt;
+      p.x+=p.vx*dt; p.y+=p.vy*dt;
+      var f=1-p.age/p.life, al=p.tw?f*(.4+.6*Math.random()):f;
+      ctx.globalAlpha=Math.max(0,al); ctx.fillStyle=p.col;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.big?2.4:(p.w?1.5:1.7),0,6.283); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    if(parts.length>1400) parts.splice(0,parts.length-1400);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+<!-- ===== /DIWALI FIREWORKS SCRIPT ===== -->
 </body>
 </html>
