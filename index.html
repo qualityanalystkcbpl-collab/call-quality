@@ -4980,10 +4980,10 @@ body.role-admin .admin-theme-controls{ display:inline-flex; }
 /* Fix: stop login page drifting down (animated bg overflow) + mobile link */
 #loginScreen{overflow:hidden !important;}
 @supports (overflow:clip){#loginScreen{overflow:clip !important;}}
-.mobile-login-row{margin-top:10px;text-align:center;}
-.mobile-login-link{display:inline-block;padding:9px 14px;border-radius:10px;font-size:13px;color:var(--agent,#4f8cff);text-decoration:none;border:1px dashed var(--agent,#4f8cff);background:var(--agent-dim,rgba(79,140,255,.12));}
-.mobile-login-link:hover{text-decoration:underline;}
-.mobile-login-link b{display:inline-block;padding:2px 9px;margin-left:3px;border-radius:6px;font-weight:800;color:#fff !important;text-shadow:0 1px 2px rgba(0,0,0,.55);animation:mlBlinkColor 1.4s linear infinite;}
+.mobile-login-row{margin-top:12px;text-align:center;}
+.mobile-login-link{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;width:100%;box-sizing:border-box;padding:12px 16px;border-radius:14px;font-size:15px;font-weight:600;line-height:1.35;letter-spacing:.2px;color:#fff !important;text-decoration:none;background:linear-gradient(135deg,#1e3a8a 0%,#4c1d95 100%);border:1.5px solid rgba(255,255,255,.55);box-shadow:0 6px 18px rgba(30,58,138,.45);text-shadow:0 1px 2px rgba(0,0,0,.45);transition:transform .2s,box-shadow .2s;}
+.mobile-login-link:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(76,29,149,.55);text-decoration:none;}
+.mobile-login-link b{display:inline-block;padding:2px 9px;margin-left:0;border-radius:8px;font-weight:800;font-size:14px;color:#fff !important;text-shadow:0 1px 2px rgba(0,0,0,.55);animation:mlBlinkColor 1.4s linear infinite;}
 @keyframes mlBlinkColor{
 0%{background:#ff1744;box-shadow:0 0 12px #ff1744;transform:scale(1);}
 20%{background:#ff9100;box-shadow:0 0 12px #ff9100;transform:scale(1.07);}
