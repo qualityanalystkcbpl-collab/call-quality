@@ -19465,6 +19465,16 @@ function scheduleFixedAutoLogout(){
 }
 
 function tickAutoLogoutCountdown(){
+  /* Fail-safe: the 1-second tick itself performs the auto-logout once the time is up.
+     (A single long setTimeout is throttled / frozen by mobile browsers when the screen is off
+     or the tab is in the background, so it could never fire at 00:00.) */
+  if(empSessionId && empSessionStartEpoch && !leadFormAutoLogoutPaused && !window.__empAutoLogoutRunning
+     && (Date.now() - Number(empSessionStartEpoch)) >= EMP_AUTO_LOGOUT_MS){
+    window.__empAutoLogoutRunning = true;
+    Promise.resolve(employeeLogout('Auto')).catch(function(e){ console.error('Auto logout failed', e); })
+      .finally(function(){ window.__empAutoLogoutRunning = false; });
+    return;
+  }
   const el = document.getElementById('empAutoLogoutCountdown');
   if(!el) return;
   const rawRemainingMs = EMP_AUTO_LOGOUT_MS - (Date.now() - Number(empSessionStartEpoch));
@@ -19477,10 +19487,19 @@ function tickAutoLogoutCountdown(){
   el.classList.toggle('warn', remainingSec <= 60 || negative);
 }
 
+['visibilitychange','pageshow','focus','online'].forEach(function(ev){
+  (ev==='visibilitychange' ? document : window).addEventListener(ev, function(){
+    if(!document.hidden) tickAutoLogoutCountdown();
+  });
+});
+
 async function employeeLogout(logoutType){
   try{
     if(empEmployeeId && empSessionId){
-      await empApiPost('employeeLogout', { employeeId: empEmployeeId, sessionId: empSessionId, logoutType: logoutType || 'Manual' });
+      await Promise.race([
+        empApiPost('employeeLogout', { employeeId: empEmployeeId, sessionId: empSessionId, logoutType: logoutType || 'Manual' }),
+        new Promise(function(res){ setTimeout(res, 4000); })   // don't wait more than 4s for the server
+      ]);
     }
   }catch(e){ console.error('Logout log failed', e); }
 
