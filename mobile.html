@@ -5152,7 +5152,6 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
         <div class="field">
           <label>Password</label>
           <input type="password" id="loginPassword" placeholder="••••••••">
-          <div class="caps-light" data-caps="unknown" title="Caps Lock ON/OFF (কোনো key চাপলে বা mouse নাড়ালে আপডেট হবে)"><span class="caps-led"></span><span class="caps-txt">Caps Lock</span></div>
         </div>
         <button class="login-btn" id="loginBtn" data-role="agent" onclick="submitStaffLogin()">Enter as QA</button>
         <div class="login-error" id="loginError"></div>
@@ -5208,7 +5207,6 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
       <div class="field">
         <label>Password</label>
         <input type="password" id="empPassword" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter'){ event.preventDefault(); employeeLogin(); }">
-        <div class="caps-light" data-caps="unknown" title="Caps Lock ON/OFF (কোনো key চাপলে বা mouse নাড়ালে আপডেট হবে)"><span class="caps-led"></span><span class="caps-txt">Caps Lock</span></div>
         <label class="show-pass-row">
           <input type="checkbox" id="empShowPassword" onchange="toggleEmpPasswordVisibility()">
           <span>Show Password</span>
@@ -5227,6 +5225,7 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
       </div>
       <button class="login-btn" id="empLoginBtn" data-role="agent" onclick="employeeLogin()">Enter as Employee/Agent</button>
       <div class="login-error" id="empLoginError"></div>
+      <div class="ma-mobile-view-wrap"><span class="ma-mobile-view-tag">You are logging in as <b>Mobile View</b></span></div>
       <div class="emp-login-footer-row">
         <button type="button" class="emp-switch-link" onclick="openForgotPasswordInfo()">Forgot Password?</button>
       </div>
@@ -22270,6 +22269,26 @@ html, body{ overflow-x:visible !important; max-width:100%; }
   *, *::before, *::after{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
   .ma-backdrop, .ma-sheet-backdrop, .login-popup-overlay{ background:rgba(4,10,20,.6) !important; }
 }
+
+/* ===== smaller login box + MOBILE VIEW tag ===== */
+.ma-mobile-view-wrap{ text-align:center; margin:8px 0 2px; }
+.ma-mobile-view-tag{ display:inline-block; margin:0; padding:5px 14px; border-radius:999px; border:1px solid var(--agent); color:var(--agent); font:600 12px 'Inter',sans-serif; letter-spacing:.2px; }
+.ma-mobile-view-tag b{ color:inherit; font-weight:inherit; }
+#loginScreen .caps-light{ display:none !important; }
+#loginScreen .login-form-wrap{ max-width:380px !important; padding:4px 14px 14px !important; }
+#loginScreen .login-brand{ max-width:380px !important; padding-top:16px !important; }
+#loginScreen .login-header-logo img{ width:104px !important; }
+#loginScreen .welcome-area{ margin-bottom:8px !important; }
+#loginScreen .emp-highlight-box{ padding:12px 13px !important; border-radius:16px !important; }
+#loginScreen .emp-highlight-box h2{ font-size:17px !important; margin-bottom:2px !important; }
+#loginScreen .emp-highlight-box p.hint{ font-size:11.5px !important; margin:0 0 8px !important; }
+#loginScreen .field{ margin-bottom:8px !important; }
+#loginScreen .field label{ font-size:11.5px !important; margin-bottom:3px !important; }
+#loginScreen input:not([type=checkbox]){ padding:9px 12px !important; border-radius:10px !important; }
+#loginScreen .login-btn{ min-height:42px !important; font-size:14px !important; padding:10px !important; border-radius:11px !important; }
+#loginScreen .show-pass-row{ font-size:12px !important; margin-top:4px !important; }
+#loginScreen .staff-tab-trigger{ padding:11px 14px !important; min-height:46px !important; }
+#loginScreen .ma-admin-opt{ margin-top:12px !important; }
 </style>
 
 <div class="ma-backdrop" id="maBackdrop"></div>
