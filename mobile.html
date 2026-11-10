@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="KCBPL QA">
-<title>KCBPL QA</title>
+<meta name="apple-mobile-web-app-title" content="QA Control Room">
+<title>QA Control Room (Mobile App)</title>
 <link rel="icon" type="image/png" href="GTPL_KCBPL_favicon_32x32.png">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -4823,18 +4823,24 @@ html:not(.ma-ready) body > *:not(#pageLoadOverlay):not(script):not(style):not(li
 html:not(.ma-ready)::after{ content:''; position:fixed; left:50%; top:50%; width:34px; height:34px; margin:-17px 0 0 -17px; border:3px solid rgba(51,201,176,.22); border-top-color:#33C9B0; border-radius:50%; animation:maBootSpin .8s linear infinite; z-index:10002; }
 @keyframes maBootSpin{ to{ transform:rotate(360deg); } }
 </style>
-<meta name="application-name" content="KCBPL QA">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="application-name" content="QA Control Room">
 <meta name="format-detection" content="telephone=no">
 <script>
 (function(){
   setTimeout(function(){ document.documentElement.classList.add('ma-ready'); }, 4000);
-  /* PWA: real manifest + service worker (install prompt reliable) */
+  /* app manifest + icon built on the fly so the page can be added to the home screen as an app */
   try{
-    if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
-      window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
-    }
+    var c=document.createElement('canvas'); c.width=c.height=512; var x=c.getContext('2d');
+    x.fillStyle='#0E1A2B'; x.fillRect(0,0,512,512);
+    var g=x.createLinearGradient(60,60,452,452); g.addColorStop(0,'#33C9B0'); g.addColorStop(1,'#4A7FE0');
+    x.fillStyle=g; x.beginPath(); if(x.roundRect){ x.roundRect(76,76,360,360,84); } else { x.rect(76,76,360,360); } x.fill();
+    x.fillStyle='#07131f'; x.font='800 190px Arial, sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('QA',256,270);
+    var png=c.toDataURL('image/png');
+    var m={ name:'QA Control Room', short_name:'QA Portal', start_url:location.href.split('#')[0], display:'standalone', orientation:'portrait',
+            background_color:'#0E1A2B', theme_color:'#0E1A2B',
+            icons:[{src:png,sizes:'512x512',type:'image/png',purpose:'any'},{src:png,sizes:'192x192',type:'image/png',purpose:'any'}] };
+    var l=document.createElement('link'); l.rel='manifest'; l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'})); document.head.appendChild(l);
+    var a=document.createElement('link'); a.rel='apple-touch-icon'; a.href=png; document.head.appendChild(a);
   }catch(e){}
 })();
 </script>
@@ -21516,26 +21522,15 @@ body.ma-in #employeeWelcomeBar .emp-welcome-left{ padding-right:50px; }
 /* ---- logos ---- */
 #loginScreen .login-header-logo{ width:100% !important; justify-content:center; }
 #loginScreen .login-header-logo img{ width:auto !important; height:auto !important; max-width:170px !important; max-height:78px !important; object-fit:contain; display:block; }
-/* ---- header text: Bengali matras (ি ী ু ে) were clipped by tight line-height / fixed 34px box; also survives big phone font sizes ---- */
-body.ma-in .logo-rotator{ min-width:0; max-width:100%; }
-body.ma-in .logo-rotator-item.active{ height:auto !important; min-height:34px; overflow:visible !important; justify-content:center; }
-body.ma-in .logo-rotator-item{ white-space:normal !important; max-width:100%; }
-body.ma-in .logo-text-main, body.ma-in .logo-text-sub{
-  line-height:1.55 !important; padding-top:.12em; padding-bottom:.12em;
-  font-family:'Space Grotesk','Noto Sans Bengali','Hind Siliguri','Nirmala UI',sans-serif;
-}
-body.ma-in #logoRotatorCustom{ max-width:100% !important; }
-body.ma-in #logoRotatorCustom .logo-text-main,
-body.ma-in #logoRotatorCustom .logo-text-sub{
-  max-width:100% !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important;
-  overflow-wrap:anywhere; word-break:normal;
-}
-body.ma-in #logoRotatorCustom .logo-text-main{ font-size:clamp(11px,3.4vw,14px) !important; }
-body.ma-in #logoRotatorCustom .logo-text-sub{ font-size:clamp(9px,2.8vw,11px) !important; }
-body.ma-in header.topbar, body.ma-in .logo-block{ overflow:visible; }
-.ma-hdr-logo{ display:none; }
-body.ma-in .logo-block.ma-logo-ok .ma-hdr-logo{ display:block; height:28px; width:auto; max-width:44px; object-fit:contain; flex:0 0 auto; border-radius:6px; }
-body.ma-in .logo-block.ma-logo-ok .logo-mark{ display:none !important; }
+
+.ma-top-logo{ display:none; }
+body.ma-in .ma-top-logo.ma-logo-ok{ display:flex; justify-content:center; align-items:center; padding:calc(var(--ma-sat) + 8px) 12px 6px; background:var(--surface); border-bottom:1px solid var(--border); }
+.ma-top-logo img{ height:38px; width:auto; max-width:200px; object-fit:contain; display:block; }
+/* Ask Quality Team: icon only */
+body.ma-in .chat-bubble-btn .chat-bubble-btn-label{ display:none !important; }
+body.ma-in .chat-bubble-btn .chat-bubble-new-tag{ display:none !important; }
+body.ma-in .chat-bubble-btn{ width:52px !important; height:52px !important; min-height:0 !important; padding:0 !important; border-radius:50% !important; font-size:24px !important; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
+body.ma-in .chat-bubble-btn[style*="display:none"], body.ma-in .chat-bubble-btn[style*="display: none"]{ display:none !important; }
 </style>
 
 <div class="ma-backdrop" id="maBackdrop"></div>
@@ -21649,17 +21644,18 @@ body.ma-in .logo-block.ma-logo-ok .logo-mark{ display:none !important; }
 
   /* ---------- top bar buttons (menu + refresh) ---------- */
   var topbar = $('header.topbar');
-  /* company logo in the app header (logo2.png -> logo.png fallback -> falls back to the old dots mark) */
+  /* company logo at the very top of the app (logo2.png -> logo.png fallback -> hidden) */
   (function(){
-    var lb = $('.logo-block', topbar || document);
-    if(!lb || $('#maHdrLogo')) return;
-    var im = document.createElement('img');
-    im.id = 'maHdrLogo'; im.className = 'ma-hdr-logo'; im.alt = 'Logo'; im.decoding = 'async';
+    var ms = $('#mainScreen');
+    if(!ms || $('#maTopLogo')) return;
+    var box = document.createElement('div'); box.id = 'maTopLogo'; box.className = 'ma-top-logo';
+    var im = document.createElement('img'); im.alt = 'Logo'; im.decoding = 'async';
     var tried = 0, srcs = ['logo2.png','logo.png'];
-    im.onload = function(){ lb.classList.add('ma-logo-ok'); };
-    im.onerror = function(){ tried++; if(tried < srcs.length){ im.src = srcs[tried]; } else { im.style.display = 'none'; lb.classList.remove('ma-logo-ok'); } };
+    im.onload = function(){ box.classList.add('ma-logo-ok'); };
+    im.onerror = function(){ tried++; if(tried < srcs.length){ im.src = srcs[tried]; } else { box.classList.remove('ma-logo-ok'); } };
     im.src = srcs[0];
-    lb.insertBefore(im, lb.firstChild);
+    box.appendChild(im);
+    ms.insertBefore(box, ms.firstChild);
   })();
   if(topbar && !$('#maMenuBtn')){
     var mb = document.createElement('button');
