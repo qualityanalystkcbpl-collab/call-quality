@@ -22096,5 +22096,137 @@ body.ma-in main.content table thead th, body.ma-in main.content table tr:first-c
   wrap('superAdminLogin', true);
 })();
 </script>
+
+<style id="backNavCss">
+.qa-exit-ov{ position:fixed; inset:0; z-index:10300; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(3,7,18,.66); }
+.qa-exit-ov.open{ display:flex; }
+.qa-exit-card{ width:100%; max-width:320px; background:var(--surface,#0e1a2b); color:var(--text,#e8eefc); border:1px solid var(--border,#26334d); border-radius:20px; padding:22px 20px 18px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.55); font-family:'Inter',sans-serif; }
+.qa-exit-card .ico{ font-size:34px; line-height:1; margin-bottom:8px; }
+.qa-exit-card h3{ margin:0 0 6px; font-size:17px; font-weight:800; }
+.qa-exit-card p{ margin:0 0 18px; font-size:14px; color:var(--text-muted,#9fb0cf); }
+.qa-exit-row{ display:flex; gap:10px; }
+.qa-exit-row button{ flex:1; min-height:46px; border-radius:13px; font:700 14px 'Inter',sans-serif; letter-spacing:.4px; cursor:pointer; border:1px solid transparent; }
+.qa-exit-row .yes{ background:linear-gradient(90deg,#ff5d73,#e11d48); color:#fff; }
+.qa-exit-row .no{ background:var(--surface-2,#14233a); color:var(--text,#e8eefc); border-color:var(--border,#26334d); }
+.qa-exit-row button:active{ transform:scale(.97); }
+</style>
+<div class="qa-exit-ov" id="qaExitOv" role="dialog" aria-modal="true" aria-labelledby="qaExitTitle">
+  <div class="qa-exit-card">
+    <div class="ico">🚪</div>
+    <h3 id="qaExitTitle">Exit App</h3>
+    <p>Do you want to exit the app?</p>
+    <div class="qa-exit-row"><button type="button" class="yes" id="qaExitYes">YES</button><button type="button" class="no" id="qaExitNo">NO</button></div>
+  </div>
+</div>
+<script id="backNavScript">
+(function(){
+  'use strict';
+  /* Phone/browser BACK button inside the app:
+       inner page  → previous page (or Home)
+       Home        → "Do you want to exit the app?  YES / NO"
+     Back never closes the page by accident while the app is open. */
+  var body = document.body, ov = document.getElementById('qaExitOv');
+  var cur = null, init = false, suppress = false, exiting = false, waiting = false;
+
+  function inMain(){ return body.classList.contains('ma-in'); }
+  function tab(){ try{ return currentTab || 'HOME'; }catch(e){ return 'HOME'; } }
+  function dlgOpen(){ return ov.classList.contains('open'); }
+  function openDlg(){ ov.classList.add('open'); }
+  function closeDlg(){ ov.classList.remove('open'); }
+  function overlayOpen(){
+    var sh = document.getElementById('maSheet');
+    return body.classList.contains('ma-drawer-open') || (sh && sh.classList.contains('open'));
+  }
+  function closeOverlays(){
+    var a = document.getElementById('maBackdrop'), b = document.getElementById('maSheetBackdrop');
+    if(body.classList.contains('ma-drawer-open') && a) a.click();
+    var sh = document.getElementById('maSheet'); if(sh && sh.classList.contains('open') && b) b.click();
+  }
+  function goTab(t){
+    suppress = true;
+    try{ if(typeof window.switchTab === 'function') window.switchTab(t); }catch(e){}
+    suppress = false;
+  }
+
+  /* create the history entries once the app is on screen (and the user has touched the page, so the browser keeps them) */
+  function ensureInit(){
+    if(init || !inMain()) return;
+    if(navigator.userActivation && !navigator.userActivation.hasBeenActive){
+      if(waiting) return; waiting = true;
+      var evs = ['pointerdown','touchstart','keydown','click'];
+      var fn = function(){ evs.forEach(function(x){ document.removeEventListener(x, fn, true); }); waiting = false; ensureInit(); };
+      evs.forEach(function(x){ document.addEventListener(x, fn, true); });
+      return;
+    }
+    var s = history.state, t = tab();
+    if(s && s.qa === 'tab'){                      /* page was reloaded on one of our entries */
+      cur = {qa:'tab', tab:t, i:(s.i!=null ? s.i : 1)};
+      history.replaceState(cur, '');
+    }else{
+      history.replaceState({qa:'root', i:0}, '');
+      cur = {qa:'tab', tab:t, i:1};
+      history.pushState(cur, '');
+    }
+    init = true;
+  }
+  function onTab(t){
+    if(!init || suppress || !inMain()) return;
+    if(cur && cur.tab === t) return;
+    cur = {qa:'tab', tab:t, i:(cur ? cur.i : 0) + 1};
+    history.pushState(cur, '');
+  }
+  /* wrap the app's own tab switcher – its logic is untouched */
+  (function(){
+    var orig = window.switchTab;
+    if(typeof orig !== 'function') return;
+    window.switchTab = function(t){
+      var r = orig.apply(this, arguments);
+      try{ onTab(tab()); }catch(e){}
+      return r;
+    };
+  })();
+
+  window.addEventListener('popstate', function(e){
+    if(!init || exiting || !inMain()) return;
+    var s = e.state;
+    if(dlgOpen()){ closeDlg(); history.pushState(cur, ''); return; }                         /* back while asking = NO */
+    if(overlayOpen()){ closeOverlays(); history.pushState(cur, ''); return; }                /* back closes menu / sheet first */
+    if(s && s.qa === 'tab'){ cur = s; goTab(s.tab); return; }                                /* previous page */
+    /* we are at the very first entry: nothing earlier inside the app */
+    cur = {qa:'tab', tab:'HOME', i:1};
+    history.pushState(cur, '');
+    if(tab() !== 'HOME'){ goTab('HOME'); return; }                                           /* go Home first */
+    openDlg();                                                                                /* already Home → ask */
+  });
+
+  document.getElementById('qaExitNo').addEventListener('click', closeDlg);
+  ov.addEventListener('click', function(e){ if(e.target === ov) closeDlg(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && dlgOpen()) closeDlg(); });
+  document.getElementById('qaExitYes').addEventListener('click', function(){
+    closeDlg();
+    exiting = true;
+    var steps = cur ? cur.i : 1;
+    try{ history.go(-steps); }catch(e){}
+    setTimeout(function(){ try{ history.back(); }catch(e){} }, 350);
+    setTimeout(function(){ try{ window.close(); }catch(e){} }, 800);
+    setTimeout(function(){ exiting = false; init = false; cur = null; }, 1400);                /* still here (nothing to go back to): next real back press exits natively */
+  });
+
+  /* start / stop with login state */
+  var wasIn = false;
+  setInterval(function(){
+    var now = inMain();
+    if(now && !wasIn){ wasIn = true; ensureInit(); }
+    else if(now && !init && !exiting){ ensureInit(); }
+    else if(!now && wasIn){
+      wasIn = false; closeDlg();
+      if(init && cur){                                     /* logged out: remove our extra entries so Back behaves normally on the login page */
+        exiting = true; var n = cur.i; try{ history.go(-n); }catch(e){}
+        setTimeout(function(){ exiting = false; init = false; cur = null; }, 500);
+      }else{ init = false; cur = null; }
+    }
+  }, 400);
+})();
+</script>
 </body>
 </html>
