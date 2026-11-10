@@ -22047,5 +22047,54 @@ body.ma-in main.content table thead th, body.ma-in main.content table tr:first-c
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
 })();
 </script>
+
+<script id="staffLoginLockScript">
+(function(){
+  /* Admin / Quality Team / Super Admin form: 2 wrong passwords in a row → silently blocked for 2 minutes.
+     No countdown and no "locked" wording is shown – the form just keeps answering with the normal wrong-password message. */
+  var LOCK_KEY = 'qa_stf_lock', FAIL_KEY = 'qa_stf_fails', MAX_FAILS = 2, LOCK_MS = 2*60*1000, FAIL_WINDOW = 15*60*1000;
+  function num(k){ try{ return parseInt(localStorage.getItem(k)||'0',10) || 0; }catch(e){ return 0; } }
+  function put(k,v){ try{ localStorage.setItem(k,String(v)); }catch(e){} }
+  function del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  function locked(){ return Date.now() < num(LOCK_KEY); }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+
+  function wrap(name, needsId){
+    var orig = window[name];
+    if(typeof orig !== 'function') return;
+    window[name] = async function(){
+      var err = document.getElementById('loginError');
+      var pass = (document.getElementById('loginPassword')||{}).value || '';
+      var idv  = needsId ? ((document.getElementById('saId')||{}).value || '').trim() : 'x';
+      if(!pass.trim() || !idv){ return orig.apply(this, arguments); }   /* empty fields: normal validation message */
+
+      if(locked()){
+        /* blocked: do not contact the server, answer like a normal wrong password after a short natural delay */
+        var btn = document.getElementById('loginBtn'), old = btn ? btn.textContent : '';
+        if(btn){ btn.disabled = true; btn.textContent = 'Signing in...'; }
+        await sleep(700 + Math.random()*500);
+        if(btn){ btn.disabled = false; btn.textContent = old; }
+        if(err) err.textContent = 'Incorrect password. Please try again.';
+        return;
+      }
+
+      var result = await orig.apply(this, arguments);
+      var msg = (err && err.textContent || '').trim();
+      var failed = msg && !/unavailable/i.test(msg);
+      if(failed){
+        var last = num(FAIL_KEY + '_t');
+        var n = (Date.now() - last > FAIL_WINDOW) ? 0 : num(FAIL_KEY);
+        n += 1; put(FAIL_KEY, n); put(FAIL_KEY + '_t', Date.now());
+        if(n >= MAX_FAILS){ put(LOCK_KEY, Date.now() + LOCK_MS); del(FAIL_KEY); del(FAIL_KEY + '_t'); }
+      } else if(!msg){
+        del(FAIL_KEY); del(FAIL_KEY + '_t'); del(LOCK_KEY);            /* successful login clears the counter */
+      }
+      return result;
+    };
+  }
+  wrap('doLogin', false);
+  wrap('superAdminLogin', true);
+})();
+</script>
 </body>
 </html>
