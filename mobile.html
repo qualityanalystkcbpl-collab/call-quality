@@ -21516,6 +21516,23 @@ body.ma-in #employeeWelcomeBar .emp-welcome-left{ padding-right:50px; }
 /* ---- logos ---- */
 #loginScreen .login-header-logo{ width:100% !important; justify-content:center; }
 #loginScreen .login-header-logo img{ width:auto !important; height:auto !important; max-width:170px !important; max-height:78px !important; object-fit:contain; display:block; }
+/* ---- header text: Bengali matras (ি ী ু ে) were clipped by tight line-height / fixed 34px box; also survives big phone font sizes ---- */
+body.ma-in .logo-rotator{ min-width:0; max-width:100%; }
+body.ma-in .logo-rotator-item.active{ height:auto !important; min-height:34px; overflow:visible !important; justify-content:center; }
+body.ma-in .logo-rotator-item{ white-space:normal !important; max-width:100%; }
+body.ma-in .logo-text-main, body.ma-in .logo-text-sub{
+  line-height:1.55 !important; padding-top:.12em; padding-bottom:.12em;
+  font-family:'Space Grotesk','Noto Sans Bengali','Hind Siliguri','Nirmala UI',sans-serif;
+}
+body.ma-in #logoRotatorCustom{ max-width:100% !important; }
+body.ma-in #logoRotatorCustom .logo-text-main,
+body.ma-in #logoRotatorCustom .logo-text-sub{
+  max-width:100% !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important;
+  overflow-wrap:anywhere; word-break:normal;
+}
+body.ma-in #logoRotatorCustom .logo-text-main{ font-size:clamp(11px,3.4vw,14px) !important; }
+body.ma-in #logoRotatorCustom .logo-text-sub{ font-size:clamp(9px,2.8vw,11px) !important; }
+body.ma-in header.topbar, body.ma-in .logo-block{ overflow:visible; }
 .ma-hdr-logo{ display:none; }
 body.ma-in .logo-block.ma-logo-ok .ma-hdr-logo{ display:block; height:28px; width:auto; max-width:44px; object-fit:contain; flex:0 0 auto; border-radius:6px; }
 body.ma-in .logo-block.ma-logo-ok .logo-mark{ display:none !important; }
