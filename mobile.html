@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="QA Control Room">
-<title>QA Control Room (Mobile App)</title>
+<meta name="apple-mobile-web-app-title" content="KCBPL QA">
+<title>KCBPL QA</title>
 <link rel="icon" type="image/png" href="GTPL_KCBPL_favicon_32x32.png">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -4823,24 +4823,18 @@ html:not(.ma-ready) body > *:not(#pageLoadOverlay):not(script):not(style):not(li
 html:not(.ma-ready)::after{ content:''; position:fixed; left:50%; top:50%; width:34px; height:34px; margin:-17px 0 0 -17px; border:3px solid rgba(51,201,176,.22); border-top-color:#33C9B0; border-radius:50%; animation:maBootSpin .8s linear infinite; z-index:10002; }
 @keyframes maBootSpin{ to{ transform:rotate(360deg); } }
 </style>
-<meta name="application-name" content="QA Control Room">
+<meta name="application-name" content="KCBPL QA">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="format-detection" content="telephone=no">
 <script>
 (function(){
   setTimeout(function(){ document.documentElement.classList.add('ma-ready'); }, 4000);
-  /* app manifest + icon built on the fly so the page can be added to the home screen as an app */
+  /* PWA: real manifest + service worker (install prompt reliable) */
   try{
-    var c=document.createElement('canvas'); c.width=c.height=512; var x=c.getContext('2d');
-    x.fillStyle='#0E1A2B'; x.fillRect(0,0,512,512);
-    var g=x.createLinearGradient(60,60,452,452); g.addColorStop(0,'#33C9B0'); g.addColorStop(1,'#4A7FE0');
-    x.fillStyle=g; x.beginPath(); if(x.roundRect){ x.roundRect(76,76,360,360,84); } else { x.rect(76,76,360,360); } x.fill();
-    x.fillStyle='#07131f'; x.font='800 190px Arial, sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('QA',256,270);
-    var png=c.toDataURL('image/png');
-    var m={ name:'QA Control Room', short_name:'QA Portal', start_url:location.href.split('#')[0], display:'standalone', orientation:'portrait',
-            background_color:'#0E1A2B', theme_color:'#0E1A2B',
-            icons:[{src:png,sizes:'512x512',type:'image/png',purpose:'any'},{src:png,sizes:'192x192',type:'image/png',purpose:'any'}] };
-    var l=document.createElement('link'); l.rel='manifest'; l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'})); document.head.appendChild(l);
-    var a=document.createElement('link'); a.rel='apple-touch-icon'; a.href=png; document.head.appendChild(a);
+    if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+      window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+    }
   }catch(e){}
 })();
 </script>
