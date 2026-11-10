@@ -5012,7 +5012,6 @@ html:not(.ma-ready)::after{ content:''; position:fixed; left:50%; top:50%; width
             <span class="slider"></span>
           </label>
           <div class="emp-autologout-countdown" id="empAutoLogoutCountdown">30:00</div>
-          <button class="emp-mini-btn emp-ico-btn" onclick="openChangePasswordModal()" title="Change Password" aria-label="Change Password"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3"/><path d="m16 7 3 3"/><path d="m14 9 2 2"/></svg></button>
           <button class="emp-mini-btn danger emp-ico-btn" onclick="handleLogoutClick()" title="Logout" aria-label="Logout"><svg class="ma-pwr" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5v9"/><path d="M6.3 6.2a8 8 0 1 0 11.4 0"/></svg></button>
         </div>
       </div>
@@ -21531,13 +21530,50 @@ body.ma-in .chat-bubble-btn .chat-bubble-btn-label{ display:none !important; }
 body.ma-in .chat-bubble-btn .chat-bubble-new-tag{ display:none !important; }
 body.ma-in .chat-bubble-btn{ width:52px !important; height:52px !important; min-height:0 !important; padding:0 !important; border-radius:50% !important; font-size:24px !important; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
 body.ma-in .chat-bubble-btn[style*="display:none"], body.ma-in .chat-bubble-btn[style*="display: none"]{ display:none !important; }
+
+/* ---- top header = colourful menu bar (static, no animation, text kept clear) ---- */
+body.ma-in .app-header-fixed{ background:linear-gradient(115deg,#0d9488 0%,#2563eb 52%,#7c3aed 100%) !important; border-bottom:1px solid rgba(255,255,255,.25); box-shadow:0 3px 14px rgba(20,30,80,.35); }
+body.ma-in .app-header-fixed .logo-text-main, body.ma-in .app-header-fixed .logo-text-sub, body.ma-in .app-header-fixed .logo-text-sub .dot{ background:none !important; color:#fff !important; -webkit-text-fill-color:#fff !important; text-shadow:0 1px 3px rgba(0,0,0,.45) !important; animation:none !important; }
+body.ma-in .app-header-fixed .logo-text-sub{ opacity:.92; }
+body.ma-in .app-header-fixed header.topbar, body.ma-in .app-header-fixed .ma-row2, body.ma-in .app-header-fixed .logo-block{ background:transparent !important; box-shadow:none !important; border-color:transparent !important; }
+body.ma-in .app-header-fixed .ma-icon-btn, body.ma-in .app-header-fixed .ma-emp-actions .emp-ico-btn:not(.danger){ background:rgba(255,255,255,.18) !important; border:1px solid rgba(255,255,255,.45) !important; color:#fff !important; }
+body.ma-in .app-header-fixed .role-pill{ background:rgba(255,255,255,.22) !important; border:1px solid rgba(255,255,255,.5) !important; color:#fff !important; text-shadow:0 1px 2px rgba(0,0,0,.35); }
+body.ma-in .app-header-fixed .logo-mark{ background:rgba(8,14,30,.55) !important; border-color:rgba(255,255,255,.3) !important; }
+
+/* ---- the 3 dots next to QA Control Room spin again ---- */
+body.ma-in .fire-loader{ animation:fireRotate 3s linear infinite !important; will-change:transform; }
+
+/* ---- timer beside Good Morning / Afternoon ---- */
+body.ma-in #employeeWelcomeBar .emp-welcome-left .emp-autologout-countdown{ display:inline-flex !important; align-items:center; flex:0 0 auto !important; width:auto !important; margin:0; padding:3px 10px !important; border-radius:999px; font:700 13px/1.2 'IBM Plex Mono',monospace !important; letter-spacing:.8px; }
+
+/* ---- logo fixed at the very top ---- */
+body.ma-in.ma-has-logo{ --ma-logo-h:calc(var(--ma-sat) + 52px); }
+body.ma-in.ma-has-logo #mainScreen, body.ma-in.has-emp-bar.ma-has-logo #mainScreen{ padding-top:var(--ma-logo-h) !important; }
+body.ma-in .ma-top-logo.ma-logo-ok{ position:fixed; top:0; left:0; right:0; z-index:9100; box-sizing:border-box; height:var(--ma-logo-h,52px); padding:calc(var(--ma-sat) + 6px) 12px 6px; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+body.ma-in.ma-has-logo .app-header-fixed{ top:var(--ma-logo-h) !important; padding-top:0 !important; }
+
+/* ---- bottom bar: 7-colour alpona background (background only) ---- */
+.ma-nav-glow::before{ content:none !important; }
+.ma-nav-glow::after{ content:''; position:absolute; left:0; right:0; top:0; bottom:0; width:auto; height:auto; border-radius:0; filter:none; opacity:1; animation:none !important; transform:none; z-index:3; background:linear-gradient(180deg, rgba(6,12,26,.50), rgba(6,12,26,.66)); }
+.ma-nav-color, .ma-nav-alpona{ position:absolute; top:0; bottom:0; left:0; width:200%; display:block; will-change:transform; }
+.ma-nav-color{ z-index:1; background:linear-gradient(90deg,#ff3d6e,#ff8a1f,#ffd21f,#2ecc71,#19c3e6,#4a7fe0,#a855f7,#ff3d6e) 0 0/50% 100% repeat-x; animation:maNavColor 16s linear infinite; }
+.ma-nav-alpona{ z-index:2; opacity:.5; background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='84'%20height='70'%20viewBox='0%200%2084%2070'%20fill='none'%20stroke='white'%20stroke-width='1.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='42'%20cy='35'%20r='3.4'%20fill='white'%20stroke='none'/%3E%3Cpath%20d='M42%2031C37%2025%2037%2018%2042%2012C47%2018%2047%2025%2042%2031Z'/%3E%3Cpath%20d='M42%2039C37%2045%2037%2052%2042%2058C47%2052%2047%2045%2042%2039Z'/%3E%3Cpath%20d='M38%2035C32%2030%2025%2030%2019%2035C25%2040%2032%2040%2038%2035Z'/%3E%3Cpath%20d='M46%2035C52%2030%2059%2030%2065%2035C59%2040%2052%2040%2046%2035Z'/%3E%3Cpath%20d='M34%2024C31%2020%2027%2019%2024%2021M50%2024C53%2020%2057%2019%2060%2021M34%2046C31%2050%2027%2051%2024%2049M50%2046C53%2050%2057%2051%2060%2049'/%3E%3Ccircle%20cx='42'%20cy='5'%20r='1.8'%20fill='white'%20stroke='none'/%3E%3Ccircle%20cx='42'%20cy='65'%20r='1.8'%20fill='white'%20stroke='none'/%3E%3Ccircle%20cx='5'%20cy='35'%20r='1.8'%20fill='white'%20stroke='none'/%3E%3Ccircle%20cx='79'%20cy='35'%20r='1.8'%20fill='white'%20stroke='none'/%3E%3Ccircle%20cx='5'%20cy='5'%20r='1.4'%20fill='white'%20stroke='none'/%3E%3Ccircle%20cx='79'%20cy='5'%20r='1.4'%20fill='white'%20stroke='none'/%3E%3Ccircle%20cx='5'%20cy='65'%20r='1.4'%20fill='white'%20stroke='none'/%3E%3Ccircle%20cx='79'%20cy='65'%20r='1.4'%20fill='white'%20stroke='none'/%3E%3C/svg%3E") 0 center/84px 70px repeat-x; animation:maNavAlpona 9s linear infinite; }
+@keyframes maNavColor{ from{ transform:translate3d(0,0,0);} to{ transform:translate3d(-50%,0,0);} }
+@keyframes maNavAlpona{ from{ transform:translate3d(0,0,0);} to{ transform:translate3d(-84px,0,0);} }
+#maBottomNav{ background:#0a1426 !important; }
+#maBottomNav button{ color:#fff !important; text-shadow:0 1px 3px rgba(0,0,0,.6); }
+#maBottomNav button > span:last-child{ font-weight:700; }
+#maBottomNav button.active > span:last-child{ color:#fff !important; text-shadow:0 0 8px rgba(255,255,255,.7), 0 1px 3px rgba(0,0,0,.6); }
+#maBottomNav button .ic{ opacity:.95; filter:drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+.ma-nav-pill{ background:rgba(255,255,255,.22) !important; border:1px solid rgba(255,255,255,.65) !important; box-shadow:0 0 14px rgba(255,255,255,.35) !important; }
+@media (prefers-reduced-motion:reduce){ .ma-nav-color, .ma-nav-alpona, body.ma-in .fire-loader{ animation:none !important; } }
 </style>
 
 <div class="ma-backdrop" id="maBackdrop"></div>
 <div class="ma-sheet-backdrop" id="maSheetBackdrop"></div>
 <div class="ma-sheet" id="maSheet" role="dialog" aria-modal="true"><div class="grab"></div><h4 id="maSheetTitle"></h4><div class="list" id="maSheetList"></div></div>
 <nav id="maBottomNav" aria-label="Main navigation" style="--i:0">
-  <span class="ma-nav-glow" aria-hidden="true"></span>
+  <span class="ma-nav-glow" aria-hidden="true"><i class="ma-nav-color"></i><i class="ma-nav-alpona"></i></span>
   <span class="ma-nav-pill" aria-hidden="true"></span>
   <button type="button" data-ma="home"><span class="ic">🏠</span><span>Home</span></button>
   <button type="button" data-ma="data"><span class="ic">🗂️</span><span>Data</span></button>
@@ -21651,8 +21687,8 @@ body.ma-in .chat-bubble-btn[style*="display:none"], body.ma-in .chat-bubble-btn[
     var box = document.createElement('div'); box.id = 'maTopLogo'; box.className = 'ma-top-logo';
     var im = document.createElement('img'); im.alt = 'Logo'; im.decoding = 'async';
     var tried = 0, srcs = ['logo2.png','logo.png'];
-    im.onload = function(){ box.classList.add('ma-logo-ok'); };
-    im.onerror = function(){ tried++; if(tried < srcs.length){ im.src = srcs[tried]; } else { box.classList.remove('ma-logo-ok'); } };
+    im.onload = function(){ box.classList.add('ma-logo-ok'); document.body.classList.add('ma-has-logo'); };
+    im.onerror = function(){ tried++; if(tried < srcs.length){ im.src = srcs[tried]; } else { box.classList.remove('ma-logo-ok'); document.body.classList.remove('ma-has-logo'); } };
     im.src = srcs[0];
     box.appendChild(im);
     ms.insertBefore(box, ms.firstChild);
@@ -21667,7 +21703,9 @@ body.ma-in .chat-bubble-btn[style*="display:none"], body.ma-in .chat-bubble-btn[
     if(ub){
       /* employee actions (timer, change password, logout) live in the header line next to refresh / role pill */
       var box = document.createElement('div'); box.id = 'maEmpActions'; box.className = 'ma-emp-actions';
-      var cd = document.getElementById('empAutoLogoutCountdown'); if(cd) box.appendChild(cd);
+      var kb = document.querySelector('#employeeWelcomeBar .emp-ico-btn[onclick*="openChangePasswordModal"]'); if(kb) kb.remove();   /* Change Pass removed */
+      var cd = document.getElementById('empAutoLogoutCountdown'), gr = document.getElementById('empWelcomeGreeting');
+      if(cd && gr && gr.parentNode) gr.parentNode.insertBefore(cd, gr.nextSibling);   /* timer sits beside Good Morning / Afternoon */
       $$('#employeeWelcomeBar .emp-ico-btn').forEach(function(bt){ box.appendChild(bt); });
       ub.insertBefore(box, ub.firstChild);
       var rb = document.createElement('button');
