@@ -32,8 +32,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="QA Control Room">
-<title>QA Control Room (Mobile App)</title>
+<meta name="apple-mobile-web-app-title" content="KCBPL QA">
+<title>KCBPL QA</title>
 <link rel="icon" type="image/png" href="GTPL_KCBPL_favicon_32x32.png">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -4848,24 +4848,21 @@ html:not(.ma-ready) body > *:not(#pageLoadOverlay):not(script):not(style):not(li
 html:not(.ma-ready)::after{ content:''; position:fixed; left:50%; top:50%; width:34px; height:34px; margin:-17px 0 0 -17px; border:3px solid rgba(51,201,176,.22); border-top-color:#33C9B0; border-radius:50%; animation:maBootSpin .8s linear infinite; z-index:10002; }
 @keyframes maBootSpin{ to{ transform:rotate(360deg); } }
 </style>
-<meta name="application-name" content="QA Control Room">
+<meta name="application-name" content="KCBPL QA">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="format-detection" content="telephone=no">
 <script>
 (function(){
   setTimeout(function(){ document.documentElement.classList.add('ma-ready'); }, 4000);
-  /* app manifest + icon built on the fly so the page can be added to the home screen as an app */
+  /* PWA: real manifest + service worker; capture the install prompt so the login page can show its own Install button */
+  window.__qaInstallEvt=null;
+  window.addEventListener('beforeinstallprompt',function(e){ e.preventDefault(); window.__qaInstallEvt=e; try{ document.dispatchEvent(new Event('qa-install-ready')); }catch(_){} });
+  window.addEventListener('appinstalled',function(){ window.__qaInstallEvt=null; try{ document.dispatchEvent(new Event('qa-installed')); }catch(_){} });
   try{
-    var c=document.createElement('canvas'); c.width=c.height=512; var x=c.getContext('2d');
-    x.fillStyle='#0E1A2B'; x.fillRect(0,0,512,512);
-    var g=x.createLinearGradient(60,60,452,452); g.addColorStop(0,'#33C9B0'); g.addColorStop(1,'#4A7FE0');
-    x.fillStyle=g; x.beginPath(); if(x.roundRect){ x.roundRect(76,76,360,360,84); } else { x.rect(76,76,360,360); } x.fill();
-    x.fillStyle='#07131f'; x.font='800 190px Arial, sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('QA',256,270);
-    var png=c.toDataURL('image/png');
-    var m={ name:'QA Control Room', short_name:'QA Portal', start_url:location.href.split('#')[0], display:'standalone', orientation:'portrait',
-            background_color:'#0E1A2B', theme_color:'#0E1A2B',
-            icons:[{src:png,sizes:'512x512',type:'image/png',purpose:'any'},{src:png,sizes:'192x192',type:'image/png',purpose:'any'}] };
-    var l=document.createElement('link'); l.rel='manifest'; l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'})); document.head.appendChild(l);
-    var a=document.createElement('link'); a.rel='apple-touch-icon'; a.href=png; document.head.appendChild(a);
+    if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+      window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+    }
   }catch(e){}
 })();
 </script>
@@ -21759,6 +21756,43 @@ body.ma-in main.content table thead th, body.ma-in main.content table tr:first-c
 #loginScreen .emp-captcha-canvas{ flex:1 1 auto !important; min-width:0; width:auto !important; max-width:calc(100% - 96px); height:42px !important; object-fit:fill; border-radius:10px; }
 #loginScreen .emp-captcha-icons{ display:flex !important; flex-direction:row !important; flex:0 0 auto; gap:6px !important; margin:0 !important; }
 #loginScreen .emp-captcha-icon-btn{ width:42px !important; height:42px !important; min-width:42px !important; min-height:42px !important; padding:0 !important; display:flex; align-items:center; justify-content:center; font-size:16px; border-radius:10px !important; }
+/* ---- Admin / Quality Team login: small icon at the right; tap opens the full card ---- */
+#loginScreen .ma-admin-opt .ma-or{ display:none !important; }
+#loginScreen .ma-admin-opt{ margin-top:12px !important; }
+#loginScreen .staff-login-card:not(.expanded){ width:44px !important; height:44px; margin-left:auto !important; margin-right:0 !important; padding:0 !important; border-radius:12px !important; overflow:hidden; }
+#loginScreen .staff-login-card:not(.expanded) .staff-tab-trigger{ width:44px; height:44px; padding:0 !important; margin:0 !important; display:flex !important; align-items:center; justify-content:center; }
+#loginScreen .staff-login-card:not(.expanded) .staff-tab-trigger h2{ font-size:0 !important; margin:0 !important; line-height:1; }
+#loginScreen .staff-login-card:not(.expanded) .staff-tab-trigger h2::before{ font-size:21px; margin:0 !important; line-height:1; }
+#loginScreen .staff-login-card:not(.expanded) .staff-tab-chevron{ display:none !important; }
+#loginScreen .staff-login-card:not(.expanded) .staff-login-body{ display:none !important; }
+/* ---- install button on login page ---- */
+#maInstallBox{ width:100%; margin-top:14px; }
+#maInstallBtn{ width:100%; display:flex; align-items:center; gap:12px; text-align:left; cursor:pointer; padding:11px 14px; border-radius:14px;
+  background:var(--lg-card,#0c1024); color:var(--text,#fff); border:1px solid var(--lg-a,#19d3c5); font-family:inherit; box-shadow:0 6px 18px rgba(0,0,0,.35); }
+#maInstallBtn:active{ transform:scale(.98); }
+#maInstallBtn .mi-ic{ font-size:24px; line-height:1; flex:0 0 auto; }
+#maInstallBtn .mi-click{ margin-left:auto; flex:0 0 auto; font-size:10px; font-weight:800; letter-spacing:.8px; padding:4px 8px; border-radius:8px; background:var(--lg-a,#19d3c5); color:#04121a; animation:maClickBlink 1s steps(1,end) infinite; }
+@keyframes maClickBlink{ 0%,100%{ opacity:1; } 50%{ opacity:.15; } }
+#maInstallBtn .mi-tx{ display:flex; flex-direction:column; min-width:0; line-height:1.4; }
+#maInstallBtn .mi-tx b{ font-size:14px; font-weight:700; color:var(--lg-a,#19d3c5); }
+#maInstallBtn .mi-tx small{ font-size:11px; color:var(--lg-dim,#8f97c9); }
+#maInstallHint{ margin-top:8px; padding:10px 12px; border-radius:12px; font-size:12.5px; line-height:1.6; background:var(--lg-input,#171a30); border:1px solid var(--lg-border,#2c3159); color:var(--text,#fff); }
+#maInstallHint small{ color:var(--lg-dim,#8f97c9); }
+/* ---- header text: Bengali matras were clipped by tight line-height / fixed 34px box; survives big phone font sizes ---- */
+body.ma-in .logo-rotator{ min-width:0; max-width:100%; }
+body.ma-in .logo-rotator-item.active{ height:auto !important; min-height:34px; overflow:visible !important; justify-content:center; }
+body.ma-in .logo-rotator-item{ white-space:normal !important; max-width:100%; }
+body.ma-in .logo-text-main, body.ma-in .logo-text-sub{
+  line-height:1.55 !important; padding-top:.12em; padding-bottom:.12em;
+  font-family:'Space Grotesk','Noto Sans Bengali','Hind Siliguri','Nirmala UI',sans-serif;
+}
+body.ma-in #logoRotatorCustom{ max-width:100% !important; }
+body.ma-in #logoRotatorCustom .logo-text-main,
+body.ma-in #logoRotatorCustom .logo-text-sub{
+  max-width:100% !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important; overflow-wrap:anywhere;
+}
+body.ma-in #logoRotatorCustom .logo-text-main{ font-size:clamp(11px,3.4vw,14px) !important; }
+body.ma-in #logoRotatorCustom .logo-text-sub{ font-size:clamp(9px,2.8vw,11px) !important; }
 </style>
 
 <div class="ma-backdrop" id="maBackdrop"></div>
@@ -21923,7 +21957,55 @@ body.ma-in main.content table thead th, body.ma-in main.content table tr:first-c
     opt.appendChild(staff);
     if(note) opt.appendChild(note);
     emp.parentNode.insertBefore(opt, emp.nextSibling);
+    /* ---- Install App button (login page) ---- */
+    (function(){
+      var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+      if($('#maInstallBox')) return;
+      var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      var ua = navigator.userAgent, android = /android/i.test(ua);
+      var isChrome = /Chrome\//.test(ua) && !/EdgA|OPR\/|SamsungBrowser|Firefox|UCBrowser|MiuiBrowser|; wv\)/i.test(ua);
+      var box = document.createElement('div'); box.id = 'maInstallBox';
+      box.innerHTML = '<button type="button" id="maInstallBtn"><span class="mi-ic">📲</span><span class="mi-tx"><b>Install KCBPL QA App</b><small>Keep it on your home screen as an app</small></span><span class="mi-click">CLICK HERE</span></button><div id="maInstallHint" hidden></div>';
+      emp.parentNode.insertBefore(box, opt);
+      var btn = box.querySelector('#maInstallBtn'), hint = box.querySelector('#maInstallHint');
+      function showHint(html){ hint.innerHTML = html; hint.hidden = false; }
+      function markInstalled(){
+        installed = true; btn.classList.add('is-installed');
+        btn.querySelector('.mi-tx').innerHTML = '<b>App installed ✓</b><small>Open KCBPL QA from your home screen / app drawer</small>'; var mc = btn.querySelector('.mi-click'); if(mc) mc.style.display = 'none';
+      }
+      var installed = false;
+      if(standalone){ markInstalled(); }
+      btn.addEventListener('click', function(){
+        var ev = window.__qaInstallEvt;
+        if(installed){
+          showHint('This app is already installed. Look for <b>KCBPL QA</b> on your home screen or app drawer.');
+        } else if(ev){
+          hint.hidden = true;
+          ev.prompt();
+          ev.userChoice.then(function(r){ window.__qaInstallEvt = null; if(r && r.outcome === 'accepted'){ markInstalled(); } }).catch(function(){});
+        } else if(!ios && isChrome && !btn.__waited){
+          /* Chrome may still be preparing the install prompt (service worker just registered) - wait briefly, then try again */
+          btn.__waited = true;
+          showHint('Preparing install... please wait.');
+          var done = false;
+          function go(){ if(done) return; done = true; document.removeEventListener('qa-install-ready', go); btn.click(); }
+          document.addEventListener('qa-install-ready', go);
+          setTimeout(go, 3000);
+          setTimeout(function(){ btn.__waited = false; }, 3500);
+        } else if(android && !isChrome){
+          var u = 'intent://' + location.host + location.pathname + location.search + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end';
+          showHint('Opening in Chrome... If it does not open, <a href="' + u + '" style="color:var(--lg-a,#19d3c5);font-weight:700;">tap here</a>. If Chrome is not installed, install it from the Play Store.');
+          location.href = u;
+        } else if(ios){
+          showHint('iPhone / iPad: In Safari, tap the <b>Share</b> (⬆️) button, then select <b>Add to Home Screen</b>.');
+        } else {
+          showHint('Tap the <b>⋮</b> (three-dot) menu at the top right of Chrome, then select <b>Install app</b> or <b>Add to Home screen</b>.<br><small>If you do not see this option, refresh the page once and try again.</small>');
+        }
+      });
+      document.addEventListener('qa-installed', markInstalled);
+    })();
     var h = $('h2', staff); if(h) h.textContent = 'Admin / Quality Team Login';
+    var stg = $('#staffTabTrigger'); if(stg){ stg.title = 'Admin / Quality Team Login'; stg.setAttribute('aria-label','Admin / Quality Team Login'); }
   })();
   /* charts: smaller default fonts (individual charts that set their own size were reduced in the source) */
   function tuneCharts(){
