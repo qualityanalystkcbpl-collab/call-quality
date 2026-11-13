@@ -21975,9 +21975,18 @@ body.ma-in #logoRotatorCustom .logo-text-sub{ font-size:clamp(9px,2.8vw,11px) !i
       }
       var installed = false;
       if(standalone){ markInstalled(); }
+      /* Android APK: if KCBPL-QA.apk is uploaded next to this page, the button downloads it directly (no Play Store) */
+      var APK_URL = 'KCBPL-QA.apk', apkOk = false;
+      if(android && !standalone && /^https?:$/.test(location.protocol)){
+        try{ fetch(APK_URL, {method:'HEAD', cache:'no-store'}).then(function(r){ apkOk = !!(r && r.ok); }).catch(function(){}); }catch(_){}
+      }
       btn.addEventListener('click', function(){
         var ev = window.__qaInstallEvt;
-        if(installed){
+        if(!installed && android && apkOk){
+          var a = document.createElement('a'); a.href = APK_URL; a.download = 'KCBPL-QA.apk'; a.style.display = 'none';
+          document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 1000);
+          showHint('Download started. When it finishes, open the downloaded <b>KCBPL-QA.apk</b> file and tap <b>Install</b>. If Android asks, allow <b>Install unknown apps</b> for this browser.');
+        } else if(installed){
           showHint('This app is already installed. Look for <b>KCBPL QA</b> on your home screen or app drawer.');
         } else if(ev){
           hint.hidden = true;
