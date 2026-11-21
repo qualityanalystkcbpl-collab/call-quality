@@ -9767,6 +9767,7 @@ async function doLogin(){
   }
 }
 function doLogout(){
+  if(typeof npClosePopup === 'function'){ try{ npClosePopup(); }catch(e){} }
 localStorage.removeItem("qa_role");
     localStorage.removeItem("qa_login_time");
   currentRole = null;
@@ -20065,7 +20066,7 @@ doLogout = function(){
       // 📝 Lead Entry Form খোলা থাকা অবস্থায় auto-reload একদম বন্ধ রাখা হচ্ছে —
       // ফর্ম পূরণ করার মাঝখানে কখনোই পেজ নিজে থেকে রিফ্রেশ হয়ে ডাটা মুছে যাবে না।
       if(currentTab === 'LEADFORM'){ return; }
-      if(currentTab === 'NOTEPAD' && typeof npIsDirty === 'function' && npIsDirty()){ return; }
+      if(typeof npIsDirty === 'function' && npIsDirty() && (currentTab === 'NOTEPAD' || (typeof npIsPopped === 'function' && npIsPopped()))){ return; }
 
       var res = await fetch(API_URL + '?_=' + Date.now(), {
         cache: 'no-store',
@@ -22084,45 +22085,118 @@ window.qxDelMsg = async function(id){
 
 <!-- ===================== ONLINE NOTEPAD ===================== -->
 <style>
-#panel-NOTEPAD .np-wrap{background:#fbfbfb;color:#1f1f1f;border-radius:12px;border:1px solid #d9dde3;box-shadow:0 8px 30px rgba(0,0,0,.28);overflow:hidden;display:flex;flex-direction:column;min-height:calc(100vh - 150px);font-family:'Segoe UI',system-ui,Arial,sans-serif;}
-#panel-NOTEPAD .np-title{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#f0f2f5;border-bottom:1px solid #e1e4e8;font-size:13px;color:#444;}
-#panel-NOTEPAD .np-title b{font-size:14px;color:#222;}
-#panel-NOTEPAD .np-owner{margin-left:auto;background:#e6eefc;color:#1a4fb4;padding:3px 10px;border-radius:999px;font-weight:600;font-size:12px;}
-#panel-NOTEPAD .np-menubar{display:flex;align-items:center;gap:2px;padding:4px 8px;background:#fbfbfb;border-bottom:1px solid #eceef1;position:relative;flex-wrap:wrap;}
-#panel-NOTEPAD .np-menu{position:relative;}
-#panel-NOTEPAD .np-menu>button{border:0;background:transparent;padding:6px 12px;border-radius:6px;font-size:13.5px;color:#222;cursor:pointer;}
-#panel-NOTEPAD .np-menu>button:hover,#panel-NOTEPAD .np-menu.open>button{background:#e9ecf1;}
-#panel-NOTEPAD .np-drop{display:none;position:absolute;top:100%;left:0;min-width:230px;background:#fff;border:1px solid #d5d9df;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.22);padding:5px;z-index:50;}
-#panel-NOTEPAD .np-menu.open .np-drop{display:block;}
-#panel-NOTEPAD .np-drop button{display:flex;justify-content:space-between;gap:20px;width:100%;border:0;background:transparent;text-align:left;padding:7px 10px;border-radius:5px;font-size:13px;color:#222;cursor:pointer;}
-#panel-NOTEPAD .np-drop button:hover{background:#e9f0fd;}
-#panel-NOTEPAD .np-drop button span{color:#888;font-size:12px;}
-#panel-NOTEPAD .np-drop hr{border:0;border-top:1px solid #e6e8ec;margin:4px 0;}
-#panel-NOTEPAD .np-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 10px;background:#f6f7f9;border-bottom:1px solid #e3e6ea;}
-#panel-NOTEPAD .np-toolbar select,#panel-NOTEPAD .np-toolbar input[type=color]{height:30px;border:1px solid #cfd4db;border-radius:6px;background:#fff;color:#222;font-size:13px;padding:0 6px;}
-#panel-NOTEPAD .np-toolbar input[type=color]{width:34px;padding:2px;cursor:pointer;}
-#panel-NOTEPAD .np-tb{width:32px;height:30px;border:1px solid transparent;border-radius:6px;background:transparent;color:#222;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
-#panel-NOTEPAD .np-tb:hover{background:#e5e8ed;}
-#panel-NOTEPAD .np-tb.on{background:#d6e4ff;border-color:#9db9ee;}
-#panel-NOTEPAD .np-sep{width:1px;height:20px;background:#d8dce2;margin:0 4px;}
-#panel-NOTEPAD .np-save{margin-left:auto;display:flex;align-items:center;gap:8px;}
-#panel-NOTEPAD .np-savebtn{height:30px;padding:0 14px;border:0;border-radius:6px;background:#1a73e8;color:#fff;font-weight:600;font-size:13px;cursor:pointer;}
-#panel-NOTEPAD .np-savebtn:hover{background:#1558b8;}
-#panel-NOTEPAD .np-savebtn:disabled{opacity:.6;cursor:default;}
-#panel-NOTEPAD .np-status{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:#eef0f3;color:#555;white-space:nowrap;}
-#panel-NOTEPAD .np-status i{width:9px;height:9px;border-radius:50%;background:#9aa0a6;display:inline-block;}
-#panel-NOTEPAD .np-status.saved{background:#e3f6e8;color:#17803d;}#panel-NOTEPAD .np-status.saved i{background:#22b14c;}
-#panel-NOTEPAD .np-status.saving{background:#fff3d6;color:#9a6700;}#panel-NOTEPAD .np-status.saving i{background:#f0a500;animation:npPulse 1s infinite;}
-#panel-NOTEPAD .np-status.unsaved{background:#fff3d6;color:#9a6700;}#panel-NOTEPAD .np-status.unsaved i{background:#f0a500;}
-#panel-NOTEPAD .np-status.error{background:#fde4e4;color:#b3261e;}#panel-NOTEPAD .np-status.error i{background:#e53935;}
+/* ---- Notepad: chrome follows the app theme, the paper itself always stays light ---- */
+.np-wrap{--np-paper:#FFFFFF;--np-ink:#1c1c1c;position:relative;display:flex;flex-direction:column;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.28);overflow:hidden;min-height:calc(100vh - 150px);font-family:'Inter','Noto Sans Bengali','Nirmala UI','Segoe UI',system-ui,sans-serif;}
+.np-wrap button{font-family:inherit;}
+
+/* header */
+.np-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(110deg,var(--surface-2),var(--surface) 75%);border-bottom:1px solid var(--border);border-top:3px solid var(--agent);}
+.np-logo{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;background:linear-gradient(135deg,#33C9B0,#0E9C85);box-shadow:0 3px 10px rgba(14,156,133,.4);}
+.np-head b{font-family:'Space Grotesk','Inter',sans-serif;font-size:16px;letter-spacing:.2px;}
+.np-owner{background:var(--agent-dim);color:var(--agent);padding:3px 11px;border-radius:999px;font-weight:600;font-size:12px;}
+.np-pop{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s;}
+.np-pop:hover{background:var(--surface-3);border-color:var(--agent);}
+
+/* menu bar */
+.np-menubar{display:flex;align-items:center;gap:2px;padding:4px 8px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;flex-wrap:wrap;}
+.np-menu{position:relative;}
+.np-menu>button{border:0;background:transparent;padding:6px 12px;border-radius:7px;font-size:13.5px;color:var(--text);cursor:pointer;}
+.np-menu>button:hover,.np-menu.open>button{background:var(--surface-3);}
+.np-drop{display:none;position:absolute;top:100%;left:0;min-width:230px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.35);padding:5px;z-index:70;}
+.np-menu.open .np-drop{display:block;}
+.np-drop button{display:flex;justify-content:space-between;gap:20px;width:100%;border:0;background:transparent;text-align:left;padding:7px 10px;border-radius:6px;font-size:13px;color:var(--text);cursor:pointer;}
+.np-drop button:hover{background:var(--surface-3);}
+.np-drop button span{color:var(--text-muted);font-size:12px;}
+.np-drop hr{border:0;border-top:1px solid var(--border);margin:4px 0;}
+
+/* toolbar */
+.np-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:var(--surface-2);border-bottom:1px solid var(--border);}
+.np-toolbar select{height:30px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px;padding:0 6px;max-width:150px;}
+.np-tb{position:relative;width:32px;height:30px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text);font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+.np-tb:hover{background:var(--surface-3);}
+.np-tb.on{background:rgba(51,201,176,.18);border-color:var(--agent);}
+.np-tb .np-A{font-weight:800;line-height:1;font-size:15px;margin-top:-3px;}
+.np-tb i.bar{position:absolute;left:7px;right:7px;bottom:4px;height:3px;border-radius:2px;background:#1c1c1c;}
+.np-sep{width:1px;height:20px;background:var(--border);margin:0 4px;}
+.np-save{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.np-savebtn{height:30px;padding:0 15px;border:0;border-radius:8px;background:linear-gradient(135deg,#1fb59d,#0e8f7a);color:#fff;font-weight:600;font-size:13px;cursor:pointer;box-shadow:0 3px 10px rgba(14,156,133,.35);}
+.np-savebtn:hover{filter:brightness(1.08);}
+.np-savebtn:disabled{opacity:.6;cursor:default;}
+
+/* colour palettes (custom, so the text selection is never lost) */
+.np-colwrap{position:relative;display:inline-flex;}
+.np-pal{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:80;width:184px;flex-wrap:wrap;gap:7px;padding:11px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.38);}
+.np-pal.open{display:flex;}
+.np-sw{width:24px;height:24px;padding:0;border-radius:7px;border:1px solid rgba(128,128,128,.45);cursor:pointer;transition:transform .12s;}
+.np-sw:hover{transform:scale(1.15);}
+.np-sw.none{background:linear-gradient(135deg,transparent 45%,#e0524a 45%,#e0524a 55%,transparent 55%),#fff;}
+.np-sw.custom{position:relative;overflow:hidden;background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);}
+.np-sw.custom input{position:absolute;inset:-6px;width:40px;height:40px;opacity:0;cursor:pointer;}
+.np-pal-label{width:100%;font-size:11.5px;color:var(--text-muted);font-weight:600;}
+
+/* status pill */
+.np-status{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--surface-3);color:var(--text-muted);white-space:nowrap;}
+.np-status i{width:9px;height:9px;border-radius:50%;background:#9aa0a6;display:inline-block;}
+.np-status.saved{background:rgba(63,191,127,.16);color:var(--excellent);}.np-status.saved i{background:var(--excellent);}
+.np-status.saving{background:rgba(224,195,65,.18);color:var(--good);}.np-status.saving i{background:var(--good);animation:npPulse 1s infinite;}
+.np-status.unsaved{background:rgba(224,138,63,.16);color:var(--average);}.np-status.unsaved i{background:var(--average);}
+.np-status.error{background:rgba(224,82,74,.16);color:var(--need);}.np-status.error i{background:var(--need);}
 @keyframes npPulse{0%,100%{opacity:1}50%{opacity:.3}}
-#panel-NOTEPAD .np-setup{display:none;margin:10px;padding:10px 14px;background:#fff4e5;border:1px solid #f5c26b;color:#7a4b00;border-radius:8px;font-size:13px;}
-#panel-NOTEPAD .np-pagewrap{flex:1;background:#fbfbfb;overflow:auto;}
-#panel-NOTEPAD .np-editor{min-height:60vh;padding:22px 28px;outline:none;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.55;color:#1c1c1c;background:#fbfbfb;word-break:break-word;white-space:pre-wrap;transform-origin:top left;}
-#panel-NOTEPAD .np-editor.nowrap{white-space:pre;word-break:normal;overflow-x:auto;}
-#panel-NOTEPAD .np-editor:empty:before{content:attr(data-ph);color:#a0a4aa;pointer-events:none;}
-#panel-NOTEPAD .np-foot{display:flex;gap:18px;align-items:center;padding:5px 14px;background:#f0f2f5;border-top:1px solid #e1e4e8;font-size:12px;color:#555;flex-wrap:wrap;}
-#panel-NOTEPAD .np-foot .np-grow{margin-left:auto;}
+.np-setup{display:none;margin:10px;padding:10px 14px;background:var(--admin-dim);border:1px solid var(--admin);color:var(--admin);border-radius:10px;font-size:13px;}
+
+/* page tabs */
+.np-tabs{display:flex;align-items:flex-end;gap:4px;padding:9px 12px 0;background:var(--surface-2);overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;}
+.np-pg{position:relative;display:flex;align-items:center;gap:6px;padding:9px 8px 8px 14px;border-radius:10px 10px 0 0;background:var(--surface-3);color:var(--text-muted);border:1px solid var(--border);border-bottom:0;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;max-width:210px;flex-shrink:0;transition:background .15s,color .15s;}
+.np-pg::before{content:'';position:absolute;left:-1px;right:-1px;top:-1px;height:3px;border-radius:10px 10px 0 0;background:var(--tc);opacity:.55;}
+.np-pg:hover{color:var(--text);}
+.np-pg.active{background:var(--np-paper);color:var(--np-ink);margin-bottom:-1px;padding-bottom:9px;}
+.np-pg.active::before{opacity:1;}
+.np-pgn{overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.np-pg input{width:120px;font:inherit;border:1px solid var(--tc);border-radius:5px;padding:1px 5px;background:#fff;color:#1c1c1c;outline:none;}
+.np-x{width:18px;height:18px;border:0;border-radius:50%;background:transparent;color:inherit;font-size:15px;line-height:1;cursor:pointer;opacity:.55;display:grid;place-items:center;padding:0;}
+.np-x:hover{background:rgba(224,82,74,.18);color:#e0524a;opacity:1;}
+.np-add{flex-shrink:0;height:30px;margin-bottom:3px;padding:0 13px;border-radius:999px;border:1.5px dashed var(--agent);background:transparent;color:var(--agent);font-size:12.5px;font-weight:700;cursor:pointer;}
+.np-add:hover{background:var(--agent-dim);}
+
+/* paper */
+.np-pagewrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;background-color:var(--np-paper);
+  background-image:linear-gradient(to right,transparent 47px,#f2b4b4 47px,#f2b4b4 48px,transparent 48px),repeating-linear-gradient(to bottom,transparent 0,transparent 27px,#e3ebf5 27px,#e3ebf5 28px);
+  background-position:0 0,0 16px;background-attachment:local;}
+.np-editor{flex:1 0 auto;min-height:60vh;padding:16px 28px 40px 66px;outline:none;font-family:'Segoe UI','Noto Sans Bengali','Nirmala UI',Arial,sans-serif;font-size:16px;line-height:28px;color:var(--np-ink);background:transparent;word-break:break-word;white-space:pre-wrap;transform-origin:top left;}
+.np-editor.nowrap{white-space:pre;word-break:normal;overflow-x:auto;}
+.np-editor:empty:before{content:attr(data-ph);color:#a0a4aa;pointer-events:none;}
+
+/* footer */
+.np-foot{display:flex;gap:18px;align-items:center;padding:6px 14px;background:var(--surface-2);border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);flex-wrap:wrap;}
+.np-foot .np-grow{margin-left:auto;}
+
+/* floating (popup) window */
+.np-wrap.np-floating{position:fixed;z-index:9500;min-height:300px;min-width:min(340px,calc(100vw - 16px));resize:both;border-radius:14px;box-shadow:0 26px 70px rgba(0,0,0,.5),0 0 0 1px var(--border);}
+.np-wrap.np-floating .np-head{cursor:grab;touch-action:none;user-select:none;}
+.np-wrap.np-floating.dragging .np-head{cursor:grabbing;}
+.np-wrap.np-floating.dragging{box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 2px var(--agent);}
+
+/* placeholder shown in the normal panel while the notepad is popped out */
+.np-ph{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:60px 20px;border:2px dashed var(--border);border-radius:16px;background:var(--surface);color:var(--text);}
+.np-ph-ic{font-size:42px;}
+.np-ph p{color:var(--text-muted);font-size:13.5px;max-width:420px;line-height:1.6;}
+.np-ph button{margin-top:6px;height:36px;padding:0 18px;border:0;border-radius:9px;background:linear-gradient(135deg,#1fb59d,#0e8f7a);color:#fff;font-weight:600;font-size:13.5px;cursor:pointer;}
+
+
+/* trash overlay + retry */
+.np-trash{position:absolute;inset:0;z-index:90;display:grid;place-items:center;background:rgba(0,0,0,.5);padding:14px;}
+.np-trash-box{width:min(520px,100%);max-height:100%;overflow:auto;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:0 20px 50px rgba(0,0,0,.5);}
+.np-trash-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:15px;}
+.np-trash-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--border);font-size:13px;}
+.np-trash-row .np-pgn{font-weight:600;max-width:170px;}
+.np-trash-row small{color:var(--text-muted);margin-right:auto;}
+.np-trash-btn{height:28px;padding:0 11px;border-radius:7px;border:1px solid var(--agent);background:var(--agent-dim);color:var(--agent);font-size:12px;font-weight:600;cursor:pointer;}
+.np-trash-btn.danger{border-color:var(--need);background:transparent;color:var(--need);}
+.np-trash-empty{color:var(--text-muted);padding:14px 0;text-align:center;font-size:13px;}
+.np-trash-note{margin-top:10px;font-size:12px;color:var(--text-muted);line-height:1.5;}
+.np-retry{margin-left:6px;border:0;border-radius:6px;padding:2px 8px;background:var(--need);color:#fff;font-size:12px;font-weight:600;cursor:pointer;}
+
+@media(max-width:640px){.np-owner{display:none;}.np-editor{padding:14px 14px 40px 56px;}.np-pop span{display:none;}}
 </style>
 <script>
 /* ====== ONLINE NOTEPAD — config ======
@@ -22132,13 +22206,28 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
 (function(){
   const AUTOSAVE_DELAY = 2000;   // typing thamar 2 sec por auto-save
   const AUTOSAVE_EVERY = 15000;  // dirty thakle proti 15 sec-e abar
-  const MAX_LEN = 49000;
+  const MAX_LEN = 49000;         // proti page-er limit
+  const MAX_PAGES = 30;
+  const TAB_COLORS = ['#33C9B0','#E3A857','#E0524A','#3FBF7F','#4A7FE0','#B94AE0','#E0C341'];
+  const TEXT_COLORS = ['#1C1C1C','#6B7280','#D32F2F','#E65100','#F9A825','#2E7D32','#00897B','#1565C0','#4527A0','#AD1457','#6D4C41','#FFFFFF'];
+  const HILITES = ['#FFF59D','#FFCC80','#A5D6A7','#80DEEA','#90CAF9','#CE93D8','#F48FB1'];
+
   let owner = '', loaded = false, dirty = false, saving = false, queued = false;
-  let version = 0, savedVersion = 0, tDelay = null, tInterval = null, zoom = 100, lastSavedMs = 0;
-  let hooksReady = false;
+  let version = 0, tDelay = null, tInterval = null, zoom = 100, lastSavedMs = 0;
+  let hooksReady = false, popped = false, busy = false, savedRange = null, geomTimer = null;
+  let pages = [{id:'p1', name:'Page 1'}], cur = 'p1', trash = [];
+  let lastVerifiedMs = 0, lastStaleCheck = 0, retryTimer = null;
 
   const $ = id => document.getElementById(id);
-  const lsKey = k => 'qa_np_' + k + '_' + owner;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const esc = s => (typeof escapeHtml === 'function') ? escapeHtml(s) : String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  /* Page 1 purano key-i bebohar kore (ager lekha ashol thake); baki page-er alada key */
+  const lsKey = (k, pid) => { pid = pid || cur; return 'qa_np_' + k + '_' + owner + (pid === 'p1' ? '' : '_' + pid); };
+  const backendOwner = pid => pid === 'p1' ? owner : owner + '::' + pid;
+  const metaLsKey = () => 'qa_np_meta_' + owner;
+  const curLsKey = () => 'qa_np_cur_' + owner;
+  const curPage = () => pages.find(p => p.id === cur) || pages[0];
 
   function getOwner(){
     let n = '';
@@ -22181,10 +22270,184 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
     const words = (t.trim().match(/\S+/g) || []).length;
     const len = ed.innerHTML.length;
     $('npCounts').textContent = 'অক্ষর: ' + t.replace(/\n/g,'').length + ' · শব্দ: ' + words + ' · সাইজ: ' + len + '/' + MAX_LEN;
-    $('npCounts').style.color = len > MAX_LEN ? '#b3261e' : '';
+    $('npCounts').style.color = len > MAX_LEN ? 'var(--need)' : '';
+    const pi = $('npPageInfo'); if(pi) pi.textContent = 'পেজ ' + (pages.indexOf(curPage()) + 1) + '/' + pages.length;
+  }
+
+  /* ---------- PAGES (meta list) ---------- */
+  function validPages(a){
+    return Array.isArray(a) && a.length && a.every(p => p && typeof p.id === 'string' && typeof p.name === 'string');
+  }
+  function readLocalMeta(){
+    let m = null;
+    try{ m = JSON.parse(localStorage.getItem(metaLsKey()) || 'null'); }catch(e){}
+    pages = (m && validPages(m.pages)) ? m.pages : [{id:'p1', name:'Page 1'}];
+    trash = (m && Array.isArray(m.trash)) ? m.trash : [];
+    const saved = localStorage.getItem(curLsKey());
+    cur = pages.some(p => p.id === saved) ? saved : pages[0].id;
+  }
+  async function loadMetaFromServer(){
+    if(!NOTEPAD_APPS_SCRIPT_URL) return;
+    try{
+      const res = await fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=get&owner=' + encodeURIComponent(owner + '::META') + '&_=' + Date.now());
+      const j = await res.json();
+      if(j && j.ok === true && j.exists && typeof j.content === 'string' && j.content.indexOf('NPMETA:') === 0){
+        const m = JSON.parse(decodeURIComponent(escape(atob(j.content.slice(7)))));
+        if(m && validPages(m.pages)){
+          pages = m.pages; trash = Array.isArray(m.trash) ? m.trash : trash;
+          if(!pages.some(p => p.id === cur)) cur = pages[0].id;
+          try{ localStorage.setItem(metaLsKey(), JSON.stringify({v:1, pages:pages, trash:trash})); }catch(e){}
+        }
+      }
+    }catch(e){ console.warn('Notepad meta load', e); }
+  }
+  function saveMeta(){
+    const data = {v:1, pages:pages, trash:trash};
+    try{ localStorage.setItem(metaLsKey(), JSON.stringify(data)); localStorage.setItem(curLsKey(), cur); }catch(e){}
+    if(!NOTEPAD_APPS_SCRIPT_URL) return;
+    const enc = 'NPMETA:' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=save', {method:'POST', body: JSON.stringify({owner: owner + '::META', content: enc, plain: ''})})
+      .then(r => r.json()).then(j => { if(!j || j.ok !== true) throw new Error('meta'); })
+      .catch(() => setStatus('error','পেজের তালিকা সার্ভারে সেভ হয়নি (এই ব্রাউজারে আছে)'));
+  }
+
+  function renderTabs(){
+    const s = $('npTabs'); if(!s) return;
+    s.innerHTML = pages.map((p,i) =>
+      '<div class="np-pg' + (p.id === cur ? ' active' : '') + '" data-pg="' + esc(p.id) + '" style="--tc:' + TAB_COLORS[i % TAB_COLORS.length] + '" title="' + (p.id === cur ? 'ডাবল-ক্লিক করে নাম বদলান' : esc(p.name)) + '">' +
+        '<span class="np-pgn">' + esc(p.name) + '</span>' +
+        (pages.length > 1 ? '<button type="button" class="np-x" data-x="' + esc(p.id) + '" title="এই পেজ মুছুন">×</button>' : '') +
+      '</div>').join('') +
+      (pages.length < MAX_PAGES ? '<button type="button" class="np-add" id="npAdd" title="নতুন পেজ (আগের লেখা যেমন আছে তেমনই থাকবে)">＋ নতুন পেজ</button>' : '');
+    const a = s.querySelector('.np-pg.active'); if(a && a.scrollIntoView) a.scrollIntoView({block:'nearest', inline:'nearest'});
+    updateCounts(); updateTrashLabel();
+  }
+
+  /* pending save shesh howar ager jonno opekkha */
+  async function waitSaving(){ let n = 0; while(saving && n < 60){ await sleep(100); n++; } }
+  async function settle(){
+    clearTimeout(tDelay);
+    await waitSaving();
+    if(dirty && loaded) await saveNow(true);
+    await waitSaving();
+  }
+
+  async function switchPage(id){
+    if(busy || id === cur || !pages.some(p => p.id === id)) return;
+    busy = true;
+    try{
+      await settle();
+      cur = id; try{ localStorage.setItem(curLsKey(), cur); }catch(e){}
+      renderTabs();
+      await loadNote();
+    }finally{ busy = false; }
+  }
+
+  async function addPage(){
+    if(busy) return;
+    if(pages.length >= MAX_PAGES){ alert('সর্বোচ্চ ' + MAX_PAGES + 'টি পেজ করা যাবে।'); return; }
+    busy = true;
+    try{
+      await settle();   // ager page-er lekha age save hoye jay — kono lekha muchhe na
+      const id = 'p' + Date.now().toString(36);
+      let n = 1; while(pages.some(p => p.name === 'Page ' + n)) n++;
+      pages.push({id:id, name:'Page ' + n});
+      cur = id;
+      saveMeta();
+      renderTabs();
+      await loadNote();
+    }finally{ busy = false; }
+  }
+
+  async function deletePage(pid){
+    if(busy || pages.length < 2) return;
+    const p = pages.find(x => x.id === pid); if(!p) return;
+    if(!confirm('"' + p.name + '" পেজটি ট্র্যাশে পাঠাবেন?\n\nলেখা মুছবে না — File ▸ মোছা পেজ থেকে যেকোনো সময় ফিরিয়ে আনতে পারবেন।')) return;
+    busy = true;
+    try{
+      if(pid === cur) await settle();           // ager lekha age save
+      const idx = pages.indexOf(p);
+      pages.splice(idx, 1);
+      trash.push({id:p.id, name:p.name, at:Date.now()});
+      if(pid === cur){
+        cur = pages[Math.min(idx, pages.length - 1)].id;
+        saveMeta(); renderTabs(); await loadNote();
+      }else{
+        saveMeta(); renderTabs();
+      }
+    }finally{ busy = false; }
+  }
+
+  function updateTrashLabel(){
+    const t = $('npTrashItem'); if(t) t.textContent = '🗑 মোছা পেজ' + (trash.length ? ' (' + trash.length + ')' : '');
+  }
+  function closeTrash(){ const o = $('npTrash'); if(o) o.remove(); }
+  function showTrash(){
+    const w = $('npWrap'); if(!w) return;
+    closeTrash();
+    const o = document.createElement('div'); o.id = 'npTrash'; o.className = 'np-trash';
+    o.innerHTML = '<div class="np-trash-box"><div class="np-trash-h"><b>🗑 মোছা পেজ</b><button type="button" class="np-x" data-close="1" title="বন্ধ করুন">×</button></div>' +
+      (trash.length ? trash.slice().reverse().map(t =>
+        '<div class="np-trash-row"><span class="np-pgn">' + esc(t.name) + '</span><small>' + fmtTime(t.at) + '</small>' +
+        '<button type="button" class="np-trash-btn" data-restore="' + esc(t.id) + '">ফিরিয়ে আনুন</button>' +
+        '<button type="button" class="np-trash-btn danger" data-forever="' + esc(t.id) + '">চিরতরে মুছুন</button></div>').join('')
+       : '<p class="np-trash-empty">ট্র্যাশ খালি।</p>') +
+      '<p class="np-trash-note">এখানকার পেজের লেখা মুছে যায়নি। শুধু আপনি "চিরতরে মুছুন" চাপলেই মুছবে।</p></div>';
+    w.appendChild(o);
+    o.addEventListener('click', async ev => {
+      if(ev.target === o || ev.target.closest('[data-close]')){ closeTrash(); return; }
+      const r = ev.target.closest('[data-restore]');
+      const f = ev.target.closest('[data-forever]');
+      if(r){
+        const t = trash.find(x => x.id === r.dataset.restore); if(!t) return;
+        trash = trash.filter(x => x !== t);
+        pages.push({id:t.id, name:t.name});
+        saveMeta(); closeTrash(); renderTabs(); await switchPage(t.id);
+      }else if(f){
+        const t = trash.find(x => x.id === f.dataset.forever); if(!t) return;
+        if(!confirm('"' + t.name + '" পেজের লেখা চিরতরে মুছে যাবে। নিশ্চিত?')) return;
+        trash = trash.filter(x => x !== t);
+        ['draft','draft_ms','dirty','saved_ms'].forEach(k => localStorage.removeItem(lsKey(k, t.id)));
+        if(NOTEPAD_APPS_SCRIPT_URL){
+          fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=save', {method:'POST', body: JSON.stringify({owner: backendOwner(t.id), content:'', plain:'', allowEmpty:true})}).catch(()=>{});
+        }
+        saveMeta(); showTrash(); updateTrashLabel();
+      }
+    });
+  }
+
+  function startRename(pid){
+    const el = document.querySelector('#npTabs .np-pg[data-pg="' + pid + '"] .np-pgn'); if(!el) return;
+    const p = pages.find(x => x.id === pid); if(!p) return;
+    const inp = document.createElement('input');
+    inp.value = p.name; inp.maxLength = 40;
+    el.replaceWith(inp); inp.focus(); inp.select();
+    let done = false;
+    const finish = ok => {
+      if(done) return; done = true;
+      const v = inp.value.trim();
+      if(ok && v && v !== p.name){ p.name = v.slice(0, 40); saveMeta(); }
+      renderTabs();
+    };
+    inp.addEventListener('keydown', e => { e.stopPropagation(); if(e.key === 'Enter') finish(true); else if(e.key === 'Escape') finish(false); });
+    inp.addEventListener('blur', () => finish(true));
+    inp.addEventListener('click', e => e.stopPropagation());
   }
 
   /* ---------- SAVE ---------- */
+  async function keepConflictCopy(content, ms){
+    const id = 'p' + Date.now().toString(36) + 'c';
+    const d = new Date(ms || Date.now()), p2 = n => String(n).padStart(2,'0');
+    const name = 'অন্য কপি ' + p2(d.getDate()) + '/' + p2(d.getMonth()+1) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+    const plain = new DOMParser().parseFromString('<div>'+content+'</div>','text/html').body.textContent || '';
+    const res = await fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=save', {method:'POST', body: JSON.stringify({owner: backendOwner(id), content: content, plain: plain})});
+    const j = await res.json();
+    if(!j || j.ok !== true) throw new Error('অন্য কপি রাখা যায়নি, তাই Save থামানো হয়েছে');
+    pages.push({id:id, name:name});
+    saveMeta(); renderTabs();
+    return name;
+  }
+
   async function saveNow(manual){
     clearTimeout(tDelay);
     const ed = $('npEditor'); if(!ed || !loaded) return;
@@ -22192,32 +22455,51 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
     if(saving){ queued = true; return; }
     if(!dirty && !manual){ return; }
 
+    const pid = cur;
     const html = ed.innerHTML;
-    if(html.length > MAX_LEN){ setStatus('error','Note অনেক বড় — ' + MAX_LEN + ' অক্ষরের মধ্যে রাখুন'); return; }
+    if(html.length > MAX_LEN){ setStatus('error','পেজ অনেক বড় — ' + MAX_LEN + ' অক্ষরের মধ্যে রাখুন (নতুন পেজ খুলুন)'); return; }
     const myVersion = version;
     saving = true; queued = false;
     setStatus('saving','Saving...');
     const btn = $('npSaveBtn'); if(btn){ btn.disabled = true; }
     try{
+      /* Save-er age server-er lekha check: onno jaygay notun lekha thakle seta alada page-e rekhe dei, kichu overwrite hoy na */
+      let conflictName = '';
+      if(lastSavedMs === 0 || Date.now() - lastVerifiedMs > 60000){
+        let s = null;
+        try{
+          const r = await fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=get&owner=' + encodeURIComponent(backendOwner(pid)) + '&_=' + Date.now());
+          s = await r.json();
+        }catch(e){ s = null; }
+        if(!s || s.ok !== true){
+          if(lastSavedMs === 0) throw new Error('সার্ভারের লেখা যাচাই করা যায়নি — পুরোনো লেখা বাঁচাতে Save থামানো হয়েছে');
+        }else{
+          lastVerifiedMs = Date.now();
+          const sMs = Number(s.updatedMs || 0);
+          if(s.exists && s.content && sMs > lastSavedMs + 2000 && s.content !== html){
+            conflictName = await keepConflictCopy(s.content, sMs);
+          }
+        }
+      }
+      const blank = ed.innerText.replace(/\u200B/g,'').trim() === '';
       const res = await fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=save', {
         method:'POST',
-        body: JSON.stringify({ owner: owner, content: html, plain: ed.innerText.replace(/\u200B/g,'') })
+        body: JSON.stringify({ owner: backendOwner(pid), content: html, plain: ed.innerText.replace(/\u200B/g,''), allowEmpty: blank })
       });
       const j = await res.json();
       if(!j || j.ok !== true) throw new Error((j && j.error) || 'Save failed');
-      lastSavedMs = j.savedMs || Date.now();
-      savedVersion = myVersion;
-      localStorage.setItem(lsKey('saved_ms'), String(lastSavedMs));
-      if(version === myVersion){
-        dirty = false; localStorage.removeItem(lsKey('dirty'));
-        setStatus('saved', savedLabel());
-      }else{
+      lastSavedMs = j.savedMs || Date.now(); lastVerifiedMs = Date.now();
+      localStorage.setItem(lsKey('saved_ms', pid), String(lastSavedMs));
+      if(version === myVersion && cur === pid){
+        dirty = false; localStorage.removeItem(lsKey('dirty', pid));
+        setStatus('saved', savedLabel() + (conflictName ? ' · অন্য ডিভাইসের লেখা "' + esc(conflictName) + '" পেজে রাখা হয়েছে' : ''));
+      }else if(cur === pid){
         setStatus('unsaved','নতুন লেখা — Save হচ্ছে...'); queued = true;
       }
     }catch(e){
       console.error('Notepad save error', e);
-      setStatus('error','Save হয়নি — ' + (e.message || 'network error') + ' (আবার চেষ্টা হবে)');
-      dirty = true; localStorage.setItem(lsKey('dirty'),'1');
+      setStatus('error','Save হয়নি — ' + (e.message || 'network error') + ' (লেখা এই ব্রাউজারে নিরাপদ, আবার চেষ্টা হবে)');
+      dirty = true; localStorage.setItem(lsKey('dirty', pid),'1');
     }finally{
       saving = false;
       if(btn){ btn.disabled = false; }
@@ -22227,7 +22509,7 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
 
   function onEdit(){
     version++; dirty = true;
-    const ed = $('npEditor');
+    const ed = $('npEditor'); if(!ed) return;
     try{
       localStorage.setItem(lsKey('draft'), ed.innerHTML);
       localStorage.setItem(lsKey('draft_ms'), String(Date.now()));
@@ -22239,56 +22521,89 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
     tDelay = setTimeout(()=>saveNow(false), AUTOSAVE_DELAY);
   }
 
-  /* ---------- LOAD ---------- */
+  /* ---------- LOAD (current page) ---------- */
   async function loadNote(){
-    const ed = $('npEditor');
+    const ed = $('npEditor'); if(!ed) return;
+    clearTimeout(retryTimer);
     owner = getOwner();
-    loaded = false;
-    const draft = localStorage.getItem(lsKey('draft'));
-    const draftMs = Number(localStorage.getItem(lsKey('draft_ms')) || 0);
-    const wasDirty = localStorage.getItem(lsKey('dirty')) === '1';
+    loaded = false; dirty = false; queued = false; version++;
+    const pid = cur;
+    const draft = localStorage.getItem(lsKey('draft', pid));
+    const draftMs = Number(localStorage.getItem(lsKey('draft_ms', pid)) || 0);
+    const wasDirty = localStorage.getItem(lsKey('dirty', pid)) === '1';
 
     if(!NOTEPAD_APPS_SCRIPT_URL){
       $('npSetup').style.display = 'block';
       ed.innerHTML = sanitize(draft || '');
       loaded = true; updateCounts();
+      ed.setAttribute('contenteditable','true');
       setStatus('error','Server যুক্ত নয় (শুধু এই ব্রাউজারে সেভ)');
       return;
     }
     $('npSetup').style.display = 'none';
-    setStatus('saving','Loading notepad...');
+    setStatus('saving','Loading ' + esc(curPage().name) + '...');
     ed.setAttribute('contenteditable','false');
     try{
-      const res = await fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=get&owner=' + encodeURIComponent(owner) + '&_=' + Date.now());
+      const res = await fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=get&owner=' + encodeURIComponent(backendOwner(pid)) + '&_=' + Date.now());
       const j = await res.json();
       if(!j || j.ok !== true) throw new Error((j && j.error) || 'Load failed');
+      if(pid !== cur) return;
       const serverMs = Number(j.updatedMs || 0);
-      lastSavedMs = serverMs;
+      lastSavedMs = serverMs; lastVerifiedMs = Date.now();
       if(wasDirty && draft != null && draftMs > serverMs){
         ed.innerHTML = sanitize(draft); loaded = true; dirty = true; version++;
         setStatus('unsaved','আগের Unsaved লেখা ফিরে এসেছে — Save হচ্ছে...');
         setTimeout(()=>saveNow(true), 400);
       }else{
         ed.innerHTML = sanitize(j.content || '');
-        loaded = true; dirty = false; localStorage.removeItem(lsKey('dirty'));
-        setStatus(j.exists ? 'saved' : 'unsaved', j.exists ? savedLabel() : 'নতুন notepad — লিখতে শুরু করুন');
+        loaded = true; dirty = false; localStorage.removeItem(lsKey('dirty', pid));
+        setStatus(j.exists ? 'saved' : 'unsaved', j.exists ? savedLabel() : 'নতুন পেজ — লিখতে শুরু করুন');
       }
     }catch(e){
       console.error('Notepad load error', e);
-      ed.innerHTML = sanitize(draft || '');
-      loaded = true;
-      setStatus('error','Load হয়নি — ' + (e.message || 'network'));
-      if(draft){ dirty = true; }
+      if(pid !== cur) return;
+      lastSavedMs = 0;
+      if(draft){
+        /* browser-er lekha dekhai; server-er lekha jachai na kore Save hobe na (save-er age check hoy) */
+        ed.innerHTML = sanitize(draft); loaded = true; dirty = true;
+        setStatus('error','Load হয়নি — এই ব্রাউজারের লেখা দেখানো হচ্ছে। সার্ভারের লেখা যাচাই না করে Save হবে না');
+      }else{
+        /* kichu na dekhiye khali editor-e lekhar sujog dilei server-er lekha overwrite hoye jeto — tai lock */
+        ed.innerHTML = ''; loaded = false;
+        setStatus('error','Load হয়নি — আপনার লেখা সার্ভারে নিরাপদ আছে, Save বন্ধ রাখা হয়েছে <button type="button" class="np-retry">↻ আবার চেষ্টা</button>');
+        retryTimer = setTimeout(()=>{ if(!loaded && pid === cur) loadNote(); }, 8000);
+      }
     }finally{
-      ed.setAttribute('contenteditable','true');
+      if(loaded){ ed.setAttribute('contenteditable','true'); try{ ed.focus(); }catch(e){} }
       updateCounts();
-      try{ ed.focus(); }catch(e){}
     }
   }
 
+  /* onno device/tab theke notun lekha thakle (ar ekhane kichu likhi ni), chupchap notun ta dekhai — purano diye overwrite hoy na */
+  async function refreshIfStale(){
+    if(!NOTEPAD_APPS_SCRIPT_URL || !loaded || dirty || saving || busy || Date.now() - lastStaleCheck < 15000) return;
+    lastStaleCheck = Date.now();
+    const pid = cur;
+    try{
+      const r = await fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=get&owner=' + encodeURIComponent(backendOwner(pid)) + '&_=' + Date.now());
+      const s = await r.json();
+      if(s && s.ok === true && s.exists && pid === cur && !dirty && !saving && Number(s.updatedMs || 0) > lastSavedMs + 2000) await loadNote();
+    }catch(e){}
+  }
+
   /* ---------- FORMATTING ---------- */
+  function restoreSel(){
+    const ed = $('npEditor'); if(!ed) return false;
+    ed.focus();
+    const sel = window.getSelection();
+    if(savedRange && ed.contains(savedRange.commonAncestorContainer)){
+      sel.removeAllRanges(); sel.addRange(savedRange);
+    }
+    return true;
+  }
   function wrapSelection(prop, val){
-    const ed = $('npEditor'); ed.focus();
+    if(!restoreSel()) return;
+    const ed = $('npEditor');
     const sel = window.getSelection(); if(!sel.rangeCount) return;
     const range = sel.getRangeAt(0);
     if(!ed.contains(range.commonAncestorContainer)) return;
@@ -22300,7 +22615,6 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
       sel.removeAllRanges(); sel.addRange(r);
     }else{
       const frag = range.extractContents();
-      // purane same-property span gulo remove kore nei
       frag.querySelectorAll && frag.querySelectorAll('span').forEach(s=>{ if(s.style[prop]) s.style[prop] = ''; });
       span.appendChild(frag); range.insertNode(span);
       const r = document.createRange(); r.selectNodeContents(span);
@@ -22308,12 +22622,24 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
     }
     onEdit();
   }
-  function cmd(c, v){ $('npEditor').focus(); document.execCommand(c, false, v||null); onEdit(); refreshToolbar(); }
+  /* text color / highlight — execCommand (selection thik thake) */
+  function applyColor(kind, color){
+    if(!restoreSel()) return;
+    try{ document.execCommand('styleWithCSS', false, true); }catch(e){}
+    if(kind === 'text'){
+      document.execCommand('foreColor', false, color);
+      const bar = $('npColBar'); if(bar) bar.style.background = color;
+    }else{
+      document.execCommand('hiliteColor', false, color);
+    }
+    onEdit(); refreshToolbar();
+  }
+  function cmd(c, v){ restoreSel(); document.execCommand(c, false, v||null); onEdit(); refreshToolbar(); }
 
   function refreshToolbar(){
     const ed = $('npEditor'); if(!ed) return;
     ['bold','italic','underline','strikeThrough'].forEach(c=>{
-      const b = document.querySelector('#panel-NOTEPAD [data-np-cmd="'+c+'"]');
+      const b = document.querySelector('#npWrap [data-np-cmd="'+c+'"]');
       if(b){ let on = false; try{ on = document.queryCommandState(c); }catch(e){} b.classList.toggle('on', !!on); }
     });
     const sel = window.getSelection();
@@ -22325,14 +22651,16 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
         const sz = $('npSize'); if(sz){ if(![...sz.options].some(o=>o.value==size)){ const o=document.createElement('option'); o.value=size; o.textContent=size; sz.appendChild(o); } sz.value = String(size); }
         const ff = cs.fontFamily.split(',')[0].replace(/["']/g,'').trim();
         const fs = $('npFont'); if(fs){ const m=[...fs.options].find(o=>o.value.split(',')[0].replace(/["']/g,'').trim().toLowerCase()===ff.toLowerCase()); if(m) fs.value = m.value; }
+        const bar = $('npColBar'); if(bar) bar.style.background = cs.color;
       }
     }
   }
 
   function setZoom(z){
     zoom = Math.max(50, Math.min(300, z));
-    const ed = $('npEditor'); ed.style.zoom = (zoom/100);
-    $('npZoom').textContent = zoom + '%';
+    const ed = $('npEditor'); if(!ed) return;
+    ed.style.zoom = (zoom/100);
+    const zl = $('npZoom'); if(zl) zl.textContent = zoom + '%';
   }
 
   function download(name, text, type){
@@ -22341,51 +22669,151 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
     a.download = name; document.body.appendChild(a); a.click();
     setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
+  const fileBase = () => 'notepad_' + owner.replace(/\s+/g,'_') + '_' + curPage().name.replace(/[^\w\u0980-\u09FF-]+/g,'_');
+
+  function closeMenus(){
+    document.querySelectorAll('#npWrap .np-menu').forEach(m=>m.classList.remove('open'));
+    document.querySelectorAll('#npWrap .np-pal').forEach(m=>m.classList.remove('open'));
+  }
 
   function menuAction(a){
     const ed = $('npEditor');
-    document.querySelectorAll('#panel-NOTEPAD .np-menu').forEach(m=>m.classList.remove('open'));
+    closeMenus();
     if(a==='save'){ saveNow(true); }
-    else if(a==='new'){
-      if(ed.innerText.trim() && !confirm('পুরো লেখা মুছে নতুন খালি notepad করবেন? (সেভ করা লেখাও খালি হয়ে যাবে)')) return;
+    else if(a==='new'){ addPage(); }
+    else if(a==='rename'){ startRename(cur); }
+    else if(a==='trash'){ showTrash(); }
+    else if(a==='clear'){
+      if(ed.innerText.trim() && !confirm('এই পেজের পুরো লেখা মুছে খালি করবেন? (অন্য পেজ ঠিক থাকবে)')) return;
       ed.innerHTML=''; onEdit(); saveNow(true);
     }
-    else if(a==='txt'){ download('notepad_'+owner.replace(/\s+/g,'_')+'.txt', ed.innerText.replace(/\u200B/g,'')); }
-    else if(a==='html'){ download('notepad_'+owner.replace(/\s+/g,'_')+'.html','<meta charset="utf-8">'+ed.innerHTML,'text/html;charset=utf-8'); }
+    else if(a==='txt'){ download(fileBase()+'.txt', ed.innerText.replace(/\u200B/g,'')); }
+    else if(a==='html'){ download(fileBase()+'.html','<meta charset="utf-8">'+ed.innerHTML,'text/html;charset=utf-8'); }
     else if(a==='print'){
       const w = window.open('','_blank'); if(!w) return;
       w.document.write('<meta charset="utf-8"><title>Notepad</title><body style="font-family:Segoe UI,Arial;white-space:pre-wrap">'+ed.innerHTML+'</body>'); w.document.close(); w.focus(); w.print();
     }
     else if(a==='undo'){ cmd('undo'); } else if(a==='redo'){ cmd('redo'); }
-    else if(a==='cut'){ cmd('cut'); } else if(a==='copy'){ ed.focus(); document.execCommand('copy'); }
+    else if(a==='cut'){ cmd('cut'); } else if(a==='copy'){ restoreSel(); document.execCommand('copy'); }
     else if(a==='selall'){ ed.focus(); document.execCommand('selectAll'); }
     else if(a==='clearfmt'){ cmd('removeFormat'); }
-    else if(a==='datetime'){ ed.focus(); document.execCommand('insertText', false, new Date().toLocaleString('en-IN')); onEdit(); }
+    else if(a==='datetime'){ restoreSel(); document.execCommand('insertText', false, new Date().toLocaleString('en-IN')); onEdit(); }
     else if(a==='zin'){ setZoom(zoom+10); } else if(a==='zout'){ setZoom(zoom-10); } else if(a==='zreset'){ setZoom(100); }
     else if(a==='wrap'){ ed.classList.toggle('nowrap'); }
     else if(a==='statusbar'){ const f=$('npFoot'); f.style.display = f.style.display==='none' ? '' : 'none'; }
   }
 
+  /* ---------- POPUP (floating, draggable window) ---------- */
+  function geomLoad(){ try{ return JSON.parse(localStorage.getItem('qa_np_float') || 'null') || {}; }catch(e){ return {}; } }
+  function geomSave(){
+    const w = $('npWrap'); if(!w || !popped) return;
+    const r = w.getBoundingClientRect();
+    try{ localStorage.setItem('qa_np_float', JSON.stringify({l:Math.round(r.left), t:Math.round(r.top), w:Math.round(r.width), h:Math.round(r.height)})); }catch(e){}
+  }
+  function clampGeom(w){
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const r = w.getBoundingClientRect();
+    const W = Math.min(r.width, vw - 16), H = Math.min(r.height, vh - 16);
+    w.style.width = W + 'px'; w.style.height = H + 'px';
+    w.style.left = Math.min(Math.max(8, r.left), Math.max(8, vw - W - 8)) + 'px';
+    w.style.top  = Math.min(Math.max(8, r.top),  Math.max(8, vh - 56)) + 'px';
+  }
+  function applyGeom(w){
+    const g = geomLoad(), vw = window.innerWidth, vh = window.innerHeight;
+    const W = Math.min(g.w || 720, vw - 16), H = Math.min(g.h || 560, vh - 16);
+    w.style.width = W + 'px'; w.style.height = H + 'px';
+    w.style.left = (g.l != null ? g.l : vw - W - 24) + 'px';
+    w.style.top  = (g.t != null ? g.t : 72) + 'px';
+    clampGeom(w);
+  }
+  function bindDrag(w){
+    const h = w.querySelector('.np-head');
+    let drag = false, sx = 0, sy = 0, ox = 0, oy = 0;
+    h.addEventListener('pointerdown', e=>{
+      if(!popped || e.button > 0 || e.target.closest('button')) return;
+      drag = true; const r = w.getBoundingClientRect(); ox = r.left; oy = r.top; sx = e.clientX; sy = e.clientY;
+      try{ h.setPointerCapture(e.pointerId); }catch(_){}
+      w.classList.add('dragging'); e.preventDefault();
+    });
+    h.addEventListener('pointermove', e=>{
+      if(!drag) return;
+      const r = w.getBoundingClientRect();
+      const L = Math.min(Math.max(80 - r.width, ox + e.clientX - sx), window.innerWidth - 80);
+      const T = Math.min(Math.max(0, oy + e.clientY - sy), window.innerHeight - 44);
+      w.style.left = L + 'px'; w.style.top = T + 'px';
+    });
+    const end = e=>{ if(!drag) return; drag = false; w.classList.remove('dragging'); try{ h.releasePointerCapture(e.pointerId); }catch(_){} geomSave(); };
+    h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
+    if(window.ResizeObserver){
+      new ResizeObserver(()=>{ if(!popped) return; clearTimeout(geomTimer); geomTimer = setTimeout(geomSave, 300); }).observe(w);
+    }
+  }
+  function placeholderHtml(){
+    return '<div class="np-ph"><div class="np-ph-ic">📒</div><b>Notepad এখন পপআপে খোলা আছে</b>' +
+      '<p>বাম মেনু থেকে যেকোনো পেজে যান — notepad ভেসে থাকবে। উপরের বার ধরে টেনে যেখানে খুশি সরান, কোণা ধরে বড়-ছোট করুন।</p>' +
+      '<button type="button" id="npDockBtn">⇱ আবার এখানে ফিরিয়ে আনুন</button></div>';
+  }
+  function popOut(){
+    const w = $('npWrap'); if(!w || popped) return;
+    popped = true;
+    document.body.appendChild(w);
+    w.classList.add('np-floating');
+    applyGeom(w);
+    const b = $('npPop'); if(b){ b.innerHTML = '⇱ <span>Dock</span>'; b.title = 'আবার মূল পেজে ফিরিয়ে আনুন'; }
+    const panel = $('panel-NOTEPAD');
+    if(panel){ panel.innerHTML = placeholderHtml(); const d = $('npDockBtn'); if(d) d.onclick = dock; }
+    try{ $('npEditor').focus(); }catch(e){}
+  }
+  async function dock(){
+    const w = $('npWrap'); if(!w || !popped) return;
+    await settle();
+    popped = false; w.remove();
+    if(typeof switchTab === 'function') switchTab('NOTEPAD'); else window.renderNotepadPanel();
+  }
+  window.npClosePopup = function(){
+    if(!popped) return;
+    popped = false;
+    const w = $('npWrap');
+    Promise.resolve(dirty ? saveNow(false) : null).finally(()=>{ if(w) w.remove(); });
+  };
+
   /* ---------- RENDER ---------- */
+  function buildPalette(id, label, colors, kind, withNone){
+    return '<div class="np-pal" id="' + id + '"><div class="np-pal-label">' + label + '</div>' +
+      (withNone ? '<button type="button" class="np-sw none" data-hl="transparent" title="হাইলাইট বাদ দিন"></button>' : '') +
+      colors.map(c => '<button type="button" class="np-sw" data-' + kind + '="' + c + '" style="background:' + c + '" title="' + c + '"></button>').join('') +
+      '<label class="np-sw custom" title="নিজের পছন্দের রং"><input type="color" data-custom="' + kind + '" value="#1c1c1c"></label></div>';
+  }
+
   window.renderNotepadPanel = function(){
     const panel = $('panel-NOTEPAD'); if(!panel) return;
+    if(popped && $('npWrap')){
+      panel.innerHTML = placeholderHtml();
+      const d = $('npDockBtn'); if(d) d.onclick = dock;
+      return;
+    }
+    popped = false;
     owner = getOwner();
     panel.innerHTML = `
-    <div class="np-wrap">
-      <div class="np-title"><span>📒</span><b>Online notepad</b><span class="np-owner" id="npOwner">${escapeHtml(owner)}</span></div>
+    <div class="np-wrap" id="npWrap">
+      <div class="np-head" id="npHead"><span class="np-logo">📒</span><b>Online notepad</b><span class="np-owner" id="npOwner">${esc(owner)}</span>
+        <button type="button" class="np-pop" id="npPop" title="Notepad ভাসমান উইন্ডোতে খুলুন — টেনে সরানো যাবে, অন্য পেজেও থাকবে">⧉ <span>Popup</span></button></div>
       <div class="np-menubar" id="npMenubar">
         <div class="np-menu"><button type="button">File</button><div class="np-drop">
-          <button data-np-act="new">New (খালি করুন)<span>Ctrl+N</span></button>
+          <button data-np-act="new">নতুন পেজ (New page)</button>
           <button data-np-act="save">Save<span>Ctrl+S</span></button>
+          <button data-np-act="rename">পেজের নাম বদলান</button>
+          <button data-np-act="clear">এই পেজ খালি করুন</button>
+          <button data-np-act="trash" id="npTrashItem">🗑 মোছা পেজ</button>
           <hr><button data-np-act="txt">Download (.txt)</button><button data-np-act="html">Download (.html)</button>
-          <hr><button data-np-act="print">Print<span>Ctrl+P</span></button></div></div>
+          <hr><button data-np-act="print">Print</button></div></div>
         <div class="np-menu"><button type="button">Edit</button><div class="np-drop">
           <button data-np-act="undo">Undo<span>Ctrl+Z</span></button><button data-np-act="redo">Redo<span>Ctrl+Y</span></button><hr>
           <button data-np-act="cut">Cut<span>Ctrl+X</span></button><button data-np-act="copy">Copy<span>Ctrl+C</span></button>
           <button data-np-act="selall">Select all<span>Ctrl+A</span></button><hr>
           <button data-np-act="datetime">Time / Date</button><button data-np-act="clearfmt">Clear formatting</button></div></div>
         <div class="np-menu"><button type="button">View</button><div class="np-drop">
-          <button data-np-act="zin">Zoom in<span>Ctrl +</span></button><button data-np-act="zout">Zoom out<span>Ctrl -</span></button>
+          <button data-np-act="zin">Zoom in</button><button data-np-act="zout">Zoom out</button>
           <button data-np-act="zreset">Restore default zoom</button><hr>
           <button data-np-act="wrap">Word wrap on / off</button><button data-np-act="statusbar">Status bar show / hide</button></div></div>
       </div>
@@ -22405,7 +22833,9 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
         <button type="button" class="np-tb" data-np-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
         <button type="button" class="np-tb" data-np-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
         <span class="np-sep"></span>
-        <input type="color" id="npColor" value="#1c1c1c" title="Text color">
+        <div class="np-colwrap"><button type="button" class="np-tb" id="npColBtn" title="লেখার রং (Text color)"><span class="np-A">A</span><i class="bar" id="npColBar"></i></button>${buildPalette('npPalText','লেখার রং',TEXT_COLORS,'tc',false)}</div>
+        <div class="np-colwrap"><button type="button" class="np-tb" id="npHlBtn" title="হাইলাইট (Highlight)">🖍</button>${buildPalette('npPalHl','হাইলাইট',HILITES,'hl',true)}</div>
+        <span class="np-sep"></span>
         <button type="button" class="np-tb" data-np-cmd="insertUnorderedList" title="Bullet list">•≡</button>
         <button type="button" class="np-tb" data-np-cmd="insertOrderedList" title="Numbered list">1≡</button>
         <div class="np-save">
@@ -22414,10 +22844,12 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
         </div>
       </div>
       <div class="np-setup" id="npSetup">⚠️ Notepad এখনো সংযুক্ত করা হয়নি। ততক্ষণ লেখা শুধু এই ব্রাউজারে জমা থাকবে।</div>
+      <div class="np-tabs" id="npTabs"></div>
       <div class="np-pagewrap"><div class="np-editor" id="npEditor" contenteditable="true" spellcheck="false" data-ph="এখানে লিখুন... (নিজে থেকে Save হবে)"></div></div>
-      <div class="np-foot" id="npFoot"><span id="npCounts"></span><span class="np-grow">Zoom: <span id="npZoom">100%</span></span><span>Auto-save: ON</span></div>
+      <div class="np-foot" id="npFoot"><span id="npCounts"></span><span id="npPageInfo"></span><span class="np-grow">Zoom: <span id="npZoom">100%</span></span><span>Auto-save: ON</span></div>
     </div>`;
 
+    const wrap = $('npWrap');
     const ed = $('npEditor');
     ed.addEventListener('input', onEdit);
     ed.addEventListener('keyup', refreshToolbar);
@@ -22432,34 +22864,86 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
       if((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase()==='s'){ ev.preventDefault(); saveNow(true); }
     });
     $('npSaveBtn').addEventListener('click', ()=>saveNow(true));
+    $('npStatus').addEventListener('click', ev=>{ if(ev.target.closest('.np-retry')) loadNote(); });
+    $('npPop').addEventListener('click', ()=>{ if(popped) dock(); else popOut(); });
     $('npFont').addEventListener('change', e=>wrapSelection('fontFamily', e.target.value));
     $('npSize').addEventListener('change', e=>wrapSelection('fontSize', e.target.value + 'px'));
-    $('npColor').addEventListener('input', e=>wrapSelection('color', e.target.value));
-    panel.querySelectorAll('[data-np-cmd]').forEach(b=>{
+
+    /* page tabs */
+    const tabs = $('npTabs');
+    tabs.addEventListener('click', ev=>{
+      const x = ev.target.closest('.np-x');
+      if(x){ ev.stopPropagation(); deletePage(x.dataset.x); return; }
+      if(ev.target.closest('.np-add')){ addPage(); return; }
+      if(ev.target.tagName === 'INPUT') return;
+      const pg = ev.target.closest('.np-pg'); if(pg) switchPage(pg.dataset.pg);
+    });
+    tabs.addEventListener('dblclick', ev=>{
+      const pg = ev.target.closest('.np-pg'); if(pg && pg.dataset.pg === cur && ev.target.tagName !== 'INPUT') startRename(cur);
+    });
+
+    /* colour palettes — mousedown preventDefault => selection kept */
+    const togglePal = (palId, ev)=>{
+      ev.stopPropagation();
+      const p = $(palId), was = p.classList.contains('open');
+      closeMenus(); if(!was) p.classList.add('open');
+    };
+    $('npColBtn').addEventListener('mousedown', ev=>ev.preventDefault());
+    $('npHlBtn').addEventListener('mousedown', ev=>ev.preventDefault());
+    $('npColBtn').addEventListener('click', ev=>togglePal('npPalText', ev));
+    $('npHlBtn').addEventListener('click', ev=>togglePal('npPalHl', ev));
+    wrap.querySelectorAll('.np-pal').forEach(p=>{
+      p.addEventListener('click', ev=>ev.stopPropagation());
+      p.querySelectorAll('button.np-sw').forEach(b=>{
+        b.addEventListener('mousedown', ev=>ev.preventDefault());
+        b.addEventListener('click', ()=>{
+          if(b.dataset.tc) applyColor('text', b.dataset.tc); else applyColor('hl', b.dataset.hl);
+          p.classList.remove('open');
+        });
+      });
+      p.querySelectorAll('input[data-custom]').forEach(inp=>{
+        inp.addEventListener('change', ()=>{
+          applyColor(inp.dataset.custom === 'tc' ? 'text' : 'hl', inp.value);
+          p.classList.remove('open');
+        });
+      });
+    });
+
+    wrap.querySelectorAll('[data-np-cmd]').forEach(b=>{
       b.addEventListener('mousedown', ev=>ev.preventDefault());
       b.addEventListener('click', ()=>cmd(b.dataset.npCmd));
     });
-    panel.querySelectorAll('.np-menu>button').forEach(b=>{
+    wrap.querySelectorAll('.np-menu>button').forEach(b=>{
       b.addEventListener('click', ev=>{
         ev.stopPropagation();
         const m = b.parentElement, was = m.classList.contains('open');
-        panel.querySelectorAll('.np-menu').forEach(x=>x.classList.remove('open'));
+        closeMenus();
         if(!was) m.classList.add('open');
       });
     });
-    panel.querySelectorAll('[data-np-act]').forEach(b=>{
+    wrap.querySelectorAll('[data-np-act]').forEach(b=>{
       b.addEventListener('mousedown', ev=>ev.preventDefault());
       b.addEventListener('click', ()=>menuAction(b.dataset.npAct));
     });
+    bindDrag(wrap);
 
     if(!hooksReady){
       hooksReady = true;
-      document.addEventListener('click', ()=>document.querySelectorAll('#panel-NOTEPAD .np-menu').forEach(m=>m.classList.remove('open')));
-      document.addEventListener('selectionchange', ()=>{ if(document.activeElement && document.activeElement.id==='npEditor') refreshToolbar(); });
-      document.addEventListener('visibilitychange', ()=>{ if(document.hidden && dirty) saveNow(false); });
+      document.addEventListener('click', ()=>closeMenus());
+      document.addEventListener('selectionchange', ()=>{
+        const e = $('npEditor'); if(!e) return;
+        const s = window.getSelection();
+        if(s && s.rangeCount && e.contains(s.anchorNode)){
+          savedRange = s.getRangeAt(0).cloneRange();
+          if(document.activeElement && document.activeElement.id==='npEditor') refreshToolbar();
+        }
+      });
+      document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ if(dirty) saveNow(false); } else refreshIfStale(); });
+      window.addEventListener('focus', refreshIfStale);
+      window.addEventListener('resize', ()=>{ const w = $('npWrap'); if(popped && w) clampGeom(w); });
       window.addEventListener('pagehide', ()=>{
         if(dirty && loaded && NOTEPAD_APPS_SCRIPT_URL && $('npEditor')){
-          try{ fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=save', {method:'POST', keepalive:true, body: JSON.stringify({owner:owner, content:$('npEditor').innerHTML, plain:$('npEditor').innerText})}); }catch(e){}
+          try{ fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=save', {method:'POST', keepalive:true, body: JSON.stringify({owner:backendOwner(cur), content:$('npEditor').innerHTML, plain:$('npEditor').innerText})}); }catch(e){}
         }
       });
       window.addEventListener('beforeunload', ev=>{ if(dirty){ ev.preventDefault(); ev.returnValue=''; } });
@@ -22467,12 +22951,20 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
     clearInterval(tInterval);
     tInterval = setInterval(()=>{ if(dirty && !saving) saveNow(false); }, AUTOSAVE_EVERY);
     setZoom(100);
-    loadNote();
+
+    (async function init(){
+      readLocalMeta(); renderTabs();
+      setStatus('saving','Loading notepad...');
+      await loadMetaFromServer();
+      renderTabs();
+      await loadNote();
+    })();
   };
 
   /* tab chhare gele (onno tab-e gele) pending save kore dei */
   window.npFlushIfLeaving = function(){ if(dirty && !saving) saveNow(false); };
   window.npIsDirty = function(){ return !!(dirty || saving); };
+  window.npIsPopped = function(){ return !!popped; };
 })();
 </script>
 
