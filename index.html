@@ -5436,6 +5436,11 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
 
 
       <div class="nav-section">
+      <div class="nav-label">NOTEPAD</div>
+      <div class="nav-item" data-tab="NOTEPAD" onclick="switchTab('NOTEPAD')"><span class="dot"></span>📒 Online notepad</div>
+      </div>
+
+      <div class="nav-section">
       <div class="nav-label">All Dashboards</div>
       <div class="nav-item dashboard-tab" data-tab="DASH-CATV" onclick="switchTab('DASH-CATV')"><span class="dot"></span>CATV Dashboard (Month wise)</div>
       <div class="nav-item dashboard-tab" data-tab="DASH-BBTECH" onclick="switchTab('DASH-BBTECH')"><span class="dot"></span>BB Tech Dashboard (Month wise)</div>
@@ -5663,6 +5668,7 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
       <!-- LOB Wise Data — one Google Sheet, three LOB tabs (CATV / BB Tech Support / BB Renewal), each with a chart -->
       <div class="panel" id="panel-LOBDATA"></div>
       <div class="panel" id="panel-LEADFORM"></div>
+      <div class="panel" id="panel-NOTEPAD"></div>
       <!-- Updates panel -->
       
 <!-- ============================================================
@@ -10861,6 +10867,7 @@ async function switchTab(tab){
   if(String(tab).indexOf('QX_') === 0 && currentRole !== 'admin'){ tab = 'HOME'; }
   if(tab === 'ADVANCEDREPORTS' && currentRole !== 'admin'){ tab = 'HOME'; }
   if(tab === 'AGENTREPORT' && currentRole !== 'agent' && currentRole !== 'admin'){ tab = 'HOME'; }
+  if(currentTab === 'NOTEPAD' && tab !== 'NOTEPAD' && typeof npFlushIfLeaving === 'function'){ npFlushIfLeaving(); }
   currentTab = tab;
   if(leadFormAutoLogoutPaused && tab !== 'LEADFORM' && typeof scheduleFixedAutoLogout === 'function'){
     leadFormAutoLogoutPaused = false;
@@ -10909,6 +10916,8 @@ async function switchTab(tab){
       await renderLobDataPanel();
     } else if (tab === 'LEADFORM') {
       renderLeadFormPanel();
+    } else if (tab === 'NOTEPAD') {
+      renderNotepadPanel();
         } else if (tab === 'SQLCONTROL') {
       await sqlCenterRefreshAll();
  } else if (tab === 'HELP') {
@@ -20052,6 +20061,7 @@ doLogout = function(){
       // 📝 Lead Entry Form খোলা থাকা অবস্থায় auto-reload একদম বন্ধ রাখা হচ্ছে —
       // ফর্ম পূরণ করার মাঝখানে কখনোই পেজ নিজে থেকে রিফ্রেশ হয়ে ডাটা মুছে যাবে না।
       if(currentTab === 'LEADFORM'){ return; }
+      if(currentTab === 'NOTEPAD' && typeof npIsDirty === 'function' && npIsDirty()){ return; }
 
       var res = await fetch(API_URL + '?_=' + Date.now(), {
         cache: 'no-store',
@@ -22063,6 +22073,400 @@ window.qxDelMsg = async function(id){
   try{ await qxPost('qxDeleteMessage', { msgId: id }); qxLoadReceipts(); }catch(e){ qToast('Delete failed'); }
 };
 
+})();
+</script>
+
+<!-- ===================== ONLINE NOTEPAD ===================== -->
+<style>
+#panel-NOTEPAD .np-wrap{background:#fbfbfb;color:#1f1f1f;border-radius:12px;border:1px solid #d9dde3;box-shadow:0 8px 30px rgba(0,0,0,.28);overflow:hidden;display:flex;flex-direction:column;min-height:calc(100vh - 150px);font-family:'Segoe UI',system-ui,Arial,sans-serif;}
+#panel-NOTEPAD .np-title{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#f0f2f5;border-bottom:1px solid #e1e4e8;font-size:13px;color:#444;}
+#panel-NOTEPAD .np-title b{font-size:14px;color:#222;}
+#panel-NOTEPAD .np-owner{margin-left:auto;background:#e6eefc;color:#1a4fb4;padding:3px 10px;border-radius:999px;font-weight:600;font-size:12px;}
+#panel-NOTEPAD .np-menubar{display:flex;align-items:center;gap:2px;padding:4px 8px;background:#fbfbfb;border-bottom:1px solid #eceef1;position:relative;flex-wrap:wrap;}
+#panel-NOTEPAD .np-menu{position:relative;}
+#panel-NOTEPAD .np-menu>button{border:0;background:transparent;padding:6px 12px;border-radius:6px;font-size:13.5px;color:#222;cursor:pointer;}
+#panel-NOTEPAD .np-menu>button:hover,#panel-NOTEPAD .np-menu.open>button{background:#e9ecf1;}
+#panel-NOTEPAD .np-drop{display:none;position:absolute;top:100%;left:0;min-width:230px;background:#fff;border:1px solid #d5d9df;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.22);padding:5px;z-index:50;}
+#panel-NOTEPAD .np-menu.open .np-drop{display:block;}
+#panel-NOTEPAD .np-drop button{display:flex;justify-content:space-between;gap:20px;width:100%;border:0;background:transparent;text-align:left;padding:7px 10px;border-radius:5px;font-size:13px;color:#222;cursor:pointer;}
+#panel-NOTEPAD .np-drop button:hover{background:#e9f0fd;}
+#panel-NOTEPAD .np-drop button span{color:#888;font-size:12px;}
+#panel-NOTEPAD .np-drop hr{border:0;border-top:1px solid #e6e8ec;margin:4px 0;}
+#panel-NOTEPAD .np-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 10px;background:#f6f7f9;border-bottom:1px solid #e3e6ea;}
+#panel-NOTEPAD .np-toolbar select,#panel-NOTEPAD .np-toolbar input[type=color]{height:30px;border:1px solid #cfd4db;border-radius:6px;background:#fff;color:#222;font-size:13px;padding:0 6px;}
+#panel-NOTEPAD .np-toolbar input[type=color]{width:34px;padding:2px;cursor:pointer;}
+#panel-NOTEPAD .np-tb{width:32px;height:30px;border:1px solid transparent;border-radius:6px;background:transparent;color:#222;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+#panel-NOTEPAD .np-tb:hover{background:#e5e8ed;}
+#panel-NOTEPAD .np-tb.on{background:#d6e4ff;border-color:#9db9ee;}
+#panel-NOTEPAD .np-sep{width:1px;height:20px;background:#d8dce2;margin:0 4px;}
+#panel-NOTEPAD .np-save{margin-left:auto;display:flex;align-items:center;gap:8px;}
+#panel-NOTEPAD .np-savebtn{height:30px;padding:0 14px;border:0;border-radius:6px;background:#1a73e8;color:#fff;font-weight:600;font-size:13px;cursor:pointer;}
+#panel-NOTEPAD .np-savebtn:hover{background:#1558b8;}
+#panel-NOTEPAD .np-savebtn:disabled{opacity:.6;cursor:default;}
+#panel-NOTEPAD .np-status{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:#eef0f3;color:#555;white-space:nowrap;}
+#panel-NOTEPAD .np-status i{width:9px;height:9px;border-radius:50%;background:#9aa0a6;display:inline-block;}
+#panel-NOTEPAD .np-status.saved{background:#e3f6e8;color:#17803d;}#panel-NOTEPAD .np-status.saved i{background:#22b14c;}
+#panel-NOTEPAD .np-status.saving{background:#fff3d6;color:#9a6700;}#panel-NOTEPAD .np-status.saving i{background:#f0a500;animation:npPulse 1s infinite;}
+#panel-NOTEPAD .np-status.unsaved{background:#fff3d6;color:#9a6700;}#panel-NOTEPAD .np-status.unsaved i{background:#f0a500;}
+#panel-NOTEPAD .np-status.error{background:#fde4e4;color:#b3261e;}#panel-NOTEPAD .np-status.error i{background:#e53935;}
+@keyframes npPulse{0%,100%{opacity:1}50%{opacity:.3}}
+#panel-NOTEPAD .np-setup{display:none;margin:10px;padding:10px 14px;background:#fff4e5;border:1px solid #f5c26b;color:#7a4b00;border-radius:8px;font-size:13px;}
+#panel-NOTEPAD .np-pagewrap{flex:1;background:#fbfbfb;overflow:auto;}
+#panel-NOTEPAD .np-editor{min-height:60vh;padding:22px 28px;outline:none;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.55;color:#1c1c1c;background:#fbfbfb;word-break:break-word;white-space:pre-wrap;transform-origin:top left;}
+#panel-NOTEPAD .np-editor.nowrap{white-space:pre;word-break:normal;overflow-x:auto;}
+#panel-NOTEPAD .np-editor:empty:before{content:attr(data-ph);color:#a0a4aa;pointer-events:none;}
+#panel-NOTEPAD .np-foot{display:flex;gap:18px;align-items:center;padding:5px 14px;background:#f0f2f5;border-top:1px solid #e1e4e8;font-size:12px;color:#555;flex-wrap:wrap;}
+#panel-NOTEPAD .np-foot .np-grow{margin-left:auto;}
+</style>
+<script>
+/* ====== ONLINE NOTEPAD — config ======
+   notepad_Code.gs ke notun Google Sheet-e deploy kore /exec URL ta niche boshan. */
+const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQICLa4fb_FX0stgitpaxihjE9FqzMaBIWTKl6EyGcH-NhAfdprCg_KBJYDXPNt1/exec";
+
+(function(){
+  const AUTOSAVE_DELAY = 2000;   // typing thamar 2 sec por auto-save
+  const AUTOSAVE_EVERY = 15000;  // dirty thakle proti 15 sec-e abar
+  const MAX_LEN = 49000;
+  let owner = '', loaded = false, dirty = false, saving = false, queued = false;
+  let version = 0, savedVersion = 0, tDelay = null, tInterval = null, zoom = 100, lastSavedMs = 0;
+  let hooksReady = false;
+
+  const $ = id => document.getElementById(id);
+  const lsKey = k => 'qa_np_' + k + '_' + owner;
+
+  function getOwner(){
+    let n = '';
+    try{ n = String((typeof empAgentName !== 'undefined' && empAgentName) || localStorage.getItem('qa_emp_name') || '').trim(); }catch(e){}
+    if(!n){
+      if(localStorage.getItem('qa_is_superadmin') === '1') n = 'SUPER ADMIN';
+      else n = 'ADMIN';
+    }
+    return n.replace(/\s+/g,' ').toUpperCase();
+  }
+
+  function sanitize(html){
+    const doc = new DOMParser().parseFromString('<div id="r">'+String(html||'')+'</div>', 'text/html');
+    const root = doc.getElementById('r');
+    root.querySelectorAll('script,style,iframe,object,embed,link,meta,form,input,button,textarea,select,svg,math').forEach(n=>n.remove());
+    root.querySelectorAll('*').forEach(el=>{
+      Array.from(el.attributes).forEach(a=>{
+        const nm = a.name.toLowerCase(), v = String(a.value||'').trim().toLowerCase();
+        if(nm.startsWith('on') || ((nm==='href'||nm==='src'||nm==='xlink:href') && /^(javascript|data|vbscript):/.test(v))) el.removeAttribute(a.name);
+      });
+    });
+    return root.innerHTML;
+  }
+
+  function setStatus(kind, text){
+    const el = $('npStatus'); if(!el) return;
+    el.className = 'np-status ' + kind;
+    el.innerHTML = '<i></i>' + text;
+  }
+  function fmtTime(ms){
+    const d = new Date(ms);
+    const p = n => String(n).padStart(2,'0');
+    return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+  }
+  function savedLabel(){ return lastSavedMs ? 'Google Sheet-e Saved ✓ · ' + fmtTime(lastSavedMs) : 'Saved ✓'; }
+
+  function updateCounts(){
+    const ed = $('npEditor'); if(!ed) return;
+    const t = ed.innerText.replace(/\u200B/g,'');
+    const words = (t.trim().match(/\S+/g) || []).length;
+    const len = ed.innerHTML.length;
+    $('npCounts').textContent = 'অক্ষর: ' + t.replace(/\n/g,'').length + ' · শব্দ: ' + words + ' · সাইজ: ' + len + '/' + MAX_LEN;
+    $('npCounts').style.color = len > MAX_LEN ? '#b3261e' : '';
+  }
+
+  /* ---------- SAVE ---------- */
+  async function saveNow(manual){
+    clearTimeout(tDelay);
+    const ed = $('npEditor'); if(!ed || !loaded) return;
+    if(!NOTEPAD_APPS_SCRIPT_URL){ setStatus('error','Apps Script URL সেট করা নেই'); return; }
+    if(saving){ queued = true; return; }
+    if(!dirty && !manual){ return; }
+
+    const html = ed.innerHTML;
+    if(html.length > MAX_LEN){ setStatus('error','Note অনেক বড় — ' + MAX_LEN + ' অক্ষরের মধ্যে রাখুন'); return; }
+    const myVersion = version;
+    saving = true; queued = false;
+    setStatus('saving','Saving...');
+    const btn = $('npSaveBtn'); if(btn){ btn.disabled = true; }
+    try{
+      const res = await fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=save', {
+        method:'POST',
+        body: JSON.stringify({ owner: owner, content: html, plain: ed.innerText.replace(/\u200B/g,'') })
+      });
+      const j = await res.json();
+      if(!j || j.ok !== true) throw new Error((j && j.error) || 'Save failed');
+      lastSavedMs = j.savedMs || Date.now();
+      savedVersion = myVersion;
+      localStorage.setItem(lsKey('saved_ms'), String(lastSavedMs));
+      if(version === myVersion){
+        dirty = false; localStorage.removeItem(lsKey('dirty'));
+        setStatus('saved', savedLabel());
+      }else{
+        setStatus('unsaved','নতুন লেখা — Save হচ্ছে...'); queued = true;
+      }
+    }catch(e){
+      console.error('Notepad save error', e);
+      setStatus('error','Save হয়নি — ' + (e.message || 'network error') + ' (আবার চেষ্টা হবে)');
+      dirty = true; localStorage.setItem(lsKey('dirty'),'1');
+    }finally{
+      saving = false;
+      if(btn){ btn.disabled = false; }
+      if(queued && dirty){ setTimeout(()=>saveNow(false), 600); }
+    }
+  }
+
+  function onEdit(){
+    version++; dirty = true;
+    const ed = $('npEditor');
+    try{
+      localStorage.setItem(lsKey('draft'), ed.innerHTML);
+      localStorage.setItem(lsKey('draft_ms'), String(Date.now()));
+      localStorage.setItem(lsKey('dirty'),'1');
+    }catch(e){}
+    setStatus('unsaved','Unsaved — লেখা চলছে...');
+    updateCounts();
+    clearTimeout(tDelay);
+    tDelay = setTimeout(()=>saveNow(false), AUTOSAVE_DELAY);
+  }
+
+  /* ---------- LOAD ---------- */
+  async function loadNote(){
+    const ed = $('npEditor');
+    owner = getOwner();
+    loaded = false;
+    const draft = localStorage.getItem(lsKey('draft'));
+    const draftMs = Number(localStorage.getItem(lsKey('draft_ms')) || 0);
+    const wasDirty = localStorage.getItem(lsKey('dirty')) === '1';
+
+    if(!NOTEPAD_APPS_SCRIPT_URL){
+      $('npSetup').style.display = 'block';
+      ed.innerHTML = sanitize(draft || '');
+      loaded = true; updateCounts();
+      setStatus('error','Google Sheet যুক্ত নয় (শুধু এই ব্রাউজারে সেভ)');
+      return;
+    }
+    $('npSetup').style.display = 'none';
+    setStatus('saving','Loading notepad...');
+    ed.setAttribute('contenteditable','false');
+    try{
+      const res = await fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=get&owner=' + encodeURIComponent(owner) + '&_=' + Date.now());
+      const j = await res.json();
+      if(!j || j.ok !== true) throw new Error((j && j.error) || 'Load failed');
+      const serverMs = Number(j.updatedMs || 0);
+      lastSavedMs = serverMs;
+      if(wasDirty && draft != null && draftMs > serverMs){
+        ed.innerHTML = sanitize(draft); loaded = true; dirty = true; version++;
+        setStatus('unsaved','আগের Unsaved লেখা ফিরে এসেছে — Save হচ্ছে...');
+        setTimeout(()=>saveNow(true), 400);
+      }else{
+        ed.innerHTML = sanitize(j.content || '');
+        loaded = true; dirty = false; localStorage.removeItem(lsKey('dirty'));
+        setStatus(j.exists ? 'saved' : 'unsaved', j.exists ? savedLabel() : 'নতুন notepad — লিখতে শুরু করুন');
+      }
+    }catch(e){
+      console.error('Notepad load error', e);
+      ed.innerHTML = sanitize(draft || '');
+      loaded = true;
+      setStatus('error','Google Sheet থেকে load হয়নি — ' + (e.message || 'network'));
+      if(draft){ dirty = true; }
+    }finally{
+      ed.setAttribute('contenteditable','true');
+      updateCounts();
+      try{ ed.focus(); }catch(e){}
+    }
+  }
+
+  /* ---------- FORMATTING ---------- */
+  function wrapSelection(prop, val){
+    const ed = $('npEditor'); ed.focus();
+    const sel = window.getSelection(); if(!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    if(!ed.contains(range.commonAncestorContainer)) return;
+    const span = document.createElement('span'); span.style[prop] = val;
+    if(range.collapsed){
+      span.appendChild(document.createTextNode('\u200B'));
+      range.insertNode(span);
+      const r = document.createRange(); r.setStart(span.firstChild, 1); r.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r);
+    }else{
+      const frag = range.extractContents();
+      // purane same-property span gulo remove kore nei
+      frag.querySelectorAll && frag.querySelectorAll('span').forEach(s=>{ if(s.style[prop]) s.style[prop] = ''; });
+      span.appendChild(frag); range.insertNode(span);
+      const r = document.createRange(); r.selectNodeContents(span);
+      sel.removeAllRanges(); sel.addRange(r);
+    }
+    onEdit();
+  }
+  function cmd(c, v){ $('npEditor').focus(); document.execCommand(c, false, v||null); onEdit(); refreshToolbar(); }
+
+  function refreshToolbar(){
+    const ed = $('npEditor'); if(!ed) return;
+    ['bold','italic','underline','strikeThrough'].forEach(c=>{
+      const b = document.querySelector('#panel-NOTEPAD [data-np-cmd="'+c+'"]');
+      if(b){ let on = false; try{ on = document.queryCommandState(c); }catch(e){} b.classList.toggle('on', !!on); }
+    });
+    const sel = window.getSelection();
+    if(sel && sel.anchorNode && ed.contains(sel.anchorNode)){
+      const el = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+      if(el){
+        const cs = getComputedStyle(el);
+        const size = Math.round(parseFloat(cs.fontSize));
+        const sz = $('npSize'); if(sz){ if(![...sz.options].some(o=>o.value==size)){ const o=document.createElement('option'); o.value=size; o.textContent=size; sz.appendChild(o); } sz.value = String(size); }
+        const ff = cs.fontFamily.split(',')[0].replace(/["']/g,'').trim();
+        const fs = $('npFont'); if(fs){ const m=[...fs.options].find(o=>o.value.split(',')[0].replace(/["']/g,'').trim().toLowerCase()===ff.toLowerCase()); if(m) fs.value = m.value; }
+      }
+    }
+  }
+
+  function setZoom(z){
+    zoom = Math.max(50, Math.min(300, z));
+    const ed = $('npEditor'); ed.style.zoom = (zoom/100);
+    $('npZoom').textContent = zoom + '%';
+  }
+
+  function download(name, text, type){
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], {type: type||'text/plain;charset=utf-8'}));
+    a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  function menuAction(a){
+    const ed = $('npEditor');
+    document.querySelectorAll('#panel-NOTEPAD .np-menu').forEach(m=>m.classList.remove('open'));
+    if(a==='save'){ saveNow(true); }
+    else if(a==='new'){
+      if(ed.innerText.trim() && !confirm('পুরো লেখা মুছে নতুন খালি notepad করবেন? (Google Sheet-এও খালি হয়ে যাবে)')) return;
+      ed.innerHTML=''; onEdit(); saveNow(true);
+    }
+    else if(a==='txt'){ download('notepad_'+owner.replace(/\s+/g,'_')+'.txt', ed.innerText.replace(/\u200B/g,'')); }
+    else if(a==='html'){ download('notepad_'+owner.replace(/\s+/g,'_')+'.html','<meta charset="utf-8">'+ed.innerHTML,'text/html;charset=utf-8'); }
+    else if(a==='print'){
+      const w = window.open('','_blank'); if(!w) return;
+      w.document.write('<meta charset="utf-8"><title>Notepad</title><body style="font-family:Segoe UI,Arial;white-space:pre-wrap">'+ed.innerHTML+'</body>'); w.document.close(); w.focus(); w.print();
+    }
+    else if(a==='undo'){ cmd('undo'); } else if(a==='redo'){ cmd('redo'); }
+    else if(a==='cut'){ cmd('cut'); } else if(a==='copy'){ ed.focus(); document.execCommand('copy'); }
+    else if(a==='selall'){ ed.focus(); document.execCommand('selectAll'); }
+    else if(a==='clearfmt'){ cmd('removeFormat'); }
+    else if(a==='datetime'){ ed.focus(); document.execCommand('insertText', false, new Date().toLocaleString('en-IN')); onEdit(); }
+    else if(a==='zin'){ setZoom(zoom+10); } else if(a==='zout'){ setZoom(zoom-10); } else if(a==='zreset'){ setZoom(100); }
+    else if(a==='wrap'){ ed.classList.toggle('nowrap'); }
+    else if(a==='statusbar'){ const f=$('npFoot'); f.style.display = f.style.display==='none' ? '' : 'none'; }
+  }
+
+  /* ---------- RENDER ---------- */
+  window.renderNotepadPanel = function(){
+    const panel = $('panel-NOTEPAD'); if(!panel) return;
+    owner = getOwner();
+    panel.innerHTML = `
+    <div class="np-wrap">
+      <div class="np-title"><span>📒</span><b>Online notepad</b><span class="np-owner" id="npOwner">${escapeHtml(owner)}</span></div>
+      <div class="np-menubar" id="npMenubar">
+        <div class="np-menu"><button type="button">File</button><div class="np-drop">
+          <button data-np-act="new">New (খালি করুন)<span>Ctrl+N</span></button>
+          <button data-np-act="save">Save<span>Ctrl+S</span></button>
+          <hr><button data-np-act="txt">Download (.txt)</button><button data-np-act="html">Download (.html)</button>
+          <hr><button data-np-act="print">Print<span>Ctrl+P</span></button></div></div>
+        <div class="np-menu"><button type="button">Edit</button><div class="np-drop">
+          <button data-np-act="undo">Undo<span>Ctrl+Z</span></button><button data-np-act="redo">Redo<span>Ctrl+Y</span></button><hr>
+          <button data-np-act="cut">Cut<span>Ctrl+X</span></button><button data-np-act="copy">Copy<span>Ctrl+C</span></button>
+          <button data-np-act="selall">Select all<span>Ctrl+A</span></button><hr>
+          <button data-np-act="datetime">Time / Date</button><button data-np-act="clearfmt">Clear formatting</button></div></div>
+        <div class="np-menu"><button type="button">View</button><div class="np-drop">
+          <button data-np-act="zin">Zoom in<span>Ctrl +</span></button><button data-np-act="zout">Zoom out<span>Ctrl -</span></button>
+          <button data-np-act="zreset">Restore default zoom</button><hr>
+          <button data-np-act="wrap">Word wrap on / off</button><button data-np-act="statusbar">Status bar show / hide</button></div></div>
+      </div>
+      <div class="np-toolbar">
+        <select id="npFont" title="Font">
+          <option value="'Segoe UI',Arial,sans-serif">Segoe UI</option><option value="Arial,Helvetica,sans-serif">Arial</option>
+          <option value="'Times New Roman',serif">Times New Roman</option><option value="'Courier New',monospace">Courier New</option>
+          <option value="Consolas,monospace">Consolas</option><option value="Verdana,sans-serif">Verdana</option>
+          <option value="Tahoma,sans-serif">Tahoma</option><option value="Georgia,serif">Georgia</option>
+          <option value="'Trebuchet MS',sans-serif">Trebuchet MS</option><option value="'Comic Sans MS',cursive">Comic Sans MS</option>
+          <option value="'Noto Sans Bengali','Nirmala UI',sans-serif">Bangla (Nirmala UI)</option>
+        </select>
+        <select id="npSize" title="Font size">${[10,11,12,13,14,16,18,20,24,28,32,40,48,64].map(n=>`<option value="${n}"${n===16?' selected':''}>${n}</option>`).join('')}</select>
+        <span class="np-sep"></span>
+        <button type="button" class="np-tb" data-np-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button type="button" class="np-tb" data-np-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button type="button" class="np-tb" data-np-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+        <button type="button" class="np-tb" data-np-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+        <span class="np-sep"></span>
+        <input type="color" id="npColor" value="#1c1c1c" title="Text color">
+        <button type="button" class="np-tb" data-np-cmd="insertUnorderedList" title="Bullet list">•≡</button>
+        <button type="button" class="np-tb" data-np-cmd="insertOrderedList" title="Numbered list">1≡</button>
+        <div class="np-save">
+          <span class="np-status" id="npStatus"><i></i>Loading...</span>
+          <button type="button" class="np-savebtn" id="npSaveBtn">💾 Save</button>
+        </div>
+      </div>
+      <div class="np-setup" id="npSetup">⚠️ Notepad-এর Google Sheet এখনো যুক্ত করা হয়নি। <b>notepad_Code.gs</b> deploy করে URL টা <b>NOTEPAD_APPS_SCRIPT_URL</b>-এ বসান। ততক্ষণ লেখা শুধু এই ব্রাউজারে জমা থাকবে।</div>
+      <div class="np-pagewrap"><div class="np-editor" id="npEditor" contenteditable="true" spellcheck="false" data-ph="এখানে লিখুন... (নিজে থেকে Google Sheet-এ Save হবে)"></div></div>
+      <div class="np-foot" id="npFoot"><span id="npCounts"></span><span class="np-grow">Zoom: <span id="npZoom">100%</span></span><span>Auto-save: ON</span></div>
+    </div>`;
+
+    const ed = $('npEditor');
+    ed.addEventListener('input', onEdit);
+    ed.addEventListener('keyup', refreshToolbar);
+    ed.addEventListener('mouseup', refreshToolbar);
+    ed.addEventListener('blur', ()=>{ if(dirty) saveNow(false); });
+    ed.addEventListener('paste', ev=>{
+      ev.preventDefault();
+      const t = (ev.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, t);
+    });
+    ed.addEventListener('keydown', ev=>{
+      if((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase()==='s'){ ev.preventDefault(); saveNow(true); }
+    });
+    $('npSaveBtn').addEventListener('click', ()=>saveNow(true));
+    $('npFont').addEventListener('change', e=>wrapSelection('fontFamily', e.target.value));
+    $('npSize').addEventListener('change', e=>wrapSelection('fontSize', e.target.value + 'px'));
+    $('npColor').addEventListener('input', e=>wrapSelection('color', e.target.value));
+    panel.querySelectorAll('[data-np-cmd]').forEach(b=>{
+      b.addEventListener('mousedown', ev=>ev.preventDefault());
+      b.addEventListener('click', ()=>cmd(b.dataset.npCmd));
+    });
+    panel.querySelectorAll('.np-menu>button').forEach(b=>{
+      b.addEventListener('click', ev=>{
+        ev.stopPropagation();
+        const m = b.parentElement, was = m.classList.contains('open');
+        panel.querySelectorAll('.np-menu').forEach(x=>x.classList.remove('open'));
+        if(!was) m.classList.add('open');
+      });
+    });
+    panel.querySelectorAll('[data-np-act]').forEach(b=>{
+      b.addEventListener('mousedown', ev=>ev.preventDefault());
+      b.addEventListener('click', ()=>menuAction(b.dataset.npAct));
+    });
+
+    if(!hooksReady){
+      hooksReady = true;
+      document.addEventListener('click', ()=>document.querySelectorAll('#panel-NOTEPAD .np-menu').forEach(m=>m.classList.remove('open')));
+      document.addEventListener('selectionchange', ()=>{ if(document.activeElement && document.activeElement.id==='npEditor') refreshToolbar(); });
+      document.addEventListener('visibilitychange', ()=>{ if(document.hidden && dirty) saveNow(false); });
+      window.addEventListener('pagehide', ()=>{
+        if(dirty && loaded && NOTEPAD_APPS_SCRIPT_URL && $('npEditor')){
+          try{ fetch(NOTEPAD_APPS_SCRIPT_URL + '?action=save', {method:'POST', keepalive:true, body: JSON.stringify({owner:owner, content:$('npEditor').innerHTML, plain:$('npEditor').innerText})}); }catch(e){}
+        }
+      });
+      window.addEventListener('beforeunload', ev=>{ if(dirty){ ev.preventDefault(); ev.returnValue=''; } });
+    }
+    clearInterval(tInterval);
+    tInterval = setInterval(()=>{ if(dirty && !saving) saveNow(false); }, AUTOSAVE_EVERY);
+    setZoom(100);
+    loadNote();
+  };
+
+  /* tab chhare gele (onno tab-e gele) pending save kore dei */
+  window.npFlushIfLeaving = function(){ if(dirty && !saving) saveNow(false); };
+  window.npIsDirty = function(){ return !!(dirty || saving); };
 })();
 </script>
 
