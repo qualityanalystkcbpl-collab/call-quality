@@ -11419,6 +11419,9 @@ async function sqlCenterLoadReport(){
 
 /* ================= GOOGLE SHEET ↔ SQL MATCH CHECK ================= */
 const MATCH_CHECK_SHEET_NAME = 'Parameter wise fail count';
+/* "RAW DATA FOR Parameter wise fail count" spreadsheet-e bind kora Apps Script-er /exec URL.
+   Code.gs (match_check_Code.gs) deploy kore ei URL ta niche paste korun. */
+const MATCH_CHECK_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbynuWG1pmogLgWrrWV3PliaoouH4zUQMP3On-stBbh3abS1-Ya5IJoNy75mYrzZzE1GUw/exec";
 
 function matchNormalizeCallId(value){
   if(value === null || value === undefined) return '';
@@ -11437,6 +11440,36 @@ function matchFindHeaderIndex(headers, candidates){
 function matchSetValue(id, value){
   const el = document.getElementById(id);
   if(el) el.textContent = value;
+}
+
+function matchExtractCallIdsFromJson(node, out, depth){
+  depth = depth || 0;
+  if(!node || depth > 6) return;
+  if(Array.isArray(node)){
+    // [headers, row1, row2...]
+    if(node.length && Array.isArray(node[0])){
+      let hr=-1, col=-1;
+      for(let i=0;i<Math.min(node.length,10)&&col<0;i++){
+        if(!Array.isArray(node[i])) continue;
+        const idx = matchFindHeaderIndex(node[i], ['call id','callid','call_id','call identifier']);
+        if(idx>=0){hr=i;col=idx;}
+      }
+      if(col>=0){ node.slice(hr+1).forEach(r=>{const v=matchNormalizeCallId(r&&r[col]); if(v) out.push(v);}); return; }
+    }
+    // [ {Call ID: ...}, ... ]
+    node.forEach(item=>{
+      if(item && typeof item==='object' && !Array.isArray(item)){
+        const k = Object.keys(item).find(k=>/^call[\s_-]*id$/i.test(k.trim()));
+        if(k){ const v=matchNormalizeCallId(item[k]); if(v) out.push(v); }
+        else matchExtractCallIdsFromJson(item,out,depth+1);
+      }
+    });
+    return;
+  }
+  if(typeof node==='object'){
+    if(Array.isArray(node.callIds)){ node.callIds.forEach(x=>{const v=matchNormalizeCallId(x); if(v) out.push(v);}); return; }
+    Object.keys(node).forEach(k=>matchExtractCallIdsFromJson(node[k],out,depth+1));
+  }
 }
 
 async function fetchGoogleSheetMatchCallIds(){
@@ -11459,6 +11492,7 @@ async function fetchGoogleSheetMatchCallIds(){
   ].filter(Boolean))];
 
   const urls = [
+    ...(MATCH_CHECK_APPS_SCRIPT_URL ? [['MATCH_CHECK_APPS_SCRIPT_URL', MATCH_CHECK_APPS_SCRIPT_URL]] : []),
     ['WEB_APP_URL', WEB_APP_URL],
     ['RAW_SHEET_WEB_APP_URL', RAW_SHEET_WEB_APP_URL],
     ['NEW_WEB_APP_URL', NEW_WEB_APP_URL]
@@ -11480,6 +11514,29 @@ async function fetchGoogleSheetMatchCallIds(){
         sourceNote = label + ' get_audit_call_ids';
       }
     }catch(e){ /* next */ }
+  }
+
+  // Method 1b: dedicated URL-er plain response / ?vertical= theke Call ID khuje ber kora
+  if(!ids.length && MATCH_CHECK_APPS_SCRIPT_URL){
+    const tries = [
+      MATCH_CHECK_APPS_SCRIPT_URL,
+      MATCH_CHECK_APPS_SCRIPT_URL + '?vertical=' + encodeURIComponent(MATCH_CHECK_SHEET_NAME)
+    ];
+    for(const u of tries){
+      if(ids.length) break;
+      try{
+        const r = await fetch(u, {cache:'no-store', headers:{'Accept':'application/json'}});
+        if(!r.ok){ problems.push('MATCH_CHECK_APPS_SCRIPT_URL: HTTP ' + r.status); continue; }
+        const j = await r.json();
+        const tmp = [];
+        matchExtractCallIdsFromJson(j, tmp);
+        if(tmp.length){ ids = tmp; sourceNote = 'MATCH_CHECK_APPS_SCRIPT_URL (auto-detect)'; }
+        else {
+          const keys = (j && typeof j==='object') ? Object.keys(j).slice(0,8).join(', ') : typeof j;
+          problems.push('MATCH_CHECK_APPS_SCRIPT_URL response-e Call ID nei (keys: ' + keys + ')' + (j && j.error ? ' — ' + j.error : ''));
+        }
+      }catch(e){ problems.push('MATCH_CHECK_APPS_SCRIPT_URL: ' + e.message); }
+    }
   }
 
   // Method 2: full sheet theke "Call ID" column
@@ -11518,7 +11575,8 @@ async function fetchGoogleSheetMatchCallIds(){
 
   if(!ids.length){
     problems.forEach(p => sqlCenterLog('  ✗ ' + p));
-    throw new Error('Google Sheet-এ Call ID-র tab পাওয়া যায়নি — Control Log-এ কারণ দেখুন।');
+    if(!MATCH_CHECK_APPS_SCRIPT_URL) sqlCenterLog('👉 সমাধান: match_check_Code.gs deploy করে URL টা MATCH_CHECK_APPS_SCRIPT_URL-এ বসান।');
+    throw new Error('Google Sheet-এর জন্য Match Check Apps Script URL সেট করা নেই।');
   }
 
   const unique = new Set(ids);
