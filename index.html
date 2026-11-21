@@ -11440,51 +11440,60 @@ function matchSetValue(id, value){
 }
 
 async function fetchGoogleSheetMatchCallIds(){
-  // Method 1: dedicated Apps Script endpoint (newer Code.gs).
-  // Method 2 (auto fallback): old Apps Script jekhane shudhu ?vertical=<sheet name> chole.
+  // "Parameter wise fail count" sheet-er full data WEB_APP_URL-e ache
+  // (RAW_SHEET_WEB_APP_URL-e noy). Duto URL-i try kora hocche.
+  const urls = [WEB_APP_URL, RAW_SHEET_WEB_APP_URL];
+  const sheetParam = '?vertical=' + encodeURIComponent(MATCH_CHECK_SHEET_NAME);
   let ids = [];
   let sourceNote = '';
+  let lastProblem = '';
 
-  try{
-    const r1 = await fetch(RAW_SHEET_WEB_APP_URL + '?action=get_audit_call_ids', {
-      method:'GET', mode:'cors', cache:'no-store', headers:{'Accept':'application/json'}
-    });
-    if(r1.ok){
-      const j1 = await r1.json();
-      if(j1 && j1.ok === true && Array.isArray(j1.callIds)){
-        ids = j1.callIds.map(matchNormalizeCallId).filter(Boolean);
+  // Method 1: dedicated endpoint (jodi Apps Script-e thake)
+  for(const base of urls){
+    if(ids.length) break;
+    try{
+      const r = await fetch(base + '?action=get_audit_call_ids', {cache:'no-store', headers:{'Accept':'application/json'}});
+      if(!r.ok) continue;
+      const j = await r.json();
+      if(j && j.ok === true && Array.isArray(j.callIds) && j.callIds.length){
+        ids = j.callIds.map(matchNormalizeCallId).filter(Boolean);
         sourceNote = 'get_audit_call_ids endpoint';
       }
-    }
-  }catch(e){ /* fallback below */ }
-
-  if(!ids.length){
-    sqlCenterLog('get_audit_call_ids endpoint পাওয়া যায়নি — fallback: ?vertical=' + MATCH_CHECK_SHEET_NAME);
-    const r2 = await fetch(
-      RAW_SHEET_WEB_APP_URL + '?vertical=' + encodeURIComponent(MATCH_CHECK_SHEET_NAME),
-      { method:'GET', mode:'cors', cache:'no-store', headers:{'Accept':'application/json'} }
-    );
-    if(!r2.ok) throw new Error('Google Sheet HTTP ' + r2.status);
-
-    const raw = await r2.json();
-    const values = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.values) ? raw.values : []);
-    if(!values.length) throw new Error('Google Sheet থেকে কোনো data আসেনি।');
-
-    // Header row khuje "Call ID" column ber kora (prothom 10 row-er moddhe)
-    let headerRow = -1, col = -1;
-    for(let r=0; r<Math.min(values.length,10) && col<0; r++){
-      const idx = matchFindHeaderIndex(values[r] || [], ['call id','callid','call_id']);
-      if(idx >= 0){ headerRow = r; col = idx; }
-    }
-    if(col < 0) throw new Error('Google Sheet-এ "Call ID" column পাওয়া যায়নি।');
-
-    ids = values.slice(headerRow + 1)
-      .map(row => matchNormalizeCallId(row[col]))
-      .filter(Boolean);
-    sourceNote = 'vertical fallback';
+    }catch(e){ /* next */ }
   }
 
-  if(!ids.length) throw new Error('Google Sheet-এ কোনো Call ID পাওয়া যায়নি।');
+  // Method 2: full sheet (?vertical=Parameter wise fail count) theke Call ID column
+  if(!ids.length){
+    sqlCenterLog('get_audit_call_ids endpoint নেই — fallback: full sheet থেকে Call ID পড়া হচ্ছে...');
+    for(const base of urls){
+      if(ids.length) break;
+      try{
+        const r = await fetch(base + sheetParam, {cache:'no-store', headers:{'Accept':'application/json'}});
+        if(!r.ok){ lastProblem = 'HTTP ' + r.status; continue; }
+        const raw = await r.json();
+        const values = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.values) ? raw.values : []);
+        if(!values.length){
+          lastProblem = (raw && (raw.error || raw.message)) || 'empty response';
+          continue;
+        }
+
+        let headerRow = -1, col = -1;
+        for(let i=0; i<Math.min(values.length,10) && col<0; i++){
+          if(!Array.isArray(values[i])) continue;
+          const idx = matchFindHeaderIndex(values[i], ['call id','callid','call_id','call identifier']);
+          if(idx >= 0){ headerRow = i; col = idx; }
+        }
+        if(col < 0){ lastProblem = '"Call ID" column পাওয়া যায়নি'; continue; }
+
+        ids = values.slice(headerRow + 1).map(row => matchNormalizeCallId(row[col])).filter(Boolean);
+        if(ids.length) sourceNote = (base === WEB_APP_URL ? 'WEB_APP_URL' : 'RAW_SHEET_WEB_APP_URL') + ' full sheet';
+      }catch(e){ lastProblem = e.message; }
+    }
+  }
+
+  if(!ids.length){
+    throw new Error('Google Sheet থেকে Call ID আনা যায়নি' + (lastProblem ? ' (' + lastProblem + ')' : '') + '।');
+  }
 
   const unique = new Set(ids);
   sqlCenterLog(`Google Sheet OK (${sourceNote}) — ${ids.length} rows, ${unique.size} unique Call IDs.`);
