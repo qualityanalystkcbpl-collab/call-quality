@@ -22126,7 +22126,7 @@ window.qxDelMsg = async function(id){
 </style>
 <script>
 /* ====== ONLINE NOTEPAD — config ======
-   notepad_Code.gs ke notun Google Sheet-e deploy kore /exec URL ta niche boshan. */
+   Apps Script /exec URL ta niche boshan. */
 const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQICLa4fb_FX0stgitpaxihjE9FqzMaBIWTKl6EyGcH-NhAfdprCg_KBJYDXPNt1/exec";
 
 (function(){
@@ -22173,7 +22173,7 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
     const p = n => String(n).padStart(2,'0');
     return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
   }
-  function savedLabel(){ return lastSavedMs ? 'Google Sheet-e Saved ✓ · ' + fmtTime(lastSavedMs) : 'Saved ✓'; }
+  function savedLabel(){ return lastSavedMs ? 'Saved ✓ · ' + fmtTime(lastSavedMs) : 'Saved ✓'; }
 
   function updateCounts(){
     const ed = $('npEditor'); if(!ed) return;
@@ -22252,7 +22252,7 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
       $('npSetup').style.display = 'block';
       ed.innerHTML = sanitize(draft || '');
       loaded = true; updateCounts();
-      setStatus('error','Google Sheet যুক্ত নয় (শুধু এই ব্রাউজারে সেভ)');
+      setStatus('error','Server যুক্ত নয় (শুধু এই ব্রাউজারে সেভ)');
       return;
     }
     $('npSetup').style.display = 'none';
@@ -22277,7 +22277,7 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
       console.error('Notepad load error', e);
       ed.innerHTML = sanitize(draft || '');
       loaded = true;
-      setStatus('error','Google Sheet থেকে load হয়নি — ' + (e.message || 'network'));
+      setStatus('error','Load হয়নি — ' + (e.message || 'network'));
       if(draft){ dirty = true; }
     }finally{
       ed.setAttribute('contenteditable','true');
@@ -22347,7 +22347,7 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
     document.querySelectorAll('#panel-NOTEPAD .np-menu').forEach(m=>m.classList.remove('open'));
     if(a==='save'){ saveNow(true); }
     else if(a==='new'){
-      if(ed.innerText.trim() && !confirm('পুরো লেখা মুছে নতুন খালি notepad করবেন? (Google Sheet-এও খালি হয়ে যাবে)')) return;
+      if(ed.innerText.trim() && !confirm('পুরো লেখা মুছে নতুন খালি notepad করবেন? (সেভ করা লেখাও খালি হয়ে যাবে)')) return;
       ed.innerHTML=''; onEdit(); saveNow(true);
     }
     else if(a==='txt'){ download('notepad_'+owner.replace(/\s+/g,'_')+'.txt', ed.innerText.replace(/\u200B/g,'')); }
@@ -22413,8 +22413,8 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
           <button type="button" class="np-savebtn" id="npSaveBtn">💾 Save</button>
         </div>
       </div>
-      <div class="np-setup" id="npSetup">⚠️ Notepad-এর Google Sheet এখনো যুক্ত করা হয়নি। <b>notepad_Code.gs</b> deploy করে URL টা <b>NOTEPAD_APPS_SCRIPT_URL</b>-এ বসান। ততক্ষণ লেখা শুধু এই ব্রাউজারে জমা থাকবে।</div>
-      <div class="np-pagewrap"><div class="np-editor" id="npEditor" contenteditable="true" spellcheck="false" data-ph="এখানে লিখুন... (নিজে থেকে Google Sheet-এ Save হবে)"></div></div>
+      <div class="np-setup" id="npSetup">⚠️ Notepad এখনো সংযুক্ত করা হয়নি। ততক্ষণ লেখা শুধু এই ব্রাউজারে জমা থাকবে।</div>
+      <div class="np-pagewrap"><div class="np-editor" id="npEditor" contenteditable="true" spellcheck="false" data-ph="এখানে লিখুন... (নিজে থেকে Save হবে)"></div></div>
       <div class="np-foot" id="npFoot"><span id="npCounts"></span><span class="np-grow">Zoom: <span id="npZoom">100%</span></span><span>Auto-save: ON</span></div>
     </div>`;
 
