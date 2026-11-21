@@ -22591,6 +22591,41 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
     }catch(e){}
   }
 
+
+  /* Click-and-type: lekhar niche kagoj-er je kono line-e click korle sekhane-i cursor boshe (dorkar hole khali line toiri hoy) */
+  function bindClickAnywhere(){
+    const pw = document.querySelector('#npWrap .np-pagewrap'); if(!pw) return;
+    pw.addEventListener('mousedown', ev=>{
+      const ed = $('npEditor');
+      if(ev.button !== 0 || !ed || ed.getAttribute('contenteditable') !== 'true') return;
+      if(ev.target !== ed && ev.target !== pw) return;
+      const pr = pw.getBoundingClientRect();
+      if(ev.clientX > pr.left + pw.clientWidth || ev.clientY > pr.top + pw.clientHeight) return;   // scrollbar
+      const z = zoom / 100, lineH = 28 * z;
+      /* lekha ekhon porjonto kotodur */
+      let bottom = ed.getBoundingClientRect().top + 16 * z;
+      const rg = document.createRange();
+      ed.childNodes.forEach(n=>{
+        let r = null;
+        if(n.nodeType === 1) r = n.getBoundingClientRect();
+        else if(n.nodeType === 3 && n.textContent.length){ rg.selectNodeContents(n); const rs = rg.getClientRects(); if(rs.length) r = rs[rs.length - 1]; }
+        if(r && r.height && r.bottom > bottom) bottom = r.bottom;
+      });
+      if(ev.clientY <= bottom) return;     // lekhar vitore click — browser nijei thik jaygay cursor boshabe
+      ev.preventDefault();
+      let n = Math.min(300, Math.max(1, Math.ceil((ev.clientY - bottom) / lineH)));
+      let last = null;
+      for(let i = 0; i < n; i++){
+        last = document.createElement('div'); last.appendChild(document.createElement('br')); ed.appendChild(last);
+      }
+      ed.focus();
+      const sel = window.getSelection(), r2 = document.createRange();
+      r2.setStart(last, 0); r2.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r2);
+      onEdit();
+    });
+  }
+
   /* ---------- FORMATTING ---------- */
   function restoreSel(){
     const ed = $('npEditor'); if(!ed) return false;
@@ -22926,6 +22961,7 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
       b.addEventListener('click', ()=>menuAction(b.dataset.npAct));
     });
     bindDrag(wrap);
+    bindClickAnywhere();
 
     if(!hooksReady){
       hooksReady = true;
