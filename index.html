@@ -6080,6 +6080,20 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
               <button class="btn small" type="button" onclick="resetBrandText()">Remove 4th Item</button>
             </div>
           </div>
+          <div class="editor-card" style="background:var(--surface); border:2px solid var(--admin); padding:18px; border-radius:var(--radius); margin-bottom:16px;">
+            <h3 style="margin-bottom:6px;">🎯 কোন Process-এর মেসেজ এডিট করবেন?</h3>
+            <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">এখানে যে Process বাছবেন, নিচের Scrolling Ticker, Login Popup, Banner Slides, News Ticker ও ছবির Banner Manager শুধু সেই Process-এর জন্য সেভ হবে। Process-এর আলাদা সেভ না থাকলে "Default" মেসেজ দেখাবে।</p>
+            <select id="msgProcSelect" onchange="msgSelectProc(this.value)" style="padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-width:260px;">
+              <option value="">🌐 Default (সবার জন্য)</option>
+              <option value="CATV">CATV</option>
+              <option value="BBTECH">BB TECH SUPPORT</option>
+              <option value="BBRENEWAL">BB RENEWAL</option>
+              <option value="QA">QA</option>
+              <option value="AM">AM</option>
+              <option value="BBRETENTION">BB RETENTION</option>
+              <option value="HR">HR</option>
+            </select>
+          </div>
           <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius);">
             <h3 style="margin-bottom:12px;">Scrolling Ticker Text</h3>
             <input type="text" id="tickerInput" placeholder="Ticker text..." style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:10px;">
@@ -7746,6 +7760,53 @@ const SB_HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABAS
 /* ticker / updates / banners / loginPopup — সরাসরি Supabase `webpage_settings` টেবিলে (storageGet/storageSet এগুলো ব্যবহার করে) */
 const SB_SETTINGS_KEYS = ['ticker', 'updates', 'banners', 'loginPopup', 'brand'];
 const SB_SETTINGS_TABLE = 'webpage_settings';
+/* ===== PROCESS-WISE MESSAGES =====
+   প্রতিটা Process-এর নিজস্ব ticker / news / banner / popup। key = base + '__' + PROCESS (যেমন ticker__CATV)।
+   Process-এর আলাদা সেভ না থাকলে Default (আগের key) দেখায়। */
+const MSG_PROCESSES = [['CATV','CATV'],['BBTECH','BB TECH SUPPORT'],['BBRENEWAL','BB RENEWAL'],['QA','QA'],['AM','AM'],['BBRETENTION','BB RETENTION'],['HR','HR']];
+let msgAdminProc = '';   // Admin editor-এ বাছা Process ('' = Default / সবার জন্য)
+function msgNormProc(name){
+  const n = String(name||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(!n) return '';
+  if(n.indexOf('CATV')!==-1) return 'CATV';
+  if(n.indexOf('RETENTION')!==-1) return 'BBRETENTION';
+  if(n.indexOf('RENEWAL')!==-1) return 'BBRENEWAL';
+  if(n.indexOf('TECH')!==-1) return 'BBTECH';
+  if(n==='QA' || n==='QUALITY' || n==='QUALITYASSURANCE') return 'QA';
+  if(n==='AM') return 'AM';
+  if(n==='HR') return 'HR';
+  return '';
+}
+function msgViewProc(){
+  if(currentRole === 'admin' || currentRole === 'superadmin') return msgAdminProc;
+  let p = '';
+  try{ p = (typeof empProcess !== 'undefined' && empProcess) ? empProcess : (localStorage.getItem('qa_emp_process') || ''); }catch(e){}
+  return msgNormProc(p);
+}
+function msgKey(base, proc){ return proc ? base + '__' + proc : base; }
+function msgIsValid(base, d){
+  if(d === null || d === undefined) return false;
+  if(Array.isArray(d)) return d.length > 0;
+  return true;
+}
+async function msgGet(base){
+  const proc = msgViewProc();
+  if(proc){
+    const d = await storageGet(msgKey(base, proc));
+    if(msgIsValid(base, d)) return d;
+  }
+  return storageGet(base);
+}
+async function msgReloadAll(){
+  loginPopupFetchPromise = null;
+  await Promise.allSettled([ loadTicker(), loadBanners(), loadNewsTicker(), loadLoginPopupAdmin(), (typeof loadHomeBannerCarousel==='function' ? loadHomeBannerCarousel() : null) ]);
+}
+async function msgSelectProc(v){
+  msgAdminProc = v || '';
+  showToast(msgAdminProc ? 'এখন এডিট হচ্ছে: ' + (MSG_PROCESSES.find(x=>x[0]===msgAdminProc)||[0,msgAdminProc])[1] : 'এখন এডিট হচ্ছে: Default (সবার জন্য)');
+  await msgReloadAll();
+  if(typeof renderBannerManagerPanel === 'function' && document.getElementById('bannerMgrList')) loadBannerMgrList();
+}
 /* ---- Agent Access (per-agent sidebar menu + popup) — Supabase table `agent_access` ---- */
 const AA_TABLE = 'agent_access';
 const AA_TEMPLATE_ID = '__NEW_AGENT_TEMPLATE__';
@@ -7842,10 +7903,12 @@ const RAW_SHEET_TABS = {
 let ans3secSubTab = 'CATV';
 let fatalSubTab = 'CATV';
 let currentRole = null;
-let loginPopupFetchPromise = null; // shared fetch so the popup and admin editor don't both hit the backend separately
+let loginPopupFetchPromise = null; let loginPopupFetchProc = null; // shared fetch so the popup and admin editor don't both hit the backend separately
 function fetchLoginPopupOnce(){
-  if(!loginPopupFetchPromise){
-    loginPopupFetchPromise = storageGet('loginPopup');
+  const _pp = msgViewProc();
+  if(!loginPopupFetchPromise || loginPopupFetchProc !== _pp){
+    loginPopupFetchProc = _pp;
+    loginPopupFetchPromise = msgGet('loginPopup');
   }
   return loginPopupFetchPromise;
 }
@@ -8001,7 +8064,7 @@ function autoFormatCellValue(val, columnName) {
 
 async function storageGet(key){
   try{
-    if(SB_SETTINGS_KEYS.indexOf(key) !== -1){
+    if(SB_SETTINGS_KEYS.indexOf(key) !== -1 || String(key).indexOf('__') > 0){
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/${SB_SETTINGS_TABLE}?select=value&key=eq.${encodeURIComponent(key)}&limit=1`,
         { headers: SB_HEADERS, cache: 'no-store' });
@@ -8019,7 +8082,7 @@ async function storageGet(key){
 }
 async function storageSet(key, value){
   try{
-    if(SB_SETTINGS_KEYS.indexOf(key) !== -1){
+    if(SB_SETTINGS_KEYS.indexOf(key) !== -1 || String(key).indexOf('__') > 0){
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/${SB_SETTINGS_TABLE}?on_conflict=key`,
         { method: 'POST',
@@ -8178,6 +8241,7 @@ async function loadHomeBannerCarousel(){
     homeBannerAll = [];
   }
   // Only banners whose scheduled Start/End time covers "now" are shown
+  { const _vp = msgViewProc(); homeBannerAll = homeBannerAll.filter(b => !b.process || msgNormProc(b.process) === _vp || b.process === _vp); }
   homeBannerList = homeBannerAll.filter(bannerIsLiveNow);
   if(!homeBannerList.length){
     wrap.style.display = 'none';
@@ -8283,6 +8347,7 @@ async function loadBannerMgrList(){
     });
     bannerMgrItems = await res.json();
     if(!Array.isArray(bannerMgrItems)) bannerMgrItems = [];
+    if(msgAdminProc) bannerMgrItems = bannerMgrItems.filter(b => b.process === msgAdminProc || msgNormProc(b.process) === msgAdminProc);
   }catch(e){
     console.error(e);
     listEl.innerHTML = `<div class="empty-state"><b>ব্যানার লোড করা যায়নি। Supabase সেটআপ ঠিকভাবে হয়েছে কিনা চেক করুন।</b></div>`;
@@ -8298,6 +8363,7 @@ async function loadBannerMgrList(){
         ? `<video src="${escapeAttr(b.image_url)}" class="banner-mgr-thumb" muted loop autoplay playsinline></video>`
         : `<img src="${escapeAttr(b.image_url)}" class="banner-mgr-thumb">`}
       <div class="banner-mgr-meta">
+        <div style="font-size:11px;font-weight:700;margin-bottom:3px;">🎯 ${b.process ? escapeHtml((MSG_PROCESSES.find(x=>x[0]===msgNormProc(b.process))||[0,b.process])[1]) : 'সব Process'}</div>
         <div>${!b.is_active ? '⚪ Hidden (বন্ধ করা আছে)'
           : (bannerScheduleStatus(b)==='upcoming' ? '⏳ Scheduled — শুরু হবে ' + escapeHtml(bannerFmtDT(b.start_at))
           : (bannerScheduleStatus(b)==='expired' ? '⌛ মেয়াদ শেষ — ' + escapeHtml(bannerFmtDT(b.end_at)) + '-এ বন্ধ হয়েছে'
@@ -8404,15 +8470,24 @@ async function handleBannerUpload(input){
         'Content-Type':'application/json',
         Prefer:'return=minimal'
       },
-      body: JSON.stringify({
+      body: JSON.stringify(Object.assign({
         image_url: publicUrl,
         storage_path: path,
         sort_order: nextOrder,
         is_active: true,
         uploaded_by: currentRole === 'admin' ? 'Admin' : 'Agent'
-      })
+      }, msgAdminProc ? { process: msgAdminProc } : {}))
     });
-    if(!insertRes.ok){ throw new Error('DB insert failed: ' + insertRes.status); }
+    if(!insertRes.ok && msgAdminProc){
+      /* DB-তে `process` কলাম না থাকলে ব্যানার সবার জন্য সেভ হবে */
+      const retry = await fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}`, {
+        method:'POST',
+        headers:{ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type':'application/json', Prefer:'return=minimal' },
+        body: JSON.stringify({ image_url: publicUrl, storage_path: path, sort_order: nextOrder, is_active: true, uploaded_by: currentRole === 'admin' ? 'Admin' : 'Agent' })
+      });
+      if(!retry.ok){ throw new Error('DB insert failed: ' + retry.status); }
+      showToast('⚠️ DB-তে process কলাম নেই — ব্যানারটা সবার জন্য সেভ হলো।');
+    } else if(!insertRes.ok){ throw new Error('DB insert failed: ' + insertRes.status); }
     showToast('ব্যানার আপলোড হয়েছে ✅');
     input.value = '';
     await loadBannerMgrList();
@@ -10346,7 +10421,7 @@ async function resetBrandText(){
 
 /* ===================== TICKER SYSTEMS ===================== */
 async function loadTicker(){
-  const data = await storageGet('ticker');
+  const data = await msgGet('ticker');
   const text = (data && data.text) ? data.text : 'CATV, BB Tech Support ও BB Renewal-এর লাইভ কোয়ালিটি কন্ট্রোল রুম ও রিয়েল-টাইম ড্যাশবোর্ড ট্র্যাকিং সিস্টেমে স্বাগতম।';
   renderTopTicker(text);
   document.getElementById('tickerInput').value = text;
@@ -10355,7 +10430,7 @@ async function saveTicker(){
   const text = document.getElementById('tickerInput').value.trim();
   if(!text) return;
   showToast('Saving to WEBPAGEDATA...');
-  const success = await storageSet('ticker', { text });
+  const success = await storageSet(msgKey('ticker', msgAdminProc), { text });
   if(success) {
     renderTopTicker(text);
     showToast('Ticker saved dynamically to Google Sheets!');
@@ -10372,7 +10447,7 @@ async function saveLoginPopup(){
   const el = document.getElementById('loginPopupInput');
   const text = el ? el.value.trim() : '';
   showToast('Saving to WEBPAGEDATA...');
-  const success = await storageSet('loginPopup', { text });
+  const success = await storageSet(msgKey('loginPopup', msgAdminProc), { text });
   if(success){
     loginPopupFetchPromise = null; // invalidate cache so the next fetch picks up the new text
     showToast(text ? 'Popup message saved!' : 'Popup message cleared — popup আর দেখাবে না।');
@@ -10497,7 +10572,7 @@ function defaultBanners(){
   return arr;
 }
 async function loadBanners(){
-  let data = await storageGet('banners');
+  let data = await msgGet('banners');
   if(!data || !Array.isArray(data) || data.length===0) data = defaultBanners();
   renderBanners(data);
   renderBannerEditor(data);
@@ -10679,7 +10754,7 @@ async function saveBanners(){
   });
   banners.forEach(b => { b.anim = BN_ANIM_ORDER.filter(k => b.anim.includes(k)); });   // keep a fixed, predictable order
   showToast('Updating Banners in WEBPAGEDATA...');
-  const success = await storageSet('banners', banners);
+  const success = await storageSet(msgKey('banners', msgAdminProc), banners);
   if(success) {
     renderBanners(banners);
     showToast('Banners saved ✅');
@@ -10692,7 +10767,7 @@ function defaultNewsTicker(){
   return [];
 }
 async function loadNewsTicker(){
-  let items = await storageGet('newsTickerItems');
+  let items = await msgGet('newsTickerItems');
   if(!Array.isArray(items)) items = [];
   renderNewsTicker(items);
   renderNewsTickerEditor(items.length ? items : ['']);
@@ -10846,7 +10921,7 @@ async function saveNewsTicker(){
   const items = Array.from(inputs).map(inp=> inp.value.trim()).filter(Boolean);
   showToast('Updating News Ticker in WEBPAGEDATA...');
   try{
-    const success = await storageSet('newsTickerItems', items);
+    const success = await storageSet(msgKey('newsTickerItems', msgAdminProc), items);
     if(success){
       renderNewsTicker(items);
       renderNewsTickerEditor(items.length ? items : ['']);
