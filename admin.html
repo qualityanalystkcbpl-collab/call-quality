@@ -5045,6 +5045,33 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
 #staffLoginCard .staff-tab-chevron{display:none;}
 #staffLoginCard .staff-role-toggle button{font-size:13px !important;padding:10px 6px !important;}
 #staffLoginCard .login-btn{font-size:14px;padding:12px;}
+/* ---- Big animated "ADMIN" word (slides in left → right) ---- */
+.admin-word{display:flex;gap:.06em;margin:0 0 14px;font-family:"Space Grotesk",Inter,sans-serif;font-weight:800;font-size:clamp(54px,7.2vw,104px);line-height:.95;letter-spacing:.04em;user-select:none;pointer-events:none;}
+.admin-word span{display:inline-block;opacity:0;transform:translateX(-90px);color:#4A7FE0;
+  animation:adminWordLoop 3s cubic-bezier(.2,.8,.2,1) infinite both;}
+.admin-word span:nth-child(1){animation-delay:.05s,1.8s;color:#4A7FE0;}
+.admin-word span:nth-child(2){animation-delay:.2s,2s;color:#6B72D8;}
+.admin-word span:nth-child(3){animation-delay:.35s,2.2s;color:#9A6AC8;}
+.admin-word span:nth-child(4){animation-delay:.5s,2.4s;color:#C8665E;}
+.admin-word span:nth-child(5){animation-delay:.65s,2.6s;color:#FF6B6B;}
+.admin-title{margin:0 0 14px;}
+.admin-title .admin-word{margin:0;}
+.admin-word-super{font-size:clamp(28px,3.6vw,52px) !important;margin-bottom:2px !important;letter-spacing:.32em !important;}
+.admin-word-super span{animation-delay:.05s,1.8s !important;}
+.admin-word-super span:nth-child(1){animation-delay:.05s,1.8s !important;}
+.admin-word-super span:nth-child(2){animation-delay:.15s,2s !important;}
+.admin-word-super span:nth-child(3){animation-delay:.25s,2.2s !important;}
+.admin-word-super span:nth-child(4){animation-delay:.35s,2.4s !important;}
+.admin-word-super span:nth-child(5){animation-delay:.45s,2.6s !important;}
+.admin-title .admin-word:not(.admin-word-super) span:nth-child(1){animation-delay:.6s,2.2s;}
+.admin-title .admin-word:not(.admin-word-super) span:nth-child(2){animation-delay:.72s,2.4s;}
+.admin-title .admin-word:not(.admin-word-super) span:nth-child(3){animation-delay:.84s,2.6s;}
+.admin-title .admin-word:not(.admin-word-super) span:nth-child(4){animation-delay:.96s,2.8s;}
+.admin-title .admin-word:not(.admin-word-super) span:nth-child(5){animation-delay:1.08s,3s;}
+@keyframes adminWordLoop{0%{opacity:0;transform:translateX(-90px);}25%{opacity:.9;transform:translateX(0);}78%{opacity:.9;transform:translateX(0);}100%{opacity:0;transform:translateX(0);}}
+@keyframes adminWordIn{0%{opacity:0;transform:translateX(-90px);}100%{opacity:.82;transform:translateX(0);}}
+@keyframes adminWordGlow{0%{opacity:.82;filter:drop-shadow(0 0 0 rgba(255,255,255,0));}100%{opacity:1;filter:drop-shadow(0 0 14px rgba(120,160,255,.55));}}
+@media (prefers-reduced-motion:reduce){.admin-word span{animation:none;opacity:.85;transform:none;}}
 .login-support-note{display:block;}
 </style>
 </head>
@@ -5079,6 +5106,10 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
         <img src="logo.png" alt="GTPL KCBPL Logo">
             </div>
     <div class="login-brand-content">
+    <div class="admin-title" aria-label="SUPER ADMIN">
+      <div class="admin-word admin-word-super" aria-hidden="true"><span>S</span><span>U</span><span>P</span><span>E</span><span>R</span></div>
+      <div class="admin-word" aria-hidden="true"><span>A</span><span>D</span><span>M</span><span>I</span><span>N</span></div>
+    </div>
     <div class="login-eyebrow"><span class="pulse-dot"></span> QA CONTROL ROOM • LIVE</div>
     <div class="login-title" id="loginTitle3D">Every call, <span>scored</span>.<br>Every agent, <span>seen</span>.</div>
     <p class="login-sub">A unified command center for CATV, Broadband Renewal, Tech Support, BB Retention, and BB Business Development—delivering real-time Call Quality Scores and Live Performance Analytics. Now enhanced with New Customer Lead Capture, a structured Agent Training Journey, and an AI-powered Quality Analyst, backed by comprehensive Agent-wise and LOB-wise Reports updating live.</p>
@@ -5088,32 +5119,6 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
       <div class="login-stat"><b>5 +</b><span>Calls / Week / Agent</span></div>
       <div class="login-stat"><b>Live</b><span>Analytics</span></div>
       <div class="login-stat"><b id="loginStatOnline" style="color:var(--agent);"><span class="pulse-dot" style="display:inline-block;margin-right:4px;"></span>--</b><span>Online Now</span></div>
-    </div>
-
-    <!-- ============ STAFF ACCESS — Quality Team / Admin / Super Admin, tucked under the stats, tiny & unobtrusive ============ -->
-    <div class="login-card staff-login-card" id="staffLoginCard" data-adminportal="1">
-      <div class="agent-admin-heading staff-tab-trigger" id="staffTabTrigger" role="button" tabindex="0" aria-expanded="false" aria-controls="staffLoginBody" onclick="toggleStaffLoginCard()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleStaffLoginCard();}">
-        <h2>🛡️ Admin Portal Login</h2>
-        <span class="staff-tab-chevron" id="staffTabChevron" aria-hidden="true">▾</span>
-      </div>
-      <div class="staff-login-body" id="staffLoginBody">
-        <p class="hint">Admin অথবা Super Admin বেছে পাসওয়ার্ড দিন।</p>
-        <div class="role-toggle staff-role-toggle">
-          <button type="button" class="active" data-role="admin" onclick="selectRole('admin')">Admin</button>
-          <button type="button" data-role="superadmin" onclick="selectRole('superadmin')">Super Admin</button>
-        </div>
-        <div class="field" id="saIdField" style="display:none;">
-          <label>Super Admin ID</label>
-          <input type="text" id="saId" placeholder="Super Admin ID" autocomplete="username">
-        </div>
-        <div class="field">
-          <label>Password</label>
-          <input type="password" id="loginPassword" placeholder="••••••••">
-          <div class="caps-light" data-caps="unknown" title="Caps Lock ON/OFF (কোনো key চাপলে বা mouse নাড়ালে আপডেট হবে)"><span class="caps-led"></span><span class="caps-txt">Caps Lock</span></div>
-        </div>
-        <button class="login-btn" id="loginBtn" data-role="admin" onclick="submitStaffLogin()">Enter as Admin</button>
-        <div class="login-error" id="loginError"></div>
-      </div>
     </div>
 
     <div class="login-support-note">
@@ -5152,6 +5157,33 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
 
 </div>
 
+    </div>
+
+    <!-- ============ STAFF ACCESS — Quality Team / Admin / Super Admin, tucked under the stats, tiny & unobtrusive ============ -->
+    <div class="login-card staff-login-card" id="staffLoginCard" data-adminportal="1">
+      <div class="agent-admin-heading staff-tab-trigger" id="staffTabTrigger" role="button" tabindex="0" aria-expanded="false" aria-controls="staffLoginBody" onclick="toggleStaffLoginCard()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleStaffLoginCard();}">
+        <h2>🛡️ Admin Portal Login</h2>
+        <span class="staff-tab-chevron" id="staffTabChevron" aria-hidden="true">▾</span>
+      </div>
+      <div class="staff-login-body" id="staffLoginBody">
+        <p class="hint">Quality Team, Admin অথবা Super Admin বেছে পাসওয়ার্ড দিন।</p>
+        <div class="role-toggle staff-role-toggle">
+          <button type="button" data-role="agent" onclick="selectRole('agent')">Quality Team</button>
+          <button type="button" class="active" data-role="admin" onclick="selectRole('admin')">Admin</button>
+          <button type="button" data-role="superadmin" onclick="selectRole('superadmin')">Super Admin</button>
+        </div>
+        <div class="field" id="saIdField" style="display:none;">
+          <label>Super Admin ID</label>
+          <input type="text" id="saId" placeholder="Super Admin ID" autocomplete="username">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••">
+          <div class="caps-light" data-caps="unknown" title="Caps Lock ON/OFF (কোনো key চাপলে বা mouse নাড়ালে আপডেট হবে)"><span class="caps-led"></span><span class="caps-txt">Caps Lock</span></div>
+        </div>
+        <button class="login-btn" id="loginBtn" data-role="admin" onclick="submitStaffLogin()">Enter as Admin</button>
+        <div class="login-error" id="loginError"></div>
+      </div>
     </div>
 
     <!-- ============ EMPLOYEE SIGN IN — primary/default card, highlighted ============ -->
@@ -9785,7 +9817,7 @@ document.addEventListener('click', function(e){
   }
 });
 function selectRole(role){
-  if(role !== 'admin' && role !== 'superadmin') role = 'admin';
+  if(role !== 'admin' && role !== 'superadmin' && role !== 'agent') role = 'admin';
   selectedRole = role;
   document.querySelectorAll('.staff-role-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.role===role));
   const btn = document.getElementById('loginBtn');
@@ -9798,7 +9830,7 @@ function selectRole(role){
     btn.textContent = 'Login as Super Admin';
   }else{
     saIdField.style.display = 'none';
-    btn.textContent = 'Enter as Admin';
+    btn.textContent = role === 'agent' ? 'Enter as QA' : 'Enter as Admin';
   }
   document.getElementById('loginError').textContent = '';
 }
