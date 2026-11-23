@@ -396,31 +396,6 @@ body.light-theme .bg-floating-circles span{
   font-size:13px;
   margin-bottom:28px;
 }
-.role-toggle{
-  display:flex;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:4px;
-  margin-bottom:22px;
-}
-.role-toggle button{
-  flex:1;
-  padding:10px;
-  border:none;
-  background:transparent;
-  color:var(--text-muted);
-  font-family:'Inter',sans-serif;
-  font-weight:600;
-  font-size:13px;
-  border-radius:7px;
-  cursor:pointer;
-  transition:all .2s;
-}
-.role-toggle button.active[data-role="agent"]{background:var(--agent-dim);color:var(--agent);}
-.role-toggle button.active[data-role="admin"]{background:var(--admin-dim);color:var(--admin);}
-.role-toggle button.active[data-role="superadmin"]{background:rgba(185,74,224,0.16);color:#B94AE0;}
-.staff-role-toggle button{font-size:12px;padding:10px 4px;}
 .field{margin-bottom:16px;}
 .field label{
   display:block;
@@ -518,8 +493,6 @@ body.light-theme .bg-floating-circles span{
 }
 .login-btn:active{transform:scale(0.98);}
 .login-btn[data-role="agent"]{background:var(--agent);color:#04211C;}
-.login-btn[data-role="admin"]{background:var(--admin);color:#2B1D06;}
-.login-btn[data-role="superadmin"]{background:#B94AE0;color:#2B0C3B;}
 .login-error{
   color:var(--need);
   font-size:12.5px;
@@ -4409,50 +4382,6 @@ transform:translateY(0);
   color:var(--text-muted); font-size:12px; line-height:1.7;
 }
 
-.admin-chat-layout{
-  display:flex; gap:0; height:560px; max-height:70vh;
-  border:1px solid var(--border); border-radius:12px; overflow:hidden;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
-}
-.admin-chat-thread-list{
-  width:280px; flex-shrink:0; overflow-y:auto;
-  border-right:1px solid var(--border); background:var(--surface-2);
-}
-.admin-chat-thread-item{
-  display:flex; align-items:center; gap:10px;
-  padding:10px 14px; border-bottom:1px solid var(--border); cursor:pointer;
-  transition: background .2s ease;
-}
-.admin-chat-thread-item:hover{ background:var(--surface-3, #1B3150); }
-.admin-chat-thread-item.active{ background:var(--agent-dim); border-left:3px solid var(--agent); }
-.admin-chat-thread-item.unread .admin-chat-thread-name{ font-weight:800; }
-.admin-chat-avatar{
-  width:40px; height:40px; border-radius:50%; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-  font-size:15px; font-weight:800; color:#fff;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
-}
-.admin-chat-thread-main{ flex:1; min-width:0; }
-.admin-chat-thread-name{ font-size:13px; color:var(--text); display:flex; align-items:center; justify-content:space-between; gap:6px; }
-.admin-chat-unread-dot{
-  width:9px; height:9px; border-radius:50%; background:var(--agent); display:inline-block; flex-shrink:0;
-  box-shadow:0 0 0 2px var(--surface-2);
-}
-.admin-chat-thread-preview{ font-size:11.5px; color:var(--text-muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-.admin-chat-thread-view{
-  flex:1; min-width:0; display:flex; flex-direction:column;
-  background:var(--surface-2); overflow:hidden;
-}
-.admin-chat-thread-header{
-  padding:12px 16px; border-bottom:1px solid var(--border); font-weight:700; color:var(--text); font-size:14px;
-  display:flex; align-items:center; gap:10px; background:var(--chat-panel-header-bg,#140F30);
-}
-@media (max-width:900px){
-  .admin-chat-layout{ flex-direction:column; height:auto; }
-  .admin-chat-thread-list{ width:100%; max-height:220px; border-right:none; border-bottom:1px solid var(--border); }
-  .admin-chat-thread-view{ min-height:360px; }
-}
 
 <style id="sql-duplicate-check-styles">
   .sql-dup-wrap{
@@ -4854,39 +4783,10 @@ body:has(#panel-MONTHDATA.active)::before{animation:none!important;}
 .aa-navgrid label{display:flex;gap:6px;align-items:flex-start;font-size:12.5px;cursor:pointer;}
 .aa-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;}
 .aa-modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:780px;width:100%;max-height:90vh;overflow:auto;padding:18px;}
-/* ===== ADMIN PORTAL colour theme (only when an Admin / Super Admin is logged in; Dark / Light toggle still works) ===== */
-body.role-admin:not(.light-theme){--bg:#0D0B1E;--surface:#161230;--surface-2:#1F1944;--surface-3:#2A2259;--border:#3A2F70;--text:#F0EDFB;--text-muted:#A39CCB;--agent:#9B7BFF;--agent-dim:#2A2060;--top:#9B7BFF;}
-body.role-admin.light-theme{--bg:#F5F2FD;--surface:#FFFFFF;--surface-2:#EFEAFB;--surface-3:#E5DDF8;--border:#DBD0F2;--text:#1C1536;--text-muted:#645B85;--agent:#6E4BE0;--agent-dim:#E8E0FB;--top:#6E4BE0;}
-body.role-admin[data-accent="blue"]:not(.light-theme){--bg:#050E24;--surface:#0B1B3D;--surface-2:#112652;--surface-3:#19346B;--border:#24428A;--text:#EAF1FF;--text-muted:#93A8D6;--agent:#4C8DFF;--agent-dim:#12306B;--top:#4C8DFF;}
-body.role-admin[data-accent="blue"].light-theme{--bg:#F0F5FF;--surface:#FFFFFF;--surface-2:#E8F0FD;--surface-3:#DCE8FB;--border:#CBDCF5;--text:#12203D;--text-muted:#56688A;--agent:#2563EB;--agent-dim:#DDE9FD;--top:#2563EB;}
-body.role-admin[data-accent="rose"]:not(.light-theme){--bg:#1A0A14;--surface:#26101D;--surface-2:#331828;--surface-3:#44213A;--border:#632E52;--text:#FBEDF4;--text-muted:#D0A0BF;--agent:#FF6B9D;--agent-dim:#4A1F38;--top:#FF6B9D;}
-body.role-admin[data-accent="rose"].light-theme{--bg:#FFF3F7;--surface:#FFFFFF;--surface-2:#FDEAF1;--surface-3:#FADCE8;--border:#F2C9DA;--text:#3A1424;--text-muted:#86536B;--agent:#D6336C;--agent-dim:#FCE0EB;--top:#D6336C;}
-body.role-admin[data-accent="orange"]:not(.light-theme){--bg:#1A0F06;--surface:#25160A;--surface-2:#331F0E;--surface-3:#452A12;--border:#63401C;--text:#FBF1E6;--text-muted:#D2B08A;--agent:#FF9F43;--agent-dim:#4A2D10;--top:#FF9F43;}
-body.role-admin[data-accent="orange"].light-theme{--bg:#FFF7EE;--surface:#FFFFFF;--surface-2:#FDEFDD;--surface-3:#FAE3C7;--border:#F2D4B0;--text:#3A2210;--text-muted:#866444;--agent:#E07B16;--agent-dim:#FDE7CC;--top:#E07B16;}
-body.role-admin::before{ background:linear-gradient(120deg,var(--agent) 0%,#B94AE0 25%,var(--agent) 50%,#E3A857 75%,var(--agent) 100%); background-size:700% 700%; opacity:.10; }
-body.role-admin .bg-floating-circles span{ --clr:var(--agent) !important; }
-#adminModeBar{ display:none; position:fixed; top:0; left:0; right:0; height:4px; z-index:100001; background:linear-gradient(90deg,var(--agent),#E3A857,var(--agent)); background-size:200% 100%; animation:adminBarMove 6s linear infinite; }
-body.role-admin #adminModeBar{ display:block; }
-@keyframes adminBarMove{ to{ background-position:200% 0; } }
-body.role-admin .role-pill.admin{ background:var(--agent); color:#fff; border-color:var(--agent); box-shadow:0 0 12px var(--agent); }
-/* Admin: replace the remaining hard-coded teal accents with the admin accent colour */
-body.role-admin .banner-wrap{ border-color:color-mix(in srgb,var(--agent) 65%,transparent); background:linear-gradient(-45deg,#1B1450,#2A1A6B,#5A2D8F,#8A2E6B,#233E9B); background-size:400% 400%; animation:dynamicMeshBackground 15s ease infinite; box-shadow:0 0 40px color-mix(in srgb,var(--agent) 35%,transparent), inset 0 0 60px rgba(0,0,0,.45); }
-body.role-admin .banner-wrap::before{ background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--agent) 25%,transparent) 30%,rgba(227,168,87,.4) 50%,color-mix(in srgb,var(--agent) 25%,transparent) 70%,transparent); }
-body.role-admin .banner-dots span.active{ background:linear-gradient(90deg,var(--agent),#FF5E7E); box-shadow:0 0 15px var(--agent); }
-body.role-admin .ticker{ border-color:color-mix(in srgb,var(--agent) 45%,transparent); background:linear-gradient(90deg,var(--surface),var(--surface-2),var(--surface)); }
-body.role-admin .news-ticker-track{ background:linear-gradient(90deg,color-mix(in srgb,var(--agent) 10%,transparent),transparent 30%),var(--surface-2); }
-body.role-admin .news-ticker-scroll span.item{ color:var(--agent); }
-body.role-admin .nav-label{ background:linear-gradient(90deg,var(--agent),#E3A857,#B94AE0,var(--agent)); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; filter:drop-shadow(0 0 6px color-mix(in srgb,var(--agent) 55%,transparent)); }
-body.role-admin .brand-strip{ background:linear-gradient(120deg,var(--bg),color-mix(in srgb,var(--agent) 12%,transparent),var(--bg)); }
-body.role-admin .nav-item.nav-quicklink-glow{ border-color:color-mix(in srgb,var(--agent) 40%,transparent); }
-body.role-admin table.raw-sheet-table tr:not(.rs-header-row):nth-child(even) td:not(.rs-head){ background:color-mix(in srgb,var(--agent) 6%,transparent); }
-body.role-admin table.raw-sheet-table tr:not(.rs-header-row):hover td:not(.rs-head){ background:color-mix(in srgb,var(--agent) 16%,transparent); }
-body.role-admin .ans3sec-table-wrap{ background:linear-gradient(135deg,color-mix(in srgb,var(--agent) 12%,transparent),rgba(227,168,87,.10)); }
-body.role-admin .banner-always.on{ background:color-mix(in srgb,var(--agent) 18%,transparent); border-color:var(--agent); color:var(--text) !important; }
 /* big scrolling 3D "ADMIN PORTAL" label next to the logo (Admin / Super Admin only) — scrolls right → left (same direction as the other tickers) */
 .admin-portal-title{ display:none; flex-shrink:0; width:190px; margin:0 12px 0 6px; padding:3px 0 7px; overflow:hidden; white-space:nowrap; perspective:420px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
-body.role-admin .admin-portal-title, body.show-role-title .admin-portal-title{ display:block; }
+body.show-role-title .admin-portal-title{ display:block; }
 .admin-portal-title .apt-track{ display:inline-flex; width:max-content; animation:adminPortalScroll calc(6s / var(--spd-adminlabel, 1)) linear infinite; will-change:transform; }
 .admin-portal-title .apt-track span{
   --apt-side:color-mix(in srgb,var(--agent) 52%,#000);
@@ -4899,11 +4799,6 @@ body.role-admin .admin-portal-title, body.show-role-title .admin-portal-title{ d
 @media (prefers-reduced-motion:reduce){ .admin-portal-title .apt-track{ animation:none; } }
 @media (max-width:1100px){ .admin-portal-title{ width:150px; margin:0 8px; } .admin-portal-title .apt-track span{ font-size:15px; letter-spacing:1.5px; padding-right:26px; } }
 @media (max-width:700px){ .admin-portal-title{ width:116px; } .admin-portal-title .apt-track span{ font-size:12px; letter-spacing:1px; padding-right:20px; } }
-body.role-admin .emp-welcome-btn-row .theme-switch-mini{ display:none; }     /* admin has its own toggle in the header */
-.admin-theme-controls{ display:none; align-items:center; gap:8px; margin-right:8px; }
-body.role-admin .admin-theme-controls{ display:inline-flex; }
-.admin-accent-dot{ width:16px; height:16px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0; box-shadow:0 0 0 1px rgba(255,255,255,.25); }
-.admin-accent-dot.on{ border-color:#fff; box-shadow:0 0 8px currentColor; transform:scale(1.15); }
 /* Banner slide background animation + editor */
 .banner-slide{ overflow:hidden; }
 .banner-slide-img{ will-change:transform; }
@@ -5016,7 +4911,6 @@ body.light-theme #loginScreen{--agent:'+aDark+';--admin:'+bDark+';--lt-c:'+mix(T
 body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
 #loginScreen .field input:focus{border-color:var(--agent);box-shadow:0 0 0 3px rgba('+A+',.22);background:rgba('+A+',.06);}\
 #loginScreen .login-btn[data-role="agent"]{background:linear-gradient(135deg,var(--agent),var(--lt-c));color:#06101a;box-shadow:0 6px 18px rgba('+A+',.32);}\
-#loginScreen .login-btn[data-role="admin"]{background:linear-gradient(135deg,var(--admin),var(--agent));color:#06101a;box-shadow:0 6px 18px rgba('+B+',.30);}\
 #loginScreen .login-btn:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 10px 26px rgba('+A+',.45);}\
 #loginScreen .login-btn:active{transform:scale(.98);}\
 #loginScreen .welcome-title{background:linear-gradient(90deg,var(--agent),var(--lt-c),var(--admin));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}\
@@ -5185,7 +5079,6 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
   </div>
 </div>
 <!-- ============ MAIN APP ============ -->
-<div id="adminModeBar"></div>
 <div id="mainScreen">
     <!-- ============ EMPLOYEE FIXED WELCOME BAR (NEW - ADDITIVE) ============ -->
     <div id="employeeWelcomeBar" style="display:none;">
@@ -5342,16 +5235,6 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
         </div>
       </div>
       <div class="user-block">
-        <span class="admin-theme-controls" id="adminThemeControls" title="Admin theme">
-          <label class="theme-switch theme-switch-mini" title="Dark / Light mode">
-            <input type="checkbox" class="theme-switch-input" onchange="toggleTheme(this)">
-            <span class="slider"></span>
-          </label>
-          <button type="button" class="admin-accent-dot" data-k="violet" style="background:#8B6BFF;color:#8B6BFF" title="Violet" onclick="setAdminAccent('violet')"></button>
-          <button type="button" class="admin-accent-dot" data-k="blue"   style="background:#3B82F6;color:#3B82F6" title="Blue"   onclick="setAdminAccent('blue')"></button>
-          <button type="button" class="admin-accent-dot" data-k="rose"   style="background:#F0558A;color:#F0558A" title="Rose"   onclick="setAdminAccent('rose')"></button>
-          <button type="button" class="admin-accent-dot" data-k="orange" style="background:#F59E3B;color:#F59E3B" title="Orange" onclick="setAdminAccent('orange')"></button>
-        </span>
         <span class="role-pill" id="rolePill">AGENT</span>
         <button class="logout-btn" onclick="handleLogoutClick()">⏻Logout</button>
       </div>
@@ -8358,14 +8241,12 @@ function doLogout(){
 localStorage.removeItem("qa_role");
     localStorage.removeItem("qa_login_time");
   currentRole = null;
-  applyAdminTheme();   // admin colours must not stay on the login screen
+  applyRoleTitle();   // admin colours must not stay on the login screen
   document.getElementById('mainScreen').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   // Role-gated elements (chat bubble/panel, nav items etc.) must go back to hidden —
   // otherwise they stay stuck visible on top of the login screen after logout.
   document.querySelectorAll('.agent-only').forEach(el=> el.style.display = 'none');
-  document.querySelectorAll('.admin-only').forEach(el=> el.style.display = 'none');
-  document.querySelectorAll('.superadmin-only').forEach(el=> el.style.display = 'none');
   const empChatPanelEl = document.getElementById('empChatPanel');
   if(empChatPanelEl) empChatPanelEl.classList.remove('open');
   const empPassEl = document.getElementById('empPassword');
@@ -8400,25 +8281,12 @@ function getSafeReturnTarget(){
   }catch(e){}
   return null;
 }
-/* ---- Admin portal theme: separate colours for Admin / Super Admin only ---- */
-function applyAdminTheme(){
-  const on = (currentRole === 'admin');
-  document.body.classList.toggle('role-admin', on);
-  const acc = localStorage.getItem('qa_admin_accent') || 'violet';
-  if(on) document.body.setAttribute('data-accent', acc); else document.body.removeAttribute('data-accent');
-  document.querySelectorAll('.admin-accent-dot').forEach(b => b.classList.toggle('on', b.dataset.k === acc));
-  applyRoleTitle();
-  if(on) document.title = (document.title.replace(/ \(Admin\)$/, '')) + ' (Admin)';
-  else document.title = document.title.replace(/ \(Admin\)$/, '');
-}
-function setAdminAccent(k){ localStorage.setItem('qa_admin_accent', k); applyAdminTheme(); }
 
 /* Big scrolling 3D label next to the logo: "ADMIN PORTAL" for Admin / Super Admin, the agent's PROCESS (from the Google Sheet) for agents */
 function applyRoleTitle(){
   const el = document.getElementById('adminPortalTitle'); if(!el) return;
   let text = '';
-  if(currentRole === 'admin') text = 'ADMIN PORTAL';
-  else if(currentRole === 'agent'){
+  if(currentRole === 'agent'){
     const proc = (localStorage.getItem('qa_emp_process') || aaMyProcess || '').replace(/\s+/g, ' ').trim().toUpperCase();
     text = proc ? (/\bPORTAL$/.test(proc) ? proc : proc + ' PORTAL') : '';      // e.g. "CATV PORTAL", "BB RENEWAL PORTAL"
   }
@@ -8453,34 +8321,8 @@ async function enterApp(){
   const pill = document.getElementById('rolePill');
   pill.textContent = currentRole.toUpperCase();
   pill.className = 'role-pill ' + currentRole;
-  applyAdminTheme();
-  if(currentRole==="admin"){
-
-    document
-        .querySelectorAll(".admin-only")
-        .forEach(el=>el.style.display="");
-
-    document
-        .querySelectorAll(".agent-only")
-        .forEach(el=>el.style.display="none");
-
-    // Super Admin Panel menu item: visible to Admin and Super Admin logins
-    document
-        .querySelectorAll(".nav-item.superadmin-only")
-        .forEach(el=>el.style.display="");
-
-}
-
+  applyRoleTitle();
 if(currentRole==="agent"){
-
-    document
-        .querySelectorAll(".admin-only")
-        .forEach(el=>el.style.display="none");
-
-    // Agents must never see anything Super Admin related
-    document
-        .querySelectorAll(".superadmin-only")
-        .forEach(el=>el.style.display="none");
 
     document
         .querySelectorAll(".agent-only")
@@ -9059,321 +8901,6 @@ async function switchTab(tab){
 }
 
 /* ===================== AGENT PERSONAL QA REPORT ===================== */
-function agentReportStatus(score){
-  const n = Number(score);
-  if(!Number.isFinite(n)) return {cls:'no-data', label:'NO DATA'};
-  if(n >= 95) return {cls:'excellent', label:'EXCELLENT'};
-  if(n >= 90) return {cls:'good', label:'GOOD'};
-  if(n >= 80) return {cls:'average', label:'AVERAGE'};
-  return {cls:'need', label:'NEEDS IMPROVEMENT'};
-}
-
-function agentReportNormalizeProcess(process){
-  const p = String(process || '').trim().toUpperCase();
-  if(p.includes('BB TECH')) return 'BBTECH';
-  if(p.includes('BB RENEWAL')) return 'BBRENEWAL';
-  if(p.includes('CATV') || p.includes('CABLE')) return 'CATV';
-  return null;
-}
-
-function agentReportFormatNumber(n){
-  const x = Number(n || 0);
-  return Number.isFinite(x) ? x.toLocaleString('en-IN') : '0';
-}
-
-function agentReportFailEntries(fails){
-  if(!fails) return [];
-  let arr = [];
-  if(Array.isArray(fails)){
-    arr = fails.map(x=>({name:x.parameter || x.name || x.label || 'Parameter', count:Number(x.count ?? x.failCount ?? x.fails ?? x.value ?? 0)}));
-  }else if(typeof fails === 'object'){
-    arr = Object.entries(fails).map(([name,count])=>({name, count:Number(count || 0)}));
-  }
-  return arr.filter(x=>x.name && Number.isFinite(x.count) && x.count > 0)
-    .sort((a,b)=>b.count-a.count || String(a.name).localeCompare(String(b.name)));
-}
-
-async function renderAgentPersonalReportLegacy(adminSelectedAgent = null){
-  const panel = document.getElementById('panel-AGENTREPORT');
-  if(!panel) return;
-
-  const isAdminPreview = currentRole === 'admin';
-  const loggedInAgent = String((typeof empAgentName !== 'undefined' && empAgentName) || localStorage.getItem('qa_emp_name') || '').trim();
-  const loggedInProcess = agentReportNormalizeProcess((typeof empProcess !== 'undefined' && empProcess) || localStorage.getItem('qa_emp_process') || '');
-
-  // Admin preview: collect the same agent rows the Agent report uses and allow
-  // the Admin to select exactly which Agent's report to preview.
-  if(isAdminPreview && !adminSelectedAgent){
-    panel.innerHTML = `
-      <div class="panel-header">
-        <div>
-          <h1>My QA Report</h1>
-          <p>Admin Preview — এখানে যে Agent select করবেন, Agent login করলে ঠিক এই report-টাই দেখতে পাবে।</p>
-        </div>
-      </div>
-      <div class="agent-report-empty">Agent list লোড হচ্ছে...</div>`;
-
-    try{
-      const allAgents = new Map();
-      for(const key of Object.keys(VERTICALS)){
-        try{
-          const { rows } = await ensureVerticalDataLoaded(key);
-          (rows || []).forEach(r => {
-            const name = String(r.agent || '').trim();
-            if(name){
-              const normalized = name.toLowerCase();
-              if(!allAgents.has(normalized)) allAgents.set(normalized, name);
-            }
-          });
-        }catch(e){ console.warn('Agent list load failed for', key, e); }
-      }
-
-      const names = Array.from(allAgents.values()).sort((a,b)=>a.localeCompare(b));
-      if(!names.length){
-        panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>Admin Preview</p></div></div><div class="agent-report-empty">কোনো Agent QA data পাওয়া যায়নি।</div>`;
-        return;
-      }
-
-      const saved = String(localStorage.getItem('qa_admin_report_agent') || '').trim();
-      const selected = names.find(n => n.toLowerCase() === saved.toLowerCase()) || names[0];
-
-      panel.innerHTML = `
-        <div class="panel-header">
-          <div>
-            <h1>My QA Report</h1>
-            <p>Admin Preview — selected Agent-এর personal report exactly Agent view-এর মতো দেখানো হচ্ছে।</p>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface);">
-          <label for="adminAgentReportSelect" style="font-size:12px;font-weight:800;color:var(--text-muted);">SELECT AGENT</label>
-          <select id="adminAgentReportSelect" style="min-width:280px;max-width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2,var(--surface));color:var(--text);font-weight:700;outline:none;">
-            ${names.map(n => `<option value="${escapeHtml(n)}" ${n.toLowerCase()===selected.toLowerCase()?'selected':''}>${escapeHtml(n)}</option>`).join('')}
-          </select>
-          <button class="btn primary small" type="button" onclick="adminPreviewAgentReport()">View Report</button>
-          <span style="font-size:11px;color:var(--text-muted);">This is a read-only Agent view.</span>
-        </div>
-        <div id="adminAgentReportBody"></div>`;
-
-      await renderAgentPersonalReport(selected);
-    }catch(e){
-      console.error('Admin agent list failed', e);
-      panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>Admin Preview</p></div></div><div class="agent-report-empty" style="color:var(--need);">Agent list load করতে সমস্যা হয়েছে।</div>`;
-    }
-    return;
-  }
-
-  const agent = isAdminPreview
-    ? String(adminSelectedAgent || '').trim()
-    : loggedInAgent;
-
-  const processKey = isAdminPreview ? null : loggedInProcess;
-
-  if(!agent){
-    panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>Agent session information পাওয়া যায়নি।</p></div></div><div class="agent-report-empty">আপনার Agent session আবার শুরু করুন।</div>`;
-    return;
-  }
-
-  // Preserve the Admin selector while replacing only the report body.
-  const adminSelector = isAdminPreview ? document.getElementById('adminAgentReportSelect') : null;
-  const selectorBlock = isAdminPreview ? `
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface);">
-      <label for="adminAgentReportSelect" style="font-size:12px;font-weight:800;color:var(--text-muted);">SELECT AGENT</label>
-      <select id="adminAgentReportSelect" style="min-width:280px;max-width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2,var(--surface));color:var(--text);font-weight:700;outline:none;"></select>
-      <button class="btn primary small" type="button" onclick="adminPreviewAgentReport()">View Report</button>
-      <span style="font-size:11px;color:var(--text-muted);">Read-only preview of the Agent's view.</span>
-    </div>` : '';
-
-  panel.innerHTML = `${isAdminPreview ? `<div class="panel-header"><div><h1>My QA Report</h1><p>Admin Preview — ${escapeHtml(agent)}</p></div></div>${selectorBlock}` : `<div class="panel-header"><div><h1>My QA Report</h1><p>${escapeHtml(agent)}-এর ব্যক্তিগত Call Quality performance report</p></div></div>`}<div class="agent-report-empty">আপনার QA data লোড হচ্ছে...</div>`;
-
-  try{
-    const keys = processKey ? [processKey] : Object.keys(VERTICALS);
-    const results = [];
-    for(const key of keys){
-      const { rows } = await ensureVerticalDataLoaded(key);
-      const row = (rows || []).find(r => String(r.agent || '').trim().toLowerCase() === agent.toLowerCase());
-      if(row) results.push({tab:key, row});
-    }
-
-    // Rebuild selector after data load so Admin can change Agent without leaving the panel.
-    if(isAdminPreview){
-      const select = document.getElementById('adminAgentReportSelect');
-      if(select && select.options.length === 0){
-        const allAgents = new Map();
-        for(const key of Object.keys(VERTICALS)){
-          const cached = rawDataCache[key];
-          const rows = cached && cached.rows ? cached.rows : [];
-          rows.forEach(r=>{
-            const n = String(r.agent || '').trim();
-            if(n && !allAgents.has(n.toLowerCase())) allAgents.set(n.toLowerCase(), n);
-          });
-        }
-        Array.from(allAgents.values()).sort((a,b)=>a.localeCompare(b)).forEach(n=>{
-          const opt=document.createElement('option'); opt.value=n; opt.textContent=n; select.appendChild(opt);
-        });
-        select.value = agent;
-      }
-    }
-
-    if(!results.length){
-      const head = isAdminPreview ? `Admin Preview — ${escapeHtml(agent)}` : escapeHtml(agent);
-      panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>${head}</p></div></div>${isAdminPreview ? selectorBlock : ''}<div class="agent-report-empty">এই Agent-এর জন্য বর্তমানে কোনো QA report পাওয়া যায়নি।</div>`;
-      return;
-    }
-
-    const totalAudits = results.reduce((sum,x)=>sum + Number(x.row.auditCount || 0), 0);
-    const weightedScoreNumerator = results.reduce((sum,x)=>sum + (Number(x.row.auditCount || 0) * Number(x.row.avgScore || 0)), 0);
-    const avgScore = totalAudits > 0 ? weightedScoreNumerator / totalAudits : (Number(results[0].row.avgScore) || 0);
-    const status = agentReportStatus(avgScore);
-    const lobs = results.map(x => (VERTICALS[x.tab] && VERTICALS[x.tab].label) || x.tab).join(' • ');
-
-    const failMap = {};
-    results.forEach(({row})=>{
-      agentReportFailEntries(row.fails).forEach(f=>{ failMap[f.name] = (failMap[f.name] || 0) + f.count; });
-    });
-    const failEntries = Object.entries(failMap).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count).slice(0,8);
-
-    const scoreText = Number.isFinite(Number(avgScore)) ? Number(avgScore).toFixed(2) + '%' : '--';
-    const previewHeader = isAdminPreview ? `
-      <div style="margin:0 0 14px;padding:10px 13px;border:1px dashed var(--border);border-radius:10px;color:var(--text-muted);font-size:11.5px;">
-        👁️ <b>Admin Preview:</b> এই report-টি <b>${escapeHtml(agent)}</b> Agent login করলে যে personal QA report দেখতে পাবে, একই data/logic দিয়ে তৈরি।
-      </div>` : '';
-
-    const reportBody = `
-      ${previewHeader}
-      <div class="agent-report-wrap">
-        <div class="agent-report-hero">
-          <div>
-            <div class="agent-report-name">${escapeHtml(agent)}</div>
-            <p class="agent-report-sub">${escapeHtml(lobs)} &nbsp;•&nbsp; Personal QA Performance</p>
-          </div>
-          <div class="agent-report-status ${status.cls}">${status.label}</div>
-        </div>
-
-        <div class="agent-report-grid">
-          <div class="agent-report-card"><div class="label">Total Audits</div><div class="value">${agentReportFormatNumber(totalAudits)}</div></div>
-          <div class="agent-report-card"><div class="label">Average Score</div><div class="value">${escapeHtml(scoreText)}</div></div>
-          <div class="agent-report-card"><div class="label">LOB / Process</div><div class="value" style="font-size:18px;">${escapeHtml(lobs)}</div></div>
-          <div class="agent-report-card"><div class="label">Report Status</div><div class="value" style="font-size:18px;">${status.label}</div></div>
-        </div>
-
-        <div class="agent-report-section">
-          <h3>⚠️ My Improvement Areas</h3>
-          ${failEntries.length ? `<div class="agent-report-fail-list">${failEntries.map(f=>`<div class="agent-report-fail-item"><span class="fail-name">${escapeHtml(f.name)}</span><span class="fail-count">${f.count} fail${f.count===1?'':'s'}</span></div>`).join('')}</div>` : `<div class="agent-report-empty">কোনো parameter-wise fail data পাওয়া যায়নি।</div>`}
-          <div class="agent-report-note">এই অংশে QA data-তে সবচেয়ে বেশি fail হওয়া parameter-গুলো আগে দেখানো হচ্ছে।</div>
-        </div>
-
-        <div class="agent-report-section">
-          <h3>📌 QA Feedback</h3>
-          <div style="font-size:13px;line-height:1.85;color:var(--text);">
-            ${
-              (() => {
-                const top1 = failEntries[0] || null;
-                const top2 = failEntries[1] || null;
-                const top3 = failEntries[2] || null;
-
-                const areaText = top1
-                  ? (
-                      '<strong>' + escapeHtml(top1.name) + '</strong> (' + top1.count + ' fail' + (top1.count === 1 ? '' : 's') + ')' +
-                      (top2
-                        ? ' এবং <strong>' + escapeHtml(top2.name) + '</strong> (' + top2.count + ' fail' + (top2.count === 1 ? '' : 's') + ')'
-                        : '') +
-                      (top3
-                        ? ' এবং <strong>' + escapeHtml(top3.name) + '</strong> (' + top3.count + ' fail' + (top3.count === 1 ? '' : 's') + ')'
-                        : '')
-                    )
-                  : '';
-
-                if(status.cls === 'excellent'){
-                  return `
-                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Excellent range-এ রয়েছে।
-                    Overall performance খুব ভালো এবং QA parameters-এ আপনার consistency প্রশংসনীয়।
-                    ${top1
-                      ? 'তবে ' + areaText + ' parameter-এ কিছু repeated observation রয়েছে। এই gap-গুলো নিয়মিতভাবে address করতে পারলে performance আরও consistent হবে।'
-                      : 'এই ভালো performance এবং consistency বজায় রাখুন।'}
-                    পরবর্তী audits-এ একই quality standard ধরে রাখার পাশাপাশি customer handling, process adherence এবং communication quality-তে একই level বজায় রাখার উপর গুরুত্ব দিন।
-                  `;
-                }
-
-                if(status.cls === 'good'){
-                  return `
-                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Good range-এ রয়েছে।
-                    Overall performance ভালো এবং basic QA standards যথেষ্টভাবে maintain হচ্ছে।
-                    ${top1
-                      ? 'তবে ' + areaText + ' parameter-এ repeated gaps লক্ষ্য করা যাচ্ছে। এই areas-এ একটু বেশি attention দিলে overall score আরও উন্নত করা সম্ভব।'
-                      : 'এখন মূল লক্ষ্য হওয়া উচিত এই performance-টি আরও consistent রাখা।'}
-                    প্রতিটি call-এ parameter-wise checklist follow করুন এবং যেসব area-তে observation বেশি হচ্ছে, call handling-এর সময় সেগুলো consciously maintain করুন।
-                  `;
-                }
-
-                if(status.cls === 'average'){
-                  return `
-                    আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Average range-এ রয়েছে।
-                    Performance-এ ভালো দিক রয়েছে, তবে কিছু parameter-এ repeated gaps-এর কারণে overall score আরও উন্নত করার সুযোগ রয়েছে।
-                    ${top1
-                      ? 'প্রধান improvement areas হলো ' + areaText + '।'
-                      : 'Parameter-wise performance আরও consistent করা প্রয়োজন।'}
-                    এই parameters-এ কেন repeated error হচ্ছে তা review করে প্রতিটি call-এ process এবং communication points consciously follow করুন।
-                    পরবর্তী audits-এ একই ধরনের observation কমানো এবং consistency বাড়ানোকে প্রধান focus হিসেবে রাখুন।
-                  `;
-                }
-
-                return `
-                  আপনার overall QA score <strong>${escapeHtml(scoreText)}</strong>, যা Needs Improvement range-এ রয়েছে।
-                  Overall performance উন্নত করার জন্য parameter-wise repeated issues-এর উপর immediate focus প্রয়োজন।
-                  ${top1
-                    ? 'প্রধান improvement areas হলো ' + areaText + '।'
-                    : 'Parameter-wise performance আরও consistent করা প্রয়োজন।'}
-                  এই parameters-এ repeated failures-এর কারণ review করে সংশ্লিষ্ট QA guidelines এবং process steps follow করার উপর বিশেষ গুরুত্ব দিন।
-                  প্রতিটি call-এর আগে এবং call handling-এর সময় relevant checklist points মনে রেখে কাজ করলে একই ধরনের observation কমানো সম্ভব হবে।
-                  পরবর্তী QA audits-এ repeated issue কমিয়ে score এবং overall call quality ধারাবাহিকভাবে উন্নত করাই মূল লক্ষ্য হওয়া উচিত।
-                `;
-              })()
-            }
-          </div>
-        </div>
-
-        <div class="agent-report-note">Last loaded: ${escapeHtml(new Date().toLocaleString('en-IN'))}</div>
-      </div>`;
-
-    // Keep the Admin selector visible above the report.
-    if(isAdminPreview){
-      const select = document.getElementById('adminAgentReportSelect');
-      const currentSelectValue = select ? select.value : agent;
-      panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>Admin Preview — selected Agent-এর personal report</p></div></div>${selectorBlock}<div id="adminAgentReportBody">${reportBody}</div>`;
-      const newSelect = document.getElementById('adminAgentReportSelect');
-      if(newSelect){
-        // Rebuild from all cached rows and keep selected agent.
-        const allAgents = new Map();
-        Object.keys(VERTICALS).forEach(key=>{
-          const cached = rawDataCache[key];
-          (cached && cached.rows ? cached.rows : []).forEach(r=>{
-            const n=String(r.agent||'').trim();
-            if(n && !allAgents.has(n.toLowerCase())) allAgents.set(n.toLowerCase(),n);
-          });
-        });
-        Array.from(allAgents.values()).sort((a,b)=>a.localeCompare(b)).forEach(n=>{
-          const opt=document.createElement('option'); opt.value=n; opt.textContent=n; newSelect.appendChild(opt);
-        });
-        newSelect.value = currentSelectValue || agent;
-      }
-    }else{
-      panel.innerHTML = reportBody;
-    }
-    runCountUps(panel);
-  }catch(e){
-    console.error('Agent personal report failed', e);
-    panel.innerHTML = `<div class="panel-header"><div><h1>My QA Report</h1><p>${escapeHtml(agent)}</p></div></div><div class="agent-report-empty" style="color:var(--need);">Report load করতে সমস্যা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।</div>`;
-  }
-}
-
-async function adminPreviewAgentReport(){
-  if(currentRole !== 'admin') return;
-  const select = document.getElementById('adminAgentReportSelect');
-  const agent = select ? String(select.value || '').trim() : '';
-  if(!agent) return;
-  localStorage.setItem('qa_admin_report_agent', agent);
-  await renderAgentPersonalReport(agent);
-}
 
 /* ===================== SQL CONTROL CENTER =====================
    NGROK FIX:
@@ -11168,7 +10695,6 @@ async function ensureVerticalDataLoaded(tab, forceRefresh){
 async function renderVerticalPanel(tab){
   const meta = VERTICALS[tab];
   const panel = document.getElementById('panel-'+tab);
-  const isAdmin = currentRole === 'admin';
   
   panel.innerHTML = `
     <div class="panel-header">
@@ -11187,22 +10713,8 @@ async function renderVerticalPanel(tab){
       </div>
     </div>`;
     
-  if(isAdmin){
-    html += `
-    <div class="upload-box">
-      <div class="txt">
-        <b>Excel ফাইল আপলোড করুন (${meta.label})</b>
-        <span>কল লেভেল র-ডাটা শিট (Associate Name, Call Link, Date, Time, Duration এবং প্যারামিটার যুক্ত কলাম) আপলোড করুন। এটি সরাসরি আপনার মূল গুগল শিটে ওভাররাইট হয়ে যাবে।</span>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <label class="btn gold" for="file-${tab}">📂 Upload Excel</label>
-        <input type="file" id="file-${tab}" accept=".xlsx,.xls,.csv" onchange="handleUpload(event,'${tab}')">
-        ${rows.length ? `<button class="btn danger" onclick="clearVertical('${tab}')">🗑️ Clear Grid</button>` : ''}
-      </div>
-    </div>`;
-  }
   if(!rows.length){
-    html += `<div class="empty-state"><b>কোনো ডাটা রেকর্ড খুঁজে পাওয়া যায়নি</b><br>${isAdmin ? 'ড্যাশবোর্ড সচল করতে দয়া করে এক্সেল শিট আপলোড করুন।' : ' এখনো কোনো ডাটা উপলব্ধ নেই।'}</div>`;
+    html += `<div class="empty-state"><b>কোনো ডাটা রেকর্ড খুঁজে পাওয়া যায়নি</b><br> এখনো কোনো ডাটা উপলব্ধ নেই।</div>`;
     panel.innerHTML = html;
     return;
   }
@@ -11230,7 +10742,7 @@ async function renderVerticalPanel(tab){
     <div class="table-wrapper">
       ${xlsxDownloadBtnHtml('agentTable-'+tab, 'Agent_Scores_'+tab)}
       <table class="score-table" id="agentTable-${tab}">
-        <thead><tr><th>Agent Name</th><th>Audit Count</th><th>Average Score</th><th>Status Tier</th>${isAdmin?'<th>Action</th>':''}</tr></thead>
+        <thead><tr><th>Agent Name</th><th>Audit Count</th><th>Average Score</th><th>Status Tier</th></tr></thead>
         <tbody>
           ${rows.slice().sort((a,b)=> String(a.agent).localeCompare(String(b.agent), 'bn')).map(r=>{
             const st = statusFor(Number(r.avgScore));
@@ -11239,7 +10751,6 @@ async function renderVerticalPanel(tab){
               <td class="mono">${escapeHtml(r.auditCount)}</td>
               <td class="mono" style="font-weight:700; color:var(--agent);">${escapeHtml(r.avgScore)}%</td>
               <td><span class="badge ${st.cls}">${st.label}</span></td>
-              ${isAdmin ? `<td><button class="btn small danger" onclick="removeAgentRow('${tab}','${encodeURIComponent(r.agent)}')">Remove</button></td>` : ''}
             </tr>`;
           }).join('')}
         </tbody>
@@ -13729,30 +13240,6 @@ function monthDataPickDefault(sheets){
   const hit = sheets.find(n => want.includes(norm(n)));
   return hit || sheets[sheets.length - 1];
 }
-/* পোর্টাল খোলার সাথে সাথে ব্যাকগ্রাউন্ডে দুই সেকশনেরই গত মাসের ডাটা আগে থেকে এনে রাখে */
-async function monthDataPrefetch(){
-  if(currentRole !== 'admin') return;   // Agents don't use this tab: don't hammer the Apps Script for them
-  for(const section of ['RAW']){   // Parameter report loads only when its tab is opened
-    try{
-      const cfg = monthDataConfig(section);
-      if(!cfg.url || cfg.url.indexOf('PASTE_') === 0) continue;
-      const data = await monthDataFetchList(section);
-      const sheets = Array.isArray(data) ? data : (Array.isArray(data.sheets) ? data.sheets : []);
-      if(!sheets.length) continue;
-      monthDataSheetListCache[section] = sheets;
-      monthDataFetchData(section, monthDataPickDefault(sheets)).catch(() => {});
-    }catch(e){ console.warn('Month data prefetch failed', section, e); }
-  }
-}
-window.addEventListener('load', () => {
-  // currentRole is only known after login, so wait a little and try once more
-  let tries = 0;
-  const iv = setInterval(() => {
-    tries++;
-    if(currentRole === 'admin'){ clearInterval(iv); setTimeout(monthDataPrefetch, 6000); }
-    else if(currentRole === 'agent' || tries > 600){ clearInterval(iv); }
-  }, 2000);
-});
 
 /* ===================== MONTH WISE RAW DATA — SMART ANALYTICS VIEW =====================
    কাঁচা টেবিলের বদলে বিশ্লেষণ: KPI, গ্রুপ/ক্রস-টেবিল (Pivot), কলাম-প্রোফাইল, সংখ্যার সারাংশ।
@@ -14980,20 +14467,9 @@ function renderHelpList(list){
         <span class="u-date mono">${escapeHtml(u.date)}</span>
       </div>
       <div class="u-body">${escapeHtml(u.body)}</div>
-      ${currentRole==='admin' ? `<div style="margin-top:10px;"><button class="btn small danger" onclick="deleteHelp(${u.id})">Delete</button></div>` : ''}
     </div>`).join('');
 }
 
-async function deleteHelp(id){
-  showToast('Processing delete from sheet...');
-  let list = (await storageGet('helpList')) || [];
-  list = list.filter(u=> u.id !== id);
-  const success = await storageSet('helpList', list);
-  if(success){
-    renderHelpList(list);
-    showToast('Help notice removed successfully.');
-  }
-}
 /* ===================== QUICK LINK PANEL ===================== */
 
 const QUICK_LINK_URL = "";
@@ -15141,41 +14617,6 @@ function animateChartBox(canvasEl){
 }
 
 /* ===================== EXCEL UPLOAD AND SEND TO GOOGLE SHEET ===================== */
-function handleUpload(evt, tab){
-  const file = evt.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = async (e)=>{
-    try{
-      const wb = XLSX.read(e.target.result, {type:'binary'});
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      
-      const json2D = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
-      const jsonObjects = XLSX.utils.sheet_to_json(sheet, {defval:''});
-      const rows = parseScoreRows(jsonObjects);
-      
-      if(!rows.length){
-        showToast('Valid কোনো ডাটা রো পাওয়া যায়নি। এক্সেল হেডার চেক করুন।');
-        return;
-      }
-      
-      showToast('গুগল শিটে ডাটা পাঠানো হচ্ছে, অনুগ্রহ করে একটু অপেক্ষা করুন...');
-      
-      const response = await fetch(WEB_APP_URL + "?vertical=" + tab, {
-        method: "POST",
-        body: JSON.stringify({ rows: json2D })
-      });
-      
-      showToast(`সফলভাবে ডাটা ওভাররাইট সম্পন্ন হয়েছে।`);
-      renderVerticalPanel(tab);
-    }catch(err){
-      console.error(err);
-      showToast('Error parsing or uploading file.');
-    }
-  };
-  reader.readAsBinaryString(file);
-  evt.target.value = '';
-}
 function detectColumnKeys(keys){
   const nameKey = keys.find(k=> /^\s*(associate|agent)\s*name\s*$/i.test(k))
     || keys.find(k=> /associate|agent/i.test(k) && /name/i.test(k))
@@ -15216,12 +14657,6 @@ function parseScoreRows(json){
   });
   return rows;
 }
-async function removeAgentRow(tab, encodedName){
-  showToast('Removing agent updates is disabled for live integrity.');
-}
-async function clearVertical(tab){
-  showToast('Clear action restricted to protect master Google sheet.');
-}
 async function updateLoginAgentCount(){
   let count = 0;
   Object.keys(rawDataCache).forEach(k => {
@@ -15248,20 +14683,9 @@ function renderUpdates(list){
         <span class="u-date mono">${escapeHtml(u.date)}</span>
       </div>
       <div class="u-body">${escapeHtml(u.body)}</div>
-      ${currentRole==='admin' ? `<div style="margin-top:10px;"><button class="btn small danger" onclick="deleteUpdate(${u.id})">Delete</button></div>` : ''}
     </div>`).join('');
 }
 
-async function deleteUpdate(id){
-  showToast('Processing delete from sheet...');
-  let list = (await storageGet('updates')) || [];
-  list = list.filter(u=> u.id !== id);
-  const success = await storageSet('updates', list);
-  if(success) {
-    renderUpdates(list);
-    showToast('Notice removed successfully.');
-  }
-}
 /* ===================== SYSTEM INITIALIZATION ===================== */
 updateLoginAgentCount();
 /* Each greeting text (Morning/Afternoon/Evening/Night) spans several hours —
@@ -15627,87 +15051,6 @@ setInterval(updateWelcome,1000);
   -moz-osx-font-smoothing:grayscale;
 }
 
-/* Quality Team / Admin / Super Admin — collapsed by default into a light, low-key tab;
-   tapping the heading reveals the same login box underneath. */
-.staff-login-card{
-  margin-top:22px;
-  max-width:190px;
-  background:transparent;
-  border:1px solid transparent;
-  border-radius:9px;
-  padding:0;
-  transition:background .25s ease, border-color .25s ease, box-shadow .25s ease, transform .18s ease-out;
-  transform-style:preserve-3d;
-  transform:perspective(900px) rotateX(0deg) rotateY(0deg);
-  will-change:transform;
-}
-.staff-login-card.expanded{
-  background:var(--surface, #0E1A2B);
-  border-color:var(--border, #203859);
-  box-shadow:0 10px 26px rgba(0,0,0,0.35);
-}
-.staff-tab-trigger{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:7px 9px;
-  cursor:pointer;
-  border-radius:7px;
-  background:rgba(255,255,255,0.03);
-  transition:background .2s ease;
-}
-.staff-login-card:not(.expanded) .staff-tab-trigger:hover,
-.staff-tab-trigger:focus-visible{
-  background:rgba(255,255,255,0.07);
-  outline:none;
-}
-.staff-login-card:not(.expanded) .staff-tab-trigger:hover .agent-admin-heading h2,
-.staff-tab-trigger:focus-visible .agent-admin-heading h2{
-  color:rgba(235,241,247,0.95);
-}
-.staff-login-card:not(.expanded) .staff-tab-trigger:hover .staff-tab-chevron,
-.staff-tab-trigger:focus-visible .staff-tab-chevron{
-  color:rgba(235,241,247,0.9);
-}
-.staff-login-card.expanded .staff-tab-trigger .agent-admin-heading h2{ color:rgba(235,241,247,0.95); }
-.staff-login-card.expanded .staff-tab-trigger .staff-tab-chevron{ color:rgba(235,241,247,0.9); }
-.staff-tab-chevron{
-  font-size:11px;
-  color:rgba(235,241,247,0.4);
-  transition:transform .25s ease, color .2s ease;
-  flex-shrink:0;
-  text-shadow:0 1px 2px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.7);
-}
-.staff-login-card.expanded .staff-tab-chevron{ transform:rotate(180deg); }
-.staff-login-body{
-  max-height:0;
-  overflow:hidden;
-  opacity:0;
-  padding:0 9px;
-  transition:max-height .32s ease, opacity .22s ease, padding .32s ease;
-}
-.staff-login-card.expanded .staff-login-body{
-  max-height:420px;
-  opacity:1;
-  padding:0 9px 9px;
-}
-.staff-login-card .agent-admin-heading h2{
-  font-size:10.5px;
-  margin-bottom:0;
-  font-weight:700;
-  color:rgba(235,241,247,0.4);
-  transition:color .2s ease;
-  text-shadow:
-    0 1px 2px rgba(0,0,0,0.9),
-    0 0 6px rgba(0,0,0,0.75),
-    0 2px 10px rgba(0,0,0,0.55);
-}
-.staff-login-card .staff-login-body p.hint{ font-size:8px; margin:6px 0; line-height:1.3; }
-.staff-login-card .role-toggle{ padding:2px; margin-bottom:6px; border-radius:6px; }
-.staff-login-card .staff-role-toggle button{ font-size:8px; padding:5px 1px; border-radius:4px; line-height:1.2; }
-.staff-login-card .field{ margin-bottom:6px; }
-.staff-login-card .field label{ font-size:7.5px; margin-bottom:2px; }
 /* Small, multi-colored contact/support note under the Staff Access card on the login screen */
 .login-support-note{
   margin-top:14px;
@@ -15737,9 +15080,6 @@ setInterval(updateWelcome,1000);
 .login-support-note .lsn-a{ background-image:linear-gradient(90deg,#8FA0B5,#33C9B0,#4A7FE0,#8FA0B5,#33C9B0,#4A7FE0); font-weight:600; }
 .login-support-note .lsn-b{ background-image:linear-gradient(90deg,#E3A857,#FF6B6B,#B94AE0,#E3A857,#FF6B6B,#B94AE0); font-weight:700; animation-duration:4.5s; }
 .login-support-note .lsn-c{ background-image:linear-gradient(90deg,#33C9B0,#00FF9D,#4A7FE0,#33C9B0,#00FF9D,#4A7FE0); font-weight:600; animation-duration:5.5s; }
-.staff-login-card .field input{ padding:5px 7px; font-size:10px; border-radius:6px; }
-.staff-login-card .login-btn{ padding:6px; font-size:9.5px; border-radius:6px; margin-top:2px; }
-.staff-login-card .login-error{ font-size:8.5px; margin-top:4px; min-height:0; }
 
 .emp-login-footer-row{
   display:flex; justify-content:center; align-items:center; margin-top:8px;
@@ -17320,90 +16660,6 @@ async function submitChangePassword(){
 </script>
 
 <script>
-/* =========================================================
-   FIX: Admin "My QA Report" Agent selector
-   Uses FastAPI -> SQL Server /advanced-report-filters and
-   /advanced-report-data instead of the old cached Sheet data.
-   Agent login behavior remains unchanged (legacy function).
-   ========================================================= */
-async function qaSqlAdminAgentReport(agentName = null){
-  const panel = document.getElementById('panel-AGENTREPORT');
-  if(!panel) return;
-
-  const isAdmin = currentRole === 'admin';
-  if(!isAdmin){
-    return renderAgentPersonalReportLegacy(agentName);
-  }
-
-  panel.innerHTML = `
-    <div class="panel-header">
-      <div>
-        <h1>My QA Report</h1>
-        <p>Admin Preview — SQL Server-এর live QA data থেকে Agent report</p>
-      </div>
-    </div>
-    <div class="agent-report-empty">Agent list লোড হচ্ছে...</div>`;
-
-  try{
-    const filterData = await sqlCenterFetch('/advanced-report-filters');
-    if(!filterData || filterData.status !== 'success'){
-      throw new Error((filterData && filterData.message) || 'Agent list load failed');
-    }
-
-    const names = Array.from(new Set(
-      (filterData.agents || [])
-        .map(x => String(x || '').trim())
-        .filter(Boolean)
-    )).sort((a,b)=>a.localeCompare(b));
-
-    if(!names.length){
-      throw new Error('SQL Server থেকে কোনো Agent পাওয়া যায়নি।');
-    }
-
-    const saved = String(localStorage.getItem('qa_admin_report_agent') || '').trim();
-    const requested = String(agentName || '').trim();
-    const selected =
-      names.find(n => n.toLowerCase() === requested.toLowerCase()) ||
-      names.find(n => n.toLowerCase() === saved.toLowerCase()) ||
-      names[0];
-
-    panel.innerHTML = `
-      <div class="panel-header">
-        <div>
-          <h1>My QA Report</h1>
-          <p>Admin Preview — selected Agent-এর personal report</p>
-        </div>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface);">
-        <label for="adminAgentReportSelect" style="font-size:12px;font-weight:800;color:var(--text-muted);">SELECT AGENT</label>
-        <select id="adminAgentReportSelect"
-          onchange="adminPreviewAgentReport()"
-          style="min-width:280px;max-width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2,var(--surface));color:var(--text);font-weight:700;outline:none;">
-          ${names.map(n => `<option value="${escapeHtml(n)}" ${n.toLowerCase()===selected.toLowerCase()?'selected':''}>${escapeHtml(n)}</option>`).join('')}
-        </select>
-        <button class="btn primary small" type="button" onclick="adminPreviewAgentReport()">View Report</button>
-        <span style="font-size:11px;color:var(--text-muted);">Read-only preview of the Agent's view.</span>
-      </div>
-
-      <div id="adminAgentReportBody">
-        <div class="agent-report-empty">Report লোড হচ্ছে...</div>
-      </div>`;
-
-    localStorage.setItem('qa_admin_report_agent', selected);
-    await qaRenderSqlAgentReport(selected);
-
-  }catch(e){
-    console.error('SQL Agent report failed:', e);
-    panel.innerHTML = `
-      <div class="panel-header">
-        <div><h1>My QA Report</h1><p>Admin Preview</p></div>
-      </div>
-      <div class="agent-report-empty" style="color:var(--need);">
-        Agent list load করতে সমস্যা হয়েছে: ${escapeHtml(e.message)}
-      </div>`;
-  }
-}
 
 function qaScoreStatus(score){
   const n = Number(score);
@@ -17743,11 +16999,8 @@ async function qaRenderSqlAgentReport(agent, targetId='adminAgentReportBody'){
   }
 }
 
-/* Replace the Admin-only selector action with the SQL-backed version. */
-async function renderAgentPersonalReport(adminSelectedAgent = null){
-  if(currentRole === 'admin'){
-    return qaSqlAdminAgentReport(adminSelectedAgent);
-  }
+/* Agent personal QA report (SQL-backed). */
+async function renderAgentPersonalReport(){
   const agent = String(
     (typeof empAgentName !== 'undefined' && empAgentName) ||
     localStorage.getItem('qa_emp_name') || ''
@@ -17763,26 +17016,6 @@ async function renderAgentPersonalReport(adminSelectedAgent = null){
   }
   // Reuse the same SQL report renderer; it will render into agentPersonalSqlBody.
   await qaRenderSqlAgentReport(agent, 'agentPersonalSqlBody');
-}
-
-async function adminPreviewAgentReport(){
-  if(currentRole !== 'admin') return;
-
-  const select = document.getElementById('adminAgentReportSelect');
-  const agent = select ? String(select.value || '').trim() : '';
-
-  if(!agent){
-    return;
-  }
-
-  localStorage.setItem('qa_admin_report_agent', agent);
-
-  const body = document.getElementById('adminAgentReportBody');
-  if(body){
-    body.innerHTML = '<div class="agent-report-empty">Selected Agent-এর SQL report লোড হচ্ছে...</div>';
-  }
-
-  await qaRenderSqlAgentReport(agent);
 }
 </script>
 
