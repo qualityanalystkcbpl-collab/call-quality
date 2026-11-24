@@ -7108,9 +7108,24 @@ function msgNormProc(name){
 }
 function msgViewProc(){
   if(currentRole === 'admin' || currentRole === 'superadmin') return msgAdminProc;
-  let p = '';
-  try{ p = (typeof empProcess !== 'undefined' && empProcess) ? empProcess : (localStorage.getItem('qa_emp_process') || ''); }catch(e){}
-  return msgNormProc(p);
+  /* Process-এর নাম লগইন রেসপন্স → localStorage → Supabase agent list (backup) — যেটাতে আগে মেলে */
+  const cands = [];
+  try{ if(typeof empProcess !== 'undefined' && empProcess) cands.push(empProcess); }catch(e){}
+  try{ cands.push(localStorage.getItem('qa_emp_process') || ''); }catch(e){}
+  try{ if(typeof aaMyProcess !== 'undefined' && aaMyProcess) cands.push(aaMyProcess); }catch(e){}
+  for(const c of cands){ const n = msgNormProc(c); if(n) return n; }
+  return '';
+}
+/* লগইনের ঠিক পরে (Process এখনো জানা নেই) — Supabase থেকে agent-এর Process এনে নেয় */
+async function msgViewProcAsync(){
+  let p = msgViewProc();
+  if(!p && currentRole === 'agent' && typeof aaFetchMy === 'function'){
+    try{
+      const row = await aaFetchMy();
+      if(row && row.process) p = msgNormProc(String(row.process));
+    }catch(e){}
+  }
+  return p;
 }
 function msgKey(base, proc){ return proc ? base + '__' + proc : base; }
 function msgIsValid(base, d){
@@ -7119,7 +7134,8 @@ function msgIsValid(base, d){
   return true;
 }
 async function msgGet(base){
-  const proc = msgViewProc();
+  const proc = await msgViewProcAsync();
+  console.log('[process-msg]', base, '→ process:', proc || '(Default)');
   if(proc){
     const d = await storageGet(msgKey(base, proc));
     if(msgIsValid(base, d)) return d;
