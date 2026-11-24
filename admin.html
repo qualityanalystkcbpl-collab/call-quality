@@ -23313,16 +23313,21 @@ function getMe(){
   try{
     const ms = document.getElementById('mainScreen');
     if(ms && getComputedStyle(ms).display === 'none') return null;
-    let id = (typeof empEmployeeId!=='undefined' && empEmployeeId) || localStorage.getItem('qa_emp_id') || '';
+    const ls = k => localStorage.getItem(k);
+    const adminLogin = ls('qa_admin_role') === 'admin' || (typeof currentRole!=='undefined' && currentRole === 'admin');
+    /* 1) Super Admin login (admin portal) */
+    if((typeof superAdminToken!=='undefined' && superAdminToken) || (ls('qa_admin_sa') === '1' && adminLogin) || (typeof currentRole!=='undefined' && currentRole === 'superadmin'))
+      return { id:'SUPERADMIN', name:'Super Admin', role:'Super Admin', team:'', process:'' };
+    /* 2) Employee login (agent / TL / AM / HR ... ) — live session variable */
+    let id = (typeof empEmployeeId!=='undefined' && empEmployeeId) || '';
+    /* 3) page refresh-er por: localStorage-er employee session, jodi admin-login na hoy (purano stale ID bhul dhorbe na) */
+    if(!id && !adminLogin) id = ls('qa_emp_id') || '';
     if(id){
-      let name = (typeof empAgentName!=='undefined' && empAgentName) || localStorage.getItem('qa_emp_name') || id;
-      return { id:String(id), name:String(name), role: localStorage.getItem('qa_emp_role_label') || 'Agent',
-        team: localStorage.getItem('qa_emp_team') || '', process: localStorage.getItem('qa_emp_process') || '' };
+      let name = (typeof empAgentName!=='undefined' && empAgentName) || ls('qa_emp_name') || id;
+      return { id:String(id), name:String(name), role: ls('qa_emp_role_label') || 'Agent', team: ls('qa_emp_team') || '', process: ls('qa_emp_process') || '' };
     }
-    if(typeof currentRole === 'undefined' || !currentRole) return null;
-    const isSA = (typeof superAdminToken!=='undefined' && superAdminToken) || localStorage.getItem('qa_is_superadmin') === '1' || localStorage.getItem('qa_sa_token') || currentRole === 'superadmin';
-    if(isSA) return { id:'SUPERADMIN', name:'Super Admin', role:'Super Admin', team:'', process:'' };
-    if(currentRole === 'admin') return { id:'ADMIN', name:'Admin', role:'Admin', team:'', process:'' };
+    /* 4) shared Admin login */
+    if(typeof currentRole!=='undefined' && currentRole === 'admin') return { id:'ADMIN', name:'Admin', role:'Admin', team:'', process:'' };
   }catch(e){}
   return null;
 }
