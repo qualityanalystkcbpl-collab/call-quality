@@ -23241,6 +23241,11 @@ body.light-theme .ic-file{background:rgba(0,0,0,.05)}
 .ic-setup textarea{width:100%;height:120px;margin-top:8px;font-size:11px;font-family:monospace;background:var(--ic-bg);color:var(--ic-text);border:1px solid var(--ic-line);border-radius:6px}
 .ic-setup button{margin-top:6px;background:var(--ic-green);color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer}
 .nav-item .ic-nav-badge{margin-left:auto;background:#00a884;color:#fff;border-radius:10px;min-width:19px;height:19px;padding:0 6px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;animation:icPop .3s}
+.ic-sn{font-size:12.5px;font-weight:700;margin-bottom:2px}
+.ic-m .ic-tagdel{font-size:10.5px;color:var(--ic-err);margin-left:6px}
+.ic-hd .ic-hbtn{background:rgba(241,92,109,.15);color:var(--ic-err);border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-family:inherit}
+.ic-row .ic-top .ic-chip{padding:3px 11px;font-size:12px}
+.ic-blocked{padding:60px 24px;text-align:center;color:var(--ic-sub);font-size:15px;line-height:1.7}
 @media(max-width:820px){
   .ic-wrap{height:calc(100vh - 140px);border-radius:10px}
   .ic-side{width:100%;max-width:100%}
@@ -23262,7 +23267,7 @@ const INLINE_FILE_MAX = 1.5 * 1024 * 1024;// Storage na thakle ei porjonto DB-te
 const PAGE = 60;
 const ONLINE_MS = 100 * 1000;
 const SQL_SETUP = `create table if not exists chat_users (
-  id text primary key, name text, role text, team text, process text,
+  id text primary key, name text, role text, team text, process text, status text, chat_removed boolean default false,
   last_seen timestamptz default now()
 );
 create table if not exists ic_messages (
@@ -23277,6 +23282,8 @@ create table if not exists ic_messages (
   delivered_at timestamptz, read_at timestamptz,
   deleted_at timestamptz, deleted_by text
 );
+alter table chat_users add column if not exists status text;
+alter table chat_users add column if not exists chat_removed boolean default false;
 create index if not exists ic_messages_conv_idx on ic_messages(conv_id, created_at);
 create index if not exists ic_messages_rcv_idx on ic_messages(receiver_id, created_at);
 create index if not exists ic_messages_snd_idx on ic_messages(sender_id, created_at);
@@ -23291,7 +23298,7 @@ alter publication supabase_realtime add table ic_messages;`;
 /* ---------- STATE ---------- */
 const S = { me:null, users:{}, convs:{}, msgs:{}, open:null, tab:'chats', q:'', grp:'', loadedDir:0, setupErr:false,
   typingUntil:0, typCh:null, typConv:null, lastTypeSent:0, realtime:null, started:false, hidden:{}, atBottom:true, newBelow:0,
-  hasMore:{}, sendQ:{}, lastBackup:{}, dirty:{}, toastSeen:{} };
+  saView:'people', all:{}, mon:null, monMsgs:[], monMore:false, hasMore:{}, sendQ:{}, lastBackup:{}, dirty:{}, toastSeen:{} };
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast = m => { try{ showToast(m); }catch(e){} };
@@ -23356,11 +23363,21 @@ function initials(n){ const p = String(n||'?').trim().split(/\s+/); return ((p[0
 function avatar(u, cls){ const id=u.id, nm=u.name||id; return '<div class="ic-av '+(cls||'')+'" style="background:'+colorOf(id)+'">'+esc(initials(nm))+(isOnline(u)?'<span class="ic-dot"></span>':'')+'</div>'; }
 
 /* ---------- DIRECTORY ---------- */
+async function upsertUsers(rows, prefer){
+  const strip = r => { const o = Object.assign({}, r); delete o.status; return o; };
+  const body = S.noStatus ? [].concat(rows).map(strip) : rows;
+  try{ await api(T_USR + '?on_conflict=id', { method:'POST', prefer, noJson:true, body }); }
+  catch(e){
+    if(!S.noStatus && e.status===400 && /status/i.test(e.body||'')){ S.noStatus = true; return upsertUsers(rows, prefer); }
+    throw e;
+  }
+}
+const INACTIVE_RE = /^\s*(inactive|in-active|deactivat|disabled|blocked|left|resign|terminat)/i;
+const vis = u => !!u && !u.chat_removed && !INACTIVE_RE.test(String(u.status||''));
 async function registerMe(){
   const me = S.me; if(!me) return;
   try{
-    await api(T_USR + '?on_conflict=id', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal', noJson:true,
-      body:{ id:me.id, name:me.name, role:me.role, team:me.team||null, process:me.process||null, last_seen:new Date().toISOString() } });
+    await upsertUsers({ id:me.id, name:me.name, role:me.role, team:me.team||null, process:me.process||null, status:'Active', last_seen:new Date().toISOString() }, 'resolution=merge-duplicates,return=minimal');
     S.setupErr = false;
   }catch(e){ markSetupErr(e); }
   if(S.users[me.id]) S.users[me.id].last_seen = new Date().toISOString();
@@ -23371,10 +23388,14 @@ async function syncAgentsFromSuperAdmin(){
     if(Date.now() - (Number(sessionStorage.getItem('ic_sync'))||0) < 10*60*1000) return;
     const d = await empApiGet('listAgents', { token: superAdminToken });
     if(!(d && d.ok && Array.isArray(d.agents))) return;
-    const rows = d.agents.filter(a=>a && a.employeeId).map(a=>({ id:String(a.employeeId), name:a.agentName||String(a.employeeId),
-      role: a.designation||a.Designation||((String(a.role||'').toLowerCase()==='admin')?'Admin':'Agent'), team:a.team||null, process:a.process||null }));
-    for(let i=0;i<rows.length;i+=200){
-      await api(T_USR + '?on_conflict=id', { method:'POST', prefer:'resolution=ignore-duplicates,return=minimal', noJson:true, body: rows.slice(i,i+200) });
+    const withRole = [], noRole = [];
+    d.agents.filter(a=>a && a.employeeId).forEach(a=>{
+      const row = { id:String(a.employeeId), name:a.agentName||String(a.employeeId), team:a.team||null, process:a.process||null, status:a.status||'Active' };
+      const des = a.designation||a.Designation||((String(a.role||'').toLowerCase()==='admin')?'Admin':'');
+      if(des){ row.role = des; withRole.push(row); } else noRole.push(row);   // role na thakle purano role overwrite hobe na
+    });
+    for(const rows of [withRole, noRole]){
+      for(let i=0;i<rows.length;i+=200) await upsertUsers(rows.slice(i,i+200), 'resolution=merge-duplicates,return=minimal');
     }
     sessionStorage.setItem('ic_sync', String(Date.now()));
   }catch(e){ console.warn('IC sync', e); }
@@ -23397,6 +23418,7 @@ function previewOf(m){
 }
 async function pollList(){
   const me = S.me; if(!me) return;
+  if(isRemoved()){ updateNavBadge(0); return; }
   let rows;
   try{
     rows = await api(T_MSG + '?select=id,conv_id,sender_id,receiver_id,sender_name,kind,text,file_name,created_at,delivered_at,read_at,deleted_at&or=(sender_id.eq.'+q(me.id)+',receiver_id.eq.'+q(me.id)+')&order=created_at.desc&limit=600');
@@ -23451,7 +23473,7 @@ function peerOf(cid){ const c = S.convs[cid]; const id = (c && c.peer) || cid.sp
 async function openConv(peerId){
   const me = S.me; if(!me) return;
   const cid = convId(me.id, peerId);
-  S.open = cid; S.newBelow = 0; S.atBottom = true;
+  S.open = cid; S.mon = null; S.newBelow = 0; S.atBottom = true;
   if(!S.convs[cid]) S.convs[cid] = { id:cid, peer:peerId, last:null, unread:0 };
   $('icWrap').classList.add('chat');
   renderMain(true); renderList();
@@ -23511,6 +23533,8 @@ async function markRead(cid){
 async function sendMsg(extra){
   const me = S.me, cid = S.open; if(!me || !cid) return;
   const peer = peerOf(cid);
+  if(isRemoved()) return toast('Apnake chat theke soriye deoa hoyeche');
+  if(S.users[peer.id] && S.users[peer.id].chat_removed) return toast('Ei user ekhon chat-e nei');
   const ta = $('icTa');
   let text = extra && extra.text !== undefined ? extra.text : (ta ? ta.value : '');
   text = String(text||'').replace(/\s+$/,'');
@@ -23718,22 +23742,22 @@ function renderPanel(){
   $('icSearch').value = S.q;
   renderMain(false); renderList();
   start();
-  registerMe().then(()=>loadDirectory(true)).then(()=>{ renderList(); renderHeader(); });
+  registerMe().then(()=>loadDirectory(true)).then(()=>{ if(isRemoved()) return showBlocked(); renderList(); renderHeader(); });
   syncAgentsFromSuperAdmin().then(()=>loadDirectory(true)).then(renderList);
   pollList();
   if(S.open){ const cid=S.open; S.open=null; openConv((S.convs[cid]&&S.convs[cid].peer)||cid.split('|').find(x=>x!==S.me.id)); }
 }
 function renderAll(){ if(!panelOpen()) return; renderList(); renderHeader(); }
 function groupsOf(){
-  const set = new Set(); Object.values(S.users).forEach(u=>{ if(u.id===S.me.id) return; if(u.role) set.add(u.role); if(u.team) set.add(u.team); if(u.process) set.add(u.process); });
+  const set = new Set(); Object.values(S.users).forEach(u=>{ if(u.id===S.me.id || !vis(u)) return; if(u.role) set.add(u.role); if(u.team) set.add(u.team); if(u.process) set.add(u.process); });
   return Array.from(set).sort((a,b)=>String(a).localeCompare(String(b)));
 }
 function renderList(){
   const list = $('icList'), tabs = $('icTabs'); if(!list || !S.me) return;
   const unreadTotal = Object.values(S.convs).reduce((a,c)=>a+(c.unread||0),0);
-  tabs.innerHTML = '<button class="ic-chip '+(S.tab==='chats'?'on':'')+'" data-t="chats">Chats'+(unreadTotal?' ('+unreadTotal+')':'')+'</button><button class="ic-chip '+(S.tab==='people'?'on':'')+'" data-t="people">People</button>' +
+  tabs.innerHTML = '<button class="ic-chip '+(S.tab==='chats'?'on':'')+'" data-t="chats">Chats'+(unreadTotal?' ('+unreadTotal+')':'')+'</button><button class="ic-chip '+(S.tab==='people'?'on':'')+'" data-t="people">People</button>' + (isSA()?'<button class="ic-chip '+(S.tab==='sa'?'on':'')+'" data-t="sa">👑 Admin</button>':'') +
     (S.tab==='people' ? '<select class="ic-sel" id="icGrp"><option value="">All roles/teams</option>'+groupsOf().map(g=>'<option '+(S.grp===g?'selected':'')+' value="'+esc(g)+'">'+esc(g)+'</option>').join('')+'</select>' : '');
-  tabs.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ S.tab=b.dataset.t; if(S.tab==='people') loadDirectory(true).then(renderList); renderList(); });
+  tabs.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ S.tab=b.dataset.t; if(S.tab==='people') loadDirectory(true).then(renderList); if(S.tab==='sa'){ loadDirectory(true).then(saLoadAll); } renderList(); });
   const g = $('icGrp'); if(g) g.onchange = ()=>{ S.grp = g.value; renderList(); };
   const qq = S.q.trim().toLowerCase();
   let html = '';
@@ -23751,16 +23775,18 @@ function renderList(){
   };
   if(S.tab==='chats'){
     let cs = Object.values(S.convs).filter(c=>c.last).sort((a,b)=>String(b.last.created_at).localeCompare(String(a.last.created_at)));
-    const rows = cs.map(c=>({ u:peerOf(c.id), c })).filter(x=>!qq || (x.u.name||'').toLowerCase().includes(qq) || String(x.u.id).toLowerCase().includes(qq));
+    const rows = cs.map(c=>({ u:peerOf(c.id), c })).filter(x=>(!S.users[x.u.id] || vis(S.users[x.u.id])) && (!qq || (x.u.name||'').toLowerCase().includes(qq) || String(x.u.id).toLowerCase().includes(qq)));
     html += rows.map(x=>mkRow(x.u, x.c)).join('');
     if(qq){
       const have = new Set(rows.map(x=>x.u.id));
-      const more = Object.values(S.users).filter(u=>u.id!==S.me.id && !have.has(u.id) && ((u.name||'').toLowerCase().includes(qq) || String(u.id).toLowerCase().includes(qq)));
+      const more = Object.values(S.users).filter(u=>u.id!==S.me.id && vis(u) && !have.has(u.id) && ((u.name||'').toLowerCase().includes(qq) || String(u.id).toLowerCase().includes(qq)));
       if(more.length) html += '<div class="ic-empty" style="padding:10px 16px;text-align:left;font-size:12px">OTHER PEOPLE</div>' + more.slice(0,40).map(u=>mkRow(u, null)).join('');
     }
     if(!html.replace(/<div class="ic-setup">[\s\S]*?<\/div>/,'').trim()) html += '<div class="ic-empty">💬<br>Kono chat nei.<br><b>People</b> tab theke kauke select kore chat shuru korun.</div>';
+  }else if(S.tab==='sa' && isSA()){
+    html += saListHtml();
   }else{
-    let us = Object.values(S.users).filter(u=>u.id!==S.me.id);
+    let us = Object.values(S.users).filter(u=>u.id!==S.me.id && vis(u));
     if(S.grp) us = us.filter(u=>u.role===S.grp||u.team===S.grp||u.process===S.grp);
     if(qq) us = us.filter(u=>(u.name||'').toLowerCase().includes(qq)||String(u.id).toLowerCase().includes(qq)||(u.role||'').toLowerCase().includes(qq)||(u.process||'').toLowerCase().includes(qq)||(u.team||'').toLowerCase().includes(qq));
     us.sort((a,b)=> (isOnline(b)-isOnline(a)) || String(a.name||'').localeCompare(String(b.name||'')));
@@ -23770,10 +23796,12 @@ function renderList(){
   const prevScroll = list.scrollTop;
   list.innerHTML = html; list.scrollTop = prevScroll;
   list.querySelectorAll('[data-peer]').forEach(r=>r.onclick=()=>openConv(r.dataset.peer));
+  if(S.tab==='sa') wireSA(list);
   const cp = $('icCopySql'); if(cp) cp.onclick = ()=>{ const t=$('icSql'); t.select(); try{ document.execCommand('copy'); toast('SQL copy hoyeche'); }catch(e){} };
 }
 function renderMain(full){
   const main = $('icMain'); if(!main) return;
+  if(S.mon){ renderMon(); return; }
   if(!S.open){
     main.innerHTML = '<div class="ic-wall"></div><div class="ic-blank"><div class="ic-big">💬</div><h3>Internal Chat</h3><div>Agent, TL, AM, HR, Admin, Super Admin — sabai nijeder moddhe 1-to-1 chat korte parben.<br>Shudhu doi-jon-i ei chat dekhte parbe.</div></div>';
     return;
@@ -23887,6 +23915,108 @@ function toggleAttach(){
 document.addEventListener('click', e=>{ if(!e.target.closest('.ic-menu,.ic-emo,.ic-attm')) closeMenus(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeMenus(); closePreview(); } });
 
+
+/* ---------- SUPER ADMIN: remove/restore people + sob chat dekha ---------- */
+const isSA = () => !!(S.me && S.me.id === 'SUPERADMIN');
+const isRemoved = () => !!(S.me && S.users[S.me.id] && S.users[S.me.id].chat_removed);
+function showBlocked(){
+  const p = $('panel-INTERNALCHAT'); if(!p) return;
+  p.innerHTML = '<div class="ic-wrap"><div class="ic-blocked" style="flex:1"><div style="font-size:60px">🚫</div><b style="color:var(--ic-text);font-size:18px">Internal Chat theke apnake soriye deoa hoyeche.</b><br>Dorkar hole Super Admin-er sathe jogajog korun.</div></div>';
+}
+async function setRemoved(id, val){
+  try{
+    await api(T_USR + '?id=eq.' + enc(id), { method:'PATCH', body:{ chat_removed: !!val }, prefer:'return=minimal', noJson:true });
+    if(S.users[id]) S.users[id].chat_removed = !!val;
+    toast(val ? '✅ Chat theke soriye deoa hoyeche' : '✅ Abar chat-e ferano hoyeche');
+  }catch(e){ toast('⚠️ Hoy ni — Supabase-e "chat_removed" column add korun (SQL file dekhun)'); }
+  renderList();
+}
+async function saLoadAll(){
+  if(!isSA()) return;
+  try{
+    const rows = await api(T_MSG + '?select=id,conv_id,sender_id,receiver_id,sender_name,kind,text,file_name,created_at,deleted_at&order=created_at.desc&limit=4000') || [];
+    const all = {};
+    rows.forEach(r=>{ const c = all[r.conv_id] || (all[r.conv_id] = { id:r.conv_id, ids:r.conv_id.split('|'), last:r, count:0, names:{} }); c.count++; if(r.sender_name) c.names[r.sender_id] = r.sender_name; });
+    S.all = all;
+  }catch(e){ markSetupErr(e); }
+  renderList();
+}
+const nameOfId = (id, c) => (S.users[id] && S.users[id].name) || (c && c.names && c.names[id]) || id;
+function saListHtml(){
+  const qq = S.q.trim().toLowerCase();
+  let h = '<div class="ic-tabs" style="padding-top:8px"><button class="ic-chip '+(S.saView==='people'?'on':'')+'" data-sv="people">Manage people</button><button class="ic-chip '+(S.saView==='chats'?'on':'')+'" data-sv="chats">All chats ('+Object.keys(S.all||{}).length+')</button><button class="ic-chip" data-sv="reload" title="Reload">↻</button></div>';
+  if(S.saView==='people'){
+    let us = Object.values(S.users).filter(u=>u.id!==S.me.id && (!qq || (u.name||'').toLowerCase().includes(qq) || String(u.id).toLowerCase().includes(qq) || (u.role||'').toLowerCase().includes(qq)));
+    us.sort((a,b)=> (!!a.chat_removed - !!b.chat_removed) || String(a.name||'').localeCompare(String(b.name||'')));
+    h += '<div class="ic-empty" style="padding:4px 16px 8px;text-align:left;font-size:12px">"Remove" korle se chat-e kauke dekhbe na, keu take dekhbe na, message-o pathate parbe na. Restore korle abar ager moto.</div>';
+    h += us.map(u=>'<div class="ic-row" data-sap="'+esc(u.id)+'">'+avatar(u)+'<div class="ic-mid"><div class="ic-top"><span class="ic-nm">'+esc(u.name||u.id)+(u.chat_removed?'<span class="ic-role" style="background:rgba(241,92,109,.18);color:var(--ic-err)">Removed</span>':(INACTIVE_RE.test(String(u.status||''))?'<span class="ic-role" style="background:rgba(128,128,128,.2);color:var(--ic-sub)">Inactive</span>':''))+'</span><button class="ic-chip" data-rm="'+esc(u.id)+'">'+(u.chat_removed?'Restore':'Remove')+'</button></div><div class="ic-bot"><span class="ic-pv">'+esc([u.id,u.role,u.process].filter(Boolean).join(' · '))+'</span></div></div></div>').join('');
+    if(!us.length) h += '<div class="ic-empty">Kono manush nei.</div>';
+  }else{
+    let cs = Object.values(S.all||{}).filter(c=>{ if(!qq) return true; return c.ids.some(id=> id.toLowerCase().includes(qq) || nameOfId(id,c).toLowerCase().includes(qq)); }).sort((a,b)=>String(b.last.created_at).localeCompare(String(a.last.created_at)));
+    h += cs.map(c=>{ const nm = c.ids.map(id=>nameOfId(id,c)); return '<div class="ic-row '+(S.mon===c.id?'on':'')+'" data-mon="'+esc(c.id)+'">'+avatar({id:c.ids[0],name:nm[0]})+'<div class="ic-mid"><div class="ic-top"><span class="ic-nm">'+esc(nm[0])+' ⇄ '+esc(nm[1]||'')+'</span><span class="ic-tm">'+listTime(c.last.created_at)+'</span></div><div class="ic-bot"><span class="ic-pv">'+esc(previewOf(c.last).slice(0,60))+'</span><span class="ic-tm">'+c.count+'</span></div></div></div>'; }).join('');
+    if(!cs.length) h += '<div class="ic-empty">Kono chat nei.</div>';
+  }
+  return h;
+}
+function wireSA(list){
+  list.querySelectorAll('[data-sv]').forEach(b=>b.onclick=()=>{ if(b.dataset.sv==='reload'){ loadDirectory(true).then(saLoadAll); return; } S.saView=b.dataset.sv; renderList(); });
+  list.querySelectorAll('[data-rm]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); const u=S.users[b.dataset.rm]; if(!u) return;
+    if(u.chat_removed) setRemoved(u.id,false); else if(confirm((u.name||u.id)+' ke Internal Chat theke soriye dite chan?')) setRemoved(u.id,true); });
+  list.querySelectorAll('[data-mon]').forEach(r=>r.onclick=()=>openMon(r.dataset.mon));
+}
+async function openMon(cid){
+  S.mon = cid; S.open = null; S.monMsgs = []; S.monMore = false;
+  const w = $('icWrap'); if(w) w.classList.add('chat');
+  renderMain(); renderList(); await monLoad(false);
+}
+async function monLoad(older){
+  const cid = S.mon; if(!cid) return;
+  try{
+    let url = T_MSG + '?conv_id=eq.'+enc(cid)+'&select=*&order=created_at.desc&limit=200';
+    if(older && S.monMsgs.length) url += '&created_at=lt.'+enc(S.monMsgs[0].created_at);
+    const rows = (await api(url)) || [];
+    if(S.mon!==cid) return;
+    S.monMore = rows.length >= 200;
+    S.monMsgs = rows.reverse().concat(older ? S.monMsgs : []);
+    renderMonMsgs(!older);
+  }catch(e){ toast('Load hoy ni'); }
+}
+function renderMon(){
+  const main = $('icMain'); if(!main) return;
+  const c = (S.all && S.all[S.mon]) || { ids:S.mon.split('|'), names:{} };
+  main.innerHTML = '<div class="ic-wall"></div><div class="ic-hd"><button class="ic-back" id="icBack">←</button>'+avatar({id:c.ids[0],name:nameOfId(c.ids[0],c)},'sm')+
+    '<div class="ic-who"><b>'+esc(nameOfId(c.ids[0],c))+' ⇄ '+esc(nameOfId(c.ids[1],c))+'</b><small>👑 Super Admin view · read-only</small></div><button class="ic-hbtn" id="icMonDel">🗑 Delete chat</button></div>'+
+    '<div class="ic-msgs" id="icMonMsgs"></div>';
+  $('icBack').onclick = ()=>{ S.mon=null; $('icWrap').classList.remove('chat'); renderMain(); renderList(); };
+  $('icMonDel').onclick = async ()=>{
+    if(!confirm('Ei duijoner pura chat history DB theke muche felben? (Google Sheet backup thakbe)')) return;
+    try{ await api(T_MSG + '?conv_id=eq.'+enc(S.mon), { method:'DELETE', prefer:'return=minimal', noJson:true }); }catch(e){ return toast('Delete hoy ni'); }
+    if(S.all) delete S.all[S.mon]; delete S.msgs[S.mon]; delete S.convs[S.mon];
+    S.mon=null; $('icWrap').classList.remove('chat'); renderMain(); renderList(); toast('Chat muche deoa hoyeche');
+  };
+  renderMonMsgs(true);
+}
+function renderMonMsgs(bottom){
+  const box = $('icMonMsgs'); if(!box) return;
+  const c = (S.all && S.all[S.mon]) || { ids:S.mon.split('|'), names:{} };
+  let html = S.monMore ? '<button class="ic-more" id="icMonMore">Load older messages</button>' : '';
+  let lastDay = '', lastS = null;
+  S.monMsgs.forEach(m=>{
+    const dk = dayKey(m.created_at); if(dk!==lastDay){ html += '<div class="ic-date">'+dayLabel(m.created_at)+'</div>'; lastDay=dk; lastS=null; }
+    const right = m.sender_id === c.ids[1], tail = lastS!==m.sender_id; lastS = m.sender_id;
+    let body = '';
+    if(m.kind==='image'){ const src = m.file_data||m.file_url||''; body += '<img class="ic-img" data-src="'+esc(src)+'" src="'+esc(src)+'" alt="photo">'; }
+    else if(m.kind==='file'){ const ext=fileExt(m.file_name); body += '<div class="ic-file" data-dl="'+esc(m.id)+'"><div class="ic-fi" style="background:'+(EXT_COL[ext]||'#607d8b')+'">'+esc(ext)+'</div><div style="min-width:0"><div class="ic-fn">'+esc(m.file_name||'File')+'</div><div class="ic-fs">'+esc(fmtSize(m.file_size||0))+'</div></div><div class="ic-dl">⬇</div></div>'; }
+    if(m.text) body += '<div class="ic-txt">'+linkify(m.text)+'</div>';
+    html += '<div class="ic-m noanim '+(right?'out':'in')+(tail?' tail':'')+'"><div class="ic-sn" style="color:'+colorOf(m.sender_id)+'">'+esc(nameOfId(m.sender_id,c))+(m.deleted_at?'<span class="ic-tagdel">(user delete korechilo)</span>':'')+'</div>'+body+'<span class="ic-meta">'+t12(m.created_at)+'</span></div>';
+  });
+  if(!S.monMsgs.length) html += '<div class="ic-note">Kono message nei</div>';
+  box.innerHTML = html; if(bottom) box.scrollTop = box.scrollHeight;
+  box.querySelectorAll('.ic-img').forEach(i=>i.onclick=()=>lightbox(i.dataset.src));
+  box.querySelectorAll('[data-dl]').forEach(f=>f.onclick=()=>{ const m=S.monMsgs.find(x=>x.id===f.dataset.dl); if(m) downloadFile(m); });
+  const mo = $('icMonMore'); if(mo) mo.onclick = ()=>{ const h=box.scrollHeight; monLoad(true).then(()=>{ box.scrollTop = box.scrollHeight - h; }); };
+}
+
 /* ---------- AUTO DELETE: conversation-er last message-er 15 din por puro history muche jay ---------- */
 const KEEP_DAYS = 15;
 async function cleanupStale(){
@@ -23929,7 +24059,7 @@ function start(){
   if(S.started) return; S.started = true;
   setInterval(()=>{ const me = getMe(); if(!me) return; if(!S.me || S.me.id!==me.id){ resetFor(me); } pollList(); }, 12000);
   setInterval(()=>{ if(panelOpen()) pollOpen(); }, 4000);
-  setInterval(()=>{ if(S.me){ registerMe(); if(panelOpen()) loadDirectory(true).then(()=>{ renderList(); renderHeader(); }); } }, 60000);
+  setInterval(()=>{ if(S.me){ registerMe(); if(panelOpen()) loadDirectory(true).then(()=>{ if(isRemoved()) return showBlocked(); renderList(); renderHeader(); if(isSA() && S.tab==='sa') saLoadAll(); }); } }, 60000);
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ pollList(); if(S.open){ pollOpen(); markRead(S.open); } } });
   window.addEventListener('focus', ()=>{ if(S.open) markRead(S.open); });
   initRealtime();
@@ -23949,7 +24079,7 @@ window.icRenderPanel = function(){ renderPanel(); };
     clearInterval(t);
     if(!S.me || S.me.id!==me.id) resetFor(me);
     try{ S.hidden = JSON.parse(localStorage.getItem('ic_hidden_'+me.id)||'{}'); }catch(e){ S.hidden={}; }
-    start(); registerMe(); pollList();
+    start(); registerMe().then(()=>loadDirectory(true)); pollList();
   }, 2500);
 })();
 })();
