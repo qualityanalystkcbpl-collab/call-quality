@@ -6121,27 +6121,15 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
               <button class="btn small" type="button" onclick="resetBrandText()">Remove 4th Item</button>
             </div>
           </div>
-          <div class="editor-card" style="background:var(--surface); border:2px solid var(--admin); padding:18px; border-radius:var(--radius); margin-bottom:16px;">
-            <h3 style="margin-bottom:6px;">🎯 কোন Process-এর মেসেজ এডিট করবেন?</h3>
-            <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">এখানে যে Process বাছবেন, নিচের Scrolling Ticker, Login Popup, Banner Slides, News Ticker ও ছবির Banner Manager শুধু সেই Process-এর জন্য সেভ হবে। Process-এর আলাদা সেভ না থাকলে "Default" মেসেজ দেখাবে।</p>
-            <select id="msgProcSelect" onchange="msgSelectProc(this.value)" style="padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-width:260px;">
-              <option value="">🌐 Default (সবার জন্য)</option>
-              <option value="CATV">CATV</option>
-              <option value="BBTECH">BB TECH SUPPORT</option>
-              <option value="BBRENEWAL">BB RENEWAL</option>
-              <option value="QA">QA</option>
-              <option value="AM">AM</option>
-              <option value="BBRETENTION">BB RETENTION</option>
-              <option value="HR">HR</option>
-            </select>
-          </div>
           <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius);">
             <h3 style="margin-bottom:12px;">Scrolling Ticker Text</h3>
+            <div class="msgProcBox" data-base="ticker"></div>
             <input type="text" id="tickerInput" placeholder="Ticker text..." style="width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:10px;">
             <button class="btn primary small" onclick="saveTicker()">Save Ticker</button>
           </div>
           <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
             <h3 style="margin-bottom:12px;">Agent Login Welcome Popup</h3>
+            <div class="msgProcBox" data-base="loginPopup"></div>
             <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">Agent লগইন করার পর এই মেসেজটি পপ-আপে দেখাবে (রঙিন অ্যানিমেশন সহ, বড় ফন্টে)। খালি রাখলে কোনো পপ-আপ দেখাবে না।</p>
             <textarea id="loginPopupInput" placeholder="যেমন: আজকের টার্গেট সম্পন্ন করার জন্য শুভকামনা!" style="width:100%;min-height:90px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:10px;resize:vertical;font-family:inherit;"></textarea>
             <button class="btn primary small" onclick="saveLoginPopup()">Save Popup Message</button>
@@ -6153,11 +6141,13 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
           </div>
           <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
             <h3 style="margin-bottom:12px;">Banner Slides (max 10)</h3>
+            <div class="msgProcBox" data-base="banners"></div>
             <div id="bannerEditor"></div>
             <button class="btn primary small" onclick="saveBanners()">Save Banners</button>
           </div>
           <div class="editor-card" style="background:var(--surface); border:1px solid var(--border); padding:18px; border-radius:var(--radius); margin-top:16px;">
             <h3 style="margin-bottom:12px;">News Ticker (টেক্সট নিউজ ব্যানার)</h3>
+            <div class="msgProcBox" data-base="newsTickerItems"></div>
             <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">নিচে যত খুশি নিউজ/নোটিশ লাইন যোগ করুন — নিউজ চ্যানেলের মতো স্ক্রল হয়ে দেখাবে। "Add Line" চেপে নতুন লাইন যোগ করুন, তারপর Save করুন।</p>
             <div id="newsTickerEditor"></div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -7805,7 +7795,7 @@ const SB_SETTINGS_TABLE = 'webpage_settings';
    প্রতিটা Process-এর নিজস্ব ticker / news / banner / popup। key = base + '__' + PROCESS (যেমন ticker__CATV)।
    Process-এর আলাদা সেভ না থাকলে Default (আগের key) দেখায়। */
 const MSG_PROCESSES = [['CATV','CATV'],['BBTECH','BB TECH SUPPORT'],['BBRENEWAL','BB RENEWAL'],['QA','QA'],['AM','AM'],['BBRETENTION','BB RETENTION'],['HR','HR']];
-let msgAdminProc = '';   // Admin editor-এ বাছা Process ('' = Default / সবার জন্য)
+let msgAdminProcs = { ticker:'', loginPopup:'', banners:'', newsTickerItems:'', bannerMgr:'' };   // প্রতিটা সেকশনের আলাদা Process ('' = Default / সবার জন্য)
 function msgNormProc(name){
   const n = String(name||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(!n) return '';
@@ -7818,8 +7808,8 @@ function msgNormProc(name){
   if(n==='HR') return 'HR';
   return '';
 }
-function msgViewProc(){
-  if(currentRole === 'admin' || currentRole === 'superadmin') return msgAdminProc;
+function msgViewProc(base){
+  if(currentRole === 'admin' || currentRole === 'superadmin') return (base && msgAdminProcs[base]) || '';
   let p = '';
   try{ p = (typeof empProcess !== 'undefined' && empProcess) ? empProcess : (localStorage.getItem('qa_emp_process') || ''); }catch(e){}
   return msgNormProc(p);
@@ -7831,23 +7821,44 @@ function msgIsValid(base, d){
   return true;
 }
 async function msgGet(base){
-  const proc = msgViewProc();
+  const proc = msgViewProc(base);
   if(proc){
     const d = await storageGet(msgKey(base, proc));
     if(msgIsValid(base, d)) return d;
   }
   return storageGet(base);
 }
+function msgProcLabel(v){ return v ? (MSG_PROCESSES.find(x=>x[0]===v)||[0,v])[1] : 'Default (সবার জন্য)'; }
+function msgProcSelectHtml(base){
+  const cur = msgAdminProcs[base] || '';
+  return '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; padding:8px 10px; border:1px dashed var(--admin); border-radius:8px;">'
+    + '<label style="font-size:12px; font-weight:700; color:var(--text);">🎯 কোন Process-এর জন্য?</label>'
+    + '<select data-msgsel="' + base + '" onchange="msgSelectProc(\'' + base + '\', this.value)" style="padding:7px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-width:200px;">'
+    + '<option value=""' + (cur ? '' : ' selected') + '>🌐 Default (সবার জন্য)</option>'
+    + MSG_PROCESSES.map(p => '<option value="' + p[0] + '"' + (cur === p[0] ? ' selected' : '') + '>' + p[1] + '</option>').join('')
+    + '</select>'
+    + '<span style="font-size:11px; color:var(--text-muted);">Process-এর আলাদা সেভ না থাকলে Default দেখাবে।</span></div>';
+}
+function msgInitProcSelects(){
+  document.querySelectorAll('.msgProcBox').forEach(box => { box.innerHTML = msgProcSelectHtml(box.getAttribute('data-base')); });
+}
 async function msgReloadAll(){
   loginPopupFetchPromise = null;
   await Promise.allSettled([ loadTicker(), loadBanners(), loadNewsTicker(), loadLoginPopupAdmin(), (typeof loadHomeBannerCarousel==='function' ? loadHomeBannerCarousel() : null) ]);
 }
-async function msgSelectProc(v){
-  msgAdminProc = v || '';
-  showToast(msgAdminProc ? 'এখন এডিট হচ্ছে: ' + (MSG_PROCESSES.find(x=>x[0]===msgAdminProc)||[0,msgAdminProc])[1] : 'এখন এডিট হচ্ছে: Default (সবার জন্য)');
-  await msgReloadAll();
-  if(typeof renderBannerManagerPanel === 'function' && document.getElementById('bannerMgrList')) loadBannerMgrList();
+async function msgSelectProc(base, v){
+  msgAdminProcs[base] = v || '';
+  showToast('এখন এডিট হচ্ছে: ' + msgProcLabel(msgAdminProcs[base]));
+  if(base === 'ticker') await loadTicker();
+  else if(base === 'loginPopup'){ loginPopupFetchPromise = null; await loadLoginPopupAdmin(); }
+  else if(base === 'banners') await loadBanners();
+  else if(base === 'newsTickerItems') await loadNewsTicker();
+  else if(base === 'bannerMgr'){
+    if(typeof loadHomeBannerCarousel === 'function') loadHomeBannerCarousel();
+    if(document.getElementById('bannerMgrList')) await loadBannerMgrList();
+  }
 }
+msgInitProcSelects();
 /* ---- Agent Access (per-agent sidebar menu + popup) — Supabase table `agent_access` ---- */
 const AA_TABLE = 'agent_access';
 const AA_TEMPLATE_ID = '__NEW_AGENT_TEMPLATE__';
@@ -7946,7 +7957,7 @@ let fatalSubTab = 'CATV';
 let currentRole = null;
 let loginPopupFetchPromise = null; let loginPopupFetchProc = null; // shared fetch so the popup and admin editor don't both hit the backend separately
 function fetchLoginPopupOnce(){
-  const _pp = msgViewProc();
+  const _pp = msgViewProc('loginPopup');
   if(!loginPopupFetchPromise || loginPopupFetchProc !== _pp){
     loginPopupFetchProc = _pp;
     loginPopupFetchPromise = msgGet('loginPopup');
@@ -8282,7 +8293,7 @@ async function loadHomeBannerCarousel(){
     homeBannerAll = [];
   }
   // Only banners whose scheduled Start/End time covers "now" are shown
-  { const _vp = msgViewProc(); homeBannerAll = homeBannerAll.filter(b => !b.process || msgNormProc(b.process) === _vp || b.process === _vp); }
+  { const _vp = msgViewProc('bannerMgr'); homeBannerAll = homeBannerAll.filter(b => !b.process || msgNormProc(b.process) === _vp || b.process === _vp); }
   homeBannerList = homeBannerAll.filter(bannerIsLiveNow);
   if(!homeBannerList.length){
     wrap.style.display = 'none';
@@ -8369,7 +8380,7 @@ async function renderBannerManagerPanel(){
   if(!panel) return;
   panel.innerHTML = `
     <div class="panel-header">
-      <div><h1>🖼️ Banner Manager</h1><p>Employee Home পেজের উপরে যেসব ব্যানার ছবি ঘুরতে থাকবে, সেগুলো এখান থেকে আপলোড/ম্যানেজ করুন।</p></div>
+      <div><h1>🖼️ Banner Manager</h1><p>Employee Home পেজের উপরে যেসব ব্যানার ছবি ঘুরতে থাকবে, সেগুলো এখান থেকে আপলোড/ম্যানেজ করুন।</p>${msgProcSelectHtml('bannerMgr')}</div>
       <div>
         <input type="file" id="bannerFileInput" accept="image/*,video/mp4,video/webm,video/quicktime" style="display:none;" onchange="handleBannerUpload(this)">
         <button class="btn primary" onclick="document.getElementById('bannerFileInput').click()">⬆️ নতুন ব্যানার আপলোড</button>
@@ -8388,7 +8399,7 @@ async function loadBannerMgrList(){
     });
     bannerMgrItems = await res.json();
     if(!Array.isArray(bannerMgrItems)) bannerMgrItems = [];
-    if(msgAdminProc) bannerMgrItems = bannerMgrItems.filter(b => b.process === msgAdminProc || msgNormProc(b.process) === msgAdminProc);
+    if(msgAdminProcs.bannerMgr) bannerMgrItems = bannerMgrItems.filter(b => b.process === msgAdminProcs.bannerMgr || msgNormProc(b.process) === msgAdminProcs.bannerMgr);
   }catch(e){
     console.error(e);
     listEl.innerHTML = `<div class="empty-state"><b>ব্যানার লোড করা যায়নি। Supabase সেটআপ ঠিকভাবে হয়েছে কিনা চেক করুন।</b></div>`;
@@ -8517,9 +8528,9 @@ async function handleBannerUpload(input){
         sort_order: nextOrder,
         is_active: true,
         uploaded_by: currentRole === 'admin' ? 'Admin' : 'Agent'
-      }, msgAdminProc ? { process: msgAdminProc } : {}))
+      }, msgAdminProcs.bannerMgr ? { process: msgAdminProcs.bannerMgr } : {}))
     });
-    if(!insertRes.ok && msgAdminProc){
+    if(!insertRes.ok && msgAdminProcs.bannerMgr){
       /* DB-তে `process` কলাম না থাকলে ব্যানার সবার জন্য সেভ হবে */
       const retry = await fetch(`${SUPABASE_URL}/rest/v1/${BANNER_BUCKET}`, {
         method:'POST',
@@ -10472,7 +10483,7 @@ async function saveTicker(){
   const text = document.getElementById('tickerInput').value.trim();
   if(!text) return;
   showToast('Saving to WEBPAGEDATA...');
-  const success = await storageSet(msgKey('ticker', msgAdminProc), { text });
+  const success = await storageSet(msgKey('ticker', msgAdminProcs.ticker), { text });
   if(success) {
     renderTopTicker(text);
     showToast('Ticker saved dynamically to Google Sheets!');
@@ -10489,7 +10500,7 @@ async function saveLoginPopup(){
   const el = document.getElementById('loginPopupInput');
   const text = el ? el.value.trim() : '';
   showToast('Saving to WEBPAGEDATA...');
-  const success = await storageSet(msgKey('loginPopup', msgAdminProc), { text });
+  const success = await storageSet(msgKey('loginPopup', msgAdminProcs.loginPopup), { text });
   if(success){
     loginPopupFetchPromise = null; // invalidate cache so the next fetch picks up the new text
     showToast(text ? 'Popup message saved!' : 'Popup message cleared — popup আর দেখাবে না।');
@@ -10796,7 +10807,7 @@ async function saveBanners(){
   });
   banners.forEach(b => { b.anim = BN_ANIM_ORDER.filter(k => b.anim.includes(k)); });   // keep a fixed, predictable order
   showToast('Updating Banners in WEBPAGEDATA...');
-  const success = await storageSet(msgKey('banners', msgAdminProc), banners);
+  const success = await storageSet(msgKey('banners', msgAdminProcs.banners), banners);
   if(success) {
     renderBanners(banners);
     showToast('Banners saved ✅');
@@ -10963,7 +10974,7 @@ async function saveNewsTicker(){
   const items = Array.from(inputs).map(inp=> inp.value.trim()).filter(Boolean);
   showToast('Updating News Ticker in WEBPAGEDATA...');
   try{
-    const success = await storageSet(msgKey('newsTickerItems', msgAdminProc), items);
+    const success = await storageSet(msgKey('newsTickerItems', msgAdminProcs.newsTickerItems), items);
     if(success){
       renderNewsTicker(items);
       renderNewsTickerEditor(items.length ? items : ['']);
