@@ -23374,6 +23374,27 @@ async function upsertUsers(rows, prefer){
 }
 const INACTIVE_RE = /^\s*(inactive|in-active|deactivat|disabled|blocked|left|resign|terminat)/i;
 const vis = u => !!u && !u.chat_removed && !INACTIVE_RE.test(String(u.status||''));
+/* ---- Process-wise visibility: CATV / BB Tech / BB Renewal / BB Retention agent shudhu nijer process-er lok + staff (AM, QA, HR, Admin, Super Admin) dekhe.
+   Staff-ra sabaike dekhe. ---- */
+const nrm = x => String(x==null?'':x).toUpperCase().replace(/[^A-Z0-9]/g,'');
+const STAFF_TOK = ['AM','QA','HR','ADMIN','SUPERADMIN','QUALITY','QUALITYTEAM','QUALITYASSURANCE'];
+function groupOf(u){
+  if(!u) return '';
+  if([u.role,u.team,u.process].some(x=>STAFF_TOK.indexOf(nrm(x))>=0)) return 'STAFF';
+  for(const x of [u.process,u.team]){
+    const n = nrm(x); if(!n) continue;
+    if(n.includes('CATV')) return 'CATV';
+    if(n.includes('RETENTION') || n.includes('RETAIN')) return 'BBRETENTION';
+    if(n.includes('RENEWAL')) return 'BBRENEWAL';
+    if(n.includes('TECH')) return 'BBTECH';
+  }
+  return '';
+}
+function canSee(u){
+  if(!vis(u)) return false;
+  const mg = groupOf(S.me); if(mg==='STAFF') return true;
+  const g = groupOf(u); return g==='STAFF' || (!!g && g===mg);
+}
 async function registerMe(){
   const me = S.me; if(!me) return;
   try{
@@ -23749,7 +23770,7 @@ function renderPanel(){
 }
 function renderAll(){ if(!panelOpen()) return; renderList(); renderHeader(); }
 function groupsOf(){
-  const set = new Set(); Object.values(S.users).forEach(u=>{ if(u.id===S.me.id || !vis(u)) return; if(u.role) set.add(u.role); if(u.team) set.add(u.team); if(u.process) set.add(u.process); });
+  const set = new Set(); Object.values(S.users).forEach(u=>{ if(u.id===S.me.id || !canSee(u)) return; if(u.role) set.add(u.role); if(u.team) set.add(u.team); if(u.process) set.add(u.process); });
   return Array.from(set).sort((a,b)=>String(a).localeCompare(String(b)));
 }
 function renderList(){
@@ -23779,14 +23800,14 @@ function renderList(){
     html += rows.map(x=>mkRow(x.u, x.c)).join('');
     if(qq){
       const have = new Set(rows.map(x=>x.u.id));
-      const more = Object.values(S.users).filter(u=>u.id!==S.me.id && vis(u) && !have.has(u.id) && ((u.name||'').toLowerCase().includes(qq) || String(u.id).toLowerCase().includes(qq)));
+      const more = Object.values(S.users).filter(u=>u.id!==S.me.id && canSee(u) && !have.has(u.id) && ((u.name||'').toLowerCase().includes(qq) || String(u.id).toLowerCase().includes(qq)));
       if(more.length) html += '<div class="ic-empty" style="padding:10px 16px;text-align:left;font-size:12px">OTHER PEOPLE</div>' + more.slice(0,40).map(u=>mkRow(u, null)).join('');
     }
     if(!html.replace(/<div class="ic-setup">[\s\S]*?<\/div>/,'').trim()) html += '<div class="ic-empty">💬<br>Kono chat nei.<br><b>People</b> tab theke kauke select kore chat shuru korun.</div>';
   }else if(S.tab==='sa' && isSA()){
     html += saListHtml();
   }else{
-    let us = Object.values(S.users).filter(u=>u.id!==S.me.id && vis(u));
+    let us = Object.values(S.users).filter(u=>u.id!==S.me.id && canSee(u));
     if(S.grp) us = us.filter(u=>u.role===S.grp||u.team===S.grp||u.process===S.grp);
     if(qq) us = us.filter(u=>(u.name||'').toLowerCase().includes(qq)||String(u.id).toLowerCase().includes(qq)||(u.role||'').toLowerCase().includes(qq)||(u.process||'').toLowerCase().includes(qq)||(u.team||'').toLowerCase().includes(qq));
     us.sort((a,b)=> (isOnline(b)-isOnline(a)) || String(a.name||'').localeCompare(String(b.name||'')));
