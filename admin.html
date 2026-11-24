@@ -8140,7 +8140,8 @@ async function storageSet(key, value){
         { method: 'POST',
           headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }, SB_HEADERS),
           body: JSON.stringify([{ key: key, value: JSON.stringify(value) }]) });
-      if(!res.ok){ console.error('Supabase save failed', res.status, await res.text()); return false; }
+      if(!res.ok){ const _t = await res.text(); window.lastStorageError = res.status + ' ' + _t.slice(0,160); console.error('Supabase save failed', res.status, _t); return false; }
+      window.lastStorageError = '';
       return true;
     }
     const res = await fetch(`${WEB_APP_URL}?action=saveSettings`, {
@@ -10483,10 +10484,18 @@ async function saveTicker(){
   const text = document.getElementById('tickerInput').value.trim();
   if(!text) return;
   showToast('Saving to WEBPAGEDATA...');
-  const success = await storageSet(msgKey('ticker', msgAdminProcs.ticker), { text });
+  const _k = msgKey('ticker', msgAdminProcs.ticker);
+  const success = await storageSet(_k, { text });
   if(success) {
-    renderTopTicker(text);
-    showToast('Ticker saved dynamically to Google Sheets!');
+    const _chk = await storageGet(_k);   // সেভ সত্যিই হয়েছে কিনা ফেরত পড়ে যাচাই
+    if(_chk && _chk.text === text){
+      renderTopTicker(text);
+      showToast('✅ Ticker saved: ' + msgProcLabel(msgAdminProcs.ticker));
+    } else {
+      showToast('⚠️ Save হয়নি — Supabase `webpage_settings`-এ "' + _k + '" রো তৈরি হচ্ছে না (RLS/Policy চেক করুন)।');
+    }
+  } else {
+    showToast('❌ Ticker save ব্যর্থ: ' + (window.lastStorageError || 'সংযোগ চেক করুন'));
   }
 }
 /* ===================== AGENT LOGIN WELCOME POPUP ===================== */
@@ -10503,7 +10512,9 @@ async function saveLoginPopup(){
   const success = await storageSet(msgKey('loginPopup', msgAdminProcs.loginPopup), { text });
   if(success){
     loginPopupFetchPromise = null; // invalidate cache so the next fetch picks up the new text
-    showToast(text ? 'Popup message saved!' : 'Popup message cleared — popup আর দেখাবে না।');
+    showToast(text ? 'Popup message saved: ' + msgProcLabel(msgAdminProcs.loginPopup) : 'Popup message cleared — popup আর দেখাবে না।');
+  } else {
+    showToast('❌ Popup save ব্যর্থ: ' + (window.lastStorageError || 'সংযোগ চেক করুন'));
   }
 }
 async function showLoginPopupIfNeeded(){
