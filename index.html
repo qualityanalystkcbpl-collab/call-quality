@@ -434,51 +434,6 @@ body.light-theme .bg-floating-circles span{
   accent-color:var(--agent);
   cursor:pointer;
 }
-.emp-captcha-field label{
-  text-transform:none;
-  letter-spacing:normal;
-  font-size:13px;
-}
-.emp-captcha-field label span{
-  font-family:'Space Grotesk',sans-serif;
-  font-weight:700;
-  color:var(--text);
-  letter-spacing:0.5px;
-}
-.emp-captcha-visual-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-bottom:8px;
-}
-.emp-captcha-canvas{
-  flex-shrink:0;
-  background:#eef1f4;
-  border:1px solid var(--border);
-  border-radius:6px;
-  display:block;
-}
-.emp-captcha-icons{
-  display:flex;
-  flex-direction:column;
-  gap:5px;
-}
-.emp-captcha-icon-btn{
-  width:26px;
-  height:26px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:6px;
-  color:var(--text-muted);
-  font-size:12px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:transform .3s ease, color .2s ease, border-color .2s ease;
-}
-.emp-captcha-icon-btn:hover{ color:var(--agent); border-color:var(--agent); }
-.emp-captcha-icon-btn:active{ transform:scale(0.92); }
 .login-btn{
   width:100%;
   padding:13px;
@@ -4928,8 +4883,20 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
 })();
 </script>
 <style>
-/* "Enter as Employee/Agent" button — shudhu mouse nile upore uthe jawa bondho; baki sob ager moto */
-#loginScreen #empLoginBtn:hover:not(:active){ transform:none !important; }
+/* "Enter as Employee/Agent" button — kono animation/hover/press effect nei */
+#loginScreen #empLoginBtn,
+#loginScreen #empLoginBtn:hover,
+#loginScreen #empLoginBtn:active,
+#loginScreen #empLoginBtn:focus{
+  transition:none !important;
+  animation:none !important;
+  transform:none !important;
+  filter:none !important;
+}
+#loginScreen #empLoginBtn:hover{ box-shadow:0 6px 18px color-mix(in srgb, var(--agent) 32%, transparent) !important; }
+/* Caps Lock ON/OFF indicator — ekdom choto */
+#loginScreen .caps-light{ gap:4px !important; margin-top:3px !important; padding:1px 6px 1px 5px !important; font-size:8px !important; font-weight:600 !important; letter-spacing:0 !important; line-height:1.2 !important; }
+#loginScreen .caps-light .caps-led{ width:6px !important; height:6px !important; }
 </style>
 </head>
 <body>
@@ -5049,17 +5016,6 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
           <input type="checkbox" id="empShowPassword" onchange="toggleEmpPasswordVisibility()">
           <span>Show Password</span>
         </label>
-      </div>
-      <div class="field emp-captcha-field">
-        <label>Security Check</label>
-        <div class="emp-captcha-visual-row">
-          <canvas id="empCaptchaCanvas" class="emp-captcha-canvas" width="128" height="38"></canvas>
-          <div class="emp-captcha-icons">
-            <button type="button" class="emp-captcha-icon-btn" title="Listen to code" onclick="speakEmpCaptcha()">🔊</button>
-            <button type="button" class="emp-captcha-icon-btn" title="New code" onclick="refreshEmpCaptcha()">↻</button>
-          </div>
-        </div>
-        <input type="text" id="empCaptchaAnswer" inputmode="numeric" autocomplete="off" placeholder="Enter correct answer" onkeydown="if(event.key==='Enter'){ event.preventDefault(); employeeLogin(); }">
       </div>
       <button class="login-btn" id="empLoginBtn" data-role="agent" onclick="employeeLogin()">Enter as Employee/Agent</button>
       <div class="login-error" id="empLoginError"></div>
@@ -15038,8 +14994,6 @@ setInterval(updateWelcome,1000);
 #employeeLoginCard .show-pass-row{ margin-top:5px; }
 #employeeLoginCard .login-btn{ padding:9px; font-size:12.5px; margin-top:2px; }
 #employeeLoginCard .emp-login-footer-row{ margin-top:5px; }
-#employeeLoginCard .emp-captcha-field{ margin-bottom:10px; }
-#employeeLoginCard .emp-captcha-visual-row{ margin-bottom:6px; }
 @keyframes empBoxGlow{
   0%,100%{ box-shadow:0 0 34px rgba(51,201,176,0.55), 0 0 75px rgba(51,201,176,0.30); border-color:rgba(51,201,176,0.85); }
   14%{  box-shadow:0 0 36px rgba(74,127,224,0.55), 0 0 75px rgba(74,127,224,0.30); border-color:rgba(74,127,224,0.85); }
@@ -15538,7 +15492,6 @@ function backToMainLogin(){
   document.getElementById('empId').value = '';
   document.getElementById('empPassword').value = '';
   document.getElementById('empLoginError').textContent = '';
-  if(typeof generateEmpCaptcha === 'function') generateEmpCaptcha();
 }
 function openForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'flex'; }
 function closeForgotPasswordInfo(){ document.getElementById('forgotPasswordModal').style.display = 'none'; }
@@ -15551,99 +15504,6 @@ function toggleEmpPasswordVisibility(){
   pass.type = chk.checked ? 'text' : 'password';
 }
 
-/* ---------- Visual Math CAPTCHA (Employee Sign in) — canvas-rendered, distorted digits + noise lines ---------- */
-let empCaptchaAnswer = 0;
-let empCaptchaA = 0;
-let empCaptchaB = 0;
-
-function drawEmpCaptcha(a, b){
-  const canvas = document.getElementById('empCaptchaCanvas');
-  if(!canvas || !canvas.getContext) return;
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#eef1f4';
-  ctx.fillRect(0, 0, w, h);
-
-  // Random squiggly noise lines behind the text (like a classic distorted CAPTCHA)
-  for(let i = 0; i < 6; i++){
-    ctx.beginPath();
-    ctx.moveTo(Math.random()*w, Math.random()*h);
-    ctx.bezierCurveTo(
-      Math.random()*w, Math.random()*h,
-      Math.random()*w, Math.random()*h,
-      Math.random()*w, Math.random()*h
-    );
-    ctx.strokeStyle = `rgba(90,100,112,${0.35 + Math.random()*0.3})`;
-    ctx.lineWidth = 1 + Math.random()*1.3;
-    ctx.stroke();
-  }
-
-  // The math expression, drawn character-by-character with random rotation/offset
-  const text = `${a} + ${b}`;
-  ctx.textBaseline = 'middle';
-  ctx.font = 'bold 18px "Space Grotesk", sans-serif';
-  ctx.fillStyle = '#333e4a';
-  let x = 10;
-  const y = h/2;
-  for(const ch of text){
-    ctx.save();
-    const angle = (Math.random()-0.5) * 0.35;
-    const dy = (Math.random()-0.5) * 7;
-    const chWidth = ctx.measureText(ch).width;
-    ctx.translate(x + chWidth/2, y + dy);
-    ctx.rotate(angle);
-    ctx.fillText(ch, -chWidth/2, 0);
-    ctx.restore();
-    x += chWidth + 3 + Math.random()*3;
-  }
-
-  // Scattered noise dots for extra visual distortion
-  for(let i = 0; i < 25; i++){
-    ctx.beginPath();
-    ctx.arc(Math.random()*w, Math.random()*h, 0.7, 0, Math.PI*2);
-    ctx.fillStyle = `rgba(90,100,112,${0.25 + Math.random()*0.3})`;
-    ctx.fill();
-  }
-}
-
-function generateEmpCaptcha(){
-  const a = Math.floor(Math.random()*8) + 1; // 1-8
-  const b = Math.floor(Math.random()*8) + 1; // 1-8
-  empCaptchaA = a;
-  empCaptchaB = b;
-  empCaptchaAnswer = a + b;
-  drawEmpCaptcha(a, b);
-  const ansEl = document.getElementById('empCaptchaAnswer');
-  if(ansEl) ansEl.value = '';
-}
-function refreshEmpCaptcha(){ generateEmpCaptcha(); }
-function speakEmpCaptcha(){
-  if(!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined'){
-    alert('Voice playback is not supported in this browser.');
-    return;
-  }
-  try{
-    const synth = window.speechSynthesis;
-    const utter = new SpeechSynthesisUtterance(`What is ${empCaptchaA} plus ${empCaptchaB}?`);
-    utter.lang = 'en-US';
-    utter.rate = 0.9;
-    utter.pitch = 1;
-    utter.volume = 1;
-    utter.onerror = function(e){ console.error('CAPTCHA speech error', e); };
-
-    // Chrome has a known bug where speak() called right after cancel() silently
-    // does nothing — giving it a brief moment to actually clear fixes it.
-    if(synth.speaking || synth.pending){
-      synth.cancel();
-      setTimeout(function(){ synth.speak(utter); }, 80);
-    } else {
-      synth.speak(utter);
-    }
-  }catch(e){ console.error('CAPTCHA speech failed', e); }
-}
-generateEmpCaptcha();
 /* ---------- Employee Login ---------- */
 async function employeeLogin(){
   const empId = document.getElementById('empId').value.trim();
@@ -15652,13 +15512,6 @@ async function employeeLogin(){
   const btn = document.getElementById('empLoginBtn');
   errBox.textContent = '';
   if(!empId || !pass){ errBox.textContent = 'Employee ID ও Password দিন।'; return; }
-
-  const captchaInput = document.getElementById('empCaptchaAnswer').value.trim();
-  if(!captchaInput || parseInt(captchaInput, 10) !== empCaptchaAnswer){
-    errBox.textContent = 'Security check answer is incorrect. Please try again.';
-    generateEmpCaptcha();
-    return;
-  }
 
   btn.disabled = true; btn.textContent = 'Signing in...';
   try{
@@ -15671,7 +15524,6 @@ async function employeeLogin(){
 
     if(!data || data.ok !== true){
       errBox.textContent = (data && data.error) || 'Invalid Employee ID or Password'; if(window.qxLogLogin) qxLogLogin({name:'', id: empId, role:'Employee', status:'FAILED', reason: (data && data.error) || 'Invalid ID or Password'});
-      generateEmpCaptcha();
       return;
     }
 
