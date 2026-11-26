@@ -247,7 +247,7 @@ body.light-theme .bg-floating-circles span{
   z-index:1;
   pointer-events:none;
   background:
-    radial-gradient(ellipse 620px 520px at 24% 48%, rgba(6,13,24,0.62) 0%, rgba(6,13,24,0.38) 45%, rgba(6,13,24,0) 78%);
+    radial-gradient(ellipse 680px 560px at 24% 48%, rgba(6,13,24,0.78) 0%, rgba(6,13,24,0.5) 48%, rgba(6,13,24,0) 80%);
 }
 .login-brand-content{
   position:relative;
@@ -4920,15 +4920,82 @@ body.light-theme #loginScreen .field input{background:rgba(0,0,0,.03);}\
   <span style="--size:24px; --left:9%;  --dur:13s; --delay:12s; --clr:#3FBF7F;"></span>
   <span style="--size:64px; --left:39%; --dur:26s; --delay:14s; --clr:#B94AE0;"></span>
 </div>
+<style id="login-left-nocopy">
+/* Left panel: text cannot be selected / copied */
+#loginScreen .login-brand, #loginScreen .login-brand *{
+  -webkit-user-select:none !important; -moz-user-select:none !important; user-select:none !important;
+  -webkit-touch-callout:none;
+}
+#loginScreen .login-brand .mobile-login-link{ cursor:pointer; }
+</style>
+<style id="login-sun-style">
+/* ===== Very light 3D sun in the middle of the left panel (rotates in 3D, 7 soft colours) ===== */
+body.light-theme #loginScreen .login-brand-scrim{ background:radial-gradient(ellipse 680px 560px at 24% 48%, rgba(243,246,250,0.6) 0%, rgba(243,246,250,0.3) 48%, rgba(243,246,250,0) 80%) !important; }
+.login-sun{
+  --sun:255,217,138;
+  position:absolute; left:50%; top:50%; z-index:1; pointer-events:none;
+  width:min(500px,70vmin); height:min(500px,70vmin);
+  transform:translate(-50%,-50%); perspective:900px;
+}
+.login-sun i, .login-sun .ls-body, .login-sun .ls-spin{ position:absolute; display:block; }
+.ls-glow{ inset:0; border-radius:50%;
+  background:radial-gradient(circle, rgba(var(--sun),.17) 0%, rgba(var(--sun),.08) 32%, rgba(var(--sun),.03) 54%, rgba(var(--sun),0) 72%); }
+.ls-body{ inset:0; transform-style:preserve-3d; will-change:transform; }
+.ls-spin{ inset:0; transform-style:preserve-3d; animation:lsSpin3D 45s linear infinite; }
+.ls-ray{ inset:8%; border-radius:50%;
+  background:repeating-conic-gradient(from 0deg, rgba(var(--sun),.09) 0deg 2.5deg, rgba(var(--sun),0) 2.5deg 15deg);
+  -webkit-mask:radial-gradient(circle, transparent 16%, #000 30%, transparent 68%);
+          mask:radial-gradient(circle, transparent 16%, #000 30%, transparent 68%); }
+.ls-ray.rb{ transform:rotateY(90deg); }
+.ls-ray.rc{ transform:rotateX(90deg); }
+.ls-core{ left:50%; top:50%; width:27%; height:27%; margin:-13.5% 0 0 -13.5%; border-radius:50%;
+  background:radial-gradient(circle at 38% 34%, rgba(255,255,255,.62) 0%, rgba(var(--sun),.42) 40%, rgba(var(--sun),.14) 70%, rgba(var(--sun),0) 100%);
+  box-shadow:0 0 50px rgba(var(--sun),.16);
+  animation:lsPulse 6s ease-in-out infinite; }
+@keyframes lsSpin3D{ from{ transform:rotateX(22deg) rotateY(0deg); } to{ transform:rotateX(22deg) rotateY(360deg); } }
+@keyframes lsPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.05); } }
+@media (prefers-reduced-motion:reduce){ .ls-spin,.ls-core{ animation:none; } }
+</style>
+<style id="login-universe-style">
+/* ===== Login universe: orbits + star-clusters on all four sides, drag with mouse to rotate ===== */
+#loginScreen .login-brand{ cursor:grab; }
+#loginScreen .login-brand.uni-dragging{ cursor:grabbing; user-select:none; -webkit-user-select:none; }
+#loginScreen .login-brand button, #loginScreen .login-brand a{ cursor:pointer; }
+.login-universe{ position:absolute; inset:0; width:100%; height:100%; display:block; z-index:0; pointer-events:none; }
+</style>
+<style id="logo3d-style">
+/* ===== Login logo: normal by default, drag with mouse/touch to rotate in 3D ===== */
+#loginScreen .logo3d-scene{
+  position:relative; width:150px; padding:10px; margin:-10px;
+  perspective:800px; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none;
+  animation:logoFloat 4s ease-in-out infinite;
+}
+#loginScreen .logo3d-scene.dragging{ cursor:grabbing; animation-play-state:paused; }
+#loginScreen .logo3d-obj{ position:relative; transform-style:preserve-3d; will-change:transform; }
+#loginScreen .login-header-logo .logo3d-obj img{
+  display:block; width:150px; max-width:none; height:auto;
+  animation:none !important; pointer-events:none; -webkit-user-drag:none;
+}
+#loginScreen .login-header-logo .logo3d-obj img.logo3d-layer{
+  position:absolute; left:0; top:0; width:100%; height:100%;
+  filter:brightness(.55) !important; backface-visibility:hidden;
+}
+#loginScreen .login-header-logo .logo3d-obj img.logo3d-front{ backface-visibility:hidden; }
+</style>
 <!-- ============ LOGIN SCREEN ============ -->
 <div id="loginScreen">
 <div class="login-top-glow"></div>
   <div class="login-brand">
-    <canvas id="loginBrand3D" class="login-brand-3d"></canvas>
+    <canvas id="loginUniverse" class="login-universe" aria-hidden="true"></canvas>
     <div class="login-brand-scrim" aria-hidden="true"></div>
+    <div class="login-sun" id="loginSun" aria-hidden="true"><i class="ls-glow"></i><div class="ls-body" id="lsBody"><div class="ls-spin"><i class="ls-ray ra"></i><i class="ls-ray rb"></i><i class="ls-ray rc"></i></div></div><i class="ls-core"></i></div>
         <div class="login-header-logo">
-        <img src="logo.png" alt="GTPL KCBPL Logo">
+          <div class="logo3d-scene" id="logo3dScene" title="Drag to rotate">
+            <div class="logo3d-obj" id="logo3dObj">
+              <img class="logo3d-front" src="logo.png" alt="GTPL KCBPL Logo" draggable="false">
             </div>
+          </div>
+        </div>
     <div class="login-brand-content">
     <div class="login-eyebrow"><span class="pulse-dot"></span> QA CONTROL ROOM • LIVE</div>
     <div class="login-title" id="loginTitle3D">Every call, <span>scored</span>.<br>Every agent, <span>seen</span>.</div>
@@ -16122,7 +16189,8 @@ async function submitChangePassword(){
 (function(){
   var canvas = document.getElementById('loginBrand3D');
   var host = document.querySelector('.login-brand');
-  if(!canvas || !host || typeof THREE === 'undefined') return;
+  if(!host) return;
+  var hasScene = !!canvas && typeof THREE !== 'undefined'; /* old bg scene is replaced by the universe; card/text tilt below must still run */
 
   var renderer, scene, camera, group, particles, frameId;
   var mouseX = 0, mouseY = 0, targetRotX = 0, targetRotY = 0;
@@ -16462,7 +16530,7 @@ async function submitChangePassword(){
 
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
     // Respect reduced motion preference: skip animation entirely
-  } else if (loginScreen) {
+  } else if (loginScreen && hasScene) {
     checkVisibility();
     var mo = new MutationObserver(checkVisibility);
     mo.observe(loginScreen, { attributes: true, attributeFilter: ['style', 'class'] });
@@ -18497,6 +18565,311 @@ const NOTEPAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZkQIC
   window.npFlushIfLeaving = function(){ if(dirty && !saving) saveNow(false); };
   window.npIsDirty = function(){ return !!(dirty || saving); };
   window.npIsPopped = function(){ return !!popped; };
+})();
+</script>
+
+<script>
+/* ===================== LOGIN LOGO : DRAG TO ROTATE (3D) ===================== */
+(function(){
+  var scene=document.getElementById('logo3dScene'), obj=document.getElementById('logo3dObj');
+  if(!scene||!obj) return;
+  var front=obj.querySelector('.logo3d-front');
+
+  /* ---- settings ---- */
+  var DEPTH=10;               // logo-r thickness (px)
+  var SENS=0.012;             // drag sensitivity
+  var RETURN_TO_NORMAL=true;  // false korle chhere dile je angle-e thakbe sheikhanei thakbe
+  var RETURN_DELAY=1200;      // ms
+
+  /* ---- build thickness layers + back face ---- */
+  var src=front.getAttribute('src');
+  front.style.transform='translateZ('+(DEPTH/2)+'px)';
+  for(var i=1;i<DEPTH;i++){
+    var l=document.createElement('img');
+    l.src=src; l.alt=''; l.draggable=false; l.className='logo3d-layer'; l.setAttribute('aria-hidden','true');
+    l.style.transform='translateZ('+(DEPTH/2-i)+'px)';
+    obj.appendChild(l);
+  }
+  var back=document.createElement('img');
+  back.src=src; back.alt=''; back.draggable=false; back.className='logo3d-front'; back.setAttribute('aria-hidden','true');
+  back.style.position='absolute'; back.style.left='0'; back.style.top='0'; back.style.width='100%'; back.style.height='100%';
+  back.style.transform='rotateY(180deg) translateZ('+(DEPTH/2)+'px)';
+  obj.appendChild(back);
+
+  /* ---- quaternion helpers [w,x,y,z] ---- */
+  var q=[1,0,0,0];
+  function mul(a,b){return [
+    a[0]*b[0]-a[1]*b[1]-a[2]*b[2]-a[3]*b[3],
+    a[0]*b[1]+a[1]*b[0]+a[2]*b[3]-a[3]*b[2],
+    a[0]*b[2]-a[1]*b[3]+a[2]*b[0]+a[3]*b[1],
+    a[0]*b[3]+a[1]*b[2]-a[2]*b[1]+a[3]*b[0]];}
+  function norm(a){var n=Math.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]+a[3]*a[3])||1;return [a[0]/n,a[1]/n,a[2]/n,a[3]/n];}
+  function axis(ax,ay,az,ang){var s=Math.sin(ang/2);return [Math.cos(ang/2),ax*s,ay*s,az*s];}
+  function apply(){
+    var w=q[0],x=q[1],y=q[2],z=q[3];
+    var r00=1-2*(y*y+z*z), r01=2*(x*y-z*w), r02=2*(x*z+y*w);
+    var r10=2*(x*y+z*w), r11=1-2*(x*x+z*z), r12=2*(y*z-x*w);
+    var r20=2*(x*z-y*w), r21=2*(y*z+x*w), r22=1-2*(x*x+y*y);
+    obj.style.transform='matrix3d('+[r00,r10,r20,0, r01,r11,r21,0, r02,r12,r22,0, 0,0,0,1].join(',')+')';
+  }
+  function rotate(dx,dy){ /* screen-space: drag right => Y, drag down => -X (CSS axes) */
+    q=norm(mul(mul(axis(1,0,0,-dy*SENS),axis(0,1,0,dx*SENS)),q));
+  }
+
+  /* ---- interaction ---- */
+  var dragging=false,lx=0,ly=0,vx=0,vy=0,raf=0,idleT=0,returning=false;
+  function loop(){
+    raf=0;
+    if(!dragging){
+      if(Math.abs(vx)>0.05||Math.abs(vy)>0.05){ rotate(vx,vy); vx*=0.94; vy*=0.94; }
+      else if(returning){
+        var t=0.09, tgt=[1,0,0,0], d=q[0]; /* shortest path to identity */
+        var sgn=d<0?-1:1;
+        q=norm([q[0]+(sgn*1-q[0])*t, q[1]*(1-t), q[2]*(1-t), q[3]*(1-t)]);
+        if(Math.abs(Math.abs(q[0])-1)<1e-5){ q=[1,0,0,0]; returning=false; obj.style.transform=''; return; }
+      } else { return; }
+    }
+    apply();
+    raf=requestAnimationFrame(loop);
+  }
+  function kick(){ if(!raf) raf=requestAnimationFrame(loop); }
+
+  scene.addEventListener('pointerdown',function(e){
+    dragging=true; returning=false; clearTimeout(idleT);
+    lx=e.clientX; ly=e.clientY; vx=vy=0;
+    scene.classList.add('dragging');
+    try{scene.setPointerCapture(e.pointerId);}catch(_){}
+    e.preventDefault();
+  });
+  scene.addEventListener('pointermove',function(e){
+    if(!dragging) return;
+    var dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
+    vx=dx; vy=dy; rotate(dx,dy); apply();
+  });
+  function end(e){
+    if(!dragging) return;
+    dragging=false; scene.classList.remove('dragging');
+    try{scene.releasePointerCapture(e.pointerId);}catch(_){}
+    if(RETURN_TO_NORMAL){ idleT=setTimeout(function(){ returning=true; kick(); },RETURN_DELAY); }
+    kick();
+  }
+  scene.addEventListener('pointerup',end);
+  scene.addEventListener('pointercancel',end);
+  scene.addEventListener('dragstart',function(e){e.preventDefault();});
+})();
+</script>
+
+<script>
+/* ===================== LOGIN UNIVERSE (orbits + clusters, drag to rotate) ===================== */
+(function(){
+  var screen=document.querySelector('#loginScreen .login-brand'), canvas=document.getElementById('loginUniverse');
+  if(!screen||!canvas||typeof THREE==='undefined') return;
+
+  /* ---- settings ---- */
+  var RADII=[6,9,12.5,16.5,21];     // orbit sizes
+  var HUBS_PER_ORBIT=[2,3,4,5,6];   // cluster count per orbit
+  var TILT=0.5;                     // orbit plane tilt
+  var AUTO_SPIN=0.012;              // rad/sec  (0 = stop auto spin)
+  var SENS=0.006;                   // drag sensitivity
+
+  var FOV=32, CAM_Z=40;
+  var renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
+  renderer.setClearColor(0x000000,0);
+  var scene=new THREE.Scene();
+  var camera=new THREE.PerspectiveCamera(FOV,1,0.1,300); camera.position.set(0,0,CAM_Z);
+  var uni=new THREE.Group(); scene.add(uni);
+  var plane=new THREE.Group(); plane.rotation.x=TILT; uni.add(plane);
+
+  var fallback=[0x33C9B0,0xE3A857,0xB94AE0,0x4A7FE0,0xFF6B6B,0x00FF9D,0xFF6FD0];
+  var accents=(window.__loginTheme&&window.__loginTheme.three&&window.__loginTheme.three.length)?window.__loginTheme.three:fallback;
+  function hexNum(c){ return (typeof c==='string')?parseInt(c.replace('#',''),16):c; }
+
+  var isLight=null;
+  var TONES={ dark:[0xd5dbe8,0xa3aec6,0x7a87a2], light:[0x3d4250,0x7d8394,0xb3b8c4] };
+  var uniforms={ uScale:{value:1}, uAlpha:{value:1} };
+  var rings=[], hubs=[];
+
+  function rnd(a,b){ return a+Math.random()*(b-a); }
+
+  /* ---- orbit rings ---- */
+  RADII.forEach(function(R,idx){
+    var ecc=0.86, pts=[];
+    for(var i=0;i<=180;i++){ var a=i/180*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*R,0,Math.sin(a)*R*ecc)); }
+    var g=new THREE.BufferGeometry().setFromPoints(pts);
+    var m=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.14,depthWrite:false});
+    var l=new THREE.LineLoop(g,m); plane.add(l); rings.push(m);
+  });
+
+  /* ---- build clusters ---- */
+  var vShader='attribute float aSize; attribute vec3 aColor; uniform float uScale; varying vec3 vC;'+
+    'void main(){ vC=aColor; vec4 mv=modelViewMatrix*vec4(position,1.0); gl_PointSize=max(1.6,aSize*uScale/-mv.z); gl_Position=projectionMatrix*mv; }';
+  var fShader='precision mediump float; varying vec3 vC; uniform float uAlpha;'+
+    'void main(){ float d=length(gl_PointCoord-0.5); if(d>0.5) discard; gl_FragColor=vec4(vC,smoothstep(0.5,0.38,d)*uAlpha); }';
+
+  var li=0;
+  RADII.forEach(function(R,oi){
+    var n=HUBS_PER_ORBIT[oi], base=Math.random()*Math.PI*2;
+    for(var h=0;h<n;h++){
+      var scale=rnd(0.7,1.35), accent=hexNum(accents[(li)%accents.length]), hasAccent=(li%4===1);
+      var nSp=Math.floor(rnd(45,120));
+      var lp=new Float32Array(nSp*6), pp=new Float32Array(nSp*3), sz=new Float32Array(nSp), col=new Float32Array(nSp*3), tone=new Int8Array(nSp);
+      for(var k=0;k<nSp;k++){
+        var u=Math.random()*2-1, th=Math.random()*Math.PI*2, r=Math.sqrt(1-u*u);
+        var len=(0.25+Math.pow(Math.random(),1.5)*2.0)*scale;
+        var ex=r*Math.cos(th)*len, ey=u*len, ez=r*Math.sin(th)*len;
+        lp[k*6+3]=ex; lp[k*6+4]=ey; lp[k*6+5]=ez;
+        pp[k*3]=ex; pp[k*3+1]=ey; pp[k*3+2]=ez;
+        sz[k]=(Math.random()<0.12?rnd(0.14,0.26):rnd(0.04,0.12))*scale;
+        tone[k]=(hasAccent&&Math.random()<0.4)?-1:Math.floor(Math.random()*3);
+      }
+      var lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.BufferAttribute(lp,3));
+      var lm=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.22,depthWrite:false});
+      var lines=new THREE.LineSegments(lg,lm);
+      var pg=new THREE.BufferGeometry();
+      pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+      pg.setAttribute('aSize',new THREE.BufferAttribute(sz,1));
+      pg.setAttribute('aColor',new THREE.BufferAttribute(col,3));
+      var pm=new THREE.ShaderMaterial({uniforms:uniforms,vertexShader:vShader,fragmentShader:fShader,transparent:true,depthWrite:false});
+      var pts=new THREE.Points(pg,pm);
+      var grp=new THREE.Group(); grp.add(lines); grp.add(pts);
+      grp.rotation.set(rnd(0,6),rnd(0,6),rnd(0,6)); /* spoke clusters spin differently */
+      var holder=new THREE.Group(); holder.add(grp); plane.add(holder);
+      hubs.push({holder:holder,grp:grp,lm:lm,pg:pg,tone:tone,accent:accent,
+        R:R,ecc:0.86,a:base+h*(Math.PI*2/n)+rnd(-0.3,0.3),w:(Math.random()<0.5?1:-1)*rnd(0.035,0.08)*Math.pow(6/R,0.5),
+        y:rnd(-0.9,0.9),spin:rnd(-0.12,0.12)});
+      li++;
+    }
+  });
+
+  /* ---- theme (dark / light) ---- */
+  function applyTheme(light){
+    isLight=light; var T=TONES[light?'light':'dark'];
+    rings.forEach(function(m){ m.color.setHex(light?0x808794:0xffffff); m.opacity=light?0.35:0.14; });
+    hubs.forEach(function(H){
+      H.lm.color.setHex(light?0x8d93a1:0xffffff); H.lm.opacity=light?0.4:0.2;
+      var col=H.pg.getAttribute('aColor'), c=new THREE.Color();
+      for(var k=0;k<H.tone.length;k++){ c.setHex(H.tone[k]<0?H.accent:T[H.tone[k]]); col.setXYZ(k,c.r,c.g,c.b); }
+      col.needsUpdate=true;
+    });
+  }
+
+  /* ---- size ---- */
+  var W=0,H_=0;
+  function resize(){
+    var w=screen.clientWidth,h=screen.clientHeight; if(!w||!h||(w===W&&h===H_)) return;
+    W=w;H_=h; var pr=Math.min(window.devicePixelRatio||1,2);
+    renderer.setPixelRatio(pr); renderer.setSize(w,h,false);
+    camera.aspect=w/h; camera.updateProjectionMatrix();
+    uniforms.uScale.value=(h*pr)/(2*Math.tan(FOV*Math.PI/360));
+  }
+
+  /* ---- quaternion rotation by mouse ---- */
+  var q=[1,0,0,0];
+  window.__loginUniQuat=function(){ return q; };
+  function mul(a,b){return [a[0]*b[0]-a[1]*b[1]-a[2]*b[2]-a[3]*b[3],a[0]*b[1]+a[1]*b[0]+a[2]*b[3]-a[3]*b[2],a[0]*b[2]-a[1]*b[3]+a[2]*b[0]+a[3]*b[1],a[0]*b[3]+a[1]*b[2]-a[2]*b[1]+a[3]*b[0]];}
+  function norm(a){var n=Math.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]+a[3]*a[3])||1;return [a[0]/n,a[1]/n,a[2]/n,a[3]/n];}
+  function axis(ax,ay,az,ang){var s=Math.sin(ang/2);return [Math.cos(ang/2),ax*s,ay*s,az*s];}
+  function rotate(dx,dy){ q=norm(mul(mul(axis(1,0,0,dy*SENS),axis(0,1,0,dx*SENS)),q)); }
+
+  var SKIP='input,textarea,select,button,a,label,.login-card,.logo3d-scene,.login-popup-overlay';
+  var dragging=false,lx=0,ly=0,vx=0,vy=0;
+  screen.addEventListener('mousedown',function(e){
+    if(e.button!==0) return;
+    if(e.target.closest&&e.target.closest(SKIP)) return;
+    e.preventDefault(); /* drag korle lekha select hobe na */
+    if(window.getSelection) window.getSelection().removeAllRanges();
+  });
+  screen.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='touch'||e.button!==0) return;
+    if(e.target.closest&&e.target.closest(SKIP)) return;
+    dragging=true; lx=e.clientX; ly=e.clientY; vx=vy=0;
+    screen.classList.add('uni-dragging');
+    try{screen.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  screen.addEventListener('pointermove',function(e){
+    if(!dragging) return;
+    var dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY; vx=dx; vy=dy; rotate(dx,dy);
+  });
+  function end(e){ if(!dragging) return; dragging=false; screen.classList.remove('uni-dragging'); try{screen.releasePointerCapture(e.pointerId);}catch(_){} }
+  screen.addEventListener('pointerup',end);
+  screen.addEventListener('pointercancel',end);
+
+  /* ---- loop ---- */
+  var last=performance.now();
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function loop(now){
+    if(document.hidden||!screen.offsetWidth){ last=performance.now(); setTimeout(function(){requestAnimationFrame(loop);},400); return; }
+    var dt=Math.min((now-last)/1000,0.1); last=now;
+    resize();
+    var light=document.body.classList.contains('light-theme');
+    if(light!==isLight) applyTheme(light);
+    if(!dragging){
+      if(Math.abs(vx)>0.05||Math.abs(vy)>0.05){ rotate(vx,vy); vx*=0.94; vy*=0.94; }
+      if(!reduce&&AUTO_SPIN) q=norm(mul(axis(0,1,0,AUTO_SPIN*dt),q));
+    }
+    uni.quaternion.set(q[1],q[2],q[3],q[0]);
+    if(!reduce){
+      hubs.forEach(function(Hh){
+        Hh.a+=Hh.w*dt;
+        Hh.holder.position.set(Math.cos(Hh.a)*Hh.R,Hh.y,Math.sin(Hh.a)*Hh.R*Hh.ecc);
+        Hh.grp.rotation.y+=Hh.spin*dt;
+      });
+    } else {
+      hubs.forEach(function(Hh){ Hh.holder.position.set(Math.cos(Hh.a)*Hh.R,Hh.y,Math.sin(Hh.a)*Hh.R*Hh.ecc); });
+    }
+    renderer.render(scene,camera);
+    requestAnimationFrame(loop);
+  }
+  resize(); applyTheme(document.body.classList.contains('light-theme'));
+  requestAnimationFrame(loop);
+})();
+</script>
+
+<script>
+/* Left panel: block select/copy/drag of text; mobile box opens in a new tab wherever it is clicked */
+(function(){
+  var left=document.querySelector('#loginScreen .login-brand'); if(!left) return;
+  ['selectstart','copy','cut','dragstart'].forEach(function(ev){
+    left.addEventListener(ev,function(e){ e.preventDefault(); });
+  });
+  var link=left.querySelector('.mobile-login-link');
+  if(link){
+    link.setAttribute('target','_blank'); link.setAttribute('rel','noopener');
+    link.addEventListener('click',function(e){
+      e.preventDefault();
+      window.open(link.href,'_blank','noopener');
+    });
+  }
+})();
+</script>
+
+<script>
+/* ===================== LOGIN SUN : 7 soft colours (slow fade) + rotates in 3D with the universe ===================== */
+(function(){
+  var sun=document.getElementById('loginSun'), body=document.getElementById('lsBody'); if(!sun||!body) return;
+  var COLORS=['#ffd98a','#ffa8c8','#c2a8ff','#8fd0ff','#8af0cf','#ffbe8a','#ff9a9a']; /* 7 halka (pastel) color */
+  var SECONDS=2;   /* ek color theke porer color e jete koto second */
+  var rgb=COLORS.map(function(h){ return [parseInt(h.substr(1,2),16),parseInt(h.substr(3,2),16),parseInt(h.substr(5,2),16)]; });
+  function ease(t){ return t*t*(3-2*t); }
+  function paint(ms){
+    var t=ms/1000/SECONDS, i=Math.floor(t), f=ease(t-i), n=rgb.length, a=rgb[i%n], b=rgb[(i+1)%n];
+    sun.style.setProperty('--sun',Math.round(a[0]+(b[0]-a[0])*f)+','+Math.round(a[1]+(b[1]-a[1])*f)+','+Math.round(a[2]+(b[2]-a[2])*f));
+  }
+  function orient(){ /* universe-er quaternion [w,x,y,z] -> CSS matrix3d (y-axis flip) */
+    var f=window.__loginUniQuat; if(!f) return; var q=f(), w=q[0],x=q[1],y=q[2],z=q[3];
+    var r00=1-2*(y*y+z*z), r01=2*(x*y-z*w), r02=2*(x*z+y*w);
+    var r10=2*(x*y+z*w), r11=1-2*(x*x+z*z), r12=2*(y*z-x*w);
+    var r20=2*(x*z-y*w), r21=2*(y*z+x*w), r22=1-2*(x*x+y*y);
+    /* CSS y points down: R_css = S R S, S=diag(1,-1,1) */
+    var c00=r00,c01=-r01,c02=r02, c10=-r10,c11=r11,c12=-r12, c20=r20,c21=-r21,c22=r22;
+    body.style.transform='matrix3d('+[c00,c10,c20,0, c01,c11,c21,0, c02,c12,c22,0, 0,0,0,1].join(',')+')';
+  }
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){ paint(0); return; }
+  function loop(now){
+    if(!document.hidden&&sun.offsetWidth){ paint(now); orient(); }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
 })();
 </script>
 
